@@ -7,6 +7,8 @@
  '(custom-enabled-themes (quote (tango-dark)))
  '(fancy-splash-image nil)
  '(font-use-system-font t)
+ '(inhibit-startup-echo-area-message "Martin")
+ '(inhibit-startup-screen t)
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)
  '(wg-display-current-workgroup-left-decor "")
