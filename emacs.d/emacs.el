@@ -1,9 +1,13 @@
-(setq custom-file (concat user-emacs-directory ".emacs-custom"))
+(setq user-emacs-directory "~/dotfiles/emacs.d/")
+
+(setq custom-file (concat user-emacs-directory "emacs-custom.el"))
 (load custom-file)
 
 (add-to-list 'load-path (concat user-emacs-directory "elisp/"))
 (require 'sr-speedbar)
 (require 'workgroups "workgroups/workgroups")
+
+
 
 ;;; open emacs in fullscreen
 (defun fullscreen () "fullscreen"
@@ -15,13 +19,11 @@
 )
 ;(fullscreen)
 
-;;; tree browser
-;(sr-speedbar-open)
 
 ;;; minor modes
 (column-number-mode t) ; column number is shown at mode line
 
-;;; windows layout
+;;; windows layout: load workgroups on start, save them on exit
 (workgroups-mode 1)
 (wg-load (concat user-emacs-directory "myWorkgroups"))
 (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))
