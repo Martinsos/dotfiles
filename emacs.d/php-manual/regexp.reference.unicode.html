@@ -1,0 +1,345 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Unicode character properties</title>
+
+ </head>
+ <body><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="regexp.reference.escape.html">Escape sequences</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="regexp.reference.anchors.html">Anchors</a></div>
+ <div class="up"><a href="reference.pcre.pattern.syntax.html">PCRE regex syntax</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div><hr /><div id="regexp.reference.unicode" class="section">
+  <h2 class="title">Unicode character properties</h2>
+  <p class="para">
+   Since 5.1.0, three
+   additional escape sequences to match generic character types are available
+   when <em class="emphasis">UTF-8 mode</em> is selected. They are:
+  </p>
+  <dl>
+
+   <dt>
+
+    <span class="term"><em class="emphasis">\p{xx}</em></span>
+    <dd>
+<span class="simpara">a character with the xx property</span></dd>
+
+   </dt>
+
+   <dt>
+
+    <span class="term"><em class="emphasis">\P{xx}</em></span>
+    <dd>
+<span class="simpara">a character without the xx property</span></dd>
+
+   </dt>
+
+   <dt>
+
+    <span class="term"><em class="emphasis">\X</em></span>
+    <dd>
+<span class="simpara">an extended Unicode sequence</span></dd>
+
+   </dt>
+
+  </dl>
+
+  <p class="para">
+   The property names represented by <em>xx</em> above are limited 
+   to the Unicode general category properties. Each character has exactly one 
+   such property, specified by a two-letter abbreviation. For compatibility with
+   Perl, negation can be specified by including a circumflex between the
+   opening brace and the property name. For example, <em>\p{^Lu}</em> 
+   is the same as <em>\P{Lu}</em>.
+  </p>
+  <p class="para">
+   If only one letter is specified with <em>\p</em> or 
+   <em>\P</em>, it includes all the properties that start with that
+   letter. In this case, in the absence of negation, the curly brackets in the 
+   escape sequence are optional; these two examples have the same effect:
+  </p>
+  <div class="informalexample">
+   <div class="example-contents">
+<div class="cdata"><pre>
+\p{L}
+\pL
+</pre></div>
+   </div>
+
+  </div>
+  <table class="doctable table">
+   <caption><strong>Supported property codes</strong></caption>
+   
+    <thead>
+     <tr>
+      <th>Property</th>
+      <th>Matches</th>
+      <th>Notes</th>
+     </tr>
+
+    </thead>
+
+    <tbody class="tbody">
+     <tr>
+      <td><em>C</em></td>
+      <td>Other</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Cc</em></td>
+      <td>Control</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Cf</em></td>
+      <td>Format</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Cn</em></td>
+      <td>Unassigned</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Co</em></td>
+      <td>Private use</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Cs</em></td>
+      <td>Surrogate</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>L</em></td>
+      <td>Letter</td>
+      <td>
+       Includes the following properties: <em>Ll</em>, 
+       <em>Lm</em>, <em>Lo</em>, <em>Lt</em> and 
+       <em>Lu</em>.
+      </td>
+     </tr>
+
+     <tr>
+      <td><em>Ll</em></td>
+      <td>Lower case letter</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Lm</em></td>
+      <td>Modifier letter</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Lo</em></td>
+      <td>Other letter</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Lt</em></td>
+      <td>Title case letter</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Lu</em></td>
+      <td>Upper case letter</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>M</em></td>
+      <td>Mark</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Mc</em></td>
+      <td>Spacing mark</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Me</em></td>
+      <td>Enclosing mark</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Mn</em></td>
+      <td>Non-spacing mark</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>N</em></td>
+      <td>Number</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Nd</em></td>
+      <td>Decimal number</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Nl</em></td>
+      <td>Letter number</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>No</em></td>
+      <td>Other number</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>P</em></td>
+      <td>Punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Pc</em></td>
+      <td>Connector punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Pd</em></td>
+      <td>Dash punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Pe</em></td>
+      <td>Close punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Pf</em></td>
+      <td>Final punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Pi</em></td>
+      <td>Initial punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Po</em></td>
+      <td>Other punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Ps</em></td>
+      <td>Open punctuation</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>S</em></td>
+      <td>Symbol</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Sc</em></td>
+      <td>Currency symbol</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Sk</em></td>
+      <td>Modifier symbol</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Sm</em></td>
+      <td>Mathematical symbol</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>So</em></td>
+      <td>Other symbol</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Z</em></td>
+      <td>Separator</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Zl</em></td>
+      <td>Line separator</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Zp</em></td>
+      <td>Paragraph separator</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+     <tr>
+      <td><em>Zs</em></td>
+      <td>Space separator</td>
+      <td class="empty">&nbsp;</td>
+     </tr>
+
+    </tbody>
+   
+  </table>
+
+  <p class="para">
+   Extended properties such as &quot;Greek&quot; or &quot;InMusicalSymbols&quot; are not
+   supported by PCRE.
+  </p>
+  <p class="para">
+   Specifying case-insensitive (caseless) matching does not affect these escape sequences.
+   For example, <em>\p{Lu}</em> always matches only upper case letters.
+  </p>
+  <p class="para">
+   The <em>\X</em> escape matches any number of Unicode characters 
+   that form an extended Unicode sequence. <em>\X</em> is equivalent 
+   to <em>(?&gt;\PM\pM*)</em>.
+  </p>
+  <p class="para">
+   That is, it matches a character without the &quot;mark&quot; property, followed
+   by zero or more characters with the &quot;mark&quot; property, and treats the
+   sequence as an atomic group (see below). Characters with the &quot;mark&quot;
+   property are typically accents that affect the preceding character.
+  </p>
+  <p class="para">
+   Matching characters by Unicode property is not fast, because PCRE has
+   to search a structure that contains data for over fifteen thousand
+   characters. That is why the traditional escape sequences such as 
+   <em>\d</em> and <em>\w</em> do not use Unicode properties 
+   in PCRE.
+  </p>
+ </div><hr /><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="regexp.reference.escape.html">Escape sequences</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="regexp.reference.anchors.html">Anchors</a></div>
+ <div class="up"><a href="reference.pcre.pattern.syntax.html">PCRE regex syntax</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div></body></html>

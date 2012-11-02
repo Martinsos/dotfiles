@@ -1,0 +1,264 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>The Thread class</title>
+
+ </head>
+ <body><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="pthreads.tutorials.html">Examples</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="thread.getcount.html">Thread::getCount</a></div>
+ <div class="up"><a href="book.pthreads.html">pthreads</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div><hr /><div id="class.thread" class="reference">
+
+ <h1 class="title">The Thread class</h1>
+ 
+
+ <div class="partintro"><p class="verinfo">(No version information available, might only be in SVN)</p>
+
+
+  <div class="section" id="thread.intro">
+   <h2 class="title">Introduction</h2>
+   <p class="para">
+ Any object that extends Thread can have the run method executed asynchronously in a Thread. 
+   </p>
+  </div>
+
+
+  <div class="section" id="thread.synopsis">
+   <h2 class="title">Class synopsis</h2>
+
+
+   <div class="classsynopsis">
+    <div class="ooclass"></div>
+
+
+    <div class="classsynopsisinfo">
+     <span class="ooclass">
+      <strong class="classname">Thread</strong>
+     </span>
+     {</div>
+
+    
+    <div class="classsynopsisinfo classsynopsisinfo_comment">/* Methods */</div>
+    <div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> 
+   <span class="modifier">public</span> 
+   <span class="modifier">static</span> 
+   <span class="type">int</span>
+    <span class="methodname"><a href="thread.getcount.html" class="methodname">getCount</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="modifier">static</span> <span class="type">int</span> <span class="methodname"><a href="thread.getmax.html" class="methodname">getMax</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="modifier">static</span> <span class="type">int</span> <span class="methodname"><a href="thread.getpeak.html" class="methodname">getPeak</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">int</span> <span class="methodname"><a href="thread.getstacked.html" class="methodname">getStacked</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="modifier">static</span> <span class="type">ImportedThread</span> <span class="methodname"><a href="thread.getthread.html" class="methodname">getThread</a></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$tid</code></span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">long</span> <span class="methodname"><a href="thread.getthreadid.html" class="methodname">getThreadId</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.isbusy.html" class="methodname">isBusy</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.isjoined.html" class="methodname">isJoined</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.isrunning.html" class="methodname">isRunning</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.isstarted.html" class="methodname">isStarted</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.iswaiting.html" class="methodname">isWaiting</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">mixed</span> <span class="methodname"><a href="thread.join.html" class="methodname">join</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.notify.html" class="methodname">notify</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">abstract</span> <span class="modifier">public</span> <span class="type">mixed</span> <span class="methodname"><a href="thread.run.html" class="methodname">run</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">int</span> <span class="methodname"><a href="thread.stack.html" class="methodname">stack</a></span>
+    ( <span class="methodparam"><span class="type">Object</span> <code class="parameter">$work</code></span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.start.html" class="methodname">start</a></span>
+    ([ <span class="methodparam"><span class="type">boolean</span> <code class="parameter">$synchronized</code></span>
+  ] )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">int</span> <span class="methodname"><a href="thread.unstack.html" class="methodname">unstack</a></span>
+    ([ <span class="methodparam"><span class="type">Object</span> <code class="parameter">$work</code></span>
+  ] )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="type">boolean</span> <span class="methodname"><a href="thread.wait.html" class="methodname">wait</a></span>
+    ([ <span class="methodparam"><span class="type"><span class="type long">long</span></span> <code class="parameter">$timeout</code></span>
+  ] )</div>
+
+   }</div>
+
+
+  </div>
+
+ </div>
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2>Table of Contents</h2><ul class="chunklist chunklist_reference"><li><a href="thread.getcount.html">Thread::getCount</a> — Return the number of currently executing Threads.</li><li><a href="thread.getmax.html">Thread::getMax</a> — Return the maximum number of Threads an instance of PHP may create.</li><li><a href="thread.getpeak.html">Thread::getPeak</a> — Return the peak number of Threads.</li><li><a href="thread.getstacked.html">Thread::getStacked</a> — Return the number of items on the referenced Threads stack.</li><li><a href="thread.getthread.html">Thread::getThread</a> — Import a Thread created in another context.</li><li><a href="thread.getthreadid.html">Thread::getThreadId</a> — Get the identifer for a Thread</li><li><a href="thread.isbusy.html">Thread::isBusy</a> — Tell if a Thread is busy executing</li><li><a href="thread.isjoined.html">Thread::isJoined</a> — Tell if the referenced Thread has been joined.</li><li><a href="thread.isrunning.html">Thread::isRunning</a> — Tell if the referenced Thread is running.</li><li><a href="thread.isstarted.html">Thread::isStarted</a> — Tell if the referenced Thread has been started.</li><li><a href="thread.iswaiting.html">Thread::isWaiting</a> — Tell if the referenced Thread is waiting.</li><li><a href="thread.join.html">Thread::join</a> — Join with the referenced Thread.</li><li><a href="thread.notify.html">Thread::notify</a> — Notify all Threads waiting for the referenced Thread.</li><li><a href="thread.run.html">Thread::run</a> — This is the method that pthreads runs asynchronously for the programmer.</li><li><a href="thread.stack.html">Thread::stack</a> — Push work onto the stack for execution by the referenced Thread</li><li><a href="thread.start.html">Thread::start</a> — Start executing the referenced Thread</li><li><a href="thread.unstack.html">Thread::unstack</a> — Remove items from the referenced Threads stack.</li><li><a href="thread.wait.html">Thread::wait</a> — Wait for Notification from the referenced Thread.</li></ul>
+</div>
+<hr /><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="pthreads.tutorials.html">Examples</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="thread.getcount.html">Thread::getCount</a></div>
+ <div class="up"><a href="book.pthreads.html">pthreads</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div></body></html>

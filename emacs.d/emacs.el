@@ -3,21 +3,21 @@
 (setq custom-file (concat user-emacs-directory "emacs-custom.el"))
 (load custom-file)
 
+;;; load libraries
 (add-to-list 'load-path (concat user-emacs-directory "elisp/"))
 (require 'sr-speedbar)
 (require 'workgroups "workgroups/workgroups")
+(load (concat user-emacs-directory "elisp/nxhtml/autostart.el"))
 
 
 
-;;; open emacs in fullscreen
-(defun fullscreen () "fullscreen"
-  (interactive)
-  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-     '(2 "_NET_WM_STATE_MAXIMIZED_VERT" 0))
-  (x-send-client-message nil 0 nil "_NET_WM_STATE" 32
-     '(2 "_NET_WM_STATE_MAXIMIZED_HORZ" 0))
+;;; add ELPA libraries
+(when (>= emacs-major-version 24)
+  (require 'package)
+  (package-initialize)
+  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+  (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
 )
-;(fullscreen)
 
 ;;; mode line
 (display-time)
@@ -41,3 +41,9 @@
 (setq wg-file (concat user-emacs-directory "myWorkgroups"))
 (wg-load wg-file)
 (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))
+
+;;; nXhtml
+(tabkey2-mode t) ; double tab runs autocomplete
+
+;;; php-mode
+(setq php-manual-path (concat user-emacs-directory "php-manual/"))

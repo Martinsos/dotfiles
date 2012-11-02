@@ -1,0 +1,196 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>The Xcom class</title>
+
+ </head>
+ <body><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="x-commerce.resources.html">Resource Types</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="xcom.construct.html">Xcom::__construct</a></div>
+ <div class="up"><a href="book.x-commerce.html">X.commerce</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div><hr /><div id="class.xcom" class="reference">
+
+ <h1 class="title">The Xcom class</h1>
+ 
+
+ <div class="partintro"><p class="verinfo">(No version information available, might only be in SVN)</p>
+
+
+  <div class="section" id="xcom.intro">
+   <h2 class="title">Introduction</h2>
+   <p class="para">
+
+   </p>
+  </div>
+
+
+  <div class="section" id="xcom.synopsis">
+   <h2 class="title">Class synopsis</h2>
+
+
+   <div class="classsynopsis">
+    <div class="ooclass"></div>
+
+
+    <div class="classsynopsisinfo">
+     <span class="ooclass">
+      <strong class="classname">Xcom</strong>
+     </span>
+     {</div>
+
+
+    <div class="classsynopsisinfo classsynopsisinfo_comment">/* Properties */</div>
+    <div class="fieldsynopsis">
+     <span class="modifier">public</span>
+      <var class="varname"><a href="class.xcom.html#xcom.props.debug">$<var class="varname">__debug</var></a></var>
+    ;</div>
+
+
+    <div class="classsynopsisinfo classsynopsisinfo_comment">/* Methods */</div>
+    <div class="methodsynopsis dc-description">
+   <span class="modifier">public</span>  <span class="methodname"><a href="xcom.construct.html" class="methodname">__construct</a></span>
+    ([ <span class="methodparam"><span class="type">string</span> <code class="parameter">$fabric_url</code></span>
+   [, <span class="methodparam"><span class="type">string</span> <code class="parameter">$fabric_token</code></span>
+   [, <span class="methodparam"><span class="type">string</span> <code class="parameter">$capability_token</code></span>
+  ]]] )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">object</span> <span class="methodname"><a href="xcom.decode.html" class="methodname">decode</a></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$avro_msg</code></span>
+   , <span class="methodparam"><span class="type">string</span> <code class="parameter">$json_schema</code></span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">string</span> <span class="methodname"><a href="xcom.encode.html" class="methodname">encode</a></span>
+    ( <span class="methodparam"><span class="type"><span class="type stdClass">stdClass</span></span> <code class="parameter">$data</code></span>
+   , <span class="methodparam"><span class="type">string</span> <code class="parameter">$avro_schema</code></span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">string</span> <span class="methodname"><a href="xcom.getdebugoutput.html" class="methodname">getDebugOutput</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">string</span> <span class="methodname"><a href="xcom.getlastresponse.html" class="methodname">getLastResponse</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">array</span> <span class="methodname"><a href="xcom.getlastresponseinfo.html" class="methodname">getLastResponseInfo</a></span>
+    ( <span class="methodparam">void</span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">string</span> <span class="methodname"><a href="xcom.getonboardingurl.html" class="methodname">getOnboardingURL</a></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$capability_name</code></span>
+   , <span class="methodparam"><span class="type">string</span> <code class="parameter">$agreement_url</code></span>
+   )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">int</span> <span class="methodname"><a href="xcom.send.html" class="methodname">send</a></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$topic</code></span>
+   , <span class="methodparam"><span class="type"><a href="language.pseudo-types.html#language.types.mixed" class="type mixed">mixed</a></span> <code class="parameter">$data</code></span>
+   [, <span class="methodparam"><span class="type">string</span> <code class="parameter">$json_schema</code></span>
+   [, <span class="methodparam"><span class="type">array</span> <code class="parameter">$http_headers</code></span>
+  ]] )</div>
+<div class="methodsynopsis dc-description">
+   <span class="modifier">public</span> <span class="type">int</span> <span class="methodname"><a href="xcom.sendasync.html" class="methodname">sendAsync</a></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$topic</code></span>
+   , <span class="methodparam"><span class="type"><a href="language.pseudo-types.html#language.types.mixed" class="type mixed">mixed</a></span> <code class="parameter">$data</code></span>
+   [, <span class="methodparam"><span class="type">string</span> <code class="parameter">$json_schema</code></span>
+   [, <span class="methodparam"><span class="type">array</span> <code class="parameter">$http_headers</code></span>
+  ]] )</div>
+
+   }</div>
+
+
+  </div>
+
+  <div class="section" id="xcom.props">
+   <h2 class="title">Properties</h2>
+   <dl>
+
+    <dt id="xcom.props.debug">
+     <span class="term"><var class="varname"><var class="varname">__debug</var></var></span>
+     <dd>
+
+      <p class="para">Set this to a non-FALSE value to enable debug mode</p>
+     </dd>
+
+    </dt>
+
+   </dl>
+
+  </div>
+
+ </div>
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2>Table of Contents</h2><ul class="chunklist chunklist_reference"><li><a href="xcom.construct.html">Xcom::__construct</a> — Create a new Xcom object</li><li><a href="xcom.decode.html">Xcom::decode</a> — Decodes an avro message</li><li><a href="xcom.encode.html">Xcom::encode</a> — Encode an avro message</li><li><a href="xcom.getdebugoutput.html">Xcom::getDebugOutput</a> — Get the debug output</li><li><a href="xcom.getlastresponse.html">Xcom::getLastResponse</a> — Get the last response body</li><li><a href="xcom.getlastresponseinfo.html">Xcom::getLastResponseInfo</a> — Gets the last response HTTP information</li><li><a href="xcom.getonboardingurl.html">Xcom::getOnboardingURL</a> — Generate an onboarding URL</li><li><a href="xcom.send.html">Xcom::send</a> — Send a message</li><li><a href="xcom.sendasync.html">Xcom::sendAsync</a> — Send a message asynchronously</li></ul>
+</div>
+<hr /><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="x-commerce.resources.html">Resource Types</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="xcom.construct.html">Xcom::__construct</a></div>
+ <div class="up"><a href="book.x-commerce.html">X.commerce</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div></body></html>

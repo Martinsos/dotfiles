@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Import a Thread created in another context.</title>
+
+ </head>
+ <body><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="thread.getstacked.html">Thread::getStacked</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="thread.getthreadid.html">Thread::getThreadId</a></div>
+ <div class="up"><a href="class.thread.html">Thread</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div><hr /><div id="thread.getthread" class="refentry">
+ <div class="refnamediv">
+  <h1 class="refname">Thread::getThread</h1>
+  <p class="verinfo">(PECL pthreads &gt;= 0.0.33)</p><p class="refpurpose"><span class="refname">Thread::getThread</span> &mdash; <span class="dc-title">Import a Thread created in another context.</span></p>
+
+ </div>
+
+ <div class="refsect1 description" id="refsect1-thread.getthread-description">
+  <h3 class="title">Description</h3>
+  <div class="methodsynopsis dc-description">
+   <span class="modifier">final</span> <span class="modifier">public</span> <span class="modifier">static</span> <span class="type"><span class="type ImportedThread">ImportedThread</span></span> <span class="methodname"><strong>Thread::getThread</strong></span>
+    ( <span class="methodparam"><span class="type">string</span> <code class="parameter">$tid</code></span>
+   )</div>
+
+  <p class="para rdfs-comment">Import a Thread created in another context for the purposes of synchronization.</p>
+ </div>
+
+
+ <div class="refsect1 parameters" id="refsect1-thread.getthread-parameters">
+  <h3 class="title">Parameters</h3>
+  <dl>
+
+   <dt>
+
+    <span class="term"><em><code class="parameter">tid</code></em></span>
+    <dd>
+
+     <p class="para">A valid Thread identifier returned by a previous call to  <span class="function"><a href="thread.getthreadid.html" class="function">Thread::getThreadId()</a></span>.</p>
+    </dd>
+
+   </dt>
+
+  </dl>
+
+ </div>
+
+
+ <div class="refsect1 returnvalues" id="refsect1-thread.getthread-returnvalues">
+  <h3 class="title">Return Values</h3>
+  <p class="para">An ImportedThread represetning the Thread referenced by tid, if it can be found in the current instance of PHP.</p>
+ </div>
+
+</div><hr /><div class="manualnavbar" style="text-align: center;">
+ <div class="prev" style="text-align: left; float: left;"><a href="thread.getstacked.html">Thread::getStacked</a></div>
+ <div class="next" style="text-align: right; float: right;"><a href="thread.getthreadid.html">Thread::getThreadId</a></div>
+ <div class="up"><a href="class.thread.html">Thread</a></div>
+ <div class="home"><a href="index.html">PHP Manual</a></div>
+</div></body></html>
