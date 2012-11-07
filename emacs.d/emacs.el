@@ -3,11 +3,27 @@
 (setq custom-file (concat user-emacs-directory "emacs-custom.el"))
 (load custom-file)
 
+
+
 ;;; load libraries
 (add-to-list 'load-path (concat user-emacs-directory "elisp/"))
+(add-to-list 'load-path (concat user-emacs-directory "elpa/"))
+
 (require 'sr-speedbar)
-(require 'workgroups "workgroups/workgroups")
+
+; workgroups
+(add-to-list 'load-path (concat user-emacs-directory "elisp/workgroups"))
+(require 'workgroups)
+
+; nxhtml
 (load (concat user-emacs-directory "elisp/nxhtml/autostart.el"))
+
+; auto-complete
+(add-to-list 'load-path (concat user-emacs-directory "elpa/auto-complete-20121022.2254/"))
+(add-to-list 'load-path (concat user-emacs-directory "elpa/popup-20121020.1203/"))
+(require 'auto-complete-config)
+;;;
+
 
 
 
@@ -47,3 +63,7 @@
 
 ;;; php-mode
 (setq php-manual-path (concat user-emacs-directory "php-manual/"))
+
+;;; auto-complete
+(ac-config-default)
+;(add-to-list 'ac-dictionary-directories (concat user-emacs-directory "elpa/auto-complete-20121022.2254/dict"))
