@@ -3,7 +3,7 @@
       [(0 8)
        nil "Interface to ack, a source code search tool" tar])
  (adaptive-wrap .
-		[(0 1)
+		[(0 2)
 		 nil "Smart line-wrapping with wrap-prefix" single])
  (all .
       [(1 0)
@@ -12,7 +12,7 @@
        [(0 2)
 	nil "Asynchronous Music Player Controller" single])
  (auctex .
-	 [(11 87)
+	 [(11 86)
 	  nil "Integrated environment for *TeX*" tar])
  (cl-lib .
 	 [(0 2)
@@ -99,7 +99,7 @@
 	 [(0 8)
 	  nil "OAuth 2.0 Authorization Protocol" single])
  (org .
-      [(20121203)
+      [(20121217)
        nil "Outline-based notes management and organizer" tar])
  (quarter-plane .
 		[(0 1)
@@ -108,7 +108,7 @@
 	[(0 1)
 	 nil "Queue data structure" single])
  (rainbow-mode .
-	       [(0 5)
+	       [(0 6)
 		nil "Colorize color names in buffers" single])
  (register-list .
 		[(0 1)
@@ -141,7 +141,7 @@
 	  (0 3)))
 	"Trie data structure" single])
  (undo-tree .
-	    [(0 5 5)
+	    [(0 6 3)
 	     nil "Treat undo history as a tree" single])
  (uni-confusables .
 		  [(0 1)
