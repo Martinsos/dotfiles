@@ -11,6 +11,7 @@
  '(custom-enabled-themes (quote (tango-dark)))
  '(fancy-splash-image nil)
  '(font-use-system-font t)
+ '(haskell-mode-hook (quote (turn-on-haskell-indentation turn-on-haskell-doc-mode turn-on-haskell-decl-scan imenu-add-menubar-index)))
  '(html-site-current "crossword-empire.com")
  '(html-site-global-mode t)
  '(html-site-list (quote (("crossword-empire.com" "/home/martin/public_html/crossword-empire.com" "nil" "nil" "nil" "nil" "nil" nil "sosic.info" "crossword-empire@sosic.info" "pOplEpEnbO10" "/" "nil" "sosic.info" "/crossword-empire.com" "nil"))))

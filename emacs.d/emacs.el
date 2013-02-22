@@ -45,7 +45,7 @@
 (tool-bar-mode -1) ; remove tool bar
 (scroll-bar-mode -1) ; remove scrolls
 (column-number-mode t) ; column number is shown at mode line
-(linum-mode t) ; show line numbers
+(global-linum-mode t) ; show line numbers
 (show-paren-mode t) ; highlight matching parent
 
 ;;; ido
@@ -67,3 +67,7 @@
 ;;; auto-complete
 (ac-config-default)
 ;(add-to-list 'ac-dictionary-directories (concat user-emacs-directory "elpa/auto-complete-20121022.2254/dict"))
+
+;;; topcoder plugin
+(gnuserv-start)
+(load-library (concat user-emacs-directory "elisp/topcoder/topcoder.el"))
