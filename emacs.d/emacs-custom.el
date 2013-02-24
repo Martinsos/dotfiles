@@ -23,6 +23,7 @@
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)
  '(tabkey2-mode nil)
+ '(topcoder-directory "/home/martin/Dropbox/topcoder")
  '(wg-display-current-workgroup-left-decor "")
  '(wg-display-current-workgroup-right-decor "")
  '(wg-mode-line-divider "|")
