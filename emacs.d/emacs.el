@@ -38,6 +38,10 @@
 ;;; mode line
 (display-time)
 
+;;; Replace tabs with spaces
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 4)
+
 ;;; keybindings
 (windmove-default-keybindings 'meta) ; change buffer with M+arrow
 
