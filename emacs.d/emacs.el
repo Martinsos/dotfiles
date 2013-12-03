@@ -73,5 +73,15 @@
 ;(add-to-list 'ac-dictionary-directories (concat user-emacs-directory "elpa/auto-complete-20121022.2254/dict"))
 
 ;;; topcoder plugin
-(gnuserv-start)
-(load-library (concat user-emacs-directory "elisp/topcoder/topcoder.el"))
+;(with-demoted-errors
+;  (gnuserv-start)
+;  (load-library (concat user-emacs-directory "elisp/topcoder/topcoder.el")) )
+(condition-case nill
+    (progn
+      (gnuserv-start)
+      (load-library (concat user-emacs-directory "elisp/topcoder/topcoder.el")) )
+  (error (message-box "Topcoder plugin encountered error!\nCheck if gnuserv is installed.")) )
+       
+
+;;; open .ispc files with c-mode
+(add-to-list 'auto-mode-alist '("\\.ispc\\'" . c-mode))
