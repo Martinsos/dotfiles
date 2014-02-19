@@ -15,6 +15,8 @@ install_link() {
     ln --symbolic --no-target-directory --interactive --verbose $s $t
 }
 
+echo "Installing dotfiles..."
+
 # emacs
 install_link $DOT_DIR/emacs.d $HOME/.emacs.d
 
@@ -26,3 +28,5 @@ if [ ! -e $HOME/.bash_local ]; then
 		> $HOME/.bash_local
 	echo "$HOME/.bash_local created. Put machine specific settings here!" 
 fi
+
+echo "Installation finished!"
