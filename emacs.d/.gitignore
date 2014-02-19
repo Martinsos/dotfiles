@@ -2,3 +2,4 @@ myWorkgroups
 semanticdb/
 ac-comphist.dat
 session.*
+elisp/nxhtml/etc/schema/xhtml-loader.rnc

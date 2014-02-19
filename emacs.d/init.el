@@ -1,5 +1,3 @@
-(setq user-emacs-directory "~/dotfiles/emacs.d/")
-
 (setq custom-file (concat user-emacs-directory "emacs-custom.el"))
 (load custom-file)
 
