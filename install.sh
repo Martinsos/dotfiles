@@ -24,5 +24,5 @@ install_link $DOT_DIR/bash_aliases $HOME/.bash_aliases
 if [ ! -e $HOME/.bash_local ]; then 
 	echo "# Put settings specific for this machine here. Loaded by .bashrc" \
 		> $HOME/.bash_local
-	echo "$HOME/.bash_local created" 
+	echo "$HOME/.bash_local created. Put machine specific settings here!" 
 fi
