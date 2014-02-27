@@ -31,5 +31,8 @@ if [ ! -e $HOME/.bash_local ]; then
 	echo "$HOME/.bash_local created. Put machine specific settings here!" 
 fi
 
+# git completion in bash
+install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
+install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
 
 echo "Installation finished!"
