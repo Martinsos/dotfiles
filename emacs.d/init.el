@@ -83,3 +83,9 @@
 
 ;;; open .ispc files with c-mode
 (add-to-list 'auto-mode-alist '("\\.ispc\\'" . c-mode))
+
+;;; Fancy highlighting of cursor
+;(require 'highlight-tail)
+;(setq highlight-tail-steps 10
+;      highlight-tail-timer 0.12)
+;(highlight-tail-mode)
