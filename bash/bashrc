@@ -14,12 +14,21 @@ HISTSIZE=10000         # 10k
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
+PATH=$PATH":~/opt"
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
+fi
+
+# enable completion for git
+if [ -f ~/.git-completion.bash ]; then
+    . ~/.git-completion.bash
+fi
+if [ -f ~/.git-prompt.sh ]; then
+    . ~/.git-prompt.sh
 fi
 
 # Alias definitions.
