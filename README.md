@@ -1,4 +1,3 @@
-dotfiles
-========
+# Martin's Dotfiles
 
-Contains my dotfiles.
+Run install.sh to install dotfiles.
