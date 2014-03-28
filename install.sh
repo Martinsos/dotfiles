@@ -2,7 +2,7 @@
 
 # This script assumes it is positioned in dotfiles directory
 
-DOT_DIR=$(dirname $0) # relative path to dotfiles directory
+DOT_DIR=$( cd $(dirname $0) ; pwd -P ) # absolute path to dotfiles directory
 
 # Takes source and target and creates link if it does not exist
 install_link() {
