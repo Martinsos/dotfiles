@@ -9,8 +9,11 @@ install_link() {
     local s=$1
     local t=$2
 
-    # if correct link exists do nothing
-    [[ -L $t && $(readlink -f $t) == $(readlink -f $s) ]] && return 0
+    # if correct link exists
+    if [[ -L $t && $(readlink -f $t) == $(readlink -f $s) ]]; then
+        echo "Link already installed"
+        return 0
+    fi
 
     ln --symbolic --no-target-directory --interactive --verbose $s $t
 }
@@ -19,10 +22,11 @@ install_link() {
 echo "Installing dotfiles..."
 
 
-# emacs
+echo "Installing emacs.d"
 install_link $DOT_DIR/emacs.d $HOME/.emacs.d
 
-# bash
+
+echo "Installing .bash files"
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
 install_link $DOT_DIR/bash/bash_aliases $HOME/.bash_aliases
 if [ ! -e $HOME/.bash_local ]; then 
@@ -31,8 +35,10 @@ if [ ! -e $HOME/.bash_local ]; then
 	echo "$HOME/.bash_local created. Put machine specific settings here!" 
 fi
 
-# git completion in bash
+
+echo "Installing git completion"
 install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
+
 
 echo "Installation finished!"
