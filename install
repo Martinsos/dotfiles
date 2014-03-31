@@ -41,4 +41,9 @@ install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
 
 
+echo "Installing xrandr screen layout setup scripts"
+echo "This are just scripts, hook them where you want!"
+install_link $DOT_DIR/screenlayout $HOME/.screenlayout
+
+
 echo "Installation finished!"
