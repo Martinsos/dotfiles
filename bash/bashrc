@@ -6,6 +6,9 @@
 
 export EDITOR=vim
 
+# Set caps lock to be ctrl
+setxkbmap -option ctrl:nocaps
+
 # Options for history
 HISTCONTROL=ignoreboth # ignorespace + ignoredups
 HISTFILESIZE=1000000   # 1M
