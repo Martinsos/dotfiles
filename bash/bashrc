@@ -6,16 +6,11 @@
 
 export EDITOR=vim
 
-# Set caps lock to be ctrl
-setxkbmap -option ctrl:nocaps
-
 # Options for history
 HISTCONTROL=ignoreboth # ignorespace + ignoredups
 HISTFILESIZE=1000000   # 1M
 HISTSIZE=10000         # 10k
 
-# make less more friendly for non-text input files, see lesspipe(1)
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 PATH=$PATH":~/opt"
 
