@@ -1,0 +1,36 @@
+[user]
+	email = sosic.martin@gmail.com
+	name = Martin Sosic
+[push]
+	default = simple
+
+[color]
+    ui = yes
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+[color "diff"]
+     meta = yellow bold
+     frag = magenta bold
+     old = red bold
+     new = green bold
+[color "status"]
+     added = yellow
+     changed = green
+     untracked = cyan
+
+[alias]
+     co = checkout
+     undo = reset --hard
+     cb = checkout -b
+     br = branch
+     cp = cherry-pick
+     st = status
+     l = log --pretty=oneline --decorate --abbrev-commit
+     lg = log --decorate --abbrev-commit
+     last = log --decorate -1 -p --abbrev-commit
+     ci = commit -a
+     pom = push origin master
+     graph = log --pretty=oneline --graph --abbrev-commit
+     dt = difftool
