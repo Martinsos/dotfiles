@@ -35,6 +35,8 @@
 
 
 ;;-------------- Packages ---------------;;
+;; Dependencies are automatically installed by package.el!
+
 (req-package c-mode
   :mode ("\\.ispc\\'" . c-mode))
 
