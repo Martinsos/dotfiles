@@ -36,9 +36,7 @@
 
 ;;-------------- Packages ---------------;;
 ;; Dependencies are automatically installed by package.el!
-
-(req-package c-mode
-  :mode ("\\.ispc\\'" . c-mode))
+;; TODO: maybe use use-package instead of req-package?
 
 (req-package workgroups
   :config
@@ -55,6 +53,22 @@
     (require 'auto-complete-config)
     (add-to-list 'ac-dictionary-directories (concat user-emacs-directory "ac-dict"))
     (ac-config-default)))
+
+; Requirement is to have js-beautify node package installed globaly!
+; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
+(req-package web-beautify
+  :config
+  (progn
+    (eval-after-load 'js2-mode
+      '(define-key js2-mode-map (kbd "C-c b") 'web-beautify-js))
+    (eval-after-load 'json-mode
+      '(define-key json-mode-map (kbd "C-c b") 'web-beautify-js))
+    (eval-after-load 'web-mode
+      '(define-key web-mode-map (kbd "C-c b") 'web-beautify-html))
+    (eval-after-load 'css-mode
+      '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))))
+
+(req-package json-mode)
 
 (req-package js2-mode
   :mode ("\\.js\\'" . js2-mode)
