@@ -16,6 +16,7 @@
 (require 'req-package)
 
 
+
 ;;---------- General settings -----------;;
 (display-time) ; Display time in mode line
 (column-number-mode t) ; Column number is shown at mode line
@@ -46,6 +47,20 @@
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))))
+
+; Takes care of trailing whitespaces (removal, highlighting).
+(req-package ethan-wspace
+  :config
+  (progn
+    (setq mode-require-final-newline nil)
+    (global-ethan-wspace-mode 1)))
+
+(req-package fill-column-indicator
+  :config
+  (progn
+    (setq fci-rule-column 110)
+    (setq fci-rule-color "seashell4")
+    (add-hook 'prog-mode-hook #'fci-mode)))
 
 (req-package auto-complete
   :config
@@ -90,5 +105,3 @@
 
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
-
-
