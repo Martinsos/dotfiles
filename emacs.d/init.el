@@ -103,5 +103,10 @@
 
 (req-package less-css-mode)
 
+(req-package coffee-mode
+  :config
+  (progn
+    (custom-set-variables '(coffee-tab-width 2))))
+
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
