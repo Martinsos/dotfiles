@@ -1,4 +1,4 @@
 # Martin's Dotfiles
 
 Go to dotfiles directory and run `./install` to install dotfiles.  
-When you update your dotfiles or change them, just run `./install` again.
+If there is a new file in dotfiles, just run `./install` again.
