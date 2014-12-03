@@ -55,13 +55,6 @@
     (setq mode-require-final-newline nil)
     (global-ethan-wspace-mode 1)))
 
-(req-package fill-column-indicator
-  :config
-  (progn
-    (setq fci-rule-column 110)
-    (setq fci-rule-color "seashell4")
-    (add-hook 'prog-mode-hook #'fci-mode)))
-
 (req-package auto-complete
   :config
   (progn
