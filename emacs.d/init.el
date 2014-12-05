@@ -24,6 +24,7 @@
 (setq-default indent-tabs-mode nil) ; Replace tabs with spaces
 (windmove-default-keybindings 'meta) ; Change buffer with M + arrow
 (show-paren-mode t) ; Highlight matching parent
+(menu-bar-mode -1) ; remove menu bar
 ;; Customize GUI
 (if (display-graphic-p)
   (progn
