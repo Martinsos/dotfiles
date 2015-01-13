@@ -18,6 +18,7 @@
 
 
 ;;---------- General settings -----------;;
+(global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
 (display-time) ; Display time in mode line
 (column-number-mode t) ; Column number is shown at mode line
 (global-linum-mode t) ; Show line numbers
@@ -48,6 +49,8 @@
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))))
+
+(req-package cmake-mode)
 
 ; Takes care of trailing whitespaces (removal, highlighting).
 (req-package ethan-wspace
