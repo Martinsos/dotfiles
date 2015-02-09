@@ -2,7 +2,7 @@
 ## IMPORTANT: Define all settings specific to this machine in .bash_local!
 
 # If not running interactively, don't do anything
-[ -z "$PS1" ] && return
+[[ $- != *i* ]] && return
 
 export EDITOR=vim
 
