@@ -143,3 +143,6 @@ else \
   echo "'$Yellow$PathShort$Color_Off'\$ "; \
 fi)'
 ########################################################################
+
+export NVM_DIR="/home/martin/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm

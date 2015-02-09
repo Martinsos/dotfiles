@@ -49,8 +49,5 @@ install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
 echo "Installing jsbeautify config file:"
 install_link $DOT_DIR/jsbeautifyrc $HOME/.jsbeautifyrc
 
-echo "Installing xrandr screen layout setup scripts:"
-install_link $DOT_DIR/screenlayout $HOME/.screenlayout
-
 
 echo "Installation finished!"
