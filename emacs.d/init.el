@@ -18,6 +18,7 @@
 
 
 ;;---------- General settings -----------;;
+(set-default-font "DroidSansMono-11")
 (global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
 (display-time) ; Display time in mode line
 (column-number-mode t) ; Column number is shown at mode line
