@@ -51,6 +51,11 @@
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))))
 
+(req-package undo-tree
+  :config
+  (progn
+    (global-undo-tree-mode)))
+
 (req-package cmake-mode)
 
 ; Takes care of trailing whitespaces (removal, highlighting).
