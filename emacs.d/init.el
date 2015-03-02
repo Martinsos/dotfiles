@@ -106,5 +106,9 @@
   (progn
     (custom-set-variables '(coffee-tab-width 2))))
 
+(req-package markdown-mode
+  :mode ("\\.md\\'" . markdown-mode)
+  :mode ("\\.markdown\\'" . markdown-mode))
+
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
