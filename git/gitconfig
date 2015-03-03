@@ -1,8 +1,8 @@
 [user]
-	email = sosic.martin@gmail.com
-	name = Martin Sosic
+    email = sosic.martin@gmail.com
+    name = Martin Sosic
 [push]
-	default = simple
+    default = simple
 
 [color]
     ui = yes
