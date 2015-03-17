@@ -49,5 +49,8 @@ install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
 echo "Installing jsbeautify config file:"
 install_link $DOT_DIR/jsbeautifyrc $HOME/.jsbeautifyrc
 
+echo "Installing conky config file (read .conkyrc for setup instructions):"
+install_link $DOT_DIR/conkyrc $HOME/.conkyrc
+
 
 echo "Installation finished!"

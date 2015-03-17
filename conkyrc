@@ -1,0 +1,128 @@
+#### SETUP ####
+# For this conky configuration to work, you have to install:
+# - lm_sensors
+# - conky-colors (AUR)
+# - conky-nvidia (AUR)
+# - nvidia-smi
+###############
+
+
+######################
+# - Conky settings - #
+######################
+update_interval 1
+total_run_times 0
+net_avg_samples 1
+cpu_avg_samples 1
+
+imlib_cache_size 0
+double_buffer yes
+no_buffers yes
+background yes
+
+#####################
+# - Text settings - #
+#####################
+use_xft yes
+xftfont Ubuntu:size=10
+override_utf8_locale yes
+text_buffer_size 2048
+
+#############################
+# - Window specifications - #
+#############################
+own_window_class Conky
+own_window yes
+own_window_type normal
+own_window_transparent yes
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+
+alignment top_right
+gap_x 25
+gap_y 50
+minimum_size 200 0
+maximum_width 200
+
+default_bar_size 60 8
+
+#########################
+# - Graphics settings - #
+#########################
+draw_shades no
+
+default_color cccccc
+
+color0 white
+color1 E07A1F
+color2 white
+
+
+TEXT
+#Time & Date ${hr 2}
+${font Arial Black:size=26}${alignc}${time %H:%M}${font}
+${alignc}${time %A, %B %d, %Y}
+
+SYSTEM ${hr 2}
+${goto 6}${voffset 6}${font conkycolorslogos:size=32}a${font}${goto 55}${voffset -25}$machine
+${goto 55}Kernel: ${kernel}
+
+${goto 6}${voffset 4}${font conkycolors:size=16}o${font}${voffset -6}${goto 32}Uptime: ${alignr}${uptime}
+${goto 6}${voffset 6}${font conkycolors:size=16}1${font}${voffset -6}${goto 32}Battery: ${alignr}${battery_short}  ${battery_bar}
+${alignr}${battery_time}
+
+
+CPU ${hr 2}
+${goto 6}${voffset 4}${font conkycolors:size=16}l${font}${voffset -5}${goto 32}Frequency: ${alignr}${freq_g (1)} GHz
+${goto 6}${voffset 8}${font conkycolors:size=16}8${font}${voffset -5}${goto 32}Temperature:${alignr}${color #FCAF3E}\
+${execi 30 sensors | grep 'Core ' | awk '{total += $3; count++} END {print total/count}' | sed 's/+//' | sed 's/\.0//g'} °C$color
+${goto 6}${voffset 9}${font conkycolors:size=16}e${font}${voffset -6}${goto 32}Usage: ${cpu}% ${alignr}${voffset -7}${cpugraph 20,85 F57900 FCAF3E}
+${goto 32}${cpubar cpu1 8,34}  ${cpubar cpu2 8,34}  ${cpubar cpu3 8,34}  ${cpubar cpu4 8,34}
+${goto 32}${cpubar cpu5 8,34}  ${cpubar cpu6 8,34}  ${cpubar cpu7 8,34}  ${cpubar cpu8 8,34}
+
+
+Discrete GPU ${hr 2}
+${if_match ${exec nvidia-smi 2> /dev/null | grep 'NVIDIA-SMI has failed' -c} == 0}\
+${goto 6}${voffset 4}${font conkycolors:size=16}8${font}${voffset -4}${goto 32}\
+Temperature: ${alignr}${color #FCAF3E}${exec nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2> /dev/null} °C$color\
+${else}\
+${goto 6}${voffset 4}${font conkycolors:size=16}r${font}${voffset -4}${goto 32}OFF\
+${endif}
+
+
+Processes ${hr 2}
+${goto 6}${voffset 4}${font conkycolors:size=16}g${font}${voffset -4}${goto 32}RAM: ${mem} ${alignr}${membar 8,60}
+${goto 6}${voffset 4}${font conkycolors:size=16}i${font}${voffset -4}${goto 32}Swap: ${swapperc}${if_match "$swapperc" != "No swap"}% ${alignr}${swapbar 8,60}${endif}
+${goto 6}${voffset 4}${font conkycolors:size=16}C${font}${voffset -4}${goto 32}Processes: ${alignr}$processes ($running_processes running)
+${goto 7.5}${voffset 4}${font Poky:size=15}${font}${goto 32}${voffset -10}Highest: ${alignr 22}CPU${alignr}RAM
+${goto 32}${voffset -5.5}${hr 1}
+${voffset -1}${goto 32}${top name 1} ${goto 124}${top cpu 1}${alignr }${top mem 1}
+${voffset -1}${goto 32}${top name 2} ${goto 124}${top cpu 2}${alignr }${top mem 2}
+${voffset -1}${goto 32}${top name 3} ${goto 124}${top cpu 3}${alignr }${top mem 3}
+${voffset -1}${goto 32}${top name 4} ${goto 124}${top cpu 4}${alignr }${top mem 4}
+
+
+Disk ${hr 2}
+${voffset 4}${font conkycolors:size=16}l${font}${voffset -4}${goto 32}I/O: ${diskio}${alignr}${diskiograph 8,60 F57900 FCAF3E}
+${voffset 4}${font conkycolors:size=16}i${font} ${voffset -5}File System
+${voffset 4}${fs_used /}/${fs_size /} ${alignr}${fs_bar 8,60 /}
+
+
+Network ${hr 2}
+${if_up wlo1}\
+${voffset 6}${font conkycolors:size=14}k${font}${goto 32}${voffset -8}SSID: ${wireless_essid wlo1}
+${goto 32}Signal: ${wireless_link_qual wlo1}% ${alignr}${wireless_link_bar 8,60 wlo1}
+#
+${voffset 15}${font conkycolors:size=14}x${font}${goto 32}${voffset -15}Up: ${upspeed wlo1}${font} ${alignr}${upspeedgraph wlo1 20,60 F57900 FCAF3E}
+${goto 32}${voffset -15}Total: ${totalup wlo1}
+#
+${voffset 15}${font conkycolors:size=14}w${font}${goto 32}${voffset -15}Down: ${downspeed wlo1}${font} ${alignr}${downspeedgraph wlo1 20,60 F57900 FCAF3E}
+${goto 32}${voffset -15}Total: ${totaldown wlo1}
+#
+${voffset 8}${font conkycolors:size=13}A${font}${goto 32}${voffset -4}Local IP: ${alignr}${addr wlo1}
+#
+${else}\
+${voffset 4}${font conkycolors:size=14}qwe${font}${goto 32}Network Unavailable
+${endif}\
+
+
+${hr 2}
