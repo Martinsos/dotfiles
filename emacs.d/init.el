@@ -115,5 +115,10 @@
   :mode ("\\.md\\'" . markdown-mode)
   :mode ("\\.markdown\\'" . markdown-mode))
 
+(req-package rainbow-delimiters
+  :config
+  (progn
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)))
+
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
