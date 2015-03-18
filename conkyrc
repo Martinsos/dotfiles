@@ -135,7 +135,7 @@ ${else}\
 ${if_up wlo1}\
 ${voffset 2} Wireless ${hr 1}
 ${voffset 10}${font conkycolors:size=14}k${font}${goto 32}${voffset -12}SSID: ${wireless_essid wlo1}
-${goto 32}Signal: ${wireless_link_qual wlo1}% ${alignr}${wireless_link_bar 8,60 wlo1}
+${goto 32}Signal: ${wireless_link_qual_perc wlo1}% ${alignr}${wireless_link_bar 8,60 wlo1}
 #
 ${voffset 15}${font conkycolors:size=14}x${font}${goto 32}${voffset -15}Up: ${upspeed wlo1}${font} ${alignr}${upspeedgraph wlo1 20,60 F57900 FCAF3E}
 ${goto 32}${voffset -15}Total: ${totalup wlo1}
