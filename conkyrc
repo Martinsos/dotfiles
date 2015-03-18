@@ -58,35 +58,43 @@ color2 white
 
 
 TEXT
-#Time & Date ${hr 2}
 ${font Arial Black:size=26}${alignc}${time %H:%M}${font}
 ${alignc}${time %A, %B %d, %Y}
 
 SYSTEM ${hr 2}
 ${goto 6}${voffset 6}${font conkycolorslogos:size=32}a${font}${goto 55}${voffset -25}$machine
 ${goto 55}Kernel: ${kernel}
-
-${loadgraph F57900 FCAF3E}
+#
+${voffset 8}${loadgraph F57900 FCAF3E}
 #
 ${goto 6}${voffset 4}${font conkycolors:size=16}o${font}${voffset -6}${goto 32}Uptime: ${alignr}${uptime}
 #
-${goto 6}${voffset 6}${font conkycolors:size=16}1${font}${voffset -6}${goto 32}Battery: ${battery_short} ${alignr}${battery_bar 8,70}
+${goto 6}${voffset 6}${font conkycolors:size=16}1${font}${voffset -6}${goto 32}Battery: ${battery_short}\
+# Color battery bar based on percentage remaining.
+${if_match ${battery_percent} < 15}${color red}${else}\
+${if_match ${battery_percent} < 25}${color orange}${else}\
+${if_match ${battery_percent} < 35}${color yellow}${else}\
+${if_match ${battery_percent} < 90}${color white}${else}\
+${color green}${endif}${endif}${endif}${endif}\
+${alignr}${battery_bar 8,70}${color}
+#
 ${alignr}${battery_time}
 
 CPU ${hr 2}
-${goto 6}${voffset 4}${font conkycolors:size=16}l${font}${voffset -5}${goto 32}Frequency: ${alignr}${freq_g (1)} GHz
+${goto 6}${voffset 4}${font conkycolors:size=16}d${font}${voffset -5}${goto 32}Frequency: ${alignr}${freq_g (1)} GHz
 ${goto 6}${voffset 8}${font conkycolors:size=16}8${font}${voffset -5}${goto 32}Temperature:${alignr}${color #FCAF3E}\
 ${execi 30 sensors | grep 'Core ' | awk '{total += $3; count++} END {print total/count}' | sed 's/+//' | sed 's/\.0//g'} °C$color
-${goto 6}${voffset 9}${font conkycolors:size=16}e${font}${voffset -6}${goto 32}Usage: ${cpu}% ${alignr}${voffset -7}${cpugraph 20,85 F57900 FCAF3E -t}
+${goto 6}${voffset 9}${font conkycolors:size=16}l${font}${voffset -6}${goto 32}Usage: ${cpu}% ${alignr}${voffset -7}${cpugraph 20,85 F57900 FCAF3E -t}
 ${goto 32}${cpubar cpu1 8,34}  ${cpubar cpu2 8,34}  ${cpubar cpu3 8,34}  ${cpubar cpu4 8,34}
 ${goto 32}${cpubar cpu5 8,34}  ${cpubar cpu6 8,34}  ${cpubar cpu7 8,34}  ${cpubar cpu8 8,34}
 
 Discrete GPU ${hr 2}
 ${if_match ${exec lsmod | grep 'nvidia' -c} > 0}\
-${voffset 5}${goto 32}${exec nvidia-smi --query-gpu=name --format=csv,noheader}
+${goto 6}${voffset 5}${font conkycolorslogos:size=16}n${font}${voffset -6}${goto 32}${exec nvidia-smi --query-gpu=name --format=csv,noheader}
 ${goto 6}${voffset 5}${font conkycolors:size=16}8${font}${voffset -6}${goto 32}\
 Temperature: ${alignr}${color #FCAF3E}${exec nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits} °C$color
-${voffset 7}${goto 32}Memory:${alignr}${exec nvidia-smi --query-gpu=memory.used --format=csv,noheader} / ${exec nvidia-smi --query-gpu=memory.total --format=csv,noheader}
+${goto 6}${voffset 5}${font conkycolors:size=16}e${font}${voffset -6}${goto 32}\
+Memory:${alignr}${exec nvidia-smi --query-gpu=memory.used --format=csv,noheader} / ${exec nvidia-smi --query-gpu=memory.total --format=csv,noheader}
 ${else}\
 ${goto 6}${voffset 5}${font conkycolors:size=16}r${font}${voffset -6}${goto 32}OFF
 ${endif}\
@@ -99,7 +107,8 @@ ${goto 6}${voffset 4}${font conkycolors:size=16}i${font}${voffset -4}${goto 32}S
 ${endif}\
 #
 ${goto 6}${voffset 4}${font conkycolors:size=16}C${font}${voffset -6}${goto 32}Processes: ${alignr}$processes ($running_processes running)
-${goto 7.5}${voffset 4}${font Poky:size=15}${font}${goto 32}${voffset -10}Highest: ${alignr 22}CPU${alignr}RAM
+${voffset 4}${goto 32}Threads: ${alignr}$threads ($running_threads running)
+${goto 32}${voffset 4}Highest: ${alignr 22}CPU${alignr}RAM
 ${goto 32}${voffset -5.5}${hr 1}
 ${voffset -1}${goto 32}${top name 1} ${goto 124}${top cpu 1}${alignr}${top mem 1}
 ${voffset -1}${goto 32}${top name 2} ${goto 124}${top cpu 2}${alignr}${top mem 2}
