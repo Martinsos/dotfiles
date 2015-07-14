@@ -1,8 +1,8 @@
 #### SETUP ####
 # For this conky configuration to work, you have to install:
-# - lm_sensors
+# - conky
 # - conky-colors (AUR)
-# - conky-nvidia (AUR)
+# - lm_sensors
 # - nvidia-smi
 ###############
 
