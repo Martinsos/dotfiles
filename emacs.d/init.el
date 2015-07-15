@@ -106,6 +106,8 @@
 
 (req-package less-css-mode)
 
+(req-package scss-mode)
+
 (req-package coffee-mode
   :config
   (progn
