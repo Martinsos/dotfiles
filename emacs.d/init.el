@@ -48,8 +48,9 @@
     ;;; windows layout: load workgroups on start, save them on exit
     (workgroups-mode 1)
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
+    (setq wg-switch-on-load nil)
     (wg-load wg-file)
-    (add-hook 'kill-emacs-hook (lambda () (wg-save wg-file)))))
+    (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
 
 (req-package undo-tree
   :config
