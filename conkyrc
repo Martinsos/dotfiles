@@ -93,19 +93,15 @@ ${endif}\
 General ${hr 2}
 ${goto 6}${voffset 4}${font conkycolors:size=16}g${font}${voffset -6}${goto 32}RAM: ${mem} ${alignr}${membar 8,60}
 \
-${if_match "$swapperc" != "No swap"}\
-${goto 6}${voffset 4}${font conkycolors:size=16}i${font}${voffset -4}${goto 32}Swap: ${swapperc}% ${alignr}${swapbar 8,60}
-${endif}\
-\
 ${goto 6}${voffset 4}${font conkycolors:size=16}C${font}${voffset -6}${goto 32}Processes: ${alignr}$processes ($running_processes running)
 ${voffset 4}${goto 32}Threads: ${alignr}$threads ($running_threads running)
-${goto 32}${voffset 4}Highest: ${alignr 22}CPU${alignr}RAM
-${goto 32}${voffset -5.5}${hr 1}
-${voffset -1}${goto 32}${top name 1} ${goto 124}${top cpu 1}${alignr}${top mem 1}
-${voffset -1}${goto 32}${top name 2} ${goto 124}${top cpu 2}${alignr}${top mem 2}
-${voffset -1}${goto 32}${top name 3} ${goto 124}${top cpu 3}${alignr}${top mem 3}
-${voffset -1}${goto 32}${top name 4} ${goto 124}${top cpu 4}${alignr}${top mem 4}
-${voffset -1}${goto 32}${top name 5} ${goto 124}${top cpu 5}${alignr}${top mem 5}
+${voffset 4}Highest: ${alignr 22}CPU${alignr}RAM
+${voffset -5.5}${hr 1}
+${voffset -1}${top name 1} ${goto 124}${top cpu 1}${alignr}${top mem 1}
+${voffset -1}${top name 2} ${goto 124}${top cpu 2}${alignr}${top mem 2}
+${voffset -1}${top name 3} ${goto 124}${top cpu 3}${alignr}${top mem 3}
+${voffset -1}${top name 4} ${goto 124}${top cpu 4}${alignr}${top mem 4}
+${voffset -1}${top name 5} ${goto 124}${top cpu 5}${alignr}${top mem 5}
 
 Disk ${hr 2}
 ${diskiograph F57900 FCAF3E}
@@ -142,9 +138,9 @@ ${endif}\
 ${endif}\
 
 Errors ${hr 2}
-${color red}\
-${voffset 4}${execi 30 journalctl -r -n 2 -p "err" -o "cat" --since "today" --no-full | fold -s -w 30}\
-${color}
+${font Ubuntu:size=9}${color red}\
+${voffset 4}${execi 30 journalctl -p 'err' -o 'cat' --since '1 hour ago' --no-full | tail -n 3 |fold -s -w 35}\
+${color}${font}
 
 
 ${hr 2}
