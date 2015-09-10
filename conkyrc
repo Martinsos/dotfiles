@@ -1,83 +1,74 @@
-#### SETUP ####
-# For this conky configuration to work, you have to install:
-# - conky
-# - conky-colors (AUR)
-# - lm_sensors
-# - nvidia-smi
-###############
+----- SETUP -----
+-- For this conky configuration to work, you have to install:
+-- * conky
+-- * conky-colors (AUR)
+-- * lm_sensors
+-- * nvidia-smi
+-----------------
 
+conky.config = {
+    --- Conky settings ---
+    update_interval = 2,
+    total_run_times = 0,
+    net_avg_samples = 1,
+    cpu_avg_samples = 1,
 
-######################
-# - Conky settings - #
-######################
-update_interval 2
-total_run_times 0
-net_avg_samples 1
-cpu_avg_samples 1
+    imlib_cache_size = 0,
+    double_buffer = true,
+    no_buffers = true,
+    background = true,
 
-imlib_cache_size 0
-double_buffer yes
-no_buffers yes
-background yes
+    --- Text settings ---
+    use_xft = true,
+    font = 'Ubuntu:size=10',
+    override_utf8_locale = true,
+    text_buffer_size = 2048,
 
-#####################
-# - Text settings - #
-#####################
-use_xft yes
-xftfont Ubuntu:size=10
-override_utf8_locale yes
-text_buffer_size 2048
+    --- Window specifications ---
+    own_window_class = 'Conky',
+    own_window = true,
+    own_window_type = 'normal',
+    own_window_transparent = true,
+    own_window_hints = 'undecorated,below,sticky,skip_taskbar,skip_pager',
 
-#############################
-# - Window specifications - #
-#############################
-own_window_class Conky
-own_window yes
-own_window_type normal
-own_window_transparent yes
-own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+    alignment = 'top_right',
+    gap_x = 25,
+    gap_y = 50,
+    minimum_width = 200, minimum_height = 0,
+    maximum_width = 200,
 
-alignment top_right
-gap_x 25
-gap_y 50
-minimum_size 200 0
-maximum_width 200
+    default_bar_width = 60, default_bar_height = 8,
 
-default_bar_size 60 8
+    --- Graphics settings ---
+    draw_shades = false,
 
-#########################
-# - Graphics settings - #
-#########################
-draw_shades no
+    default_color = '#cccccc',
 
-default_color cccccc
+    color0 = 'white',
+    color1 = '#E07A1F',
+    color2 = 'white',
+};
 
-color0 white
-color1 E07A1F
-color2 white
-
-
-TEXT
+conky.text = [[
 ${font Arial Black:size=26}${alignc}${time %H:%M}${font}
 ${alignc}${time %A, %B %d, %Y}
 
 SYSTEM ${hr 2}
 ${goto 6}${voffset 6}${font conkycolorslogos:size=32}a${font}${goto 55}${voffset -25}$machine
 ${goto 55}Kernel: ${kernel}
-#
+\
 ${voffset 8}${loadgraph F57900 FCAF3E}
-#
+\
 ${goto 6}${voffset 4}${font conkycolors:size=16}o${font}${voffset -6}${goto 32}Uptime: ${alignr}${uptime}
-#
 ${goto 6}${voffset 6}${font conkycolors:size=16}1${font}${voffset -6}${goto 32}Battery: ${battery_short}\
-# Color battery bar based on percentage remaining.
+\
 ${if_match ${battery_percent} < 15}${color red}${else}\
 ${if_match ${battery_percent} < 25}${color orange}${else}\
 ${if_match ${battery_percent} < 35}${color yellow}${else}\
 ${if_match ${battery_percent} < 90}${color white}${else}\
 ${color green}${endif}${endif}${endif}${endif}\
 ${alignr}${battery_bar 8,70}${color}
-#
+\
 ${alignr}${battery_time}
 
 CPU ${hr 2}
@@ -89,7 +80,7 @@ ${goto 32}${cpubar cpu1 8,34}  ${cpubar cpu2 8,34}  ${cpubar cpu3 8,34}  ${cpuba
 ${goto 32}${cpubar cpu5 8,34}  ${cpubar cpu6 8,34}  ${cpubar cpu7 8,34}  ${cpubar cpu8 8,34}
 
 Discrete GPU ${hr 2}
-${if_match ${exec lsmod | grep 'nvidia' -c} > 0}\
+${if_match ${exec lsmod | grep nvidia -c} > 0}\
 ${goto 6}${voffset 5}${font conkycolorslogos:size=16}n${font}${voffset -6}${goto 32}${exec nvidia-smi --query-gpu=name --format=csv,noheader}
 ${goto 6}${voffset 5}${font conkycolors:size=16}8${font}${voffset -6}${goto 32}\
 Temperature: ${alignr}${color #FCAF3E}${exec nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits} °C$color
@@ -101,11 +92,11 @@ ${endif}\
 
 General ${hr 2}
 ${goto 6}${voffset 4}${font conkycolors:size=16}g${font}${voffset -6}${goto 32}RAM: ${mem} ${alignr}${membar 8,60}
-#
+\
 ${if_match "$swapperc" != "No swap"}\
 ${goto 6}${voffset 4}${font conkycolors:size=16}i${font}${voffset -4}${goto 32}Swap: ${swapperc}% ${alignr}${swapbar 8,60}
 ${endif}\
-#
+\
 ${goto 6}${voffset 4}${font conkycolors:size=16}C${font}${voffset -6}${goto 32}Processes: ${alignr}$processes ($running_processes running)
 ${voffset 4}${goto 32}Threads: ${alignr}$threads ($running_threads running)
 ${goto 32}${voffset 4}Highest: ${alignr 22}CPU${alignr}RAM
@@ -117,7 +108,7 @@ ${voffset -1}${goto 32}${top name 4} ${goto 124}${top cpu 4}${alignr}${top mem 4
 ${voffset -1}${goto 32}${top name 5} ${goto 124}${top cpu 5}${alignr}${top mem 5}
 
 Disk ${hr 2}
-${voffset 4}${font conkycolors:size=16}l${font}${voffset -6}${goto 32}I/O: ${diskio}${alignr}${diskiograph 8,60 F57900 FCAF3E}
+${diskiograph F57900 FCAF3E}
 ${voffset 4}${font conkycolors:size=16}i${font} ${voffset -5} ${fs_used /} / ${fs_size /} ${alignr}${fs_bar 8,60 /}
 
 Network ${hr 2}
@@ -125,30 +116,36 @@ ${if_up enp0s20u5}\
 ${voffset 2} Ethernet ${hr 1}
 ${voffset 15}${font conkycolors:size=14}x${font}${goto 32}${voffset -15}Up: ${upspeed enp0s20u5}${font} ${alignr}${upspeedgraph enp0s20u5 20,60 F57900 FCAF3E}
 ${goto 32}${voffset -15}Total: ${totalup enp0s20u5}
-#
+\
 ${voffset 15}${font conkycolors:size=14}w${font}${goto 32}${voffset -15}Down: ${downspeed enp0s20u5}${font} ${alignr}${downspeedgraph enp0s20u5 20,60 F57900 FCAF3E}
 ${goto 32}${voffset -15}Total: ${totaldown enp0s20u5}
-#
+\
 ${voffset 8}${font conkycolors:size=13}A${font}${goto 32}${voffset -4}Local IP: ${alignr}${addr enp0s20u5}
-#
+\
 ${else}\
 ${if_up wlo1}\
 ${voffset 2} Wireless ${hr 1}
 ${voffset 10}${font conkycolors:size=14}k${font}${goto 32}${voffset -12}SSID: ${wireless_essid wlo1}
 ${goto 32}Signal: ${wireless_link_qual_perc wlo1}% ${alignr}${wireless_link_bar 8,60 wlo1}
-#
+\
 ${voffset 15}${font conkycolors:size=14}x${font}${goto 32}${voffset -15}Up: ${upspeed wlo1}${font} ${alignr}${upspeedgraph wlo1 20,60 F57900 FCAF3E}
 ${goto 32}${voffset -15}Total: ${totalup wlo1}
-#
+\
 ${voffset 15}${font conkycolors:size=14}w${font}${goto 32}${voffset -15}Down: ${downspeed wlo1}${font} ${alignr}${downspeedgraph wlo1 20,60 F57900 FCAF3E}
 ${goto 32}${voffset -15}Total: ${totaldown wlo1}
-#
+\
 ${voffset 8}${font conkycolors:size=13}A${font}${goto 32}${voffset -4}Local IP: ${alignr}${addr wlo1}
-#
+\
 ${else}\
 ${voffset 4}${font conkycolors:size=14}qwe${font}${goto 32}Network Unavailable
 ${endif}\
 ${endif}\
 
+Errors ${hr 2}
+${color red}\
+${voffset 4}${execi 30 journalctl -r -n 2 -p "err" -o "cat" --since "today" --no-full | fold -s -w 30}\
+${color}
+
 
 ${hr 2}
+]];
