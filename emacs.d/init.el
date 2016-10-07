@@ -109,6 +109,8 @@
 
 (req-package scss-mode)
 
+(req-package stylus-mode)
+
 (req-package coffee-mode
   :config
   (progn
@@ -122,6 +124,8 @@
   :config
   (progn
     (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)))
+
+(req-package elm-mode)
 
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
