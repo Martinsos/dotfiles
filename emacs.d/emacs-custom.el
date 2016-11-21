@@ -7,16 +7,22 @@
  '(ac-use-menu-map nil)
  '(backup-directory-alist (quote ((".*" . "~/emacs_backup"))))
  '(c-basic-offset 4)
+ '(coffee-tab-width 2)
  '(column-number-mode t)
  '(custom-enabled-themes (quote (tango-dark)))
  '(fancy-splash-image nil)
  '(font-use-system-font t)
- '(haskell-mode-hook (quote (turn-on-haskell-indentation turn-on-haskell-doc-mode turn-on-haskell-decl-scan imenu-add-menubar-index)))
+ '(haskell-mode-hook
+   (quote
+    (turn-on-haskell-indentation turn-on-haskell-doc-mode turn-on-haskell-decl-scan imenu-add-menubar-index)))
  '(inhibit-startup-echo-area-message "Martin")
  '(inhibit-startup-screen t)
  '(nxhtml-default-encoding (quote utf-8))
  '(nxml-child-indent 4)
  '(nxml-outline-child-indent 4)
+ '(package-selected-packages
+   (quote
+    (csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)
  '(tabkey2-mode nil)

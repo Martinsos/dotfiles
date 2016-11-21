@@ -38,6 +38,9 @@
 ;;---------------------------------------;;
 
 
+(add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
+
+
 ;;-------------- Packages ---------------;;
 ;; Dependencies are automatically installed by package.el!
 ;; TODO: maybe use use-package instead of req-package?
@@ -72,6 +75,11 @@
     (require 'auto-complete-config)
     (add-to-list 'ac-dictionary-directories (concat user-emacs-directory "ac-dict"))
     (ac-config-default)))
+
+(req-package ace-jump-mode
+  :config
+  (progn
+    (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)))
 
 ; Requirement is to have js-beautify node package installed globaly!
 ; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
@@ -126,6 +134,9 @@
     (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)))
 
 (req-package elm-mode)
+
+(req-package csharp-mode
+  :mode ("\\.cs$" . csharp-mode))
 
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
