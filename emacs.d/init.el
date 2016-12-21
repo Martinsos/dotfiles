@@ -138,5 +138,23 @@
 (req-package csharp-mode
   :mode ("\\.cs$" . csharp-mode))
 
+;; Tide - Typescript Interactive Development Environment
+(req-package tide
+  :config
+  (progn
+    (defun setup-tide-mode ()
+      (interactive)
+      (tide-setup)
+      (flycheck-mode +1)
+      (setq flycheck-check-syntax-automatically '(save mode-enabled))
+      (eldoc-mode +1)
+      (tide-hl-identifier-mode +1))
+    (setq company-tooltip-align-annotations t) ; aligns annotation to the right hand side
+    (add-hook 'before-save-hook 'tide-format-before-save) ; formats the buffer before saving
+    (add-hook 'typescript-mode-hook #'setup-tide-mode)
+    ;; format options
+    (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
+    ))
+
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
