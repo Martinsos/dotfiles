@@ -156,5 +156,15 @@
     (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
     ))
 
+;; Displays the colors (hex and similar) with their exact color.
+(req-package rainbow-mode)
+;; Make sure that rainbow-mode is always on.
+;; NOTE: This was not working when inside of req-package block so I put it outside.
+;; I am not sure why that happens, and would like to understand it better.
+(define-globalized-minor-mode my-global-rainbow-mode rainbow-mode
+  (lambda () (rainbow-mode 1)))
+(my-global-rainbow-mode 1)
+
+
 (req-package-finish) ; Load packages in right order.
 ;;---------------------------------------;;
