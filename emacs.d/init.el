@@ -135,6 +135,8 @@
 
 (req-package elm-mode)
 
+(req-package cython-mode)
+
 (req-package csharp-mode
   :mode ("\\.cs$" . csharp-mode))
 
