@@ -128,6 +128,9 @@
   :mode ("\\.md\\'" . markdown-mode)
   :mode ("\\.markdown\\'" . markdown-mode))
 
+(req-package yaml-mode
+  :mode ("\\.yml\\'" . yaml-mode))
+
 (req-package rainbow-delimiters
   :config
   (progn
