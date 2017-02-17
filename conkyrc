@@ -73,11 +73,17 @@ ${alignr}${battery_time}
 
 CPU ${hr 2}
 ${goto 6}${voffset 4}${font conkycolors:size=16}d${font}${voffset -5}${goto 32}Frequency: ${alignr}${freq_g (1)} GHz
-${goto 6}${voffset 8}${font conkycolors:size=16}8${font}${voffset -5}${goto 32}Temperature:${alignr}${color #FCAF3E}\
-${execi 30 sensors | grep 'Core ' | awk '{total += $3; count++} END {print total/count}' | sed 's/+//' | sed 's/\.0//g'} °C$color
-${goto 6}${voffset 9}${font conkycolors:size=16}l${font}${voffset -6}${goto 32}Usage: ${cpu}% ${alignr}${voffset -7}${cpugraph 20,85 F57900 FCAF3E -t}
-${goto 32}${cpubar cpu1 8,34}  ${cpubar cpu2 8,34}  ${cpubar cpu3 8,34}  ${cpubar cpu4 8,34}
-${goto 32}${cpubar cpu5 8,34}  ${cpubar cpu6 8,34}  ${cpubar cpu7 8,34}  ${cpubar cpu8 8,34}
+\
+${goto 6}${voffset 15}${font conkycolors:size=16}8${font}\
+${goto 35}${voffset -14}${execigraph 4 "sensors | grep 'Core ' | awk '{total += $3; count++} END {print total/count}' | sed 's/+//' | sed 's/\.0//g'" 20,125 F57900 FCAF3E -t}\
+${alignr}${voffset -12}${execi 4 sensors | grep 'Core ' | awk '{total += $3; count++} END {printf "%.0f", total/count}' | sed 's/+//' | sed 's/\.0//g'} °C
+\
+${goto 6}${voffset 15}${font conkycolors:size=16}l${font}\
+${goto 35}${voffset -14}${cpugraph 20,125 F57900 FCAF3E -t}\
+${alignr}${voffset -12}${cpu} %
+\
+${goto 35}${voffset 10}${cpubar cpu1 8,37}  ${cpubar cpu2 8,37}  ${cpubar cpu3 8,37}  ${cpubar cpu4 8,37}
+${goto 35}${cpubar cpu5 8,37}  ${cpubar cpu6 8,37}  ${cpubar cpu7 8,37}  ${cpubar cpu8 8,37}
 
 Discrete GPU ${hr 2}
 ${if_match ${exec lsmod | grep nvidia -c} > 0}\
