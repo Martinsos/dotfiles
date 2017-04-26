@@ -22,7 +22,7 @@
  '(nxml-outline-child-indent 4)
  '(package-selected-packages
    (quote
-    (yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
+    (flx-ido projectile neotree markdown-preview-mode yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)
  '(tabkey2-mode nil)

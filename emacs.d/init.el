@@ -34,9 +34,17 @@
     (scroll-bar-mode -1))) ; remove scrolls
 ;; ido
 (ido-mode t)
-(setq ido-enable-flex-matching t)
+(ido-everywhere t)
 ;;---------------------------------------;;
 
+
+(req-package flx-ido
+  :config
+  (progn
+    (setq flx-ido-mode 1)
+    (setq ido-enable-flex-matching t)
+    (setq ido-use-faces nil) ; disable ido faces to see flx highlights.
+    ))
 
 (add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
 
@@ -52,6 +60,7 @@
     (workgroups-mode 1)
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
     (setq wg-switch-on-load nil)
+    (setq wg-morph-on nil)
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
 
@@ -80,6 +89,33 @@
   :config
   (progn
     (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)))
+
+; Has some problems when fetching it from melpa. I installed it manually from melpa and then it works.
+(req-package neotree
+  :config
+  (progn
+    (setq neo-theme 'ascii)
+    (setq neo-window-width 30)
+    (setq neo-window-fixed-size nil)
+    (setq neo-auto-indent-point t)
+    (setq projectile-switch-project-action 'neotree-projectile-action)
+
+    (defun neotree-project-dir ()
+      "Open NeoTree using the git root."
+      (interactive)
+      (let ((project-dir (projectile-project-root))
+            (file-name (buffer-file-name)))
+        (neotree-toggle)
+        (if project-dir
+            (if (neo-global--window-exists-p)
+                (progn
+                  (neotree-dir project-dir)
+                  (neotree-find file-name)))
+          (message "Could not find git project root."))))
+
+    (global-set-key [f8] 'neotree-project-dir)))
+
+(req-package projectile)
 
 ; Requirement is to have js-beautify node package installed globaly!
 ; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
@@ -128,6 +164,8 @@
   :mode ("\\.md\\'" . markdown-mode)
   :mode ("\\.markdown\\'" . markdown-mode))
 
+(req-package markdown-preview-mode)
+
 (req-package yaml-mode
   :mode ("\\.yml\\'" . yaml-mode))
 
@@ -170,6 +208,10 @@
   (lambda () (rainbow-mode 1)))
 (my-global-rainbow-mode 1)
 
+(req-package generic-x)
 
 (req-package-finish) ; Load packages in right order.
+
+;; Load custom made pms mode.
+(load (concat user-emacs-directory "pms-mode.el"))
 ;;---------------------------------------;;
