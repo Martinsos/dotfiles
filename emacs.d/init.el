@@ -18,25 +18,50 @@
 
 
 ;;---------- General settings -----------;;
+(setq user-full-name "Martin Sosic"
+      user-mail-address "sosic.martin@gmail.com")
+
 (set-default-font "DroidSansMono-10")
+
 (global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
+
 (display-time) ; Display time in mode line
 (column-number-mode t) ; Column number is shown at mode line
+
 (global-linum-mode t) ; Show line numbers
+
 (setq-default indent-tabs-mode nil) ; Replace tabs with spaces
+
 (windmove-default-keybindings 'meta) ; Change buffer with M + arrow
+
 (show-paren-mode t) ; Highlight matching parent
+
 (menu-bar-mode -1) ; remove menu bar
+
 ;; Customize GUI
 (if (display-graphic-p)
   (progn
     (tool-bar-mode -1) ; remove tool bar
     (scroll-bar-mode -1))) ; remove scrolls
+
 ;; ido
 (ido-mode t)
 (ido-everywhere t)
+
+(add-hook 'prog-mode-hook 'subword-mode) ; Recognize subwords in camel case words.
+
+(delete-selection-mode t) ; delete the selection with a keypress
+
+(global-set-key (kbd "C-x C-b") #'ibuffer) ;; replace buffer-menu with ibuffer
 ;;---------------------------------------;;
 
+
+(add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
+
+
+;;-------------- Packages ---------------;;
+;; Dependencies are automatically installed by package.el!
+;; TODO: maybe use use-package instead of req-package?
 
 (req-package flx-ido
   :config
@@ -45,13 +70,6 @@
     (setq ido-enable-flex-matching t)
     (setq ido-use-faces nil) ; disable ido faces to see flx highlights.
     ))
-
-(add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
-
-
-;;-------------- Packages ---------------;;
-;; Dependencies are automatically installed by package.el!
-;; TODO: maybe use use-package instead of req-package?
 
 (req-package workgroups
   :config
