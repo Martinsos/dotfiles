@@ -4,3 +4,6 @@ ac-comphist.dat
 session.*
 /elpa/
 ido.last
+backups
+irony
+projectile-bookmarks.eld

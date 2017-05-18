@@ -21,7 +21,7 @@
 (setq user-full-name "Martin Sosic"
       user-mail-address "sosic.martin@gmail.com")
 
-(set-default-font "DroidSansMono-10")
+(set-frame-font "DroidSansMono-10")
 
 (global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
 
@@ -44,15 +44,30 @@
     (tool-bar-mode -1) ; remove tool bar
     (scroll-bar-mode -1))) ; remove scrolls
 
-;; ido
-(ido-mode t)
-(ido-everywhere t)
-
 (add-hook 'prog-mode-hook 'subword-mode) ; Recognize subwords in camel case words.
 
 (delete-selection-mode t) ; delete the selection with a keypress
 
-(global-set-key (kbd "C-x C-b") #'ibuffer) ;; replace buffer-menu with ibuffer
+(semantic-mode 1) ; parses current source file and provides easy local navigation/editing.
+
+;;------ Saving files ------;;
+(defvar --backup-directory (concat user-emacs-directory "backups"))
+(if (not (file-exists-p --backup-directory))
+    (make-directory --backup-directory t))
+(setq backup-directory-alist `(("." . ,--backup-directory)))
+(setq make-backup-files t               ; backup of a file the first time it is saved.
+      backup-by-copying t               ; don't clobber symlinks
+      version-control t                 ; version numbers for backup files
+      delete-old-versions t             ; delete excess backup files silently
+      delete-by-moving-to-trash t
+      kept-old-versions 6               ; oldest versions to keep when a new numbered backup is made (default: 2)
+      kept-new-versions 9               ; newest versions to keep when a new numbered backup is made (default: 2)
+      auto-save-default t               ; auto-save every buffer that visits a file
+      auto-save-timeout 20              ; number of seconds idle time before auto-save (default: 30)
+      auto-save-interval 200            ; number of keystrokes between auto-saves (default: 300)
+      )
+;;--------------------------;;
+
 ;;---------------------------------------;;
 
 
@@ -63,12 +78,10 @@
 ;; Dependencies are automatically installed by package.el!
 ;; TODO: maybe use use-package instead of req-package?
 
-(req-package flx-ido
+(req-package zenburn-theme
   :config
   (progn
-    (setq flx-ido-mode 1)
-    (setq ido-enable-flex-matching t)
-    (setq ido-use-faces nil) ; disable ido faces to see flx highlights.
+    (load-theme 'zenburn t)
     ))
 
 (req-package workgroups
@@ -96,20 +109,19 @@
     (setq mode-require-final-newline nil)
     (global-ethan-wspace-mode 1)))
 
-(req-package auto-complete
-  :config
-  (progn
-    (require 'auto-complete-config)
-    (add-to-list 'ac-dictionary-directories (concat user-emacs-directory "ac-dict"))
-    (ac-config-default)))
-
 (req-package ace-jump-mode
   :config
   (progn
     (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)))
 
-; Has some problems when fetching it from melpa. I installed it manually from melpa and then it works.
+(req-package projectile
+  :config
+  (progn
+    (projectile-global-mode)
+    ))
+
 (req-package neotree
+  :require projectile
   :config
   (progn
     (setq neo-theme 'ascii)
@@ -132,8 +144,6 @@
           (message "Could not find git project root."))))
 
     (global-set-key [f8] 'neotree-project-dir)))
-
-(req-package projectile)
 
 ; Requirement is to have js-beautify node package installed globaly!
 ; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
@@ -227,6 +237,123 @@
 (my-global-rainbow-mode 1)
 
 (req-package generic-x)
+
+;; Helm makes searching for anything nicer.
+;; It works on top of many other commands / packages and gives them nice, flexible UI.
+(req-package helm
+  :config
+  (progn
+    (require 'helm-config)
+
+    ;; Use C-c h instead of default C-x c, it makes more sense.
+    (global-set-key (kbd "C-c h") 'helm-command-prefix)
+    (global-unset-key (kbd "C-x c"))
+
+    (setq
+     ;; move to end or beginning of source when reaching top or bottom of source.
+     helm-move-to-line-cycle-in-source t
+     ;; search for library in `require' and `declare-function' sexp.
+     helm-ff-search-library-in-sexp t
+     ;; scroll 8 lines other window using M-<next>/M-<prior>
+     helm-scroll-amount 8
+     helm-ff-file-name-history-use-recentf t
+     helm-echo-input-in-header-line t)
+
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    (setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
+
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)
+
+    (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+
+    (global-set-key (kbd "C-x b") 'helm-mini)
+    (setq helm-buffers-fuzzy-matching t
+          helm-recentf-fuzzy-match t)
+
+    (setq helm-semantic-fuzzy-match t
+          helm-imenu-fuzzy-match t)
+
+    ;; Lists all occurences of a pattern in buffer.
+    (global-set-key (kbd "C-c h o") 'helm-occur)
+
+    (global-set-key (kbd "C-h SPC") 'helm-all-mark-rings)
+
+    ;; open helm buffer inside current window, not occupy whole other window
+    (setq helm-split-window-in-side-p t)
+    (setq helm-autoresize-max-height 50)
+    (setq helm-autoresize-min-height 30)
+    (helm-autoresize-mode 1)
+
+    (helm-mode 1)
+    ))
+
+(req-package helm-projectile
+  :require helm projectile
+  :config
+  (progn
+    (setq projectile-completion-system 'helm)
+    (helm-projectile-on)
+    ))
+
+;; Auto-complete.
+(req-package company
+  :config
+  (progn
+    (add-hook 'after-init-hook 'global-company-mode)))
+
+;; On the fly syntax checking.
+(req-package flycheck
+  :config
+  (progn
+    (global-flycheck-mode)))
+
+
+;; --------------------- C / C++ IDE ------------------ ;;
+;; Makes emacs an awesome IDE for C/C++.
+(req-package irony
+  :config
+  (progn
+    (unless (irony--find-server-executable) (call-interactively #'irony-install-server))
+
+    (add-hook 'c++-mode-hook 'irony-mode)
+    (add-hook 'c-mode-hook 'irony-mode)
+    (add-hook 'objc-mode-hook 'irony-mode)
+
+    ;; Here irony will search for compilation database (compile_commands.json or .clang_complete)
+    ;; in project structure and use it to fuel the auto-completion.
+    ;; This compilation database has to be generated by us, this is not something irony can do.
+    ;; It could be generated by cmake while building project, or using `bear` with the tool
+    ;; that we are using to build the project, or created manually (.clang_complete).
+    ;; Since compilation databases often do not contain information about header files,
+    ;; it can also be a good option to have compile_commands.json for c(pp) files and .clang_complete
+    ;; as fallback for headers.
+    (setq-default irony-cdb-compilation-databases '(irony-cdb-libclang
+                                                    irony-cdb-clang-complete))
+    (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+    ))
+
+(req-package company-irony  ;; Provides company with auto-complete for C, C++ and obj-C.
+  :require company irony
+  :config
+  (progn
+    (eval-after-load 'company '(add-to-list 'company-backends 'company-irony))))
+
+
+(req-package flycheck-irony  ;; Flycheck checker for C, C++ and obj-C.
+  :require flycheck irony
+  :config
+  (progn
+    (eval-after-load 'flycheck '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))))
+
+;; Eldoc shows argument list of the function you are currently writing in the echo area.
+;; irony-eldoc brings support for C, C++ and obj-C.
+(req-package irony-eldoc
+  :require eldoc irony
+  :config
+  (progn
+    (add-hook 'irony-mode-hook #'irony-eldoc)))
+;; ---------------------------------------------------- ;;
+
 
 (req-package-finish) ; Load packages in right order.
 
