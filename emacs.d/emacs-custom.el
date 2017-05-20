@@ -11,7 +11,7 @@
  '(c-basic-offset 4)
  '(coffee-tab-width 2)
  '(column-number-mode t)
- '(custom-enabled-themes (quote (misterioso)))
+ '(custom-enabled-themes (quote (zenburn)))
  '(custom-safe-themes
    (quote
     ("67e998c3c23fe24ed0fb92b9de75011b92f35d3e89344157ae0d544d50a63a72" "ff7625ad8aa2615eae96d6b4469fcc7d3d20b2e1ebc63b761a349bebbb9d23cb" default)))
@@ -31,7 +31,7 @@
  '(nxml-outline-child-indent 4)
  '(package-selected-packages
    (quote
-    (dracula-theme helm-projectile helm company-irony-c-headers irony-eldoc flycheck-irony company-irony company irony flx-ido projectile neotree markdown-preview-mode yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
+    (flycheck-rtags company-rtags helm-rtags rtags dracula-theme helm-projectile helm company-irony-c-headers irony-eldoc flycheck-irony company-irony company irony flx-ido projectile neotree markdown-preview-mode yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
  '(pdf-view-midnight-colors (quote ("#DCDCCC" . "#383838")))
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)

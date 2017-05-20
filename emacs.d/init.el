@@ -62,7 +62,7 @@
       delete-by-moving-to-trash t
       kept-old-versions 6               ; oldest versions to keep when a new numbered backup is made (default: 2)
       kept-new-versions 9               ; newest versions to keep when a new numbered backup is made (default: 2)
-      auto-save-default t               ; auto-save every buffer that visits a file
+      auto-save-default nil
       auto-save-timeout 20              ; number of seconds idle time before auto-save (default: 30)
       auto-save-interval 200            ; number of keystrokes between auto-saves (default: 300)
       )
@@ -270,6 +270,8 @@
     (setq helm-buffers-fuzzy-matching t
           helm-recentf-fuzzy-match t)
 
+    ;; TOOD: helm-semantic has not syntax coloring! How can I fix that?
+
     (setq helm-semantic-fuzzy-match t
           helm-imenu-fuzzy-match t)
 
@@ -299,7 +301,9 @@
 (req-package company
   :config
   (progn
-    (add-hook 'after-init-hook 'global-company-mode)))
+    (add-hook 'after-init-hook 'global-company-mode)
+    (global-set-key (kbd "M-/") 'company-complete-common-or-cycle)
+    (setq company-idle-delay 0.2)))
 
 ;; On the fly syntax checking.
 (req-package flycheck
@@ -309,6 +313,22 @@
 
 
 ;; --------------------- C / C++ IDE ------------------ ;;
+;; I have both irony and rtags, although they are alternatives to each other.
+;; Irony consumes much less resources, however it does not have following of symbol,
+;; which rtags has. Also, rtags works with headers without any problems.
+;; I will keep both of them for now, so I can decide in the future which one to use for what.
+;;
+;; In general, I prefer irony over rtags if they work exactly the same, since irony is more lightweight.
+;; both rtags and irony have good autocomplete - rtags autocomplete also works for header files
+;; out of the box which is better (irony plans to support it in the future).
+;; Irony flycheck works on the fly while rtags does not, so I like irony one better.
+;; Rtags has jump to definition, find references and similar stuff which irony does not have.
+;;
+;; Good strategy seems to be using irony for auto-complete and flycheck,
+;; since irony works correct and fast for those,
+;; and on the other hand using rtags for following symbols and everything else while not letting it reindex
+;; each time there is a change in a file - instead having it reindex manually from time to time.
+
 ;; Makes emacs an awesome IDE for C/C++.
 (req-package irony
   :config
@@ -317,7 +337,6 @@
 
     (add-hook 'c++-mode-hook 'irony-mode)
     (add-hook 'c-mode-hook 'irony-mode)
-    (add-hook 'objc-mode-hook 'irony-mode)
 
     ;; Here irony will search for compilation database (compile_commands.json or .clang_complete)
     ;; in project structure and use it to fuel the auto-completion.
@@ -327,31 +346,103 @@
     ;; Since compilation databases often do not contain information about header files,
     ;; it can also be a good option to have compile_commands.json for c(pp) files and .clang_complete
     ;; as fallback for headers.
+    ;; NOTE: rtags knows how to work with headers without .clang_complete!
     (setq-default irony-cdb-compilation-databases '(irony-cdb-libclang
                                                     irony-cdb-clang-complete))
     (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
     ))
 
-(req-package company-irony  ;; Provides company with auto-complete for C, C++ and obj-C.
+(req-package company-irony  ;; Provides company with auto-complete for C and C++.
   :require company irony
   :config
   (progn
     (eval-after-load 'company '(add-to-list 'company-backends 'company-irony))))
 
-
-(req-package flycheck-irony  ;; Flycheck checker for C, C++ and obj-C.
+;; I prefer this one over rtags because it works while I type, not only when I save file.
+(req-package flycheck-irony  ;; Flycheck checker for C and C++.
   :require flycheck irony
   :config
   (progn
     (eval-after-load 'flycheck '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))))
 
 ;; Eldoc shows argument list of the function you are currently writing in the echo area.
-;; irony-eldoc brings support for C, C++ and obj-C.
+;; irony-eldoc brings support for C and C++.
 (req-package irony-eldoc
   :require eldoc irony
   :config
   (progn
     (add-hook 'irony-mode-hook #'irony-eldoc)))
+
+
+;; rtags indexes C / C++ projects and enables us to do stuff like auto-completion,
+;; finding references / definitions and similar - it uses libclang to actually
+;; "understand" the project.
+;;
+;; rtags is actually just an emacs client for rdm daemon, which is the main logic and
+;; runs in background and re-indexes files as needed.
+;; rdm and rc (general client for rdm) can be installed through emcas by running rtags-install or manually
+;; (manually gives more control, and it is best to configure it as systemd socket service),
+;; and we have to do that only once, when setting up emacs / rtags for the first time.
+;; I like the best approach with systemd socket for now, since there I can control number of
+;; processes that rtags uses. This is important because on larger projects reindexing takes a lot of
+;; CPU, so it makes sense to either go with smaller number of processes or turning automatic reindexing off.
+;;
+;; For each new project, we have to manually register it with rdm. That is done by running
+;; `rc -J <path_to_compile_commands.json>`. If you installed rtags through emacs, rc is somewhere in its internal
+;; directory structure, so you have to find it to run this command. Also, make sure that rdm is running,
+;; and make sure it finishes indexing.
+;; rtags will make sure to automatically detect which project currently active buffer belongs to
+;; and tell rdm to switch to that project.
+(req-package rtags
+  :config
+  (progn
+    (unless (rtags-executable-find "rc") (error "Binary rc is not installed!"))
+    (unless (rtags-executable-find "rdm") (error "Binary rdm is not installed!"))
+
+    (define-key c-mode-base-map (kbd "M-.") 'rtags-find-symbol-at-point)
+    (define-key c-mode-base-map (kbd "M-,") 'rtags-find-references-at-point)
+    (define-key c-mode-base-map (kbd "M-?") 'rtags-display-summary)
+    (rtags-enable-standard-keybindings)
+
+    (setq rtags-use-helm t)
+
+    ;; Shutdown rdm when leaving emacs.
+    (add-hook 'kill-emacs-hook 'rtags-quit-rdm)
+    ))
+
+;; Has no coloring! How can I get coloring?
+;; (req-package helm-rtags
+;;   :require helm rtags
+;;   :config
+;;   (progn
+;;     (setq rtags-display-result-backend 'helm)
+;;     ))
+
+;; Use rtags for auto-completion.
+;; (req-package company-rtags
+;;   :require company rtags
+;;   :config
+;;   (progn
+;;     (setq rtags-autostart-diagnostics t)
+;;     (rtags-diagnostics)
+;;     (setq rtags-completions-enabled t)
+;;     (push 'company-rtags company-backends)
+;;     ))
+
+;; (req-package flycheck-rtags
+;;   :require flycheck rtags
+;;   :config
+;;   (progn
+;;     ;; ensure that we use only rtags checking
+;;     ;; https://github.com/Andersbakken/rtags#optional-1
+;;     (defun setup-flycheck-rtags ()
+;;       (flycheck-select-checker 'rtags)
+;;       (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
+;;       (setq-local flycheck-check-syntax-automatically nil)
+;;       )
+;;     (add-hook 'c-mode-hook #'setup-flycheck-rtags)
+;;     (add-hook 'c++-mode-hook #'setup-flycheck-rtags)
+;;     ))
 ;; ---------------------------------------------------- ;;
 
 
