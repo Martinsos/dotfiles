@@ -25,7 +25,6 @@
 
 (global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
 
-(display-time) ; Display time in mode line
 (column-number-mode t) ; Column number is shown at mode line
 
 (global-linum-mode t) ; Show line numbers
@@ -89,11 +88,27 @@
   (progn
     ;;; windows layout: load workgroups on start, save them on exit
     (workgroups-mode 1)
+    (wg-mode-line-remove-display)
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
     (setq wg-switch-on-load nil)
     (setq wg-morph-on nil)
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
+
+(req-package smart-mode-line
+  :config
+  (progn
+    (sml/setup)
+    ;; Only minor modes that match this list of regexes will be shown.
+    (setq rm-included-modes
+      (format "^ \\(%s\\)$"
+        (mapconcat #'identity
+                   '("FlyC.*"
+                     ;; "Some other mode regexp can go here."
+                     )
+                   "\\|")))
+    ;; TODO: reorder elements in mode line.
+    ))
 
 (req-package undo-tree
   :config
@@ -320,8 +335,10 @@
 ;;
 ;; In general, I prefer irony over rtags if they work exactly the same, since irony is more lightweight.
 ;; both rtags and irony have good autocomplete - rtags autocomplete also works for header files
-;; out of the box which is better (irony plans to support it in the future).
-;; Irony flycheck works on the fly while rtags does not, so I like irony one better.
+;; out of the box which is better (irony plans to support it in the future). I do have a feeling that
+;; irony sometimes returns more info on autocomplete types.
+;; Flychecks seem to works similarly, although some say that rtags has better reports, and I also feel
+;; that might be correct.
 ;; Rtags has jump to definition, find references and similar stuff which irony does not have.
 ;;
 ;; Good strategy seems to be using irony for auto-complete and flycheck,
@@ -358,7 +375,6 @@
   (progn
     (eval-after-load 'company '(add-to-list 'company-backends 'company-irony))))
 
-;; I prefer this one over rtags because it works while I type, not only when I save file.
 (req-package flycheck-irony  ;; Flycheck checker for C and C++.
   :require flycheck irony
   :config
@@ -418,7 +434,7 @@
 ;;     (setq rtags-display-result-backend 'helm)
 ;;     ))
 
-;; Use rtags for auto-completion.
+;; ;; Use rtags for auto-completion.
 ;; (req-package company-rtags
 ;;   :require company rtags
 ;;   :config
@@ -429,6 +445,7 @@
 ;;     (push 'company-rtags company-backends)
 ;;     ))
 
+;; ;; Live code checking.
 ;; (req-package flycheck-rtags
 ;;   :require flycheck rtags
 ;;   :config
@@ -439,6 +456,7 @@
 ;;       (flycheck-select-checker 'rtags)
 ;;       (setq-local flycheck-highlighting-mode nil) ;; RTags creates more accurate overlays.
 ;;       (setq-local flycheck-check-syntax-automatically nil)
+;;       (rtags-set-periodic-reparse-timeout 2.0)  ;; Run flycheck 2 seconds after being idle.
 ;;       )
 ;;     (add-hook 'c-mode-hook #'setup-flycheck-rtags)
 ;;     (add-hook 'c++-mode-hook #'setup-flycheck-rtags)
