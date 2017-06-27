@@ -27,8 +27,6 @@
 
 (column-number-mode t) ; Column number is shown at mode line
 
-(global-linum-mode t) ; Show line numbers
-
 (setq-default indent-tabs-mode nil) ; Replace tabs with spaces
 
 (windmove-default-keybindings 'meta) ; Change buffer with M + arrow
@@ -47,7 +45,11 @@
 
 (delete-selection-mode t) ; delete the selection with a keypress
 
+(add-to-list 'semantic-default-submodes 'global-semantic-stickyfunc-mode) ; show current function def at top.
+
 (semantic-mode 1) ; parses current source file and provides easy local navigation/editing.
+
+(setq magit-last-seen-setup-instructions "1.4.0")  ;; So magit does not complain.
 
 ;;------ Saving files ------;;
 (defvar --backup-directory (concat user-emacs-directory "backups"))
@@ -95,6 +97,14 @@
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
 
+;; Smart window switching.
+(req-package ace-window
+  :config
+  (progn
+    (global-set-key (kbd "C-x o") 'ace-window)
+    (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+    ))
+
 (req-package smart-mode-line
   :config
   (progn
@@ -107,7 +117,42 @@
                      ;; "Some other mode regexp can go here."
                      )
                    "\\|")))
-    ;; TODO: reorder elements in mode line.
+
+    ;; Display line and columnd as (line, column).
+    (setq sml/line-number-format "(%3l")
+    (setq sml/numbers-separator ",")
+    (setq sml/col-number-format "%2c)")
+
+    ;; TODO: reorder elements in mode line. Check mode-line-format.
+    ;; Code below should work, however it does not. How can I make sure to run it after smart-mode-line?
+    ;; (defun my-mode-line-format ()
+    ;;   (setq mode-line-format
+    ;;         (list
+    ;;          "%e"
+    ;;          'mode-line-mule-info
+    ;;          'mode-line-client
+    ;;          'mode-line-modified
+    ;;          'mode-line-remote
+    ;;          'mode-line-frame-identification
+    ;;          'mode-line-buffer-identification
+    ;;          'sml/pos-id-separator
+    ;;          'mode-line-position
+    ;;          '(vc-mode vc-mode)
+    ;;          'mode-line-front-space
+    ;;          'sml/pre-modes-separator
+    ;;          'mode-line-modes
+    ;;          'mode-line-misc-info
+    ;;          'mode-line-end-spaces))
+    ;;   )
+    ;; (eval-after-load 'smart-mode-line 'my-mode-line-format)
+    ))
+
+(req-package stickyfunc-enhance)  ; Improves semantic-stickyfunc-mode.
+
+(req-package yasnippet
+  :config
+  (progn
+    (yas-global-mode 1)
     ))
 
 (req-package undo-tree
@@ -318,7 +363,7 @@
   (progn
     (add-hook 'after-init-hook 'global-company-mode)
     (global-set-key (kbd "M-/") 'company-complete-common-or-cycle)
-    (setq company-idle-delay 0.2)))
+    (setq company-idle-delay 0)))
 
 ;; On the fly syntax checking.
 (req-package flycheck
@@ -426,13 +471,13 @@
     (add-hook 'kill-emacs-hook 'rtags-quit-rdm)
     ))
 
-;; Has no coloring! How can I get coloring?
-;; (req-package helm-rtags
-;;   :require helm rtags
-;;   :config
-;;   (progn
-;;     (setq rtags-display-result-backend 'helm)
-;;     ))
+;; TODO: Has no coloring! How can I get coloring?
+(req-package helm-rtags
+  :require helm rtags
+  :config
+  (progn
+    (setq rtags-display-result-backend 'helm)
+    ))
 
 ;; ;; Use rtags for auto-completion.
 ;; (req-package company-rtags

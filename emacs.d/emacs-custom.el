@@ -31,8 +31,12 @@
  '(nxml-outline-child-indent 4)
  '(package-selected-packages
    (quote
-    (smart-mode-line flycheck-rtags company-rtags helm-rtags rtags dracula-theme helm-projectile helm company-irony-c-headers irony-eldoc flycheck-irony company-irony company irony flx-ido projectile neotree markdown-preview-mode yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
+    (ace-window stickyfunc-enhance yasnippet smart-mode-line flycheck-rtags company-rtags helm-rtags rtags dracula-theme helm-projectile helm company-irony-c-headers irony-eldoc flycheck-irony company-irony company irony flx-ido projectile neotree markdown-preview-mode yaml-mode cython-mode rainbow-mode tide csharp-mode ace-jump-mode python-mode workgroups web-mode web-beautify undo-tree stylus-mode scss-mode req-package rainbow-delimiters markdown-mode magit less-css-mode json-mode haskell-mode handlebars-mode ethan-wspace elm-mode coffee-mode cmake-mode auto-complete arduino-mode ac-js2)))
  '(pdf-view-midnight-colors (quote ("#DCDCCC" . "#383838")))
+ '(sml/col-number-format "%2c)")
+ '(sml/line-number-format "(%3l")
+ '(sml/numbers-separator ",")
+ '(sml/use-projectile-p (quote before-prefixes))
  '(speedbar-show-unknown-files t)
  '(sr-speedbar-right-side nil)
  '(tabkey2-mode nil)
