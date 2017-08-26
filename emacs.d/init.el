@@ -222,15 +222,23 @@
 (req-package json-mode)
 
 (req-package js2-mode
-  :mode ("\\.js\\'" . js2-mode)
+  ;; :mode ("\\.js\\'" . js2-mode)
   :config
   (progn
     (setq js2-highlight-level 3) ; Rich highlighting
     (setq-default js2-basic-offset 2)
+
+    ;; Don't warn about missing semicolon.
+    (setq js2-strict-missing-semi-warning nil)
+    (setq js2-missing-semi-one-line-override t)
+
     (req-package ac-js2
       :config
       (progn
         (add-hook 'js2-mode-hook 'ac-js2-mode)))))
+
+(req-package rjsx-mode
+  :mode ("\\.js\\'" . rjsx-mode))
 
 (req-package haskell-mode)
 
@@ -286,15 +294,6 @@
     ;; format options
     (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
     ))
-
-;; Displays the colors (hex and similar) with their exact color.
-(req-package rainbow-mode)
-;; Make sure that rainbow-mode is always on.
-;; NOTE: This was not working when inside of req-package block so I put it outside.
-;; I am not sure why that happens, and would like to understand it better.
-(define-globalized-minor-mode my-global-rainbow-mode rainbow-mode
-  (lambda () (rainbow-mode 1)))
-(my-global-rainbow-mode 1)
 
 (req-package generic-x)
 
@@ -433,6 +432,13 @@
   :config
   (progn
     (add-hook 'irony-mode-hook #'irony-eldoc)))
+
+;; Brings google coding style to C/C++.
+;; (req-package google-c-style
+;;   :config
+;;   (progn
+;;     (add-hook 'c-mode-common-hook 'google-set-c-style)
+;;     (add-hook 'c-mode-common-hook 'google-make-newline-indent)))
 
 
 ;; rtags indexes C / C++ projects and enables us to do stuff like auto-completion,
