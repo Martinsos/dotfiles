@@ -5,7 +5,6 @@
     alwaysUseKillRing: true
     yankFromClipboard: true
   core:
-    autoHideMenuBar: true
     packagesWithKeymapsDisabled: []
     projectHome: "/home/martin/git"
     telemetryConsent: "limited"
@@ -21,9 +20,13 @@
     showLineNumbers: false
   "exception-reporting":
     userId: "0f3db36f-888b-4fc6-95c2-83dd854fbb87"
+  fonts:
+    fontFamily: "Droid Sans Mono"
   "language-babel": {}
   "prettier-atom":
     formatOnSaveOptions: {}
+  "project-manager":
+    alwaysOpenInSameWindow: true
   "status-bar": {}
   welcome:
     showOnStartup: false

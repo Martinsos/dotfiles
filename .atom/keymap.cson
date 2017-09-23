@@ -7,6 +7,14 @@
   "ctrl-x 2": "pane:split-down-and-copy-active-item"
   "ctrl-x 3": "pane:split-right-and-copy-active-item"
 
+  # Toggle (I prefix them with ctrl-t).
+  "ctrl-t g": "github:toggle-git-tab"
+  "ctrl-t p": "tree-view:toggle"
+
+  # All commands related to projects.
+  "ctrl-c p f": "fuzzy-finder:toggle-file-finder"  # Find file in project.
+  "ctrl-c p l": "project-manager:list-projects"
+
 "body":
   # Emacs-like movement.
   "ctrl-n": "core:move-down"
