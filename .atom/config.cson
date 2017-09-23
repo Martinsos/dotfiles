@@ -8,15 +8,19 @@
     autoHideMenuBar: true
     packagesWithKeymapsDisabled: []
     projectHome: "/home/martin/git"
-    telemetryConsent: "no"
+    telemetryConsent: "limited"
     themes: [
       "one-dark-ui"
       "zenburn"
     ]
+  "disable-keybindings":
+    prefixKeys: [
+      "ctrl-k"
+    ]
   editor:
     showLineNumbers: false
   "exception-reporting":
-    userId: "7a19b9fb-f82c-4245-9b52-3dc08102aa90"
+    userId: "0f3db36f-888b-4fc6-95c2-83dd854fbb87"
   "language-babel": {}
   "prettier-atom":
     formatOnSaveOptions: {}
