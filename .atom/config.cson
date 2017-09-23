@@ -1,0 +1,25 @@
+"*":
+  "advanced-open-file":
+    fuzzyMatch: true
+  "atomic-emacs":
+    alwaysUseKillRing: true
+    yankFromClipboard: true
+  core:
+    autoHideMenuBar: true
+    packagesWithKeymapsDisabled: []
+    projectHome: "/home/martin/git"
+    telemetryConsent: "no"
+    themes: [
+      "one-dark-ui"
+      "zenburn"
+    ]
+  editor:
+    showLineNumbers: false
+  "exception-reporting":
+    userId: "7a19b9fb-f82c-4245-9b52-3dc08102aa90"
+  "language-babel": {}
+  "prettier-atom":
+    formatOnSaveOptions: {}
+  "status-bar": {}
+  welcome:
+    showOnStartup: false

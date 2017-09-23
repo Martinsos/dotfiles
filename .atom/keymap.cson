@@ -1,0 +1,19 @@
+"atom-text-editor:not([mini])":
+  # Emacs-like auto indent on tab.
+  "tab": "editor:auto-indent"
+
+"atom-workspace":
+  # Emacs-like opening of new window/pane.
+  "ctrl-x 2": "pane:split-down-and-copy-active-item"
+  "ctrl-x 3": "pane:split-right-and-copy-active-item"
+
+"body":
+  # Emacs-like movement
+  "ctrl-n": "core:move-down"
+  "ctrl-p": "core:move-up"
+
+# TODO: Fix ctrl-k keybindings -> remove all of them that use ctrl-k as prefix,
+# because they hinder usage of ctrl-k.
+# TODO: Make it so that when I press tab, except of auto-indent
+# it also moves tab to the first character in the line. It does that already
+# if character is not in first column.

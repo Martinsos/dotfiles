@@ -240,10 +240,15 @@
 (req-package rjsx-mode
   :mode ("\\.js\\'" . rjsx-mode))
 
+(req-package vue-mode
+  :mode ("\\.vue\\'" . vue-mode))
+
 (req-package haskell-mode)
 
 (req-package web-mode
   :mode ("\\.html?\\'" . web-mode))
+
+(req-package pug-mode)
 
 (req-package less-css-mode)
 
@@ -460,30 +465,33 @@
 ;; and make sure it finishes indexing.
 ;; rtags will make sure to automatically detect which project currently active buffer belongs to
 ;; and tell rdm to switch to that project.
-(req-package rtags
-  :config
-  (progn
-    (unless (rtags-executable-find "rc") (error "Binary rc is not installed!"))
-    (unless (rtags-executable-find "rdm") (error "Binary rdm is not installed!"))
+;;
+;; NOTE: I commented rtags and helm-rtags because I had not set up rtags for the project I am working on.
+;;       They should be uncommented once rtags is set up.
+;; (req-package rtags
+;;   :config
+;;   (progn
+;;     (unless (rtags-executable-find "rc") (error "Binary rc is not installed!"))
+;;     (unless (rtags-executable-find "rdm") (error "Binary rdm is not installed!"))
 
-    (define-key c-mode-base-map (kbd "M-.") 'rtags-find-symbol-at-point)
-    (define-key c-mode-base-map (kbd "M-,") 'rtags-find-references-at-point)
-    (define-key c-mode-base-map (kbd "M-?") 'rtags-display-summary)
-    (rtags-enable-standard-keybindings)
+;;     (define-key c-mode-base-map (kbd "M-.") 'rtags-find-symbol-at-point)
+;;     (define-key c-mode-base-map (kbd "M-,") 'rtags-find-references-at-point)
+;;     (define-key c-mode-base-map (kbd "M-?") 'rtags-display-summary)
+;;     (rtags-enable-standard-keybindings)
 
-    (setq rtags-use-helm t)
+;;     (setq rtags-use-helm t)
 
-    ;; Shutdown rdm when leaving emacs.
-    (add-hook 'kill-emacs-hook 'rtags-quit-rdm)
-    ))
+;;     ;; Shutdown rdm when leaving emacs.
+;;     (add-hook 'kill-emacs-hook 'rtags-quit-rdm)
+;;     ))
 
-;; TODO: Has no coloring! How can I get coloring?
-(req-package helm-rtags
-  :require helm rtags
-  :config
-  (progn
-    (setq rtags-display-result-backend 'helm)
-    ))
+;; ;; TODO: Has no coloring! How can I get coloring?
+;; (req-package helm-rtags
+;;   :require helm rtags
+;;   :config
+;;   (progn
+;;     (setq rtags-display-result-backend 'helm)
+;;     ))
 
 ;; ;; Use rtags for auto-completion.
 ;; (req-package company-rtags

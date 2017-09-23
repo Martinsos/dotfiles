@@ -29,6 +29,9 @@ echo "Installing dotfiles..."
 echo "Installing emacs.d:"
 install_link $DOT_DIR/emacs.d $HOME/.emacs.d
 
+echo "Installing .atom:"
+install_link $DOT_DIR/.atom $HOME/.atom
+
 
 echo "Installing .bash files:"
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
