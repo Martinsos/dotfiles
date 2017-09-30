@@ -138,6 +138,8 @@ ${goto 32}${voffset -15}Total: ${totaldown wlo1}
 \
 ${voffset 8}${font conkycolors:size=13}A${font}${goto 32}${voffset -4}Local IP: ${alignr}${addr wlo1}
 \
+${voffset 8}${font conkycolors:size=13}A${font}${goto 32}${voffset -4}Public IP: ${alignr}${execi 600 curl -s www.icanhazip.com}
+\
 ${else}\
 ${voffset 4}${font conkycolors:size=14}qwe${font}${goto 32}Network Unavailable
 ${endif}\
