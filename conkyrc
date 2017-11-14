@@ -106,8 +106,6 @@ ${voffset -5.5}${hr 1}
 ${voffset -1}${top name 1} ${goto 124}${top cpu 1}${alignr}${top mem 1}
 ${voffset -1}${top name 2} ${goto 124}${top cpu 2}${alignr}${top mem 2}
 ${voffset -1}${top name 3} ${goto 124}${top cpu 3}${alignr}${top mem 3}
-${voffset -1}${top name 4} ${goto 124}${top cpu 4}${alignr}${top mem 4}
-${voffset -1}${top name 5} ${goto 124}${top cpu 5}${alignr}${top mem 5}
 
 Disk ${hr 2}
 ${diskiograph F57900 FCAF3E}
@@ -145,11 +143,6 @@ ${voffset 4}${font conkycolors:size=14}qwe${font}${goto 32}Network Unavailable
 ${endif}\
 ${endif}\
 
-Errors ${hr 2}
-${font Ubuntu:size=9}${color red}\
-${voffset 4}${execi 30 journalctl -p 'err' -o 'cat' --since '1 hour ago' --no-full | tail -n 3 |fold -s -w 35}\
-${color}${font}
 
 
-${hr 2}
 ]];

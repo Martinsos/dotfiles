@@ -28,6 +28,7 @@
       "ctrl-k"
     ]
   editor:
+    fontSize: 13
     preferredLineLength: 100
     showLineNumbers: false
   "exception-reporting":
