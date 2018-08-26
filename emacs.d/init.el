@@ -80,12 +80,14 @@
 ;; TODO: maybe use use-package instead of req-package?
 
 (req-package zenburn-theme
+  :ensure t
   :config
   (progn
     (load-theme 'zenburn t)
     ))
 
 (req-package workgroups
+  :ensure t
   :config
   (progn
     ;;; windows layout: load workgroups on start, save them on exit
@@ -99,6 +101,7 @@
 
 ;; Smart window switching.
 (req-package ace-window
+  :ensure t
   :config
   (progn
     (global-set-key (kbd "C-x o") 'ace-window)
@@ -106,6 +109,7 @@
     ))
 
 (req-package smart-mode-line
+  :ensure t
   :config
   (progn
     (sml/setup)
@@ -147,40 +151,46 @@
     ;; (eval-after-load 'smart-mode-line 'my-mode-line-format)
     ))
 
-(req-package stickyfunc-enhance)  ; Improves semantic-stickyfunc-mode.
+(req-package stickyfunc-enhance :ensure t)  ; Improves semantic-stickyfunc-mode.
 
 (req-package yasnippet
+  :ensure t
   :config
   (progn
     (yas-global-mode 1)
     ))
 
 (req-package undo-tree
+  :ensure t
   :config
   (progn
     (global-undo-tree-mode)))
 
-(req-package cmake-mode)
+(req-package cmake-mode :ensure t)
 
 ; Takes care of trailing whitespaces (removal, highlighting).
 (req-package ethan-wspace
+  :ensure t
   :config
   (progn
     (setq mode-require-final-newline nil)
     (global-ethan-wspace-mode 1)))
 
 (req-package ace-jump-mode
+  :ensure t
   :config
   (progn
     (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)))
 
 (req-package projectile
+  :ensure t
   :config
   (progn
     (projectile-global-mode)
     ))
 
 (req-package neotree
+  :ensure t
   :require projectile
   :config
   (progn
@@ -208,6 +218,7 @@
 ; Requirement is to have js-beautify node package installed globaly!
 ; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
 (req-package web-beautify
+  :ensure t
   :config
   (progn
     (eval-after-load 'js2-mode
@@ -219,9 +230,10 @@
     (eval-after-load 'css-mode
       '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))))
 
-(req-package json-mode)
+(req-package json-mode :ensure t)
 
 (req-package js2-mode
+  :ensure t
   ;; :mode ("\\.js\\'" . js2-mode)
   :config
   (progn
@@ -233,57 +245,67 @@
     (setq js2-missing-semi-one-line-override t)
 
     (req-package ac-js2
+      :ensure t
       :config
       (progn
         (add-hook 'js2-mode-hook 'ac-js2-mode)))))
 
 (req-package rjsx-mode
+  :ensure t
   :mode ("\\.js\\'" . rjsx-mode))
 
 (req-package vue-mode
+  :ensure t
   :mode ("\\.vue\\'" . vue-mode))
 
-(req-package haskell-mode)
+(req-package haskell-mode :ensure t)
 
 (req-package web-mode
+  :ensure t
   :mode ("\\.html?\\'" . web-mode))
 
-(req-package pug-mode)
+(req-package pug-mode :ensure t)
 
-(req-package less-css-mode)
+(req-package less-css-mode :ensure t)
 
-(req-package scss-mode)
+(req-package scss-mode :ensure t)
 
-(req-package stylus-mode)
+(req-package stylus-mode :ensure t)
 
 (req-package coffee-mode
+  :ensure t
   :config
   (progn
     (custom-set-variables '(coffee-tab-width 2))))
 
 (req-package markdown-mode
+  :ensure t
   :mode ("\\.md\\'" . markdown-mode)
   :mode ("\\.markdown\\'" . markdown-mode))
 
-(req-package markdown-preview-mode)
+(req-package markdown-preview-mode :ensure t)
 
 (req-package yaml-mode
+  :ensure t
   :mode ("\\.yml\\'" . yaml-mode))
 
 (req-package rainbow-delimiters
+  :ensure t
   :config
   (progn
     (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)))
 
-(req-package elm-mode)
+(req-package elm-mode :ensure t)
 
-(req-package cython-mode)
+(req-package cython-mode :ensure t)
 
 (req-package csharp-mode
+  :ensure t
   :mode ("\\.cs$" . csharp-mode))
 
 ;; Tide - Typescript Interactive Development Environment
 (req-package tide
+  :ensure t
   :config
   (progn
     (defun setup-tide-mode ()
@@ -300,14 +322,15 @@
     (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
     ))
 
-(req-package generic-x)
+(req-package generic-x :ensure t)
 
 ;; Helm makes searching for anything nicer.
 ;; It works on top of many other commands / packages and gives them nice, flexible UI.
 (req-package helm
+  :ensure t
   :config
   (progn
-    (require 'helm-config)
+    (require 'helm-config :ensure t)
 
     ;; Use C-c h instead of default C-x c, it makes more sense.
     (global-set-key (kbd "C-c h") 'helm-command-prefix)
@@ -354,6 +377,7 @@
     ))
 
 (req-package helm-projectile
+  :ensure t
   :require helm projectile
   :config
   (progn
@@ -363,6 +387,7 @@
 
 ;; Auto-complete.
 (req-package company
+  :ensure t
   :config
   (progn
     (add-hook 'after-init-hook 'global-company-mode)
@@ -371,6 +396,7 @@
 
 ;; On the fly syntax checking.
 (req-package flycheck
+  :ensure t
   :config
   (progn
     (global-flycheck-mode)))
@@ -397,6 +423,7 @@
 
 ;; Makes emacs an awesome IDE for C/C++.
 (req-package irony
+  :ensure t
   :config
   (progn
     (unless (irony--find-server-executable) (call-interactively #'irony-install-server))
@@ -419,12 +446,14 @@
     ))
 
 (req-package company-irony  ;; Provides company with auto-complete for C and C++.
+  :ensure t
   :require company irony
   :config
   (progn
     (eval-after-load 'company '(add-to-list 'company-backends 'company-irony))))
 
 (req-package flycheck-irony  ;; Flycheck checker for C and C++.
+  :ensure t
   :require flycheck irony
   :config
   (progn
@@ -433,6 +462,7 @@
 ;; Eldoc shows argument list of the function you are currently writing in the echo area.
 ;; irony-eldoc brings support for C and C++.
 (req-package irony-eldoc
+  :ensure t
   :require eldoc irony
   :config
   (progn
