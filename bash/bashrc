@@ -50,7 +50,7 @@ if [ -f ~/.git-prompt.sh ]; then
     GIT_PS1_SHOWDIRTYSTATE="true"
     GIT_PS1_SHOWUNTRACKEDFILES="true"
     GIT_PS1_SHOWUPSTREAM="auto"
-    
+
     . ~/.git-prompt.sh  # Script that brings __git_ps1 function
 
     # Set prompt to use __git_ps1 and add additional colors.

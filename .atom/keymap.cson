@@ -14,14 +14,22 @@
   # All commands related to projects.
   "ctrl-c p f": "fuzzy-finder:toggle-file-finder"  # Find file in project.
   "ctrl-c p l": "project-manager:list-projects"
+  "ctrl-c p s": "project-find:show"  # Find string in project.
 
 "body":
   # Emacs-like movement.
   "ctrl-n": "core:move-down"
   "ctrl-p": "core:move-up"
+  # Move to previous or next tab.
+  'alt--': 'pane:show-previous-item'
+  'alt-=': 'pane:show-next-item'
 
 ".platform-linux":
   "alt": "abort!"  # Don't toggle menu bar on alt.
+
+# To make sure ctrl-/ always does undo, and not toggle comments in situation specified below.
+"atom-workspace atom-text-editor:not([mini])":
+  "ctrl-/": "core:undo"
 
 # TODO: Make it so that when I press tab, except of auto-indent
 # it also moves tab to the first character in the line. It does that already

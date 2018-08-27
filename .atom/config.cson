@@ -28,8 +28,7 @@
       "ctrl-k"
     ]
   editor:
-    fontSize: 13
-    preferredLineLength: 100
+    preferredLineLength: 110
     showLineNumbers: false
   "exception-reporting":
     userId: "0f3db36f-888b-4fc6-95c2-83dd854fbb87"
@@ -40,6 +39,7 @@
     formatOnSaveOptions: {}
   "project-manager":
     alwaysOpenInSameWindow: true
+  "spell-check": {}
   "status-bar": {}
   welcome:
     showOnStartup: false
