@@ -51,6 +51,8 @@
 
 (setq magit-last-seen-setup-instructions "1.4.0")  ;; So magit does not complain.
 
+(setq ring-bell-function 'ignore) ; So that Emacs does not produce noises all the time.
+
 ;;------ Saving files ------;;
 (defvar --backup-directory (concat user-emacs-directory "backups"))
 (if (not (file-exists-p --backup-directory))
@@ -74,6 +76,7 @@
 
 (add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
 
+(require 'generic-x) ; Generic Mode (for obscure languages).
 
 ;;-------------- Packages ---------------;;
 ;; Dependencies are automatically installed by package.el!
@@ -187,6 +190,7 @@
   :config
   (progn
     (projectile-global-mode)
+    (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
     ))
 
 (req-package neotree
@@ -321,8 +325,6 @@
     ;; format options
     (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
     ))
-
-(req-package generic-x :ensure t)
 
 ;; Helm makes searching for anything nicer.
 ;; It works on top of many other commands / packages and gives them nice, flexible UI.

@@ -4,8 +4,6 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-export EDITOR=vim
-
 # Options for history
 HISTCONTROL=ignoreboth # ignorespace + ignoredups
 HISTFILESIZE=1000000   # 1M

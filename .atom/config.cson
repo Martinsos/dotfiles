@@ -6,8 +6,7 @@
   "advanced-open-file":
     fuzzyMatch: true
   "atom-ide-ui":
-    use:
-      "atom-ide-diagnostics-ui": false
+    use: {}
   "atomic-emacs":
     alwaysUseKillRing: true
     yankFromClipboard: true
@@ -15,6 +14,7 @@
     disabledPackages: [
       "activate-power-mode"
       "ide-typescript"
+      "linter"
     ]
     packagesWithKeymapsDisabled: []
     projectHome: "/home/martin/git"
@@ -34,6 +34,11 @@
     userId: "0f3db36f-888b-4fc6-95c2-83dd854fbb87"
   fonts:
     fontFamily: "Droid Sans Mono"
+  hidpi:
+    defaultScaleFactor: 2
+    manualResolutionScaleFactors: "\"1920x1080\": 1, \"2560x1440\": 1.2, \"3840x2160\": 1.2"
+    scaleFactor: 1
+    updateOnResize: false
   "language-babel": {}
   "prettier-atom":
     formatOnSaveOptions: {}
