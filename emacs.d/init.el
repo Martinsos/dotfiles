@@ -267,6 +267,12 @@
 
 (req-package haskell-mode :ensure t)
 
+(req-package intero
+  :ensure t
+  :config
+  (progn
+    (add-hook 'haskell-mode-hook 'intero-mode)))
+
 (req-package web-mode
   :ensure t
   :mode ("\\.html?\\'" . web-mode))
