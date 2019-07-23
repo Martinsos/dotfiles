@@ -1,3 +1,6 @@
+;;; Temporary fix for emacs bug: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341 .
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+
 ;;; Define where is custom file - it is modified by emacs when using menu to customize.
 (setq custom-file (concat user-emacs-directory "emacs-custom.el"))
 (load custom-file)

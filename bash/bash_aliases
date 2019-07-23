@@ -13,6 +13,3 @@ fi
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-
-# Open emacs with no GUI
-alias e='emacs -nw'

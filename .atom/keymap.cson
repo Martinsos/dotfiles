@@ -27,9 +27,13 @@
 ".platform-linux":
   "alt": "abort!"  # Don't toggle menu bar on alt.
 
-# To make sure ctrl-/ always does undo, and not toggle comments in situation specified below.
+
 "atom-workspace atom-text-editor:not([mini])":
+  # To make sure ctrl-/ always does undo, and not toggle comments in situation specified below.
   "ctrl-/": "core:undo"
+
+  # Do advanced search (overrides search from atomic emacs).
+  "ctrl-s": "find-and-replace:show"
 
 # TODO: Make it so that when I press tab, except of auto-indent
 # it also moves tab to the first character in the line. It does that already

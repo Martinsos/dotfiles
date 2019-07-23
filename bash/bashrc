@@ -9,9 +9,14 @@ HISTCONTROL=ignoreboth # ignorespace + ignoredups
 HISTFILESIZE=1000000   # 1M
 HISTSIZE=10000         # 10k
 
+export PATH=$PATH:~/opt
 
-PATH=$PATH":~/opt"
-
+# If emacs is installed, set it as main console editor.
+if [ -x "$(command -v emacs)" ]; then
+    export EDITOR="emacs -Q -nw --eval='(progn (menu-bar-mode -1) (setq make-backup-files nil))'"
+    alias e=$EDITOR
+    alias se="sudo $EDITOR"
+fi
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
