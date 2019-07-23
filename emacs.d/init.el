@@ -265,7 +265,17 @@
   :ensure t
   :mode ("\\.vue\\'" . vue-mode))
 
-(req-package haskell-mode :ensure t)
+(req-package haskell-mode
+  :ensure t
+  :config
+  (progn
+    (custom-set-variables
+     '(haskell-indentation-layout-offset 4)
+     '(haskell-indentation-starter-offset 4)
+     '(haskell-indentation-left-offset 4)
+     '(haskell-indentation-where-pre-offset 2)
+     '(haskell-indentation-where-post-offset 2)
+     )))
 
 (req-package intero
   :ensure t
