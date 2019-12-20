@@ -74,6 +74,19 @@
       )
 ;;--------------------------;;
 
+;;------- Zoom in / zoom out ------;;
+(global-set-key (kbd "C-=")
+                (lambda ()
+                  (interactive)
+                  (let ((old-face-attribute (face-attribute 'default :height)))
+                    (set-face-attribute 'default nil :height (+ old-face-attribute 10)))))
+(global-set-key (kbd "C--")
+                (lambda ()
+                  (interactive)
+                  (let ((old-face-attribute (face-attribute 'default :height)))
+                    (set-face-attribute 'default nil :height (- old-face-attribute 10)))))
+;;---------------------------------;;
+
 ;;---------------------------------------;;
 
 
