@@ -1,30 +1,40 @@
-;;; Temporary fix for emacs bug: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341 .
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 
-;;; Define where is custom file - it is modified by emacs when using menu to customize.
-(setq custom-file (concat user-emacs-directory "emacs-custom.el"))
-(load custom-file)
+;;; I don't use "customize" system, instead I define everything here in my init.el.
+;;; Therefore I send anything that emacs tries to write (and it does sometimes) in custom file to /dev/null.
+;;; I also don't load custom file, since there is none.
+(setq custom-file "/dev/null")
 
-;;; Add package archives from which packages will be installed
+;;; Add package archives from which packages will be installed.
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (package-initialize)
 
 ;;; Ensure that req-package is installed and used.
 ;;; req-package uses use-package but enables dependencies through :require.
+;;; TODO: Maybe use use-package instead of req-package?
+;;;       Yes, I should. use-package also has :require, and it has :after which might be even better fit.
 (if (not (package-installed-p 'req-package))
     (progn
       (package-refresh-contents)
       (package-install 'req-package)))
 (require 'req-package)
 
+;; TODO: Check this init.el: https://github.com/bbatsov/emacs.d/blob/master/init.el, see if I can get some inspiration.
 
+;; TODO: Split init.el into multiple files?
+
+;; TODO: Use custom-set-variable(s) for variables instead of setq, it is more correct (although rarely matters in practice).
+;;   use-package has :custom, that should be one good way to go about it.
 
 ;;---------- General settings -----------;;
+(setq inhibit-startup-screen t) ; Don't show welcome screen.
+
 (setq user-full-name "Martin Sosic"
       user-mail-address "sosic.martin@gmail.com")
 
 (set-frame-font "DroidSansMono-10")
+
+(add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in full screen. Alternatively use toggle-frame-maximized to start maximized.
 
 (global-auto-revert-mode t) ; Keeps buffers synced with file changes outside of emacs.
 
@@ -34,7 +44,9 @@
 
 (windmove-default-keybindings 'meta) ; Change buffer with M + arrow
 
-(show-paren-mode t) ; Highlight matching parent
+(show-paren-mode t) ; Highlight matching parenthesses.
+
+(setq ring-bell-function 'ignore) ; So that Emacs does not produce noises all the time.
 
 (menu-bar-mode -1) ; remove menu bar
 
@@ -54,9 +66,7 @@
 
 (setq magit-last-seen-setup-instructions "1.4.0")  ;; So magit does not complain.
 
-(setq ring-bell-function 'ignore) ; So that Emacs does not produce noises all the time.
-
-;;------ Saving files ------;;
+;;------ File backups and saving ------;;
 (defvar --backup-directory (concat user-emacs-directory "backups"))
 (if (not (file-exists-p --backup-directory))
     (make-directory --backup-directory t))
@@ -75,28 +85,37 @@
 ;;--------------------------;;
 
 ;;------- Zoom in / zoom out ------;;
-(global-set-key (kbd "C-=")
-                (lambda ()
-                  (interactive)
-                  (let ((old-face-attribute (face-attribute 'default :height)))
-                    (set-face-attribute 'default nil :height (+ old-face-attribute 10)))))
-(global-set-key (kbd "C--")
-                (lambda ()
-                  (interactive)
-                  (let ((old-face-attribute (face-attribute 'default :height)))
-                    (set-face-attribute 'default nil :height (- old-face-attribute 10)))))
+(defun zoom-in ()
+  "Make everything a little bit bigger."
+  (interactive)
+  (let ((old-face-attribute (face-attribute 'default :height)))
+    (set-face-attribute 'default nil :height (+ old-face-attribute 10))))
+
+(defun zoom-out ()
+  "Make everything a little bit smaller."
+  (interactive)
+  (let ((old-face-attribute (face-attribute 'default :height)))
+    (set-face-attribute 'default nil :height (- old-face-attribute 10))))
+
+(global-set-key (kbd "C-=") 'zoom-in)
+(global-set-key (kbd "C--") 'zoom-out)
 ;;---------------------------------;;
 
 ;;---------------------------------------;;
 
 
+;;; TODO: Where should this go?
 (add-hook 'python-mode-hook '(lambda () (setq python-indent 4)))
 
 (require 'generic-x) ; Generic Mode (for obscure languages).
 
-;;-------------- Packages ---------------;;
-;; Dependencies are automatically installed by package.el!
-;; TODO: maybe use use-package instead of req-package?
+
+
+;;-----------------------------------------------------------------------;;
+;;;;;;;;;;;;;;;; -------------- Packages --------------- ;;;;;;;;;;;;;;;;;;
+;;-----------------------------------------------------------------------;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;; General ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (req-package zenburn-theme
   :ensure t
@@ -105,6 +124,7 @@
     (load-theme 'zenburn t)
     ))
 
+;; TODO: workgroups is not maintained anymore. Consider using smth new, like eyebrowse or perspective-el.
 (req-package workgroups
   :ensure t
   :config
@@ -113,8 +133,10 @@
     (workgroups-mode 1)
     (wg-mode-line-remove-display)
     (setq wg-file (concat user-emacs-directory "myWorkgroups"))
-    (setq wg-switch-on-load nil)
-    (setq wg-morph-on nil)
+    (setq wg-switch-on-load t) ; Switch to last workgroup on emacs load.
+    (setq wg-morph-on nil) ; Don't use animations when loading workgroup.
+    (setq wg-restore-position t)
+    (setq wg-query-for-save-on-emacs-exit nil)
     (wg-load wg-file)
     (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
 
@@ -145,6 +167,8 @@
     (setq sml/line-number-format "(%3l")
     (setq sml/numbers-separator ",")
     (setq sml/col-number-format "%2c)")
+
+    (setq sml/use-projectile-p 'before-prefixes)
 
     ;; TODO: reorder elements in mode line. Check mode-line-format.
     ;; Code below should work, however it does not. How can I make sure to run it after smart-mode-line?
@@ -185,23 +209,21 @@
   (progn
     (global-undo-tree-mode)))
 
-(req-package cmake-mode :ensure t)
-
 ; Takes care of trailing whitespaces (removal, highlighting).
 (req-package ethan-wspace
   :ensure t
   :config
   (progn
-    (setq mode-require-final-newline nil)
+    (setq mode-require-final-newline NIL)
     (global-ethan-wspace-mode 1)))
 
-(req-package ace-jump-mode
+(req-package ace-jump-mode  ;; You can jump to start of any token in buffer.
   :ensure t
   :config
   (progn
     (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)))
 
-(req-package projectile
+(req-package projectile  ;; Brings concept of "project" to emacs.
   :ensure t
   :config
   (progn
@@ -209,7 +231,7 @@
     (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
     ))
 
-(req-package neotree
+(req-package neotree  ;; Nice file directory tree.
   :ensure t
   :require projectile
   :config
@@ -234,129 +256,6 @@
           (message "Could not find git project root."))))
 
     (global-set-key [f8] 'neotree-project-dir)))
-
-; Requirement is to have js-beautify node package installed globaly!
-; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
-(req-package web-beautify
-  :ensure t
-  :config
-  (progn
-    (eval-after-load 'js2-mode
-      '(define-key js2-mode-map (kbd "C-c b") 'web-beautify-js))
-    (eval-after-load 'json-mode
-      '(define-key json-mode-map (kbd "C-c b") 'web-beautify-js))
-    (eval-after-load 'web-mode
-      '(define-key web-mode-map (kbd "C-c b") 'web-beautify-html))
-    (eval-after-load 'css-mode
-      '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))))
-
-(req-package json-mode :ensure t)
-
-(req-package js2-mode
-  :ensure t
-  ;; :mode ("\\.js\\'" . js2-mode)
-  :config
-  (progn
-    (setq js2-highlight-level 3) ; Rich highlighting
-    (setq-default js2-basic-offset 2)
-
-    ;; Don't warn about missing semicolon.
-    (setq js2-strict-missing-semi-warning nil)
-    (setq js2-missing-semi-one-line-override t)
-
-    (req-package ac-js2
-      :ensure t
-      :config
-      (progn
-        (add-hook 'js2-mode-hook 'ac-js2-mode)))))
-
-(req-package rjsx-mode
-  :ensure t
-  :mode ("\\.js\\'" . rjsx-mode))
-
-(req-package vue-mode
-  :ensure t
-  :mode ("\\.vue\\'" . vue-mode))
-
-(req-package haskell-mode
-  :ensure t
-  :config
-  (progn
-    (custom-set-variables
-     '(haskell-indentation-layout-offset 4)
-     '(haskell-indentation-starter-offset 4)
-     '(haskell-indentation-left-offset 4)
-     '(haskell-indentation-where-pre-offset 2)
-     '(haskell-indentation-where-post-offset 2)
-     )))
-
-(req-package intero
-  :ensure t
-  :config
-  (progn
-    (add-hook 'haskell-mode-hook 'intero-mode)))
-
-(req-package web-mode
-  :ensure t
-  :mode ("\\.html?\\'" . web-mode))
-
-(req-package pug-mode :ensure t)
-
-(req-package less-css-mode :ensure t)
-
-(req-package scss-mode :ensure t)
-
-(req-package stylus-mode :ensure t)
-
-(req-package coffee-mode
-  :ensure t
-  :config
-  (progn
-    (custom-set-variables '(coffee-tab-width 2))))
-
-(req-package markdown-mode
-  :ensure t
-  :mode ("\\.md\\'" . markdown-mode)
-  :mode ("\\.markdown\\'" . markdown-mode))
-
-(req-package markdown-preview-mode :ensure t)
-
-(req-package yaml-mode
-  :ensure t
-  :mode ("\\.yml\\'" . yaml-mode))
-
-(req-package rainbow-delimiters
-  :ensure t
-  :config
-  (progn
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)))
-
-(req-package elm-mode :ensure t)
-
-(req-package cython-mode :ensure t)
-
-(req-package csharp-mode
-  :ensure t
-  :mode ("\\.cs$" . csharp-mode))
-
-;; Tide - Typescript Interactive Development Environment
-(req-package tide
-  :ensure t
-  :config
-  (progn
-    (defun setup-tide-mode ()
-      (interactive)
-      (tide-setup)
-      (flycheck-mode +1)
-      (setq flycheck-check-syntax-automatically '(save mode-enabled))
-      (eldoc-mode +1)
-      (tide-hl-identifier-mode +1))
-    (setq company-tooltip-align-annotations t) ; aligns annotation to the right hand side
-    (add-hook 'before-save-hook 'tide-format-before-save) ; formats the buffer before saving
-    (add-hook 'typescript-mode-hook #'setup-tide-mode)
-    ;; format options
-    (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
-    ))
 
 ;; Helm makes searching for anything nicer.
 ;; It works on top of many other commands / packages and gives them nice, flexible UI.
@@ -435,8 +334,127 @@
   (progn
     (global-flycheck-mode)))
 
+;; Colors delimiters (parentheses) according to their depth/level.
+(req-package rainbow-delimiters
+  :ensure t
+  :config
+  (progn
+    (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)))
 
-;; --------------------- C / C++ IDE ------------------ ;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Web development ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Requirement is to have js-beautify node package installed globaly!
+; Any configuration is done through .jsbeautifyrc files, that can be put inside project.
+(req-package web-beautify
+  :ensure t
+  :config
+  (progn
+    (eval-after-load 'js2-mode
+      '(define-key js2-mode-map (kbd "C-c b") 'web-beautify-js))
+    (eval-after-load 'json-mode
+      '(define-key json-mode-map (kbd "C-c b") 'web-beautify-js))
+    (eval-after-load 'web-mode
+      '(define-key web-mode-map (kbd "C-c b") 'web-beautify-html))
+    (eval-after-load 'css-mode
+      '(define-key css-mode-map (kbd "C-c b") 'web-beautify-css))))
+
+(req-package json-mode :ensure t)
+
+(req-package js2-mode
+  :ensure t
+  ;; :mode ("\\.js\\'" . js2-mode)
+  :config
+  (progn
+    (setq js2-highlight-level 3) ; Rich highlighting
+    (setq-default js2-basic-offset 2)
+
+    ;; Don't warn about missing semicolon.
+    (setq js2-strict-missing-semi-warning nil)
+    (setq js2-missing-semi-one-line-override t)
+
+    (req-package ac-js2
+      :ensure t
+      :config
+      (progn
+        (add-hook 'js2-mode-hook 'ac-js2-mode)))))
+
+(req-package rjsx-mode
+  :ensure t
+  :mode ("\\.js\\'" . rjsx-mode))
+
+(req-package vue-mode
+  :ensure t
+  :mode ("\\.vue\\'" . vue-mode))
+
+(req-package web-mode
+  :ensure t
+  :mode ("\\.html?\\'" . web-mode))
+
+(req-package pug-mode :ensure t)
+
+(req-package less-css-mode :ensure t)
+
+(req-package scss-mode :ensure t)
+
+(req-package stylus-mode :ensure t)
+
+(req-package tide  ;; Tide - Typescript Interactive Development Environment
+  :ensure t
+  :config
+  (progn
+    (defun setup-tide-mode ()
+      (interactive)
+      (tide-setup)
+      (flycheck-mode +1)
+      (setq flycheck-check-syntax-automatically '(save mode-enabled))
+      (eldoc-mode +1)
+      (tide-hl-identifier-mode +1))
+    (setq company-tooltip-align-annotations t) ; aligns annotation to the right hand side
+    (add-hook 'before-save-hook 'tide-format-before-save) ; formats the buffer before saving
+    (add-hook 'typescript-mode-hook #'setup-tide-mode)
+    ;; format options
+    (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;; Haskell development ;;;;;;;;;;;;;;;;;;;;;;
+
+(req-package haskell-mode
+  :ensure t
+  :config
+  (progn
+    (setq haskell-indentation-layout-offset 4)
+    (setq haskell-indentation-starter-offset 4)
+    (setq haskell-indentation-left-offset 4)
+    (setq haskell-indentation-where-pre-offset 2)
+    (setq haskell-indentation-where-post-offset 2)
+    ))
+
+(req-package intero
+  :ensure t
+  :config
+  (progn
+    (add-hook 'haskell-mode-hook 'intero-mode)))
+
+;;;;;;;;;;;;;;;;;;;;;;;; Other languages ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(req-package markdown-mode
+  :ensure t
+  :mode ("\\.md\\'" . markdown-mode)
+  :mode ("\\.markdown\\'" . markdown-mode))
+
+(req-package markdown-preview-mode :ensure t)
+
+(req-package yaml-mode
+  :ensure t
+  :mode ("\\.yml\\'" . yaml-mode))
+
+(req-package cython-mode :ensure t)
+
+(req-package cmake-mode :ensure t)
+
+
+;;;;;;;;;;;;;;;;;;;;; C / C++ development ;;;;;;;;;;;;;;;;;;;;;;
 ;; I have both irony and rtags, although they are alternatives to each other.
 ;; Irony consumes much less resources, however it does not have following of symbol,
 ;; which rtags has. Also, rtags works with headers without any problems.
@@ -589,6 +607,5 @@
 
 (req-package-finish) ; Load packages in right order.
 
-;; Load custom made pms mode.
-(load (concat user-emacs-directory "pms-mode.el"))
-;;---------------------------------------;;
+(provide 'init)
+;;; init.el ends here
