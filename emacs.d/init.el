@@ -124,21 +124,16 @@
     (load-theme 'zenburn t)
     ))
 
-;; TODO: workgroups is not maintained anymore. Consider using smth new, like eyebrowse or perspective-el.
-(req-package workgroups
+;; Session / workspace manager (remembers open buffers / windows).
+(req-package perspective
   :ensure t
   :config
   (progn
-    ;;; windows layout: load workgroups on start, save them on exit
-    (workgroups-mode 1)
-    (wg-mode-line-remove-display)
-    (setq wg-file (concat user-emacs-directory "myWorkgroups"))
-    (setq wg-switch-on-load t) ; Switch to last workgroup on emacs load.
-    (setq wg-morph-on nil) ; Don't use animations when loading workgroup.
-    (setq wg-restore-position t)
-    (setq wg-query-for-save-on-emacs-exit nil)
-    (wg-load wg-file)
-    (add-hook 'kill-emacs-hook (lambda () (wg-update-all-workgroups-and-save)))))
+    (persp-mode 1)
+    (setq persp-state-default-file (concat user-emacs-directory "myPerspectives"))
+    (add-hook 'kill-emacs-hook 'persp-state-save)
+    (persp-state-load persp-state-default-file)
+  ))
 
 ;; Smart window switching.
 (req-package ace-window
@@ -318,6 +313,11 @@
     (helm-projectile-on)
     ))
 
+;; Enables using ag for fast searching for a string through whole codebase.
+;; NOTE: Needed for helm-projectile-ag command.
+;; NOTE: Requires the_silver_searcher (ag) to be installed on the machine!
+(req-package helm-ag :ensure t)
+
 ;; Auto-complete.
 (req-package company
   :ensure t
@@ -334,7 +334,7 @@
   (progn
     (global-flycheck-mode)
     ;; NOTE: Syntax checking is not working correctly for stack projects currently so I turn it off here for Haskell.
-    (setq flycheck-global-modes '(not haskell-mode))
+    (setq flycheck-global-modes '(not haskell-mode persp-mode))
     ))
 
 ;; Colors delimiters (parentheses) according to their depth/level.
@@ -604,6 +604,14 @@
 
 
 (req-package-finish) ; Load packages in right order.
+
+;;;; List of especially useful keybindings that are not easy to remember (may be outdated) ;;;;
+;; C-c p f -> Search through project for a file by name.
+;; C-c p s s -> Search through project for a file by content.
+;; C-space -> set a mark.
+;; C-u + C-space -> jump to last mark.
+;; C-x x s -> create or open perspective by name.
+;;;;;;;;
 
 (provide 'init)
 ;;; init.el ends here
