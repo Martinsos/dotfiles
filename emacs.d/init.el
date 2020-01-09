@@ -332,7 +332,10 @@
   :ensure t
   :config
   (progn
-    (global-flycheck-mode)))
+    (global-flycheck-mode)
+    ;; NOTE: Syntax checking is not working correctly for stack projects currently so I turn it off here for Haskell.
+    (setq flycheck-global-modes '(not haskell-mode))
+    ))
 
 ;; Colors delimiters (parentheses) according to their depth/level.
 (req-package rainbow-delimiters
@@ -428,13 +431,8 @@
     (setq haskell-indentation-left-offset 4)
     (setq haskell-indentation-where-pre-offset 2)
     (setq haskell-indentation-where-post-offset 2)
+    ;; NOTE: In config for flycheck, I disabled it for haskell-mode! In case I figure out how to make it work nicely, I should reenable it probably.
     ))
-
-(req-package intero
-  :ensure t
-  :config
-  (progn
-    (add-hook 'haskell-mode-hook 'intero-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;; Other languages ;;;;;;;;;;;;;;;;;;;;;;;;;
 
