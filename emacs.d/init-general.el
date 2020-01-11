@@ -20,6 +20,8 @@
 
 (setq ring-bell-function 'ignore) ; So that Emacs does not produce noises all the time.
 
+(global-hl-line-mode 1) ; Highlight current line.
+
 (delete-selection-mode t) ; delete the selection with a keypress
 
 (semantic-mode 1) ; parses current source file and provides easy local navigation/editing.

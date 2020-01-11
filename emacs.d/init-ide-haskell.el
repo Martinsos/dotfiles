@@ -14,5 +14,7 @@
     ;; NOTE: In config for flycheck, I disabled it for haskell-mode! In case I figure out how to make it work nicely, I should reenable it probably.
     ))
 
+;; TODO: Figure out how to set up haskell-ide-engine to work for my stack projects!
+
 (provide 'init-ide-haskell)
 ;;; init-ide-haskell.el ends here

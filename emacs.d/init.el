@@ -1,3 +1,4 @@
+;;; Code:
 
 ;;; I don't use "customize" system, instead I define everything here in my init.el.
 ;;; Therefore I send anything that emacs tries to write (and it does sometimes) in custom file to /dev/null.
@@ -28,6 +29,8 @@
 
 ;; TODO: Use custom-set-variable(s) for variables instead of setq, it is more correct (although rarely matters in practice).
 ;;   use-package has :custom, that should be one good way to go about it.
+
+;; TODO: Check out some possibly useful packages: helm-mini, avy, ivy.
 
 
 (load-emacs-file "init-general.el")

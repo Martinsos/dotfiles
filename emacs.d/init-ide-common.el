@@ -18,9 +18,9 @@
   :ensure t
   :config
   (progn
-    (global-flycheck-mode)
     ;; NOTE: Syntax checking is not working correctly for stack projects currently so I turn it off here for Haskell.
     (setq flycheck-global-modes '(not haskell-mode))
+    (global-flycheck-mode)
     ))
 
 ;; Colors delimiters (parentheses) according to their depth/level.
