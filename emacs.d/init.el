@@ -12,8 +12,6 @@
 
 ;;; Ensure that req-package is installed and used.
 ;;; req-package uses use-package but enables dependencies through :require.
-;;; TODO: Maybe use use-package instead of req-package?
-;;;       Yes, I should. use-package also has :require, and it has :after which might be even better fit.
 (if (not (package-installed-p 'req-package))
     (progn
       (package-refresh-contents)
@@ -25,12 +23,22 @@
   (load-file (expand-file-name path-in-emacs-dir user-emacs-directory))
   )
 
+;; TODO: Use use-package intead of req-package. It also has :require, and it has :after which might be even better fit.
+
 ;; TODO: Check this init.el: https://github.com/bbatsov/emacs.d/blob/master/init.el, see if I can get some inspiration.
 
 ;; TODO: Use custom-set-variable(s) for variables instead of setq, it is more correct (although rarely matters in practice).
 ;;   use-package has :custom, that should be one good way to go about it.
 
 ;; TODO: Check out some possibly useful packages: helm-mini, avy, ivy.
+
+;; TODO: Consider doing a org file for keybindings that I have hard time forgetting. Actually there is even idea
+;;   of organizing the whole init.el as org file(s), I could also check that out.
+
+;; TODO: - Use `(unless a b...)` instead of `(if (not a) (progn b...))`.
+;;       - Eliminate lines with only closing parenthesses..
+;;       - Use a prefix (e.g. martinsos-) for defuns and defvars, even in my own config.
+;;       - Bundle sequential setqs together (see the Haskell file for example).
 
 
 (load-emacs-file "init-general.el")
