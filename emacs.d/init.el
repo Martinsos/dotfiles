@@ -40,6 +40,12 @@
 ;;       - Use a prefix (e.g. martinsos-) for defuns and defvars, even in my own config.
 ;;       - Bundle sequential setqs together (see the Haskell file for example).
 
+;; TODO: Can I make emacs have nice screen while it loads, for that 1 second?
+;;   Maybe I could have it print random motivational messages somewhere?
+;;   Possibly interesting: https://github.com/emacs-dashboard/emacs-dashboard .
+
+;; TODO: Check https://github.com/hlissner/doom-emacs, maybe I could use something from it.
+
 
 (load-emacs-file "init-general.el")
 
