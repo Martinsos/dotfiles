@@ -46,6 +46,9 @@
 
 ;; TODO: Check https://github.com/hlissner/doom-emacs, maybe I could use something from it.
 
+;; TODO: Consider using lexical binding by putting first line as such:    ;;; -*- lexical-binding: t -*-
+;;   I should better understand how that helps and why is it important.
+
 
 (load-emacs-file "init-general.el")
 

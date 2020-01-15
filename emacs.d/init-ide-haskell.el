@@ -16,5 +16,7 @@
 
 ;; TODO: Figure out how to set up haskell-ide-engine to work for my stack projects!
 
+;; TODO: Consider copying some good stuff from https://github.com/chrisdone/emacs-config/blob/master/config/haskell.el .
+
 (provide 'init-ide-haskell)
 ;;; init-ide-haskell.el ends here
