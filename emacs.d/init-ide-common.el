@@ -4,6 +4,12 @@
 
 (add-hook 'prog-mode-hook 'subword-mode) ; Recognize subwords in camel case words.
 
+;; Color lines longer than 100 characters by turning on customized whitespace-mode.
+(setq-default
+ whitespace-line-column 100
+ whitespace-style '(face lines-tail))
+(add-hook 'prog-mode-hook #'whitespace-mode)
+
 ;; Auto-complete.
 (req-package company
   :ensure t
@@ -28,7 +34,10 @@
   :ensure t
   :config
   (progn
-    (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)))
+    ;; TODO: This does not work for some reason! Rainbow delimiters mode is disabled in all the buffers,
+    ;;   I need to enable it manually, per buffer, to get it working, I don't understand why.
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+  ))
 
 (req-package yasnippet
   :ensure t

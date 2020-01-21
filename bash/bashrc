@@ -13,7 +13,7 @@ export PATH=$PATH:~/opt
 
 # If emacs is installed, set it as main console editor.
 if [ -x "$(command -v emacs)" ]; then
-    export EDITOR="emacs -Q -nw --eval='(progn (menu-bar-mode -1) (setq make-backup-files nil))'"
+    export EDITOR="emacs -Q -nw -l ~/.emacs.d/terminal-init.el"
     alias e=$EDITOR
     alias se="sudo $EDITOR"
 fi
