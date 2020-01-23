@@ -49,6 +49,8 @@
 ;; TODO: Consider using lexical binding by putting first line as such:    ;;; -*- lexical-binding: t -*-
 ;;   I should better understand how that helps and why is it important.
 
+;; TODO: Check this blog post about nice productivity setup, maybe it has some good ideas:
+;;   http://www.mycpu.org/emacs-productivity-setup/.
 
 (load-emacs-file "init-general.el")
 

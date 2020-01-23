@@ -68,9 +68,54 @@
   :ensure t
   :config
   (progn
-    (setq mode-require-final-newline NIL)
-    (global-ethan-wspace-mode 1)))
+    (setq mode-require-final-newline nil)
+    (global-ethan-wspace-mode 1)
 
+    (message "Package ethan-wspace configured.")
+    ))
+
+
+(req-package god-mode
+  :ensure t
+  :require key-chord
+  :config
+  (progn
+    (setq god-exempt-major-modes '(undo-tree-visualizer-mode))
+
+    (god-mode-all) ; Activate for all current and future buffers.
+
+    ;; On ESC, enable/disable for all active and future buffers (global).
+    (global-set-key (kbd "<escape>") 'god-mode-all)
+    ;; Only when not in god-mode, "jj" will throw us into god-mode.
+    (key-chord-define-global "jj" 'god-mode-all)
+    (key-chord-define god-local-mode-map "jj" "jj")
+
+    (defun martin-god-mode-ui-changes ()
+      (progn
+        (set-face-background 'hl-line (if (or god-local-mode nil) "#3e4446" "#383838"))
+        (setq cursor-type (if (or god-local-mode nil) 'box 'bar))
+      ))
+    (add-hook 'god-mode-enabled-hook 'martin-god-mode-ui-changes)
+    (add-hook 'god-mode-disabled-hook 'martin-god-mode-ui-changes)
+
+    ;; TODO: Change modeline color? There is example for that.
+    ;;   Toggle on overwrite mode? There is example for that.
+
+    ;; Repeat the previous part of the command. M-f . . would be M-f M-f M-f.
+    (define-key god-local-mode-map (kbd ".") 'repeat)
+
+    ;; On "i", disable god-mode for that buffer (like entering "edit" mode in vim).
+    ;; TODO: Disable god mode globally instead of locally?
+    (define-key god-local-mode-map (kbd "i") 'god-mode-all)
+
+    (message "Package god-mode configured!")
+    ))
+
+(req-package key-chord
+  :ensure t
+  :config
+  (progn
+    (key-chord-mode 1)))
 
 (provide 'init-general)
 ;;; init-general.el ends here

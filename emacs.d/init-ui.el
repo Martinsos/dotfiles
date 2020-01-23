@@ -2,7 +2,6 @@
 
 (require 'req-package)
 
-
 (set-frame-font "DroidSansMono-10")
 
 (column-number-mode t) ; Column number is shown at mode line
@@ -20,6 +19,7 @@
   :config
   (progn
     (load-theme 'zenburn t)
+    (message "Package zenburn configured!")
     ))
 
 (req-package smart-mode-line
@@ -65,8 +65,9 @@
     ;;          'mode-line-end-spaces))
     ;;   )
     ;; (eval-after-load 'smart-mode-line 'my-mode-line-format)
-    ))
 
+    (message "Package sml configured!")
+    ))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here
