@@ -46,12 +46,17 @@ This function should only modify configuration layer settings."
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     ;; auto-completion
+     auto-completion
      ;; better-defaults
      emacs-lisp
      ;; git
      helm
-     ;; lsp
+     ;; haskell requires some cabal packages to be installed as part of the setup!
+     ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
+     ;; I did not install ghc-mod because it reported conflicts in versions. I also did not install hie because it said there is no such package!
+     (haskell :variables haskell-completion-backend 'lsp)
+     ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
+     lsp
      ;; markdown
      multiple-cursors
      ;; org
@@ -474,6 +479,7 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  (spacemacs/set-leader-keys "ww" 'ace-window)
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
