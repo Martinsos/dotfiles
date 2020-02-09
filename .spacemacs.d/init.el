@@ -47,26 +47,32 @@ This function should only modify configuration layer settings."
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      auto-completion
-     ;; better-defaults
+     better-defaults
      emacs-lisp
-     ;; git
-     helm
+     git
      ;; haskell requires some cabal packages to be installed as part of the setup!
      ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
      ;; I did not install ghc-mod because it reported conflicts in versions. I also did not install hie because it said there is no such package!
-     (haskell :variables haskell-completion-backend 'lsp)
+     ;; Instead of using lsp as backend, I am using dante, because lsp did not work perfectly out of the box (false errors, errors and types not shown in minibuffer but in custom gui which does not work very well).
+     ;; I should try using lsp again in the future, when I will have more time to configure it and it will be more stable.
+     (haskell :variables haskell-completion-backend 'dante)
+     helm
+     html
+     javascript
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      lsp
-     ;; markdown
+     markdown
      multiple-cursors
-     ;; org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
+     org
+     ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
+     (shell :variables
+            shell-default-height 30
+            shell-default-position 'bottom)
      ;; spell-checking
-     ;; syntax-checking
+     syntax-checking
+     themes-megapack
      treemacs
-     ;; version-control
+     version-control
      )
 
    ;; List of additional packages that will be installed without being
@@ -262,7 +268,7 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then the last auto saved layouts are resumed automatically upon
    ;; start. (default nil)
-   dotspacemacs-auto-resume-layouts nil
+   dotspacemacs-auto-resume-layouts t
 
    ;; If non-nil, auto-generate layout name when creating new layouts. Only has
    ;; effect when using the "jump to layout by number" commands. (default nil)
@@ -285,7 +291,7 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil, the paste transient-state is enabled. While enabled, after you
    ;; paste something, pressing `C-j' and `C-k' several times cycles through the
    ;; elements in the `kill-ring'. (default nil)
-   dotspacemacs-enable-paste-transient-state nil
+   dotspacemacs-enable-paste-transient-state t
 
    ;; Which-key delay in seconds. The which-key buffer is the popup listing
    ;; the commands bound to the current keystroke sequence. (default 0.4)
@@ -484,3 +490,23 @@ before packages are loaded."
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("7aaee3a00f6eb16836f5b28bdccde9e1079654060d26ce4b8f49b56689c51904" default))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
