@@ -73,6 +73,7 @@ This function should only modify configuration layer settings."
      themes-megapack
      treemacs
      version-control
+     yaml
      )
 
    ;; List of additional packages that will be installed without being
@@ -217,7 +218,7 @@ It should only modify the values of Spacemacs settings."
    ;; refer to the DOCUMENTATION.org for more info on how to create your own
    ;; spaceline theme. Value can be a symbol or list with additional properties.
    ;; (default '(spacemacs :separator wave :separator-scale 1.5))
-   dotspacemacs-mode-line-theme '(spacemacs :separator wave :separator-scale 1.5)
+   dotspacemacs-mode-line-theme '(spacemacs :separator slant :separator-scale 1.5)
 
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
@@ -470,6 +471,9 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
+  (setq spaceline-buffer-size-p nil)
+  (setq spaceline-buffer-encoding-abbrev-p nil)
+  (setq spaceline-purpose-p nil)
   )
 
 (defun dotspacemacs/user-load ()
