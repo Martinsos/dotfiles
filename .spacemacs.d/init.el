@@ -40,7 +40,7 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(ruby
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
@@ -55,14 +55,20 @@ This function should only modify configuration layer settings."
      ;; I did not install ghc-mod because it reported conflicts in versions. I also did not install hie because it said there is no such package!
      ;; Instead of using lsp as backend, I am using dante, because lsp did not work perfectly out of the box (false errors, errors and types not shown in minibuffer but in custom gui which does not work very well).
      ;; I should try using lsp again in the future, when I will have more time to configure it and it will be more stable.
-     (haskell :variables haskell-completion-backend 'dante)
+     (haskell :variables
+              haskell-completion-backend 'dante
+              haskell-indentation-layout-offset 4
+              haskell-indentation-starter-offset 4
+              haskell-indentation-left-offset 4
+              haskell-indentation-where-pre-offset 2
+              haskell-indentation-where-post-offset 2)
      helm
      html
      javascript
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      lsp
      markdown
-     multiple-cursors
+     ;; multiple-cursors
      org
      ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
      (shell :variables
@@ -70,7 +76,7 @@ This function should only modify configuration layer settings."
             shell-default-position 'bottom)
      ;; spell-checking
      syntax-checking
-     themes-megapack
+     ;; themes-megapack
      treemacs
      version-control
      yaml
@@ -269,7 +275,8 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then the last auto saved layouts are resumed automatically upon
    ;; start. (default nil)
-   dotspacemacs-auto-resume-layouts t
+   ;; NOTE: I put this to nil because it would load all the layouts each time, which was increasing startup time.
+   dotspacemacs-auto-resume-layouts nil
 
    ;; If non-nil, auto-generate layout name when creating new layouts. Only has
    ;; effect when using the "jump to layout by number" commands. (default nil)
@@ -506,7 +513,10 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("7aaee3a00f6eb16836f5b28bdccde9e1079654060d26ce4b8f49b56689c51904" default))))
+    ("7aaee3a00f6eb16836f5b28bdccde9e1079654060d26ce4b8f49b56689c51904" default)))
+ '(package-selected-packages
+   (quote
+    (seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
