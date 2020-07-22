@@ -64,7 +64,11 @@ This function should only modify configuration layer settings."
               haskell-indentation-where-post-offset 2)
      helm
      html
-     javascript
+     (javascript :variables
+                 flycheck-checker 'javascript-standard  ;; For this to work, we need standardjs (`standard`) installed globally on the system and in the path.
+                 js2-mode-show-strict-warnings nil  ;; We have standardjs for this.
+                 js2-basic-offset 2
+                 js-indent-level 2)
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      lsp
      markdown
