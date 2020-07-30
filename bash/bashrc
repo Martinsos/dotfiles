@@ -11,9 +11,9 @@ HISTSIZE=10000         # 10k
 
 export PATH=$PATH:~/opt
 
-# If emacs is installed, set it as main console editor.
-if [ -x "$(command -v emacs)" ]; then
-    export EDITOR="emacs -Q -nw --eval='(menu-bar-mode -1)'"
+# If vim is installed, set it as main console editor.
+if [ -x "$(command -v vim)" ]; then
+    export EDITOR=vim
     alias e=$EDITOR
     alias se="sudo $EDITOR"
 fi

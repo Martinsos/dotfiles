@@ -507,7 +507,11 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (spacemacs/set-leader-keys "ww" 'ace-window)
-  )
+
+  ;; Tell Dante, when used with flycheck, to also run hlint.
+  (add-hook 'dante-mode-hook
+            (lambda () (flycheck-add-next-checker 'haskell-dante '(info . haskell-hlint))))
+)
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -530,7 +534,6 @@ This function is called at the very end of Spacemacs initialization."
  '(safe-local-variable-values
    (quote
     ((dante-target . "--test")
-     (dante-target . "waspc-test")
      (javascript-backend . tide)
      (javascript-backend . tern)
      (javascript-backend . lsp)))))

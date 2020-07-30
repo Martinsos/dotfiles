@@ -35,6 +35,9 @@ install_link $DOT_DIR/.spacemacs.d $HOME/.spacemacs.d
 echo "Installing .atom:"
 install_link $DOT_DIR/.atom $HOME/.atom
 
+echo "Installing .vimrc:"
+install_link $DOT_DIR/.vimrc $HOME/.vimrc
+
 
 echo "Installing .bash files:"
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
