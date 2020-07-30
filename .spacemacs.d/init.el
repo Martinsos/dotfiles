@@ -61,6 +61,7 @@ This function should only modify configuration layer settings."
               ;; lsp-haskell-process-path-hie "haskell-language-server-wrapper"
 
               haskell-completion-backend 'dante
+              dante-tap-type-time 1  ;; Dante shows type information of item under the cursor in live fashion, with delay of 1 second.
 
               haskell-indentation-layout-offset 4
               haskell-indentation-starter-offset 4
