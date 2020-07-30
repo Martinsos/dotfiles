@@ -52,16 +52,22 @@ This function should only modify configuration layer settings."
      git
      ;; haskell requires some cabal packages to be installed as part of the setup!
      ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
-     ;; I did not install ghc-mod because it reported conflicts in versions. I also did not install hie because it said there is no such package!
-     ;; Instead of using lsp as backend, I am using dante, because lsp did not work perfectly out of the box (false errors, errors and types not shown in minibuffer but in custom gui which does not work very well).
-     ;; I should try using lsp again in the future, when I will have more time to configure it and it will be more stable.
      (haskell :variables
+              ;; TODO: Use Haskell Language Server (HSL) as backend via lsp!
+              ;; I should install HSL, they have static binaries so I don't have to compile it, but I need to make sure they are built for the right version of GHC.
+              ;; At the end, I should have haskell-language-server install, and haskell-language-server-wrapper, which is called from lsp in emacs and then it calls haskell-language-server.
+              ;; There are the lines to add here under :variables (and I have to remove dante):
+              ;; haskell-completion-backend 'lsp
+              ;; lsp-haskell-process-path-hie "haskell-language-server-wrapper"
+
               haskell-completion-backend 'dante
+
               haskell-indentation-layout-offset 4
               haskell-indentation-starter-offset 4
               haskell-indentation-left-offset 4
               haskell-indentation-where-pre-offset 2
-              haskell-indentation-where-post-offset 2)
+              haskell-indentation-where-post-offset 2
+              )
      helm
      html
      (javascript :variables
