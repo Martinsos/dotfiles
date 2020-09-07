@@ -514,6 +514,7 @@ configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
   (spacemacs/set-leader-keys "ww" 'ace-window)
+  (spacemacs/set-leader-keys "jj" 'avy-goto-char) ; Because default is avy-goto-char-timer and I find it slow.
   (spacemacs/toggle-camel-case-motion-globally-on)
 )
 
