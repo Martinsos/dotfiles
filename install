@@ -30,13 +30,13 @@ echo "Installing emacs.d:"
 install_link $DOT_DIR/emacs.d $HOME/.emacs.d
 
 echo "Installing .spacemacs.d:"
-install_link $DOT_DIR/.spacemacs.d $HOME/.spacemacs.d
+install_link $DOT_DIR/spacemacs.d $HOME/.spacemacs.d
 
 echo "Installing .atom:"
-install_link $DOT_DIR/.atom $HOME/.atom
+install_link $DOT_DIR/atom $HOME/.atom
 
 echo "Installing .vimrc:"
-install_link $DOT_DIR/.vimrc $HOME/.vimrc
+install_link $DOT_DIR/vimrc $HOME/.vimrc
 
 
 echo "Installing .bash files:"
