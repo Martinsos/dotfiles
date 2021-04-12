@@ -45,17 +45,28 @@ This function should only modify configuration layer settings."
      vimscript
      meson
      ruby
+     docker
+     terraform
+     emoji
+     ;; To automatically join the server (with my nick and pass) and channels, use <SPC> a c i D .
      (erc :variables
           erc-server-list
           '(("irc.freenode.net"
              :port "6697"
              :ssl t
              :nick "Martinsos"
-             ;; NOTE: Password is loaded from ~/.authinfo (which is unencrypted) or ~/.authinfo.gpg (which is encrypted),
-             ;;   if there are such files.
-             ;;   Content of authinfo file should be: machine irc.freenode.net login Martinsos password <my_password>
+             ;; NOTE: Password is loaded from ~/.authinfo (which is unencrypted)
+             ;;   or ~/.authinfo.gpg (which is encrypted), if there are such
+             ;;   files. Content of authinfo file should be:
+             ;;     machine irc.freenode.net login Martinsos password <my_password>
              ))
           erc-prompt-for-nickserv-password nil
+          erc-autojoin-channels-alist '(("freenode.net" "#haskell" "#haskell-game"))
+          erc-hide-list '("JOIN" "PART" "QUIT")
+          erc-kill-buffer-on-part t
+          erc-kill-queries-on-quit t
+          erc-kill-server-buffer-on-quit t
+          erc-user-full-name "Martin Sosic"
           )
      auto-completion
      better-defaults
@@ -529,6 +540,7 @@ before packages are loaded."
   (spacemacs/set-leader-keys "ww" 'ace-window)
   (spacemacs/set-leader-keys "jj" 'avy-goto-char) ; Because default is avy-goto-char-timer and I find it slow.
   (spacemacs/toggle-camel-case-motion-globally-on)
+  (set-fontset-font t 'unicode "Symbola" nil 'prepend) ; Shows advanced unicode, like emojis and symbols.
 )
 
 ;; Do not write anything past this comment. This is where Emacs will

@@ -34,3 +34,10 @@
      pom = push origin master
      graph = log --pretty=oneline --graph --abbrev-commit
      dt = difftool
+[pll]
+	ff = only
+[pull]
+	ff = only
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
