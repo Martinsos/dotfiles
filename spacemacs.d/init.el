@@ -9,6 +9,7 @@
 ;;   support for all unicode characters. Therefore, it is important to have "fallback font" installed on system,
 ;;   which is font that has full unicode support. Otherwise, some symbols might render incorrectly (e.g. in modline).
 ;;   For Archlinux, it is recommended to instal ttf-nanum (AUR), which is what I did.
+;; - Install `ormolu` on the machine - it is Haskell formatter.
 
 (defun dotspacemacs/layers ()
   "Layer configuration:
@@ -128,7 +129,9 @@ This function should only modify configuration layer settings."
    ;; To use a local version of a package, use the `:location' property:
    ;; '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages
+   '(ormolu
+     )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -541,6 +544,12 @@ before packages are loaded."
   (spacemacs/set-leader-keys "jj" 'avy-goto-char) ; Because default is avy-goto-char-timer and I find it slow.
   (spacemacs/toggle-camel-case-motion-globally-on)
   (set-fontset-font t 'unicode "Symbola" nil 'prepend) ; Shows advanced unicode, like emojis and symbols.
+
+  (use-package ormolu
+    :hook (haskell-mode . ormolu-format-on-save-mode)
+    :bind
+    (:map haskell-mode-map
+          ("C-c r" . ormolu-format-buffer)))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
