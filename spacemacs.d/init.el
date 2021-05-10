@@ -76,15 +76,14 @@ This function should only modify configuration layer settings."
      ;; haskell requires some cabal packages to be installed as part of the setup!
      ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
      (haskell :variables
-              ;; TODO: Use Haskell Language Server (HSL) as backend via lsp!
-              ;; I should install HSL, they have static binaries so I don't have to compile it, but I need to make sure they are built for the right version of GHC.
-              ;; At the end, I should have haskell-language-server install, and haskell-language-server-wrapper, which is called from lsp in emacs and then it calls haskell-language-server.
-              ;; There are the lines to add here under :variables (and I have to remove dante):
-              ;; haskell-completion-backend 'lsp
-              ;; lsp-haskell-process-path-hie "haskell-language-server-wrapper"
+              ;; NOTE: Expects haskell-language-server to be installed on the machine.
+              ;;   On Archlinux, this is done with yay -S haskell-language-server-bin.
+              haskell-completion-backend 'lsp
 
-              haskell-completion-backend 'dante
-              dante-tap-type-time 1  ;; Dante shows type information of item under the cursor in live fashion, with delay of 1 second.
+              ;; NOTE: Uncomment the lines below to enable and use Dante as a Haskell backend.
+              ;; Comment the lsp line above in that case.
+              ;; haskell-completion-backend 'dante
+              ;; dante-tap-type-time 1  ;; Dante shows type information of item under the cursor in live fashion, with delay of 1 second.
 
               haskell-indentation-layout-offset 4
               haskell-indentation-starter-offset 4
