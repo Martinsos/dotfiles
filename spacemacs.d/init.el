@@ -543,6 +543,11 @@ before packages are loaded."
   (spacemacs/set-leader-keys "jj" 'avy-goto-char) ; Because default is avy-goto-char-timer and I find it slow.
   (spacemacs/toggle-camel-case-motion-globally-on)
   (set-fontset-font t 'unicode "Symbola" nil 'prepend) ; Shows advanced unicode, like emojis and symbols.
+  (use-package treemacs
+    :config
+    (setq treemacs-indent-guide-style 'block)
+    (treemacs-indent-guide-mode t)
+    )
 
   (use-package ormolu
     :hook (haskell-mode . ormolu-format-on-save-mode)
