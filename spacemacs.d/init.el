@@ -49,27 +49,9 @@ This function should only modify configuration layer settings."
      docker
      terraform
      emoji
-     ;; To automatically join the server (with my nick and pass) and channels, use <SPC> a c i D .
-     (erc :variables
-          erc-server-list
-          '(("irc.freenode.net"
-             :port "6697"
-             :ssl t
-             :nick "Martinsos"
-             ;; NOTE: Password is loaded from ~/.authinfo (which is unencrypted)
-             ;;   or ~/.authinfo.gpg (which is encrypted), if there are such
-             ;;   files. Content of authinfo file should be:
-             ;;     machine irc.freenode.net login Martinsos password <my_password>
-             ))
-          erc-prompt-for-nickserv-password nil
-          erc-autojoin-channels-alist '(("freenode.net" "#haskell" "#haskell-game"))
-          erc-hide-list '("JOIN" "PART" "QUIT")
-          erc-kill-buffer-on-part t
-          erc-kill-queries-on-quit t
-          erc-kill-server-buffer-on-quit t
-          erc-user-full-name "Martin Sosic"
-          )
-     auto-completion
+     (auto-completion :variables
+                      auto-completion-return-key-behavior 'nil
+                      auto-completion-tab-key-behavior 'complete)
      better-defaults
      emacs-lisp
      git
@@ -107,8 +89,11 @@ This function should only modify configuration layer settings."
      org
      ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
      (shell :variables
+            shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
             shell-default-height 30
-            shell-default-position 'bottom)
+            shell-default-position 'bottom
+            spacemacs-vterm-history-file-location "~/.bash_history"
+            )
      ;; spell-checking
      (syntax-checking :variables
                       syntax-checking-enable-tooltips nil ; Shows errors in minibuffer, instead of in GUI popups/tooltips.
@@ -543,6 +528,14 @@ before packages are loaded."
   (spacemacs/set-leader-keys "jj" 'avy-goto-char) ; Because default is avy-goto-char-timer and I find it slow.
   (spacemacs/toggle-camel-case-motion-globally-on)
   (set-fontset-font t 'unicode "Symbola" nil 'prepend) ; Shows advanced unicode, like emojis and symbols.
+
+  ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
+  ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
+  (with-eval-after-load 'vterm
+    (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
+    (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
+  )
+
   (use-package treemacs
     :config
     (setq treemacs-indent-guide-style 'block)
