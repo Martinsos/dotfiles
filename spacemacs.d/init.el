@@ -623,10 +623,10 @@ before packages are loaded."
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   )
 
-  (use-package rust-cargo
-    :config
-    (setq flycheck-rust-cargo-executable "/home/martin/.cargo/bin/cargo")
-    )
+  ;; (use-package rust-cargo
+  ;;   :config
+  ;;   (setq flycheck-rust-cargo-executable "/home/martin/.cargo/bin/cargo")
+  ;;   )
 
   (use-package treemacs
     :config

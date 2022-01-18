@@ -1,5 +1,5 @@
 
-## IMPORTANT: Define all settings specific to this machine in .bash_local!
+## IMPORTANT: Define all settings specific to this machine in .bashrc_local!
 
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
@@ -8,9 +8,6 @@
 HISTCONTROL=ignoreboth # ignorespace + ignoredups
 HISTFILESIZE=1000000   # 1M
 HISTSIZE=10000         # 10k
-
-export PATH=$PATH:~/opt
-export PATH="$HOME/.local/bin:$PATH"
 
 # If vim is installed, set it as main console editor.
 if [ -x "$(command -v vim)" ]; then
@@ -35,12 +32,6 @@ fi
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
-
-# Settings specific to this machine
-if [ -f ~/.bash_local ]; then
-    . ~/.bash_local
-fi
-
 
 ############################# PROMPT #################################
 Color_Off="\[\033[0m\]"       # Text Reset
@@ -77,3 +68,6 @@ else
     export PS1=$Yellow$PathShort$Color_Off\$
 fi
 ######################################################################
+
+# Settings specific to this machine
+[ -f "$HOME/.bashrc_local" ] && source "$HOME/.bashrc_local"

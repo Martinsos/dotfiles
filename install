@@ -42,10 +42,10 @@ install_link $DOT_DIR/vimrc $HOME/.vimrc
 echo "Installing .bash files:"
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
 install_link $DOT_DIR/bash/bash_aliases $HOME/.bash_aliases
-if [ ! -e $HOME/.bash_local ]; then
-    echo "# Put settings specific for this machine here. Loaded by .bashrc" \
-        > $HOME/.bash_local
-    echo "$HOME/.bash_local created. Put machine specific settings here!"
+if [ ! -e $HOME/.bashrc_local ]; then
+    echo "# Put bashrc settings specific for this machine here. Loaded by .bashrc" \
+        > $HOME/.bashrc_local
+    echo "$HOME/.bashrc_local created. Put machine specific bashrc settings here!"
 fi
 
 
