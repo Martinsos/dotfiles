@@ -88,6 +88,19 @@ This function should only modify configuration layer settings."
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      (lsp :variables
           lsp-rust-server 'rust-analyzer
+          lsp-lens-enable t
+          lsp-use-lsp-ui t
+          ;; NOTE: lsp-ui-doc is is that small popup that appears on hover or request to show docs.
+          lsp-ui-doc-enable t
+          lsp-ui-doc-show-with-cursor t ; Makes popup show when cursor stops on a symbol. Otherwise it shows only on mouse or manual request.
+          ;; NOTE: lsp-ui-sideline are messages that are shown on the right side of the screen at the line of our cursor.
+          lsp-ui-sideline-enable t
+          lsp-ui-sideline-show-symbol t
+          lsp-ui-sideline-show-diagnostics t ; Diagnostics means errors, warnings, ... .
+          lsp-ui-sideline-diagnostic-max-lines 10 ; The default is 1, which shows only first line of error -> we want more.
+          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-code-actions-prefix "💡 "
+          ;; Once they fix https://github.com/emacs-lsp/lsp-ui/issues/573, set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting the bulb as a prefix above.
           )
      markdown
      multiple-cursors
