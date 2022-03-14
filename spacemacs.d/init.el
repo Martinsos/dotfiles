@@ -11,6 +11,9 @@
 ;;   For Archlinux, it is recommended to instal ttf-nanum (AUR), which is what I did.
 ;; - Install `ormolu` on the machine - it is Haskell formatter.
 
+;; NOTE(martin): Stuff not working - emacs finding wrong binaries or not finding them?
+;; Try refreshing the .spacemacs.env -> that can be done with `SPC f e C-e`.
+
 (defun dotspacemacs/layers ()
   "Layer configuration:
 This function should only modify configuration layer settings."
@@ -591,7 +594,11 @@ This function defines the environment variables for your Emacs session. By
 default it calls `spacemacs/load-spacemacs-env' which loads the environment
 variables declared in `~/.spacemacs.env' or `~/.spacemacs.d/.spacemacs.env'.
 See the header of this file for more information."
-  (spacemacs/load-spacemacs-env)
+  ;; NOTE(martin): I commented this out because I found it to only cause problems.
+  ;;   I find it to cause unexpected behaviour due to spacemacs not picking up changes of env vars in the shell.
+  ;;   They only thing they don't freeze is PATH, which they merge, which is even more confusing due to
+  ;;   how they do that merge.
+  ;(spacemacs/load-spacemacs-env)
 )
 
 (defun dotspacemacs/user-init ()
@@ -635,11 +642,6 @@ before packages are loaded."
     (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   )
-
-  ;; (use-package rust-cargo
-  ;;   :config
-  ;;   (setq flycheck-rust-cargo-executable "/home/martin/.cargo/bin/cargo")
-  ;;   )
 
   (use-package treemacs
     :config

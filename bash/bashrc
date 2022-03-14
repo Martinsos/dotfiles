@@ -33,6 +33,10 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
+# Integrate FZF (fuzzy finder) with bash (so it triggers on CTRL-R and similar).
+if [ -f /usr/share/fzf/completion.bash ]; then . /usr/share/fzf/completion.bash; fi
+if [ -f /usr/share/fzf/key-bindings.bash ]; then . /usr/share/fzf/key-bindings.bash; fi
+
 ############################# PROMPT #################################
 Color_Off="\[\033[0m\]"       # Text Reset
 Green="\[\033[0;32m\]"        # Green

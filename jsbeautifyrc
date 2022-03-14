@@ -1,6 +1,0 @@
-{
-  "indent_size": 2,
-  "space_after_anon_function": true,
-  "wrap_line_length": 110,
-  "jslint_happy": true
-}

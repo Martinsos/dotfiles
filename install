@@ -32,20 +32,19 @@ install_link $DOT_DIR/emacs.d $HOME/.emacs.d
 echo "Installing .spacemacs.d:"
 install_link $DOT_DIR/spacemacs.d $HOME/.spacemacs.d
 
-echo "Installing .atom:"
-install_link $DOT_DIR/atom $HOME/.atom
-
 echo "Installing .vimrc:"
 install_link $DOT_DIR/vimrc $HOME/.vimrc
 
 
-echo "Installing .bash files:"
+echo "Installing login session configuration files:"
+install_link $DOT_DIR/profile $HOME/.profile
+install_link $DOT_DIR/bash/bash_profile $HOME/.bash_profile
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
 install_link $DOT_DIR/bash/bash_aliases $HOME/.bash_aliases
 if [ ! -e $HOME/.bashrc_local ]; then
-    echo "# Put bashrc settings specific for this machine here. Loaded by .bashrc" \
+    echo "# Put bash settings specific for this machine here. Loaded by .bashrc" \
         > $HOME/.bashrc_local
-    echo "$HOME/.bashrc_local created. Put machine specific bashrc settings here!"
+    echo "$HOME/.bashrc_local created. Put machine specific bash settings here!"
 fi
 
 
@@ -54,13 +53,5 @@ install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
 echo "Installing gitconfig:"
 install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
-
-echo "Installing jsbeautify config file:"
-install_link $DOT_DIR/jsbeautifyrc $HOME/.jsbeautifyrc
-
-echo "Installing conky config files (read .conkyrc for setup instructions):"
-install_link $DOT_DIR/conkyrc $HOME/.conkyrc
-install_link $DOT_DIR/conkyrc-logs $HOME/.conkyrc-logs
-
 
 echo "Installation finished!"

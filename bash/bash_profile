@@ -1,0 +1,12 @@
+# NOTE(martin): .profile vs .bash_profile vs .bashrc:
+#   Commands that should run every time we launch a new shell should go into .bashrc.
+#   Those are aliases and functions, custom prompts, history customizations, and similar.
+#   Use .profile or .bash_profile to run commands that should run only once, on login, such as customizing PATH.
+#   .profile vs .bash_profile:
+#     Since visual login managers often don't read .bash_profile, but often do read .profile, it is better
+#     to put stuff into .profile and then just reference it from .bash_profile, since .bash_profile overrides it
+#     if it is read.
+#   Good SO answer about this: https://unix.stackexchange.com/questions/88106/why-doesnt-my-bash-profile-work .
+
+[[ -f ~/.profile ]] && . ~/.profile
+[[ -f ~/.bashrc ]] && . ~/.bashrc
