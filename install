@@ -51,7 +51,9 @@ fi
 echo "Installing git completion:"
 install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
-echo "Installing gitconfig:"
+echo "Installing global gitconfig:"
 install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
+echo "Installing global gitignore:"
+install_link $DOT_DIR/git/gitignore $HOME/.gitignore
 
 echo "Installation finished!"
