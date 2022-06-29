@@ -73,5 +73,29 @@ else
 fi
 ######################################################################
 
+
+################### Try to make `less` output nicer #######################
+
+export LESS=-R  # Tells `less` to evaluate ansi escape codes.
+
+## Lines below tell less how to show decorated (bold, underlined, ...) text when it encounters it.
+## Less does not use this for ansi escape codes, but for other weirder formats that it understands,
+## for example the format that `man` uses, so called overstriking (https://unix.stackexchange.com/questions/118707/what-is-the-name-of-the-formatting-output-from-man).
+## What we do below is tell it to show bold as bold + blue, to show underline as underline + bold,
+## via ansi escape codes.
+## In practice this affects only `man` that I know of so far, since it uses that weird old format for text decorations,
+## so basically this comes down to having nicer `man` output (because `man` uses less).
+## SO post about this: https://unix.stackexchange.com/questions/108699/documentation-on-less-termcap-variables .
+export LESS_TERMCAP_mb="$(printf '%b' '\e[1;36m')"; a="${a%_}"
+export LESS_TERMCAP_md="$(printf '%b' '\e[1;94m')"; a="${a%_}"
+export LESS_TERMCAP_me="$(printf '%b' '\e[0m')"; a="${a%_}"
+export LESS_TERMCAP_so="$(printf '%b' '\e[01;33m')"; a="${a%_}"
+export LESS_TERMCAP_se="$(printf '%b' '\e[0m')"; a="${a%_}"
+export LESS_TERMCAP_us=$(tput smul; tput bold; tput setaf 7) # white
+export LESS_TERMCAP_ue="$(printf '%b' '\e[0m')"; a="${a%_}"
+
+###########################################################################
+
+
 # Settings specific to this machine
 [ -f "$HOME/.bashrc_local" ] && source "$HOME/.bashrc_local"
