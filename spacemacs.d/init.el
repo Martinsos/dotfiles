@@ -145,13 +145,21 @@ This function should only modify configuration layer settings."
    ;; Also include the dependencies as they will not be resolved automatically.
    dotspacemacs-additional-packages
    '(ormolu
+     lsp-grammarly
+     letterbox-mode
+     (hide-region :location (recipe
+                             :fetcher github
+                             :repo "emacsmirror/hide-region"))
      )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
 
    ;; A list of packages that will not be installed and loaded.
-   dotspacemacs-excluded-packages '()
+   dotspacemacs-excluded-packages '(
+                                    ; Because I am annoyed with getting () when I need just (.
+                                    smartparens
+                                    )
 
    ;; Defines the behaviour of Spacemacs when installing packages.
    ;; Possible values are `used-only', `used-but-keep-unused' and `all'.
@@ -654,6 +662,11 @@ before packages are loaded."
   (spacemacs/toggle-camel-case-motion-globally-on)
   (set-fontset-font t 'unicode "Symbola" nil 'prepend) ; Shows advanced unicode, like emojis and symbols.
 
+  (setq web-mode-markup-indent-offset 2) ; html indentation
+  (setq web-mode-css-indent-offset 2) ; css in html indentation
+  (setq web-mode-code-indent-offset 2) ; js code in html indentation
+  (setq css-indent-offset 2)
+
   ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
   ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
   (with-eval-after-load 'vterm
@@ -686,6 +699,19 @@ It is based on default `whitespace-line' face.")
     (setq whitespace-style '(face empty tabs lines-tail trailing))
     (setq whitespace-line 'whitespace-line-black-background)
   )
+
+  (use-package undo-tree
+    :config
+    ;; Don't persist undo history on disk, between emacs sessions.
+    (setq undo-tree-auto-save-history nil)
+  )
+
+  ;; NOTE: Currently not working due to bug in Node 18. https://github.com/emacs-grammarly/lsp-grammarly/issues/37 .
+  ;; (use-package lsp-grammarly
+  ;;   :ensure t
+  ;;   :hook (text-mode . (lambda ()
+  ;;                        (require 'lsp-grammarly)
+  ;;                        (lsp))))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
