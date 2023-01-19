@@ -101,15 +101,21 @@ This function should only modify configuration layer settings."
           lsp-use-lsp-ui t
           ;; NOTE: lsp-ui-doc is is that small popup that appears on hover or request to show docs.
           lsp-ui-doc-enable t
-          lsp-ui-doc-show-with-cursor t ; Makes popup show when cursor stops on a symbol. Otherwise it shows only on mouse or manual request.
-          ;; NOTE: lsp-ui-sideline are messages that are shown on the right side of the screen at the line of our cursor.
+          ;; Makes popup show when cursor stops on a symbol. Otherwise it shows only on mouse or
+          ;; manual request.
+          lsp-ui-doc-show-with-cursor t
+          ;; NOTE: lsp-ui-sideline are messages that are shown on the right side of the screen at
+          ;; the line of our cursor.
           lsp-ui-sideline-enable t
           lsp-ui-sideline-show-symbol t
           lsp-ui-sideline-show-diagnostics t ; Diagnostics means errors, warnings, ... .
-          lsp-ui-sideline-diagnostic-max-lines 10 ; The default is 1, which shows only first line of error -> we want more.
+          ;; The default is 1, which shows only first line of error -> we want more.
+          lsp-ui-sideline-diagnostic-max-lines 10
           lsp-ui-sideline-show-code-actions t
           lsp-ui-sideline-code-actions-prefix "💡 "
-          ;; Once they fix https://github.com/emacs-lsp/lsp-ui/issues/573, set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting the bulb as a prefix above.
+          ;; Once they fix https://github.com/emacs-lsp/lsp-ui/issues/573,
+          ;; set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting
+          ;; the bulb as a prefix above.
           )
      markdown
      multiple-cursors
@@ -133,6 +139,9 @@ This function should only modify configuration layer settings."
      version-control
      yaml
      cmake
+     ;; NOTE: I need to have installed shellcheck for static analysis and bashate for formatting.
+     (shell-scripts :variables
+                    shell-scripts-format-on-save t)
      )
 
    ;; List of additional packages that will be installed without being wrapped
@@ -149,7 +158,11 @@ This function should only modify configuration layer settings."
      letterbox-mode
      (hide-region :location (recipe
                              :fetcher github
-                             :repo "emacsmirror/hide-region"))
+                             :repo "Martinsos/emacs-hide-region"))
+     (copilot :location (recipe
+                         :fetcher github
+                         :repo "zerolfx/copilot.el"
+                         :files ("*.el" "dist")))
      )
 
    ;; A list of packages that cannot be updated.
@@ -712,6 +725,36 @@ It is based on default `whitespace-line' face.")
   ;;   :hook (text-mode . (lambda ()
   ;;                        (require 'lsp-grammarly)
   ;;                        (lsp))))
+
+  ;;;;;;;;;;;;; Github Copilot
+  ;; accept completion from copilot and fallback to company
+  (with-eval-after-load 'company
+    ;; disable inline previews
+    (delq 'company-preview-if-just-one-frontend company-frontends))
+
+  ;; NOTE: I turned off automatic activation of copilot for now because I didn't find it very useful.
+  ;(add-hook 'prog-mode-hook 'copilot-mode)
+
+  (define-key evil-insert-state-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
+  (define-key evil-insert-state-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
+
+  (with-eval-after-load 'copilot
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+  )
+  ;;;;;;;;;;;;; / Github Copilot
+
+  ;; TODO: Try using https://github.com/benma/visual-regexp.el instead of my
+  ;;   custom function below.
+  (defun find-and-replace-symbol-at-point ()
+    (interactive)
+    (let ((sym (thing-at-point 'symbol)))
+      (if sym
+          (progn
+            (setq sym (replace-regexp-in-string " +" "\\\\|" sym))
+            (evil-ex (concat "%s/" sym "/")))
+        (message "No symbol at point."))))
+  (spacemacs/set-leader-keys "sR" 'find-and-replace-symbol-at-point)
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -731,7 +774,7 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(fill-column 100)
  '(package-selected-packages
-   '(company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
+   '(lsp-docker company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
  '(safe-local-variable-values
    '((dante-target . "wasp")
      (dante-target . "--test")
