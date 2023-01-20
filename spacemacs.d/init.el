@@ -680,6 +680,8 @@ before packages are loaded."
   (setq web-mode-code-indent-offset 2) ; js code in html indentation
   (setq css-indent-offset 2)
 
+  (setq use-dialog-box nil) ; Don't ask questions via dialog popup boxes, insted ask them textually.
+
   ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
   ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
   (with-eval-after-load 'vterm
@@ -746,6 +748,8 @@ It is based on default `whitespace-line' face.")
 
   ;; TODO: Try using https://github.com/benma/visual-regexp.el instead of my
   ;;   custom function below.
+  ;; Although, best would probably be to just get multi-cursors working
+  ;; but right now they don't work well with my "fd" key chord for leaving insert mode.
   (defun find-and-replace-symbol-at-point ()
     (interactive)
     (let ((sym (thing-at-point 'symbol)))
@@ -755,6 +759,36 @@ It is based on default `whitespace-line' face.")
             (evil-ex (concat "%s/" sym "/")))
         (message "No symbol at point."))))
   (spacemacs/set-leader-keys "sR" 'find-and-replace-symbol-at-point)
+
+  ;;;; Code below solves issues where typing "fd" to leave evil insert mode
+  ;;;; leaves "f" behind on all fake cursors (when using multi cursors).
+  ;;;; Got it from here: https://github.com/gabesoft/evil-mc/issues/27#issuecomment-890879438 .
+  (setq evil-mc-custom-known-commands
+        '((custom/evil-mc-evil-escape-move-back-fake-cursors
+           (:default . evil-mc-execute-default-call))))
+
+  (defun custom/evil-mc-evil-escape-move-back-fake-cursors ()
+    "Move the fake cursors to the left once,
+     unless they already are at the beginning of the line."
+    (unless (bolp) (backward-char)))
+
+  (defun custom/evil-mc-evil-escape-fix ()
+    "Prevent the first evil-escape-key-sequence key (default: f),
+     from being typed at all of the fake cursors.
+     And move back the fake cursors when the real insert state cursor is at the end
+     of a line."
+    (when (evil-mc-has-cursors-p)
+      (evil-mc-pause-cursors)
+      (run-with-idle-timer
+       0 nil '(lambda ()
+                (evil-mc-resume-cursors)
+                (let ((evil-mc-command '((:name . custom/evil-mc-evil-escape-move-back-fake-cursors))))
+                  (evil-mc-execute-for-all))))))
+
+  (advice-add 'evil-escape-func :before 'custom/evil-mc-evil-escape-fix)
+  ;;;;
+  ;;;; End of code that solves "fd" problem when using multi-cursors.
+  ;;;;
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
