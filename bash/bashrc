@@ -71,6 +71,9 @@ else
     # If for some reason there is no git-prompt, use normal prompt.
     export PS1=$Yellow$PathShort$Color_Off\$
 fi
+
+# Show only the last 3 directory names: this keeps prompt from becoming too long.
+PROMPT_DIRTRIM=3
 ######################################################################
 
 

@@ -53,3 +53,5 @@
     colorMoved = default
 [delta]
     navigate = true
+[init]
+	defaultBranch = main

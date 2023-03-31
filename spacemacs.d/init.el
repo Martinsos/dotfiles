@@ -47,6 +47,8 @@ This function should only modify configuration layer settings."
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
    '(lua
+     ;; NOTE: For full IDE support I need to also install TS LSP server:
+     ;;   npm i -g typescript typescript-language-server
      (typescript :variables
                  typescript-indent-level 2
                  )
@@ -123,8 +125,8 @@ This function should only modify configuration layer settings."
      ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
      (shell :variables
             shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
-            shell-default-height 30
-            shell-default-position 'bottom
+            shell-default-width 50
+            shell-default-position 'right
             spacemacs-vterm-history-file-location "~/.bash_history"
             )
      ;; spell-checking
@@ -721,6 +723,9 @@ It is based on default `whitespace-line' face.")
     (setq undo-tree-auto-save-history nil)
   )
 
+  ;; Required in order for org mode to be able to evaluate haskell code snippets.
+  (require 'ob-haskell)
+
   ;; NOTE: Currently not working due to bug in Node 18. https://github.com/emacs-grammarly/lsp-grammarly/issues/37 .
   ;; (use-package lsp-grammarly
   ;;   :ensure t
@@ -789,6 +794,39 @@ It is based on default `whitespace-line' face.")
   ;;;;
   ;;;; End of code that solves "fd" problem when using multi-cursors.
   ;;;;
+
+  (defun my-first-two-top-displays ()
+    "Return the names of the displays at the top left and top right positions, sorted from left to right."
+    (let* ((displays (display-monitor-attributes-list))
+           (top-displays (seq-filter (lambda (d) (= 0 (my-get-display-top d))) displays))
+           (sorted-displays (sort top-displays (lambda (d1 d2) (< (my-get-display-left d1) (my-get-display-left d2)))))
+           )
+      (subseq sorted-displays 0 2))
+    )
+
+  (defun my-get-display-top (display)
+    (nth 1 (alist-get 'geometry display)))
+  (defun my-get-display-left (display)
+    (nth 0 (alist-get 'geometry display)))
+
+  (defun my-set-frame-fullscreen-on-display (frame display)
+      (set-frame-position frame (my-get-display-left display) (my-get-display-top display))
+      (set-frame-parameter frame 'fullscreen 'fullboth))
+
+  (defun my-setup-two-fullscreen-frames ()
+    (interactive)
+    (let ((displays (my-first-two-top-displays))
+          (left-frame (selected-frame))
+          (right-frame (make-frame)))
+      (run-with-idle-timer 0.1 nil (lambda ()
+                                     (my-set-frame-fullscreen-on-display left-frame (nth 0 displays))
+                                     (my-set-frame-fullscreen-on-display right-frame (nth 1 displays))
+                                     )
+      )
+    )
+  )
+
+
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
