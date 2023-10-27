@@ -121,7 +121,10 @@ This function should only modify configuration layer settings."
           ;; set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting
           ;; the bulb as a prefix above.
           )
-     markdown
+     ;; TODO: Use `markdown` layer again once they solve the bug with colors / styles randomly not working across the document.
+     ;;   Right now I instead commented out this layer and directly added `markdown-mode` to additional packages.
+     ;;   I will want to uncomment this layer here and remove `markdown-mode` from additional packages.
+     ;; markdown
      multiple-cursors
      org
      ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
@@ -168,6 +171,7 @@ This function should only modify configuration layer settings."
                          :fetcher github
                          :repo "zerolfx/copilot.el"
                          :files ("*.el" "dist")))
+     markdown-mode
      )
 
    ;; A list of packages that cannot be updated.
