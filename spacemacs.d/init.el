@@ -46,7 +46,8 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(lua
+   '(react
+     lua
      ;; NOTE: For full IDE support I need to also install TS LSP server:
      ;;   npm i -g typescript typescript-language-server
      (typescript :variables
@@ -73,7 +74,7 @@ This function should only modify configuration layer settings."
      ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
      (haskell :variables
               ;; NOTE: Expects haskell-language-server to be installed on the machine.
-              ;;   On Archlinux, this is done with yay -S haskell-language-server-bin.
+              ;;   Recommended way of installing it is via ghcup, together with the rest of the Haskell toolchain.
               haskell-completion-backend 'lsp
 
               ;; NOTE: Uncomment the lines below to enable and use Dante as a Haskell backend.
@@ -103,9 +104,10 @@ This function should only modify configuration layer settings."
           lsp-use-lsp-ui t
           ;; NOTE: lsp-ui-doc is is that small popup that appears on hover or request to show docs.
           lsp-ui-doc-enable t
+          lsp-ui-doc-position 'at-point
           ;; Makes popup show when cursor stops on a symbol. Otherwise it shows only on mouse or
           ;; manual request.
-          lsp-ui-doc-show-with-cursor t
+          lsp-ui-doc-show-with-cursor nil  ;; I set this to nil because it was overlapping sometimes with sideline.
           ;; NOTE: lsp-ui-sideline are messages that are shown on the right side of the screen at
           ;; the line of our cursor.
           lsp-ui-sideline-enable t
@@ -113,7 +115,7 @@ This function should only modify configuration layer settings."
           lsp-ui-sideline-show-diagnostics t ; Diagnostics means errors, warnings, ... .
           ;; The default is 1, which shows only first line of error -> we want more.
           lsp-ui-sideline-diagnostic-max-lines 10
-          lsp-ui-sideline-show-code-actions t
+          lsp-ui-sideline-show-code-actions nil
           lsp-ui-sideline-code-actions-prefix "💡 "
           ;; Once they fix https://github.com/emacs-lsp/lsp-ui/issues/573,
           ;; set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting
@@ -158,6 +160,7 @@ This function should only modify configuration layer settings."
    '(ormolu
      lsp-grammarly
      letterbox-mode
+     gdscript-mode
      (hide-region :location (recipe
                              :fetcher github
                              :repo "Martinsos/emacs-hide-region"))
@@ -684,12 +687,17 @@ before packages are loaded."
 
   (setq use-dialog-box nil) ; Don't ask questions via dialog popup boxes, insted ask them textually.
 
+  ;; On "?" in evil normal mode, show popup with documentation of the symbol cursor is currently on (via lsp).
+  (define-key evil-normal-state-map (kbd "?") (lambda () (interactive) (lsp-ui-doc-toggle)))
+
   ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
   ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
   (with-eval-after-load 'vterm
     (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   )
+
+  (require 'gdscript-mode)
 
   (use-package treemacs
     :config
@@ -785,7 +793,7 @@ It is based on default `whitespace-line' face.")
     (when (evil-mc-has-cursors-p)
       (evil-mc-pause-cursors)
       (run-with-idle-timer
-       0 nil '(lambda ()
+       0 nil #'(lambda ()
                 (evil-mc-resume-cursors)
                 (let ((evil-mc-command '((:name . custom/evil-mc-evil-escape-move-back-fake-cursors))))
                   (evil-mc-execute-for-all))))))
@@ -795,6 +803,10 @@ It is based on default `whitespace-line' face.")
   ;;;; End of code that solves "fd" problem when using multi-cursors.
   ;;;;
 
+
+  ;;;;
+  ;;;; Start of code for setting up two fullscreen frames.
+  ;;;;
   (defun my-first-two-top-displays ()
     "Return the names of the displays at the top left and top right positions, sorted from left to right."
     (let* ((displays (display-monitor-attributes-list))
@@ -825,8 +837,43 @@ It is based on default `whitespace-line' face.")
       )
     )
   )
+  ;;;;
+  ;;;; End of code for setting up two fullscreen frames.
+  ;;;;
 
-
+  (defun my/cheatsheet ()
+    (interactive)
+    (let* ((buffer-name "*Cheatsheet*")
+           (cheatsheet-content
+           `("Martin's (spac)emacs cheatsheet!!"
+             "================================="
+             ""
+             " - `:%s/query/new/gc`"
+             ""
+             " - `g r m`     -> make all cursors"
+             " - `g r q`     -> delete all cursors"
+             ""
+             " - `g w`       -> evil fill -> needs motion"
+             ""
+             " - `, g e`     -> lsp all project errors"
+             ""
+             " - `SPC s d`   -> search for string in dir"
+             ""
+             " - `SPC h d`   -> describe stuff"
+             ""
+             " - `?`         -> lsp-ui-doc-show (close it with C-g)"
+             )))
+      (if (get-buffer buffer-name)
+          (pop-to-buffer buffer-name)
+        (with-current-buffer (get-buffer-create buffer-name)
+          (erase-buffer)
+          (mapc (lambda (line) (insert line "\n")) cheatsheet-content)
+          (pop-to-buffer buffer-name)
+          (markdown-mode)
+          (setq markdown-hide-markup t)
+          (setq buffer-read-only t)
+          )))
+      )
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -846,7 +893,7 @@ This function is called at the very end of Spacemacs initialization."
  '(evil-want-Y-yank-to-eol nil)
  '(fill-column 100)
  '(package-selected-packages
-   '(lsp-docker company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
+   '(tern rjsx-mode lsp-docker company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
  '(safe-local-variable-values
    '((dante-target . "wasp")
      (dante-target . "--test")
