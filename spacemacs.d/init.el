@@ -46,30 +46,58 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(react
+   '(
+     ;;;; General
+     helm
+     better-defaults
+     emoji
+     multiple-cursors
+     (auto-completion :variables
+                      auto-completion-return-key-behavior 'nil
+                      auto-completion-tab-key-behavior 'complete)
+     ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
+     (shell :variables
+            shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
+            shell-default-width 50
+            shell-default-position 'right
+            spacemacs-vterm-history-file-location "~/.bash_history"
+            )
+     ;; spell-checking
+     (syntax-checking :variables
+                      syntax-checking-enable-tooltips nil ; Shows errors in minibuffer, instead of in GUI popups/tooltips.
+                      flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list ;; We don't want to see error message again if it is already visible in the error list buffer.
+                      )
+     ;; themes-megapack
+     (treemacs :variables
+               treemacs-use-git-mode 'deferred
+               )
+     version-control
+
+     ;;;; Tools
+     git
+     cmake
+     meson
+     docker
+     terraform
+
+     ;;;; Text Editing
+     ;; TODO: Use `markdown` layer again once they solve the bug with colors / styles randomly not working across the document.
+     ;;   Right now I instead commented out this layer and directly added `markdown-mode` to additional packages.
+     ;;   I will want to uncomment this layer here and remove `markdown-mode` from additional packages.
+     ;; markdown
+     org
+
+     ;;;; Programming Languages
      lua
-     ;; NOTE: For full IDE support I need to also install TS LSP server:
-     ;;   npm i -g typescript typescript-language-server
-     (typescript :variables
-                 typescript-indent-level 2
-                 )
      (rust :variables
            rust-format-on-save t
            )
      python
      windows-scripts
      vimscript
-     meson
      ruby
-     docker
-     terraform
-     emoji
-     (auto-completion :variables
-                      auto-completion-return-key-behavior 'nil
-                      auto-completion-tab-key-behavior 'complete)
-     better-defaults
+     yaml
      emacs-lisp
-     git
      ;; haskell requires some cabal packages to be installed as part of the setup!
      ;; I installed apply-refact, hlint, stylish-haskell, hasktags and hoogle as per instructions at that moment.
      (haskell :variables
@@ -88,15 +116,37 @@ This function should only modify configuration layer settings."
               haskell-indentation-where-pre-offset 2
               haskell-indentation-where-post-offset 2
               )
-     helm
+     ;; NOTE: I need to have installed `shellcheck` for static analysis and `bashate` for formatting.
+     (shell-scripts :variables
+                    shell-scripts-format-on-save t)
+
+     ;;;; Web Development
      html
+     react
      (javascript :variables
-                 ;; Im expecting here that `standard` or `jslint` or `jshint` are installed globally,
-                 ;; if they are, they are used as linters via flycheck.
-                 ;; If not, I should install one of them like `npm install -g standard`.
-                 js2-mode-show-strict-warnings nil  ;; We don't want these to conflict with custom linter.
+                 javascript-backend 'lsp  ;; lsp also automatically sets itself as linter.
+                 js2-mode-show-strict-warnings nil  ;; We don't want js2-mode's linter to conflict with lsp linter.
                  js2-basic-offset 2
-                 js-indent-level 2)
+                 js-indent-level 2
+                 node-add-modules-path t
+                 ;; javascript-fmt-on-save t
+                 ;; javascript-fmt-tool 'prettier
+                 )
+     ;; NOTE: For full IDE support I need to also install TS LSP server:
+     ;;   npm i -g typescript typescript-language-server
+     (typescript :variables
+                 ;; I need to install Typescript Language Server for lsp (for both js and ts) to work!
+                 ;; It can be installed with
+                 ;;   `M-x lsp-install-server` -> `ts-ls`.
+                 ;;   `npm i -g typescript-language-server; npm i -g typescript`
+                 ;; Check https://emacs-lsp.github.io/lsp-mode/page/lsp-typescript/
+                 typescript-backend 'lsp  ;; lsp also automatically sets itself as linter.
+                 typescript-indent-level 2
+                 ;; typescript-fmt-on-save t
+                 ;; typescript-fmt-tool 'prettier
+                 )
+
+     ;;;; LSP
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      (lsp :variables
           lsp-rust-server 'rust-analyzer
@@ -121,34 +171,6 @@ This function should only modify configuration layer settings."
           ;; set `lsp-ui-sideline-code-actions-icon` to use the default icon, instead of setting
           ;; the bulb as a prefix above.
           )
-     ;; TODO: Use `markdown` layer again once they solve the bug with colors / styles randomly not working across the document.
-     ;;   Right now I instead commented out this layer and directly added `markdown-mode` to additional packages.
-     ;;   I will want to uncomment this layer here and remove `markdown-mode` from additional packages.
-     ;; markdown
-     multiple-cursors
-     org
-     ;; shell by default runs ansi-term, which is terminal emulator written in elisp. There are also other options.
-     (shell :variables
-            shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
-            shell-default-width 50
-            shell-default-position 'right
-            spacemacs-vterm-history-file-location "~/.bash_history"
-            )
-     ;; spell-checking
-     (syntax-checking :variables
-                      syntax-checking-enable-tooltips nil ; Shows errors in minibuffer, instead of in GUI popups/tooltips.
-                      flycheck-display-errors-function #'flycheck-display-error-messages-unless-error-list ;; We don't want to see error message again if it is already visible in the error list buffer.
-                      )
-     ;; themes-megapack
-     (treemacs :variables
-               treemacs-use-git-mode 'deferred
-               )
-     version-control
-     yaml
-     cmake
-     ;; NOTE: I need to have installed shellcheck for static analysis and bashate for formatting.
-     (shell-scripts :variables
-                    shell-scripts-format-on-save t)
      )
 
    ;; List of additional packages that will be installed without being wrapped
@@ -899,11 +921,8 @@ This function is called at the very end of Spacemacs initialization."
  '(package-selected-packages
    '(tern rjsx-mode lsp-docker company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
  '(safe-local-variable-values
-   '((dante-target . "wasp")
-     (dante-target . "--test")
-     (javascript-backend . tide)
-     (javascript-backend . tern)
-     (javascript-backend . lsp))))
+   '(
+     )))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
