@@ -129,8 +129,8 @@ This function should only modify configuration layer settings."
                  js2-basic-offset 2
                  js-indent-level 2
                  node-add-modules-path t
-                 ;; javascript-fmt-on-save t
-                 ;; javascript-fmt-tool 'prettier
+                 javascript-fmt-on-save t
+                 javascript-fmt-tool 'prettier
                  )
      ;; NOTE: For full IDE support I need to also install TS LSP server:
      ;;   npm i -g typescript typescript-language-server
@@ -142,13 +142,14 @@ This function should only modify configuration layer settings."
                  ;; Check https://emacs-lsp.github.io/lsp-mode/page/lsp-typescript/
                  typescript-backend 'lsp  ;; lsp also automatically sets itself as linter.
                  typescript-indent-level 2
-                 ;; typescript-fmt-on-save t
-                 ;; typescript-fmt-tool 'prettier
+                 typescript-fmt-on-save t
+                 typescript-fmt-tool 'prettier
                  )
 
      ;;;; LSP
      ;; Enabling lsp layer sets the used backend for all supported languages to lsp by default.
      (lsp :variables
+          lsp-keep-workspace-alive nil ; Shut down the LSP server afer I close all the buffers associated with the server.
           lsp-rust-server 'rust-analyzer
           lsp-lens-enable t
           lsp-use-lsp-ui t
@@ -874,20 +875,32 @@ It is based on default `whitespace-line' face.")
            `("Martin's (spac)emacs cheatsheet!!"
              "================================="
              ""
-             " - `:%s/query/new/gc`"
+             " - `:%s/query/new/gc`  -> (vim) search and replace in buffer"
              ""
              " - `g r m`     -> make all cursors"
              " - `g r q`     -> delete all cursors"
              ""
              " - `g w`       -> evil fill -> needs motion"
              ""
-             " - `, g e`     -> lsp all project errors"
-             ""
-             " - `SPC s d`   -> search for string in dir"
+             " - `, g e`     -> list all project errors"
              ""
              " - `SPC h d`   -> describe stuff"
              ""
              " - `?`         -> lsp-ui-doc-show (close it with C-g)"
+             ""
+             " - `M-s o`     -> Occur -> enters \"occurrence\" mode and highlights all occurrences."
+             ""
+             " - `*`         -> search for string under cursor in file"
+             " - `/`         -> search in file"
+             " - `SPC s c`   -> clear search highlights"
+             ""
+             " - `SPC *`     -> search for string under cursor in project"
+             " - `SPC /`     -> search in project"
+             ""
+             " - `SPC p f`   -> search in project by file name"
+             ""
+             " - `SPC s d`   -> search for string in dir"
+             " - `SPC s D`   -> search for selected string in dir"
              )))
       (if (get-buffer buffer-name)
           (pop-to-buffer buffer-name)
@@ -920,9 +933,7 @@ This function is called at the very end of Spacemacs initialization."
  '(fill-column 100)
  '(package-selected-packages
    '(tern rjsx-mode lsp-docker company-lua lua-mode typescript-mode import-js grizzl add-node-modules-path toml-mode ron-mode racer rust-mode flycheck-rust cargo yapfify stickyfunc-enhance pytest pyenv-mode py-isort pippel pipenv pyvenv pip-requirements lsp-python-ms lsp-pyright live-py-mode importmagic epc ctable concurrent deferred helm-pydoc helm-cscope xcscope posframe cython-mode company-anaconda blacken anaconda-mode pythonic powershell vimrc-mode dactyl-mode seeing-is-believing rvm ruby-tools ruby-test-mode ruby-refactor ruby-hash-syntax rubocopfmt rubocop rspec-mode robe rbenv rake minitest helm-gtags ggtags enh-ruby-mode dap-mode bui counsel-gtags counsel swiper ivy chruby bundler inf-ruby yasnippet-snippets yaml-mode xterm-color ws-butler writeroom-mode winum which-key web-mode web-beautify vterm volatile-highlights vi-tilde-fringe uuidgen use-package unfill treemacs-projectile treemacs-persp treemacs-magit treemacs-evil toc-org terminal-here tagedit symon symbol-overlay string-inflection spaceline-all-the-icons smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pug-mode prettier-js popwin pcre2el password-generator paradox overseer orgit org-projectile org-present org-pomodoro org-mime org-download org-cliplink org-bullets org-brain open-junk-file nodejs-repl nameless mwim multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow macrostep lsp-ui lsp-treemacs lsp-haskell lorem-ipsum livid-mode link-hint json-navigator json-mode js2-refactor js-doc intero indent-guide impatient-mode hybrid-mode hungry-delete hlint-refactor hl-todo hindent highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-lsp helm-ls-git helm-hoogle helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag haskell-snippets google-translate golden-ratio gnuplot gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ gh-md fuzzy font-lock+ flycheck-pos-tip flycheck-package flycheck-haskell flycheck-elsa flx-ido fill-column-indicator fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emmet-mode elisp-slime-nav editorconfig dumb-jump dotenv-mode doom-modeline diminish devdocs define-word dante company-web company-tern company-statistics company-lsp company-ghci company-ghc company-cabal column-enforce-mode cmm-mode clean-aindent-mode centered-cursor-mode browse-at-remote auto-yasnippet auto-highlight-symbol auto-compile attrap aggressive-indent ace-link ace-jump-helm-line ac-ispell))
- '(safe-local-variable-values
-   '(
-     )))
+ '(safe-local-variable-values '((dante-target . "--test"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

@@ -99,6 +99,29 @@ export LESS_TERMCAP_ue="$(printf '%b' '\e[0m')"; a="${a%_}"
 
 ###########################################################################
 
+ghfrb() {
+    if [ -z "$1" ]; then
+        echo "Usage: ghfrb <git_user>:<branch>"
+        echo "  ghfrb stands for \"GitHub Fetch Remote Branch\" and will"
+        echo "  fetch a specified remote branch from the specified GitHub user"
+        echo "  for the repo you are currently in (their fork of it)."
+        return 1
+    fi
+
+    GH_REPO_NAME=$(git remote -v | grep origin | grep fetch | awk '{print $2}' | sed 's/.*:\(.*\)\/\(.*\)\.git/\2/')
+    GH_USER_NAME=$(echo "$1" | cut -d':' -f1)
+    BRANCH=$(echo "$1" | cut -d':' -f2)
+
+    GIT_FETCH_CMD="git fetch git@github.com:${GH_USER_NAME}/${GH_REPO_NAME} ${BRANCH}:${GH_USER_NAME}_${BRANCH}"
+    GIT_CO_CMD="git co ${GH_USER_NAME}_${BRANCH}"
+
+    echo "> $GIT_FETCH_CMD"
+    $GIT_FETCH_CMD
+
+    echo "> $GIT_CO_CMD"
+    $GIT_CO_CMD
+}
+
 
 # Settings specific to this machine
 [ -f "$HOME/.bashrc_local" ] && source "$HOME/.bashrc_local"
