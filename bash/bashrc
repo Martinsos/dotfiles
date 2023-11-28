@@ -16,6 +16,11 @@ if [ -x "$(command -v vim)" ]; then
     alias se="sudo $EDITOR"
 fi
 
+# I initialize nvm here because it is needed on each shell initialization
+# in order to work, but I also initialize it in profile because that way it
+# is available for applications like emacs.
+source /usr/share/nvm/init-nvm.sh
+
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
