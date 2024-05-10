@@ -16,6 +16,13 @@ if [ -x "$(command -v vim)" ]; then
     alias se="sudo $EDITOR"
 fi
 
+# Set up the colors for `ls` command.
+# We do this by calling the `dircolors` command, which exists exactly for setting up colors for `ls`.
+# It does so by setting the LS_COLORS env var, which `ls` will then look up.
+if [ -x /usr/bin/dircolors ]; then
+    eval "$(dircolors -b)"
+fi
+
 # I initialize nvm here because it is needed on each shell initialization
 # in order to work, but I also initialize it in profile because that way it
 # is available for applications like emacs.
@@ -104,12 +111,13 @@ export LESS_TERMCAP_ue="$(printf '%b' '\e[0m')"; a="${a%_}"
 
 ###########################################################################
 
-ghfrb() {
+github-frb() {
     if [ -z "$1" ]; then
-        echo "Usage: ghfrb <git_user>:<branch>"
-        echo "  ghfrb stands for \"GitHub Fetch Remote Branch\" and will"
+        echo "Usage: github-frb <git_user>:<branch>"
+        echo "  github-frb stands for \"GitHub Fetch Remote Branch\" and will"
         echo "  fetch a specified remote branch from the specified GitHub user"
         echo "  for the repo you are currently in (their fork of it)."
+        echo "  Example: github-frb martinsos:patch-1"
         return 1
     fi
 
