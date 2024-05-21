@@ -195,6 +195,7 @@ This function should only modify configuration layer settings."
                          :repo "zerolfx/copilot.el"
                          :files ("*.el" "dist")))
      markdown-mode
+     xclip
      )
 
    ;; A list of packages that cannot be updated.
@@ -760,6 +761,12 @@ It is based on default `whitespace-line' face.")
 
   ;; Required in order for org mode to be able to evaluate haskell code snippets.
   (require 'ob-haskell)
+
+  ;; This makes copy/paste properly work when emacs is running via the terminal.
+  (use-package xclip
+    :config
+    (xclip-mode 1)
+  )
 
   ;; NOTE: Currently not working due to bug in Node 18. https://github.com/emacs-grammarly/lsp-grammarly/issues/37 .
   ;; (use-package lsp-grammarly
