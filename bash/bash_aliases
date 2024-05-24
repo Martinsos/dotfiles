@@ -1,7 +1,11 @@
 alias ls='ls --color=auto'
-alias ll='ls -alF'
-alias la='ls -A'
-alias l='ls -CF'
+
+alias lsd='lsd --icon=never --group-dirs=first -r'
+alias l='lsd --blocks=git,size,date,name --date=relative -l'
+alias lt='l --tree --depth=2'
+alias ltt='l --tree --depth=3'
+alias la='l -A'
+alias ll='lsd -AlF'
 
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
