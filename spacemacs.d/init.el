@@ -749,7 +749,7 @@ It is based on default `whitespace-line' face.")
     :hook (prog-mode . whitespace-mode)
     :config
     (setq whitespace-line-column nil) ;; Ensures it uses value from fill-column.
-    (setq whitespace-style '(face empty tabs lines-tail trailing))
+    (setq whitespace-style '(face empty tabs tab-mark lines-tail trailing))
     (setq whitespace-line 'whitespace-line-black-background)
   )
 
@@ -939,7 +939,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("7aaee3a00f6eb16836f5b28bdccde9e1079654060d26ce4b8f49b56689c51904" default))
+   '("de8f2d8b64627535871495d6fe65b7d0070c4a1eb51550ce258cd240ff9394b0" "7aaee3a00f6eb16836f5b28bdccde9e1079654060d26ce4b8f49b56689c51904" default))
  '(evil-want-Y-yank-to-eol nil)
  '(fill-column 100)
  '(package-selected-packages
