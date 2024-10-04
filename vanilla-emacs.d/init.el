@@ -70,29 +70,35 @@
 
 (use-package undo-tree
   :delight
-  )  ;; TODO: configure a bit!
+  :config
+  (setq undo-tree-visualizer-diff t)  ;; Display diff in undo-tree visualizer.
+  (global-undo-tree-mode)
+)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Ivy, Counsel and Swiper ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Ivy is the main thing (nice search through list of stuff, in minibuffer and elsewhere),
+;; while Counsel and Swiper extend its usage through more of the Emacs.
+
 (use-package ivy
   :delight
   :bind (
 	 ;; I define some evil-ish keybindings here since neither evil not evil-connection
 	 ;; define these specific ones for Ivy.
-	 :map ivy-minibuffer-map
+	 :map ivy-minibuffer-map ;; When in the minibuffer.
 	      ("C-h" . ivy-backward-kill-word)
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-alt-done)
-	 :map ivy-switch-buffer-map
+	 :map ivy-switch-buffer-map ;; When in the buffer switching mode.
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-done)
 	      ("C-d" . ivy-switch-buffer-kill)
-	 :map ivy-reverse-i-search-map
+	 :map ivy-reverse-i-search-map ;; When doing incremental search.
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-done)
@@ -101,6 +107,7 @@
   :config
   (setq ivy-use-virtual-buffers t)
   (setq ivy-display-style 'fancy)
+  (setq ivy-count-format "(%d/%d) ")
   (ivy-mode 1)  ;; This will enhance some emacs commands with ivy automatically.
 )
 
@@ -112,19 +119,28 @@
   (counsel-mode 1)  ;; This will remap the built-in Emacs functions that have counsel replacements.
 )
 
+;; Better isearch (incremental search), powered by Ivy.
+(use-package swiper
+  :bind ("C-s" . swiper)
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 ;; Highlight TODO and similar keywords in comments and strings.
 (use-package hl-todo
   :config
   (global-hl-todo-mode)
 )
 
-;; TODO: add Swiper
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
 )
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
+
+;; TODO: How should I proerly format parenthesses in elisp?
+
+;; TODO: Take care of the temporary files being created by emacs and undo-tree.
+
+;; TODO: Add some of the temporary files to the .gitignore.
