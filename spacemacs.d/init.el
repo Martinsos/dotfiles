@@ -766,6 +766,26 @@ It is based on default `whitespace-line' face.")
   (use-package xclip
     :config
     (xclip-mode 1)
+    )
+
+  ;; Extending SPC a f (fun apps)
+  (spacemacs/set-leader-keys
+    "a f a" 'animate-birthday-present
+    "a f b" 'blackbox
+    "a f c" 'butterfly
+    "a f d" 'doctor
+    "a f e" 'bubbles
+    "a f f" 'dunnet
+    "a f g" 'gnugo
+    "a f h" 'hanoi
+    "a f i" 'gomoku
+    "a f j" 'solitaire
+    "a f l" 'life
+    "a f p" 'pong
+    "a f s" 'snake
+    "a f t" 'tetris
+    "a f x" '5x5
+    "a f z" 'zone
   )
 
   ;; NOTE: Currently not working due to bug in Node 18. https://github.com/emacs-grammarly/lsp-grammarly/issues/37 .
