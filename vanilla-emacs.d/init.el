@@ -11,7 +11,7 @@
 
 (set-fringe-mode 10)
 
-(load-theme 'wombat)
+(load-theme 'misterioso)
 
 ;;;;;;;;;;
 
@@ -41,16 +41,18 @@
 ;;;;;;;;;;;;
 
 (use-package evil
-  :init
-  (setq evil-want-integration t)  ;; Required by evil-collection.
-  (setq evil-want-keybinding nil) ;; Required by evil-collection.
+  :custom
+  (evil-want-integration t)  ;; Required by evil-collection.
+  (evil-want-keybinding nil) ;; Required by evil-collection.
+  (evil-want-C-u-scroll t)
   :config
   (evil-mode 1)
 )
 
 (use-package evil-escape
+  :custom
+  (evil-escape-key-sequence "fd")
   :config
-  (setq evil-escape-key-sequence "fd")
   (evil-escape-mode)
 )
 
@@ -70,8 +72,9 @@
 
 (use-package undo-tree
   :delight
+  :custom
+  (undo-tree-visualizer-diff t)  ;; Display diff in undo-tree visualizer.
   :config
-  (setq undo-tree-visualizer-diff t)  ;; Display diff in undo-tree visualizer.
   (global-undo-tree-mode)
 )
 
@@ -83,6 +86,11 @@
 ;; Ivy is the main thing (nice search through list of stuff, in minibuffer and elsewhere),
 ;; while Counsel and Swiper extend its usage through more of the Emacs.
 
+;; TODO: Should I set Ivy to use fuzzy search? Is that better or not?
+;; TODO: In Spacemacs (helm), coloring of listed files on C-x C-f is richer than I have in Ivy here.
+;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
+;; I should also get Ivy to behave like this! Right now it shows dirs in too similar color uses the same
+;; color for all the rest.
 (use-package ivy
   :delight
   :bind (
@@ -93,6 +101,7 @@
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-alt-done)
+              ("TAB" . ivy-alt-done)
 	 :map ivy-switch-buffer-map ;; When in the buffer switching mode.
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
@@ -104,11 +113,19 @@
 	      ("C-l" . ivy-done)
 	      ("C-d" . ivy-reverse-i-search-kill)
 	 )
+  :custom
+  (ivy-height 15)
+  (ivy-use-virtual-buffers t)
+  (ivy-display-style 'fancy)
+  (ivy-count-format "(%d/%d) ")
   :config
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-display-style 'fancy)
-  (setq ivy-count-format "(%d/%d) ")
   (ivy-mode 1)  ;; This will enhance some emacs commands with ivy automatically.
+)
+
+;; Show more info for some usages of Ivy.
+(use-package ivy-rich
+  :config
+  (ivy-rich-mode 1)
 )
 
 ;; Counsel brings enhanced versions of common emacs commands, powered by Ivy.
@@ -121,8 +138,12 @@
 
 ;; Better isearch (incremental search), powered by Ivy.
 (use-package swiper
-  :bind ("C-s" . swiper)
-  )
+  :bind (("C-s" . swiper)
+	 :map evil-normal-state-map
+	      ("/" . swiper)
+	      ("?" . swiper-backward)
+	)
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -133,8 +154,17 @@
   (global-hl-todo-mode)
 )
 
+;; TODO: Configure or use some other modeline.
 (use-package doom-modeline
-  :init (doom-modeline-mode 1)
+  :config
+  (doom-modeline-mode 1)
+)
+
+(use-package which-key
+  :custom
+  (which-key-idle-delay 0.5)
+  :config
+  (which-key-mode)
 )
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
@@ -144,3 +174,16 @@
 ;; TODO: Take care of the temporary files being created by emacs and undo-tree.
 
 ;; TODO: Add some of the temporary files to the .gitignore.
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(ivy-rich which-key undo-tree hl-todo evil-escape evil-collection doom-modeline delight counsel command-log-mode)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
