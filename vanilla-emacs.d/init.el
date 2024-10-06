@@ -115,17 +115,22 @@
 	 )
   :custom
   (ivy-height 15)
-  (ivy-use-virtual-buffers t)
+  (ivy-use-virtual-buffers t)  ;; Adds recent files and bookmarks and similar to results.
   (ivy-display-style 'fancy)
-  (ivy-count-format "(%d/%d) ")
+  (ivy-count-format "(%d/%d) ")  ;; (num listed / total num)
+  (ivy-extra-directories nil)  ;; Don't show ./ and ../
   :config
-  (ivy-mode 1)  ;; This will enhance some emacs commands with ivy automatically.
-)
+  ;; ivy-format-functions-alist determines for each place where ivy is used how the output should be formatted.
+  ;; t stands for default case, if there was no more specific formatting function defined.
 
-;; Show more info for some usages of Ivy.
-(use-package ivy-rich
-  :config
-  (ivy-rich-mode 1)
+  ;; Here, we specify which formatting function to use as a default case (t).
+  ;; We choose ivy-format-functon-line, that extends the higlight of selection to the edge of the window,
+  ;; not just till the end of the selected word. This is one of default choices and it looks better.
+  ;; This is recommended by ivy-rich, as a setting.
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+
+  ;; This will enhance specific emacs commands with ivy automatically.
+  (ivy-mode 1)
 )
 
 ;; Counsel brings enhanced versions of common emacs commands, powered by Ivy.
@@ -144,6 +149,42 @@
 	      ("?" . swiper-backward)
 	)
 )
+
+;; Unlike default function used by ivy(-rich) for listing file names, here I do
+;; some additional formatting:
+;;  - I stylize dot(files/dirs) with same face as comments.
+;; TODO: Do more stylizing, for executables for example, or for coloring file extensions.
+(defun my/ivy-read-file-transformer (str)
+  "Transform candidate STR when reading files."
+  (let
+    ((is-dir (ivy--dirname-p str))
+     (is-dotfile (string-prefix-p "." (file-name-nondirectory (directory-file-name str))))
+    )
+    (cond
+      ((and is-dir is-dotfile) (propertize str 'face '(:inherit '(font-lock-comment-face ivy-subdir))))
+      (is-dotfile (propertize str 'face 'font-lock-comment-face))
+      (is-dir (propertize str 'face 'ivy-subdir))
+      (t str)
+    )
+  )
+)
+
+;; Show more info for some usages of Ivy. Also allows easier customization of Ivy output.
+(use-package ivy-rich
+  :after (ivy counsel)
+  :config
+  ;; With ivy-rich-set-columns, you can add new ones or replace existing columns when ivy is used in specific commands.
+  ;; For details check out ivy-rich docs and docs of ivy-rich-display-transformers-list .
+  (ivy-rich-set-columns
+    'counsel-find-file  ;; Set columns for this command (therefore when finding file).
+    '((my/ivy-read-file-transformer)  ;; Instead of ivy-read-file-transformer.
+      (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))  ;; This I kept the same. It adds target of links.
+     )
+  )
+
+  (ivy-rich-mode 1)
+)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -174,16 +215,7 @@
 ;; TODO: Take care of the temporary files being created by emacs and undo-tree.
 
 ;; TODO: Add some of the temporary files to the .gitignore.
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(ivy-rich which-key undo-tree hl-todo evil-escape evil-collection doom-modeline delight counsel command-log-mode)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
+;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote?
+
+;; TODO: Try out helm instead of ivy.
