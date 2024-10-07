@@ -11,7 +11,27 @@
 
 (set-fringe-mode 10)
 
-(load-theme 'misterioso)
+(load-theme 'tango-dark)
+
+;; TODO: Find a theme that has highlight and region faces that don't change foreground: I don't want
+;; foreground just in one color, then we loose all the nice coloring! Instead, highlight and region
+;; should not touch foreground but be dark enough to work with any foreground.
+;; Region is usually already dark enough so I just make sure that foreground is turned off here,
+;; while highlight is often too bright so I make sure to darken it.
+;; Spacemacs has this done nicely btw with its spacemacs theme.
+;; So, I am not sure if I should have this code here for any theme, or just use themes that get this
+;; right out of the box, or should I instead customize this per theme, ... . But for now I will have this
+;; general code that takes care of it.
+;; TODO: I should make sure I do it also on any theme load, not just startup.
+(set-face-attribute 'highlight nil
+		    :foreground nil
+		    :background (color-darken-name (face-attribute 'highlight :background) 80)
+)
+(set-face-attribute 'region nil
+		    :foreground nil
+		    :background (face-attribute 'region :background)
+		    :extend t
+)
 
 ;;;;;;;;;;
 
@@ -114,7 +134,7 @@
 	      ("C-d" . ivy-reverse-i-search-kill)
 	 )
   :custom
-  (ivy-height 15)
+  (ivy-height 20)
   (ivy-use-virtual-buffers t)  ;; Adds recent files and bookmarks and similar to results.
   (ivy-display-style 'fancy)
   (ivy-count-format "(%d/%d) ")  ;; (num listed / total num)
@@ -127,7 +147,15 @@
   ;; We choose ivy-format-functon-line, that extends the higlight of selection to the edge of the window,
   ;; not just till the end of the selected word. This is one of default choices and it looks better.
   ;; This is recommended by ivy-rich, as a setting.
-  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line)
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-arrow-line)
+
+  ;; By default ivy changes the foreground to single color which looses the visual information,
+  ;; so here I make sure it doesn't change the foreground and tell it to use `highlight` face for background.
+  (set-face-attribute 'ivy-current-match nil
+		      :foreground nil
+		      :background (face-attribute 'highlight :background)
+		      :extend t
+  )
 
   ;; This will enhance specific emacs commands with ivy automatically.
   (ivy-mode 1)
@@ -152,20 +180,23 @@
 
 ;; This is my custom function for how Ivy shows candidates when finding a file.
 ;; Unlike default function used by ivy(-rich), here I do some additional formatting:
-;;  - I stylize dot(files/dirs) with the same face as comments.
-;; TODO: Do more stylizing, for executables for example, or for coloring file extensions.
-;; TODO: Use `shadow` face instead of font-lock-comment-face?
-(defun my/ivy-read-file-transformer (str)
+;;  - I stylize dot(files/dirs).
+;;  - I stylize executables.
+(defun my/ivy-read-file-transformer (filename)
   "Transform candidate STR when reading files."
-  (let
-    ((is-dir (ivy--dirname-p str))
-     (is-dotfile (string-prefix-p "." (file-name-nondirectory (directory-file-name str))))
+  (let*
+     ((current-dir (or (ivy-state-directory ivy-last) default-directory))
+     (filepath (expand-file-name filename current-dir))
+     (is-dir (ivy--dirname-p filename))
+     (is-dotfile (string-prefix-p "." filename))
+     (is-exec (file-executable-p filepath))
     )
     (cond
-      ((and is-dir is-dotfile) (propertize str 'face '(:inherit '(font-lock-comment-face ivy-subdir))))
-      (is-dotfile (propertize str 'face 'font-lock-comment-face))
-      (is-dir (propertize str 'face 'ivy-subdir))
-      (t str)
+      ((and is-dir is-dotfile) (propertize filename 'face '(:inherit (font-lock-comment-face ivy-subdir))))
+      (is-dotfile (propertize filename 'face 'font-lock-comment-face))
+      (is-dir (propertize filename 'face 'ivy-subdir))
+      (is-exec (propertize filename 'face 'font-lock-keyword-face))
+      (t filename)
     )
   )
 )
@@ -178,8 +209,8 @@
   ;; For details check out ivy-rich docs and docs of ivy-rich-display-transformers-list .
   (ivy-rich-set-columns
     'counsel-find-file  ;; Set columns for this command (therefore when finding file).
-    '((my/ivy-read-file-transformer)  ;; Instead of ivy-read-file-transformer.
-      (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))  ;; This I kept the same. It adds target of links.
+    '((my/ivy-read-file-transformer)  ;; Use my function instead of default ivy-read-file-transformer.
+      (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))  ;; This I kept the same. It adds target for links.
      )
   )
 
@@ -207,6 +238,11 @@
   (which-key-idle-delay 0.5)
   :config
   (which-key-mode)
+)
+
+(use-package hl-line
+  :config
+  (global-hl-line-mode)
 )
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
