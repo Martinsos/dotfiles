@@ -150,10 +150,11 @@
 	)
 )
 
-;; Unlike default function used by ivy(-rich) for listing file names, here I do
-;; some additional formatting:
-;;  - I stylize dot(files/dirs) with same face as comments.
+;; This is my custom function for how Ivy shows candidates when finding a file.
+;; Unlike default function used by ivy(-rich), here I do some additional formatting:
+;;  - I stylize dot(files/dirs) with the same face as comments.
 ;; TODO: Do more stylizing, for executables for example, or for coloring file extensions.
+;; TODO: Use `shadow` face instead of font-lock-comment-face?
 (defun my/ivy-read-file-transformer (str)
   "Transform candidate STR when reading files."
   (let
