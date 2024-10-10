@@ -11,7 +11,10 @@
 
 (set-fringe-mode 10)
 
-(load-theme 'tango-dark)
+;; We define our own hook that runs after any call to enable-theme.
+(defvar after-enable-theme-hook nil
+  "Hook run after a theme is loaded using `enable-theme'.")
+(advice-add 'enable-theme :after (lambda (&rest _) (run-hooks 'after-enable-theme-hook)))
 
 ;; TODO: Find a theme that has highlight and region faces that don't change foreground: I don't want
 ;; foreground just in one color, then we loose all the nice coloring! Instead, highlight and region
@@ -23,15 +26,22 @@
 ;; right out of the box, or should I instead customize this per theme, ... . But for now I will have this
 ;; general code that takes care of it.
 ;; TODO: I should make sure I do it also on any theme load, not just startup.
-(set-face-attribute 'highlight nil
-		    :foreground nil
-		    :background (color-darken-name (face-attribute 'highlight :background) 80)
+;; TODO: For some reason this won't happen again if I change theme manually, it will remain on the previous theme.
+(defun ensure-region-and-highlight-preserve-foreground ()
+    (message "yay")
+    (require 'color)  ; Needed for color-darken-name just below. color.el is built-in package.
+    (set-face-attribute 'highlight nil
+			:foreground 'unspecified
+			:background (color-darken-name (face-attribute 'default :background) 30)
+    )
+    (set-face-attribute 'region nil
+			:foreground 'unspecified
+			:extend t
+    )
 )
-(set-face-attribute 'region nil
-		    :foreground nil
-		    :background (face-attribute 'region :background)
-		    :extend t
-)
+(add-hook 'after-enable-theme-hook (lambda () (ensure-region-and-highlight-preserve-foreground)))
+
+(add-hook 'after-init-hook (lambda () (load-theme 'tango-dark t)))
 
 ;;;;;;;;;;
 
@@ -149,13 +159,9 @@
   ;; This is recommended by ivy-rich, as a setting.
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-arrow-line)
 
-  ;; By default ivy changes the foreground to single color which looses the visual information,
-  ;; so here I make sure it doesn't change the foreground and tell it to use `highlight` face for background.
-  (set-face-attribute 'ivy-current-match nil
-		      :foreground nil
-		      :background (face-attribute 'highlight :background)
-		      :extend t
-  )
+  ;; I want Ivy to use the same face for highlighting as the rest of my UI does.
+  ;; TODO: This won't work if I change theme manually, it will remain on the old theme, I don't know why.
+  (add-hook 'after-enable-theme-hook (lambda () (custom-set-faces '(ivy-current-match ((t (:inherit highlight)))))))
 
   ;; This will enhance specific emacs commands with ivy automatically.
   (ivy-mode 1)
@@ -166,6 +172,8 @@
 (use-package counsel
   :delight
   :config
+  (setq counsel-describe-function-function 'helpful-callable)
+  (setq counsel-describe-variable-function 'helpful-variable)
   (counsel-mode 1)  ;; This will remap the built-in Emacs functions that have counsel replacements.
 )
 
@@ -233,6 +241,7 @@
   (doom-modeline-mode 1)
 )
 
+;; TODO: Comes packaged with emacs 30! So I don't need to install it any more. Does that mean I need to change something here? Or use-package just won't install it and all good?
 (use-package which-key
   :custom
   (which-key-idle-delay 0.5)
@@ -245,9 +254,22 @@
   (global-hl-line-mode)
 )
 
+(use-package helpful
+  :bind
+  (("C-h f" . helpful-callable)
+   ("C-h v" . helpful-variable)
+   ("C-h k" . helpful-key)
+   ("C-h x" . helpful-command)
+   ("C-h h" . helpful-at-point)
+   ("C-h F" . helpful-function)
+  )
+)
+
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
 
-;; TODO: How should I proerly format parenthesses in elisp?
+;; TODO: How should I proerly format parenthesses in elisp? Allegedly I should use something like paredit or lispy.
+
+;; TODO: Use native installation of emacs.
 
 ;; TODO: Take care of the temporary files being created by emacs and undo-tree.
 
@@ -256,3 +278,11 @@
 ;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote?
 
 ;; TODO: Try out helm instead of ivy.
+
+;; TODO: To figure out what packages to install, I should take a look at what Doomemacs, Spacemacs (and their layers), Emacs-bedrock, and others, use, for inspiration, and how they have it configured.
+;;   Recommendation by user: projectile, helm or ivy, company (or other auto-completion package), lsp mode, which-key. Don't forget those that come with emacs: org, dired, eshell, magit, ... .
+;;   I can also look at Melpa to see which are the most used packages.
+
+;; TODO: How do I pin down package version? What if one of them introduces a breaking change and emacs breaks? I need to have a way to pin them down / freeze them.
+
+;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) .
