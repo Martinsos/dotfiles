@@ -255,10 +255,6 @@
 )
 
 ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
-;; TODO: For some reason, in the Helpful buffer, stuff is not correctly "faced" for me.
-;;   Headings are not bold, lisp code is not highlighted, ... .
-;;   I should try turning off everything else and see if I can get it working then, then
-;;   add one by one thing and figure out what is causing it.
 (use-package helpful
   :custom
   (counsel-describe-function-function #'helpful-callable)
@@ -271,12 +267,11 @@
 )
 
 ;; Colorizes color names in buffers.
-(use-package rainbow-mode
+;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
+(use-package colorful-mode
   :config
-  ;; I made rainbow-mode global. If this turns out too aggressive, I can instead hook it only
-  ;; for certain modes (e.g. Help, CSS, ...).
-  (define-globalized-minor-mode my-global-rainbow-mode rainbow-mode (lambda () (rainbow-mode 1)))
-  (my-global-rainbow-mode 1)
+  (add-to-list 'global-colorful-modes 'help-mode)
+  (global-colorful-mode)
 )
 
 ;; CHEATSHEET:
