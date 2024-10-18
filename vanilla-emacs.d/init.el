@@ -11,12 +11,17 @@
 
 (set-fringe-mode 10)
 
+(setq-default fill-column 80)
+
+(column-number-mode) ; Show row:column in mode line.
+
+;; Start in fullscreen.
+(add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+
 ;; We define our own hook that runs after any call to enable-theme.
 (defvar after-enable-theme-hook nil
   "Hook run after a theme is enabled using `enable-theme'.")
 (advice-add 'enable-theme :after (lambda (&rest _) (run-hooks 'after-enable-theme-hook)))
-
-(add-hook 'after-init-hook (lambda () (load-theme 'leuven-dark t)))
 
 ;;;;;;;;;;
 
@@ -36,10 +41,20 @@
 ;; Install use-package (advanced package management for emacs) if not installed yet.  
 (unless (package-installed-p 'use-package) (package-install 'use-package))
 (require 'use-package)
-(setq use-package-always-ensure t)  ;; Tells use-package to have :ensure t by default for every package it manages.
+(setq use-package-always-ensure t)  ; Tells use-package to have :ensure t by default for every package it manages.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; doom-themes have nice, high quality themes.
+(use-package doom-themes
+  :config
+  ;; I went with dracula for now. palenight is also nice.
+  ;; TODO: I don't quite like though how it colors the ivy selection. I will want to customize ivy-current-match face.
+  ;;   I want it to not modify the foreground of the ivy match, right now it loses coloring from it.
+  ;; I run this as after-init-hook because that gives time during init to register any after-enable-theme-hooks.
+  ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
+  (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
+)
 
 ;;;;;;;;;;;;
 ;;; Evil ;;;
@@ -47,8 +62,8 @@
 
 (use-package evil
   :custom
-  (evil-want-integration t)  ;; Required by evil-collection.
-  (evil-want-keybinding nil) ;; Required by evil-collection.
+  (evil-want-integration t)  ; Required by evil-collection.
+  (evil-want-keybinding nil) ; Required by evil-collection.
   (evil-want-C-u-scroll t)
   :config
   (evil-mode 1)
@@ -65,7 +80,7 @@
 (use-package evil-collection
   :after evil
   :ensure t
-  :custom (evil-collection-setup-minibuffer nil)  ;; If set to `t` it messes up / overrides my custom keybindings for Ivy (e.g. C-k).
+  :custom (evil-collection-setup-minibuffer nil)  ; If set to `t` it messes up / overrides my custom keybindings for Ivy (e.g. C-k).
   :init (evil-collection-init)
 )
 
@@ -75,10 +90,12 @@
 ;; Delight is used to hide/edit information about major or minor modes from the modeline.
 (use-package delight)
 
+;; TODO: Make it open nicely (undo-tree-visualize) on SPC a u.
+;;   Also, tie `u` keybinding to use undo-tree, not normal undo (should I do that?).
 (use-package undo-tree
   :delight
   :custom
-  (undo-tree-visualizer-diff t)  ;; Display diff in undo-tree visualizer.
+  (undo-tree-visualizer-diff t)  ; Display diff in undo-tree visualizer.
   :config
   (global-undo-tree-mode)
 )
@@ -96,6 +113,8 @@
 ;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
 ;; I should also get Ivy to behave like this! Right now it shows dirs in too similar color uses the same
 ;; color for all the rest.
+;; CHEATSHEET: M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
+;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
 (use-package ivy
   :delight
   :bind (
@@ -107,12 +126,12 @@
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-alt-done)
               ("TAB" . ivy-alt-done)
-	 :map ivy-switch-buffer-map ;; When in the buffer switching mode.
+	 :map ivy-switch-buffer-map ; When in the buffer switching mode.
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-done)
 	      ("C-d" . ivy-switch-buffer-kill)
-	 :map ivy-reverse-i-search-map ;; When doing incremental search.
+	 :map ivy-reverse-i-search-map ; When doing incremental search.
 	      ("C-j" . ivy-next-line)
 	      ("C-k" . ivy-previous-line)
 	      ("C-l" . ivy-done)
@@ -120,10 +139,10 @@
 	 )
   :custom
   (ivy-height 20)
-  (ivy-use-virtual-buffers t)  ;; Adds recent files and bookmarks and similar to results.
+  (ivy-use-virtual-buffers t)  ; Adds recent files and bookmarks and similar to results.
   (ivy-display-style 'fancy)
-  (ivy-count-format "(%d/%d) ")  ;; (num listed / total num)
-  (ivy-extra-directories nil)  ;; Don't show ./ and ../
+  (ivy-count-format "(%d/%d) ")  ; (num listed / total num)
+  (ivy-extra-directories nil)  ; Don't show ./ and ../
   :config
   ;; ivy-format-functions-alist determines for each place where ivy is used how the output should be formatted.
   ;; t stands for default case, if there was no more specific formatting function defined.
@@ -134,24 +153,22 @@
   ;; This is recommended by ivy-rich, as a setting.
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-arrow-line)
 
-  ;; I want Ivy to use the same face for highlighting as the rest of my UI does.
-  ;; TODO: Would a better place for this be where I customize/extend the theme, instead of here?
-  (add-hook 'after-enable-theme-hook (lambda () (custom-set-faces '(ivy-current-match ((t (:inherit highlight)))))))
-
   ;; This will enhance specific emacs commands with ivy automatically.
   (ivy-mode 1)
 )
 
-;; Counsel brings enhanced versions of common emacs commands, powered by Ivy.
+;; Counsel is a package that is part of Ivy ecosystem.
+;; It brings enhanced versions of common emacs commands, powered by Ivy.
 ;; Ivy already offers some enhanced commands, but Counsel offers more and better.
 (use-package counsel
   :delight
   :config
   (setq counsel-describe-function-function 'helpful-callable)
   (setq counsel-describe-variable-function 'helpful-variable)
-  (counsel-mode 1)  ;; This will remap the built-in Emacs functions that have counsel replacements.
+  (counsel-mode 1)  ; This will remap the built-in Emacs functions that have counsel replacements.
 )
 
+;; Swiper is a package that is part of Ivy ecosystem.
 ;; Better isearch (incremental search), powered by Ivy.
 (use-package swiper
   :bind (("C-s" . swiper)
@@ -191,9 +208,9 @@
   ;; With ivy-rich-set-columns, you can add new ones or replace existing columns when ivy is used in specific commands.
   ;; For details check out ivy-rich docs and docs of ivy-rich-display-transformers-list .
   (ivy-rich-set-columns
-    'counsel-find-file  ;; Set columns for this command (therefore when finding file).
-    '((my/ivy-read-file-transformer)  ;; Use my function instead of default ivy-read-file-transformer.
-      (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))  ;; This I kept the same. It adds target for links.
+    'counsel-find-file  ; Set columns for this command (therefore when finding file).
+    '((my/ivy-read-file-transformer)  ; Use my function instead of default ivy-read-file-transformer.
+      (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))  ; This I kept the same. It adds target for links.
      )
   )
 
@@ -218,9 +235,9 @@
 
 ;; TODO: Comes packaged with emacs 30! So I don't need to install it any more. Does that mean I need to change something here? Or use-package just won't install it and all good?
 (use-package which-key
-  :custom
-  (which-key-idle-delay 0.5)
+  :diminish
   :config
+  (setq which-key-idle-delay 0.5)
   (which-key-mode)
 )
 
@@ -230,24 +247,86 @@
   (global-hl-line-mode)
 )
 
+;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
 (use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
   :bind
-  (("C-h f" . helpful-callable)
-   ("C-h v" . helpful-variable)
-   ("C-h k" . helpful-key)
-   ("C-h x" . helpful-command)
+  (([remap describe-command] . helpful-command)
+   ([remap describe-key] . helpful-key)
    ("C-h h" . helpful-at-point)
-   ("C-h F" . helpful-function)
   )
 )
 
+;; Colorizes color names in buffers.
+(use-package rainbow-mode
+  :config
+  ;; I made rainbow-mode global. If this turns out too aggressive, I can instead hook it only
+  ;; for certain modes (e.g. Help, CSS, ...).
+  (define-globalized-minor-mode my-global-rainbow-mode rainbow-mode (lambda () (rainbow-mode 1)))
+  (my-global-rainbow-mode 1)
+)
+
+;; CHEATSHEET:
+;;  - C-s to search among the candidates. C-M-s to not just highlight but also filter. C-g to quit search mode.
+;;   TODO: Can I somehow show this "cheatsheet" info when candidate popup pops up? Maybe in the header/footer of the popup?
+;;     Seems there is no directly supported way to do that, and would be too
+;;     complex.  Ok, maybe then I can print it in the echo buffer, or somewhere
+;;     else, when popup shows up (this I can do via company-provided hooks). I
+;;     could maybe have dedicated space somewhere to show help / cheatsheet
+;;     info?
+;; TODO: Fix highlight and search faces in tooltip/popup, or have theme that makes them nice. Company has faces that we can customize.
+;; TODO: Either make scroll more visible, or use lines instead.
 (use-package company
   :custom
   (company-idle-delay 0.2)
   (company-minimum-prefix-length 2)
   (company-selection-wrap-around t)
+  (company-format-margin-function 'company-text-icons-margin)
+  (company-text-face-extra-attributes '(:weight semi-light :slant italic))
+  ;; I found default icons (be it vscode or text) to be too hard to understand,
+  ;; so I made my own mapping here that provides more info. For the context, icons are
+  ;; short descriptions left of the completion candidates in the popup.
+  (company-text-icons-mapping
+   '((array          "   []" font-lock-type-face)
+     (boolean        " bool" font-lock-builtin-face)
+     (class          "class" font-lock-type-face)
+     (color          "color" success)
+     (constant       "const" font-lock-constant-face)
+     (constructor    "cnstr" font-lock-function-name-face)
+     (enum-member    "enumv" font-lock-builtin-face)
+     (enum           " enum" font-lock-builtin-face)
+     (field          "field" font-lock-variable-name-face)
+     (file           " file" font-lock-string-face)
+     (folder         "  dir" font-lock-doc-face)
+     (interface      " intf" font-lock-type-face)
+     (keyword        "  kwd" font-lock-keyword-face)
+     (method         " mthd" font-lock-function-name-face)
+     (function       " func" font-lock-function-name-face)
+     (module         "  mdl" font-lock-type-face)
+     (numeric        "  num" font-lock-builtin-face)
+     (operator       "   op" font-lock-comment-delimiter-face)
+     (property       " prop" font-lock-variable-name-face)
+     (reference      "  ref" font-lock-doc-face)
+     (snippet        " snip" font-lock-string-face)
+     (string         "  str" font-lock-string-face)
+     (struct         "strct" font-lock-variable-name-face)
+     (text           " text" shadow)
+     (type-parameter "typep" font-lock-type-face)
+     (unit           " unit" shadow)
+     (value          "  val" font-lock-builtin-face)
+     (variable       "  var" font-lock-variable-name-face)
+     (t              "    ." shadow))
+  )
   :config
   (add-hook 'after-init-hook 'global-company-mode)
+)
+
+;; It colors each pair of parenthesses into their own color.
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode)
 )
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
@@ -273,3 +352,16 @@
 ;; TODO: Use smartparens or electric-pair-mode?
 
 ;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) .
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(doom-themes which-key undo-tree rainbow-mode rainbow-delimiters ivy-rich hl-todo helpful evil-escape evil-collection doom-modeline delight counsel company command-log-mode)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(ivy-current-match ((t (:inherit highlight)))))
