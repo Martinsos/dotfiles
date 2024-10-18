@@ -56,6 +56,33 @@
   (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
 )
 
+;; TODO: Stopped here with watching system crafters videos! Continue watching,
+;;   uncomment stuff below, and get it working.
+;; ;; general.el provides convenient, unified interface for key definitions.
+;; ;; It can do many cool things, one of them is specifying leader key and prefixes.
+;; ;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
+;; (use-package general
+;;   :config
+;;   (general-evil-setup t)
+
+;;   (general-create-definer my/leader-keys
+;;     :keymaps '(normal insert visual emacs)
+;;     :prefix "SPC"
+;;     :global-prefix "C-SPC" ; TODO: Understand why this.
+;;   )
+
+;;   ;; TODO: In general.el README, this way of defining keys is listed
+;;   ;;   as ineficient (slows down startup time).
+;;   ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
+;;   ;;   and rewrite it to follow the advice there.
+;;   (my/leader-keys
+;;     "t"  '(:ignore t :which-key "toggles")
+;;     "tt" '(counsel-load-theme :which-key "choose theme")
+;;   )
+;; )
+
+
+
 ;;;;;;;;;;;;
 ;;; Evil ;;;
 ;;;;;;;;;;;;
@@ -358,3 +385,16 @@
 ;; TODO: Use smartparens or electric-pair-mode?
 
 ;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) .
+
+;; TODO: Add keybinding for counsel-load-theme -> that is the fucntion I want to ineractively use to load themes, not load-theme, because counsel also removes old themes which is great.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;; CHEATSHEET ;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; M-: -> eval in echo buffer
+;; check-parens -> find unbalanced parenthesses in the buffer
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
