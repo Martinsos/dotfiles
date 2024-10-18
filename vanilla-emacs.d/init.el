@@ -53,7 +53,8 @@
   ;;   I want it to not modify the foreground of the ivy match, right now it loses coloring from it.
   ;; I run this as after-init-hook because that gives time during init to register any after-enable-theme-hooks.
   ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
-  (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
+  ;(add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
+  (load-theme 'doom-dracula t)
 )
 
 ;;;;;;;;;;;;
@@ -227,9 +228,16 @@
   (global-hl-todo-mode)
 )
 
+;; Utility package that provides nice icons to be used in emacs, by other packages.
+;; NOTE: The first time you load your config on a new machine, you'll have to
+;; run the following command interactively:
+;; M-x all-the-icons-install-fonts
+(use-package all-the-icons)
+
 ;; TODO: Configure or use some other modeline.
 (use-package doom-modeline
   :config
+  (setq doom-modeline-height 40)
   (doom-modeline-mode 1)
 )
 
@@ -248,6 +256,10 @@
 )
 
 ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
+;; TODO: For some reason, in the Helpful buffer, stuff is not correctly "faced" for me.
+;;   Headings are not bold, lisp code is not highlighted, ... .
+;;   I should try turning off everything else and see if I can get it working then, then
+;;   add one by one thing and figure out what is causing it.
 (use-package helpful
   :custom
   (counsel-describe-function-function #'helpful-callable)
@@ -352,16 +364,3 @@
 ;; TODO: Use smartparens or electric-pair-mode?
 
 ;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) .
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(doom-themes which-key undo-tree rainbow-mode rainbow-delimiters ivy-rich hl-todo helpful evil-escape evil-collection doom-modeline delight counsel company command-log-mode)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ivy-current-match ((t (:inherit highlight)))))
