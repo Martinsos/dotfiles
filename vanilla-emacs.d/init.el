@@ -53,8 +53,7 @@
   ;;   I want it to not modify the foreground of the ivy match, right now it loses coloring from it.
   ;; I run this as after-init-hook because that gives time during init to register any after-enable-theme-hooks.
   ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
-  ;(add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
-  (load-theme 'doom-dracula t)
+  (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
 )
 
 ;;;;;;;;;;;;
