@@ -53,45 +53,48 @@
   ;;   I want it to not modify the foreground of the ivy match, right now it loses coloring from it.
   ;; I run this as after-init-hook because that gives time during init to register any after-enable-theme-hooks.
   ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
+  ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
+  ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
   (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
 )
 
-;; TODO: Stopped here with watching system crafters videos! Continue watching,
-;;   uncomment stuff below, and get it working.
-;; ;; general.el provides convenient, unified interface for key definitions.
-;; ;; It can do many cool things, one of them is specifying leader key and prefixes.
-;; ;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
-;; (use-package general
-;;   :config
-;;   (general-evil-setup t)
+;; general.el provides convenient, unified interface for key definitions.
+;; It can do many cool things, one of them is specifying leader key and prefixes.
+;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
+(use-package general
+  :config
+  (general-evil-setup t)
 
-;;   (general-create-definer my/leader-keys
-;;     :keymaps '(normal insert visual emacs)
-;;     :prefix "SPC"
-;;     :global-prefix "C-SPC" ; TODO: Understand why this.
-;;   )
+  (general-create-definer my/leader-keys
+    :keymaps '(normal insert visual emacs) ; TODO: Do I need this? Understand it.
+    :prefix "SPC"
+    :global-prefix "C-SPC" ; TODO: Understand why this?
+  )
 
-;;   ;; TODO: In general.el README, this way of defining keys is listed
-;;   ;;   as ineficient (slows down startup time).
-;;   ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
-;;   ;;   and rewrite it to follow the advice there.
-;;   (my/leader-keys
-;;     "t"  '(:ignore t :which-key "toggles")
-;;     "tt" '(counsel-load-theme :which-key "choose theme")
-;;   )
-;; )
-
+  ;; TODO: In general.el README, this way of defining keys is listed
+  ;;   as ineficient (slows down startup time).
+  ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
+  ;;   and rewrite it to follow the advice there.
+  (my/leader-keys
+    "t"  '(:ignore t :which-key "toggles") ; TODO: This is prefix? There is no nicer way to define it?
+    "tt" '(counsel-load-theme :which-key "choose theme")
+  )
+)
 
 
 ;;;;;;;;;;;;
 ;;; Evil ;;;
 ;;;;;;;;;;;;
 
+;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
 (use-package evil
-  :custom
-  (evil-want-integration t)  ; Required by evil-collection.
-  (evil-want-keybinding nil) ; Required by evil-collection.
-  (evil-want-C-u-scroll t)
+  :init
+  (setq evil-want-integration t)  ; Required by evil-collection.
+  (setq evil-want-keybinding nil) ; Required by evil-collection.
+  ;; C-u-scroll needs explicit enabling because in Emacs C-u is important, it is
+  ;; universal argument. But I don't use it much, so I rather go with vi's
+  ;; scroll, which I use a lot.
+  (setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1)
 )
@@ -103,12 +106,12 @@
   (evil-escape-mode)
 )
 
-;; Sets evil keybindings in many more parts of emacs than evil-mode does by default.
+;; Sets evil keybindings in many more parts of emacs than evil-mode does by default,
+;; and in a better way than evil does.
 (use-package evil-collection
   :after evil
-  :ensure t
   :custom (evil-collection-setup-minibuffer nil)  ; If set to `t` it messes up / overrides my custom keybindings for Ivy (e.g. C-k).
-  :init (evil-collection-init)
+  :config (evil-collection-init)
 )
 
 ;;;;;;;;;;;;
@@ -125,6 +128,26 @@
   (undo-tree-visualizer-diff t)  ; Display diff in undo-tree visualizer.
   :config
   (global-undo-tree-mode)
+)
+
+;; Hydra enables you to define a small "menu", which when you activate, activates
+;; transient unique keybindings (which you also defined) that you can use only
+;; then, and lists them in the minibuffer in a nice menu.
+;; It is convenient when you need to spam a lot of very specific commands,
+;; e.g. scale text (in / out), or resize window (left / right / up / down), or
+;; iterate through kill ring, or something like that. So then you go into
+;; "text scale resizing mode" to put it that way, and you can easily resize it
+;; with e.g. one letter commands.
+(use-package hydra)
+
+(defhydra hydra-text-scale ()
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t)
+)
+(my/leader-keys
+  "ts" '(hydra-text-scale/body :which-key "scale text")
 )
 
 
@@ -362,7 +385,9 @@
   (prog-mode . rainbow-delimiters-mode)
 )
 
-;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when?
+;; TODO: Enable that new smooth/pixel scroll setting in emacs?
+
+;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
 
 ;; TODO: How should I proerly format parenthesses in elisp? Allegedly I should use something like paredit or lispy. Bah maybe I don't need anything.
 
@@ -376,6 +401,8 @@
 
 ;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote?
 
+;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
+
 ;; TODO: To figure out what packages to install, I should take a look at what Doomemacs, Spacemacs (and their layers), Emacs-bedrock, and others, use, for inspiration, and how they have it configured.
 ;;   Recommendation by user: projectile, helm or ivy, company (or other auto-completion package), lsp mode, which-key. Don't forget those that come with emacs: org, dired, eshell, magit, ... .
 ;;   I can also look at Melpa to see which are the most used packages.
@@ -384,17 +411,49 @@
 
 ;; TODO: Use smartparens or electric-pair-mode?
 
-;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) .
+;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) , chatgpt-shell, evedel, copilot.el .
 
 ;; TODO: Add keybinding for counsel-load-theme -> that is the fucntion I want to ineractively use to load themes, not load-theme, because counsel also removes old themes which is great.
+
+;; TODO: Can I make it so that in M-x, I get, somewhere on top maybe, a list of recent commands I ran? I guess "just" sorting commands by when they were used last would do it?
+
+;; TODO: Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
+
+;; TODO: Write down following next to lsp-mode: I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
+
+;; TODO: Try replacing Ivy, Counsel, Swiper, and Company even, with Vertico, Marginalia, Orderless, Embark, Corfu, ...
+;;   Vertico is alternative to Ivy, the rest are supporting packages for it same like Counsel and Swiper are for Ivy, and then Corfu is a replacement for Company.
+;;   Seems like a lot of people like Vertico, ... , Corfu and the rest. Allegedly they using more of native Emacs stuff, so are simpler but also make more sense? Hm.
+
+;; TODO: Check out bedrock emacs, simple starting config but has good stuff allegedly: https://sr.ht/~ashton314/emacs-bedrock/ .
+
+;; TODO: Check out config by this Prot guy, people say it is good: https://protesilaos.com/emacs/dotemacs .
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; CHEATSHEET ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; M-: -> eval in echo buffer
+;;
 ;; check-parens -> find unbalanced parenthesses in the buffer
+;;
+;; C-h -> help! find out about v (variable), f (function), face, ... .
+;; C-h h -> help for symbola at point.
+;;
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(hydra which-key undo-tree rainbow-mode rainbow-delimiters ivy-rich hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel company command-log-mode colorful-mode all-the-icons)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
