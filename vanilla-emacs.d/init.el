@@ -61,26 +61,123 @@
 ;; general.el provides convenient, unified interface for key definitions.
 ;; It can do many cool things, one of them is specifying leader key and prefixes.
 ;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
+;; NOTE: I found general.el to be really complex, and I haven't invested the time to properly understand it.
+;;   Therefore, I don't completely understand if the config below is written in the best way, but
+;;   it was recommended by others and it seems to work.
 (use-package general
   :config
   (general-evil-setup t)
 
+  ;; general-create-definer allows you to create a function with some defaults set, that you can use to define more keys.
+  ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
   (general-create-definer my/leader-keys
-    :keymaps '(normal insert visual emacs) ; TODO: Do I need this? Understand it.
-    :prefix "SPC"
-    :global-prefix "C-SPC" ; TODO: Understand why this?
+    :keymaps '(normal insert visual emacs) ; NOTE: Doesn't work without this, but I am not sure why I need it, why can't it just be global (default).
+    :prefix "SPC" ; This will be active only in "normal"-like states (so `normal` and `emacs`).
+    :global-prefix "C-SPC" ; This will be always active.
   )
 
-  ;; TODO: In general.el README, this way of defining keys is listed
-  ;;   as ineficient (slows down startup time).
+  ;; TODO: In general.el README, this way of defining keys is listed as ineficient (slows down startup time).
   ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
-  ;;   and rewrite it to follow the advice there.
+  ;;   and possibly rewrite it to follow the advice there.
   (my/leader-keys
-    "t"  '(:ignore t :which-key "toggles") ; TODO: This is prefix? There is no nicer way to define it?
-    "tt" '(counsel-load-theme :which-key "choose theme")
+    "1"   '(winum-select-window-1 :which-key "jump to window 1")
+    "2"   '(winum-select-window-2 :which-key "jump to window 2")
+    "3"   '(winum-select-window-3 :which-key "jump to window 3")
+    "4"   '(winum-select-window-4 :which-key "jump to window 4")
+
+    "t"   '(:ignore t :which-key "toggles") ; This is how prefix is defined.
+    "tt"  '(counsel-load-theme :which-key "choose theme")
+    "ts"  '(hydra-text-scale/body :which-key "scale text")
+
+    "a"   '(:ignore t :which-key "apps")
+
+    "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
+
+    "q"   '(:ignore t :which-key "quit")
+    "qq"  '(save-buffers-kill-terminal :which-key "quit")
+    "qr"  '(restart-emacs :which-key "restart")
+
+    "w"   '(:ignore t :which-key "windows")
+    "ww"  '(ace-window :which-key "other window")
+    "wd"  '(delete-window :which-key "delete window")
+    "w/"  '(split-window-right :which-key "split vertically")
+    "w-"  '(split-window-below :which-key "split horizontally")
+    "wr"  '(hydra-window-resize/body :which-key "resize window")
+    "wm"  '(hydra-window-move/body :which-key "move window")
+
+    "b"   '(:ignore t :which-key "buffers")
+    "bb"  '(ivy-switch-buffer :which-key "switch buffer")
+    "bd"  '(kill-this-buffer :which-key "kill buffer")
+    "bs"  '(scratch-buffer :which-key "go to scratch")
+    ;; TODO: Implement previous buffer on TAB
+
+    "f"   '(:ignore t :which-key "files")
+    "fj"  '(avy-goto-char-timer :which-key "jump in file")
+
+    "v"   '(:ignore t :which-key "eval (elisp)")
+    "v:"  '(eval-expression :which-key "expression")
+    "vl"  '(eval-last-sexp :which-key "last-sexp")
+    "vt"  '(eval-defun :which-key "top-level form")
   )
 )
 
+;; Hydra enables you to define a small "menu", which when you activate, activates
+;; transient unique keybindings (which you also defined) that you can use only
+;; then, and lists them in the minibuffer in a nice menu.
+;; It is convenient when you need to spam a lot of very specific commands,
+;; e.g. scale text (in / out), or resize window (left / right / up / down), or
+;; iterate through kill ring, or something like that. So then you go into
+;; "text scale resizing mode" to put it that way, and you can easily resize it
+;; with e.g. one letter commands.
+(use-package hydra)
+
+(defhydra hydra-text-scale ()
+  "Scale text"
+  ("j" text-scale-decrease "out")
+  ("k" text-scale-increase "in")
+)
+
+(defhydra hydra-window-resize (:hint nil)
+  "
+Resize Window
+-----------
+             _h_: ⇾ ⇽          ↑        ↓
+                           _k_:     _j_:
+             _l_: ⇽ ⇾          ↓        ↑
+"
+  ("h" shrink-window-horizontally)
+  ("j" shrink-window)
+  ("k" enlarge-window)
+  ("l" enlarge-window-horizontally)
+  ("q" nil "quit" :exit t)
+)
+
+(defhydra hydra-window-move (:hint nil)
+  "
+Move Window
+-----------
+                     _k_: top
+             _h_: left       _l_: right
+                     _j_: bottom
+"
+  ("h" evil-window-move-far-left)
+  ("j" evil-window-move-very-bottom)
+  ("k" evil-window-move-very-top)
+  ("l" evil-window-move-far-right)
+  ("q" nil "quit" :exit t)
+)
+
+;; Allows fast jumping inside the buffer (to word, to line, ...).
+(use-package avy)
+
+;; Allows jumping to any window by typing just a single letter.
+(use-package ace-window)
+
+;; This package gives me commands to jump to a window with specific number (ace-window doesn't do that).
+(use-package winum
+  :config
+  (winum-mode)
+)
 
 ;;;;;;;;;;;;
 ;;; Evil ;;;
@@ -129,27 +226,6 @@
   :config
   (global-undo-tree-mode)
 )
-
-;; Hydra enables you to define a small "menu", which when you activate, activates
-;; transient unique keybindings (which you also defined) that you can use only
-;; then, and lists them in the minibuffer in a nice menu.
-;; It is convenient when you need to spam a lot of very specific commands,
-;; e.g. scale text (in / out), or resize window (left / right / up / down), or
-;; iterate through kill ring, or something like that. So then you go into
-;; "text scale resizing mode" to put it that way, and you can easily resize it
-;; with e.g. one letter commands.
-(use-package hydra)
-
-(defhydra hydra-text-scale ()
-  "scale text"
-  ("j" text-scale-increase "in")
-  ("k" text-scale-decrease "out")
-  ("f" nil "finished" :exit t)
-)
-(my/leader-keys
-  "ts" '(hydra-text-scale/body :which-key "scale text")
-)
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Ivy, Counsel and Swiper ;;;
@@ -443,17 +519,3 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(hydra which-key undo-tree rainbow-mode rainbow-delimiters ivy-rich hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel company command-log-mode colorful-mode all-the-icons)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
