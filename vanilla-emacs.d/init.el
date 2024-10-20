@@ -38,7 +38,10 @@
 (package-initialize)
 ;; Downloads the package list if it hasn't been downloaded yet.
 (unless package-archive-contents (package-refresh-contents))
-;; Install use-package (advanced package management for emacs) if not installed yet.  
+
+;; TODO: Write a bit of cheatsheet / docs for myself about use-package. What is it,
+;;   what the most important keywords in it do, when to use which one, ... .
+;; Installs use-package (advanced package management for emacs) if not installed yet.  
 (unless (package-installed-p 'use-package) (package-install 'use-package))
 (require 'use-package)
 (setq use-package-always-ensure t)  ; Tells use-package to have :ensure t by default for every package it manages.
@@ -131,6 +134,9 @@
 ;; with e.g. one letter commands.
 (use-package hydra)
 
+;; TODO: Is it ok to have this here, and not in :config of hydra's use-package?
+;;   Does it work only because it is after `(use-package hydra)`?
+;;   Understand where should I be writing defhydra definitions.
 (defhydra hydra-text-scale ()
   "Scale text"
   ("j" text-scale-decrease "out")
@@ -359,18 +365,19 @@ Move Window
 ;; M-x all-the-icons-install-fonts
 (use-package all-the-icons)
 
-;; TODO: Configure or use some other modeline.
+;; TODO: Configure more or use some other modeline.
 (use-package doom-modeline
   :config
   (setq doom-modeline-height 40)
   (doom-modeline-mode 1)
 )
 
-;; TODO: Comes packaged with emacs 30! So I don't need to install it any more. Does that mean I need to change something here? Or use-package just won't install it and all good?
 (use-package which-key
   :diminish
   :config
   (setq which-key-idle-delay 0.5)
+  (setq which-key-add-column-padding 2)
+  (setq which-key-min-display-lines 5)
   (which-key-mode)
 )
 
@@ -461,6 +468,8 @@ Move Window
   (prog-mode . rainbow-delimiters-mode)
 )
 
+;; TODO: Remove delight/diminish package and its usage, it is too much to mantain / remember and I don't need it.
+
 ;; TODO: Enable that new smooth/pixel scroll setting in emacs?
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
@@ -504,6 +513,8 @@ Move Window
 ;; TODO: Check out bedrock emacs, simple starting config but has good stuff allegedly: https://sr.ht/~ashton314/emacs-bedrock/ .
 
 ;; TODO: Check out config by this Prot guy, people say it is good: https://protesilaos.com/emacs/dotemacs .
+
+;; TODO: Another emacs config to check out, kickstarter for neovimers, might have some good stuff for evil: https://github.com/LionyxML/emacs-kick . I also saw it uses vertico, marginalia, ... .
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; CHEATSHEET ;;;;;;;;;;;
