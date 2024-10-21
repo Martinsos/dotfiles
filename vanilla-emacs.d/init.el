@@ -113,6 +113,7 @@
     "bd"  '(kill-this-buffer :which-key "kill buffer")
     "bs"  '(scratch-buffer :which-key "go to scratch")
     ;; TODO: Implement previous buffer on TAB
+    ;; TODO: Add revert-buffer
 
     "f"   '(:ignore t :which-key "files")
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
@@ -121,6 +122,13 @@
     "v:"  '(eval-expression :which-key "expression")
     "vl"  '(eval-last-sexp :which-key "last-sexp")
     "vt"  '(eval-defun :which-key "top-level form")
+
+    ;; TODO: When inside counsel-projectile-rg, you can do C-c C-o to persist the search results in a special buffer,
+    ;;   and then in that buffer you can press enter on any of them and jump to that location.
+    ;;   This is awesome, but how will I remember this? Somehow help myself remember this. Another candidate for "hint"/"help" zone?
+    ;;   Btw Helm (in Spacemacs) has this bar at the bottom where it shows which command was just run and some hints (C-z for actions, ...).
+    ;;   Is this something I can replicate, at least for Ivy?
+    "/"   '(counsel-projectile-rg :which-key "search in project")
   )
 )
 
@@ -245,7 +253,8 @@ Move Window
 ;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
 ;; I should also get Ivy to behave like this! Right now it shows dirs in too similar color uses the same
 ;; color for all the rest.
-;; CHEATSHEET: M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
+;; CHEATSHEET:
+;; - M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
 ;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
 (use-package ivy
   :delight
@@ -352,6 +361,31 @@ Move Window
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
+;; CHEATSHEET:
+;; - Projectile recognizes projects with its heuristics (.git/, maven files, ...), but you can
+;;   add .projectile file to the project root to explicitly mark it as a project.
+(use-package projectile
+  :init
+  ;; TODO: See if I like this or not. I think I don't, it doesn't pick up wasp/ because it is inside wasp-lang/ dir.
+  (when (file-directory-p "~/git")
+    (setq projectile-project-search-path '("~/git"))
+  )
+  ;; First thing that happens on switching to a new project.
+  ;; TODO: Try without this, see if I like that better or not, or if I would like something else.
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind-keymap
+  ("C-c p" . projectile-command-map) ; TODO: Get this behind SPC.
+  :custom
+  ((projectile-completion-system 'ivy))
+  :config
+  (projectile-mode)
+)
+
+;; Provides better integration of Projectile and Counsel.
+(use-package counsel-projectile
+  :config (counsel-projectile-mode)
+)
 
 ;; Highlight TODO and similar keywords in comments and strings.
 (use-package hl-todo
@@ -526,6 +560,9 @@ Move Window
 ;; C-h -> help! find out about v (variable), f (function), face, ... .
 ;; C-h h -> help for symbola at point.
 ;;
+;;
+;; Troubleshooting:
+;; - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
