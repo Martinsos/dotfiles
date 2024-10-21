@@ -83,18 +83,31 @@
   ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
   ;;   and possibly rewrite it to follow the advice there.
   (my/leader-keys
+    "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
+    "TAB" '(alternate-buffer :which-key "previous buffer")
+
+    "0"   '(winum-select-window-0 :which-key "jump to window 0")
     "1"   '(winum-select-window-1 :which-key "jump to window 1")
     "2"   '(winum-select-window-2 :which-key "jump to window 2")
     "3"   '(winum-select-window-3 :which-key "jump to window 3")
     "4"   '(winum-select-window-4 :which-key "jump to window 4")
+
+    ;; TODO: When inside counsel-projectile-rg, you can do C-c C-o to persist the search results in a special buffer,
+    ;;   and then in that buffer you can press enter on any of them and jump to that location.
+    ;;   This is awesome, but how will I remember this? Somehow help myself remember this. Another candidate for "hint"/"help" zone?
+    ;;   Btw Helm (in Spacemacs) has this bar at the bottom where it shows which command was just run and some hints (C-z for actions, ...).
+    ;;   Is this something I can replicate, at least for Ivy?
+    "/"   '(counsel-projectile-rg :which-key "search in project")
+    "*"   '(counsel-projectile-rg-region-or-symbol :which-key "search in project w/input")
+
+    ;; TODO: Add "'" to open shell.
 
     "t"   '(:ignore t :which-key "toggles") ; This is how prefix is defined.
     "tt"  '(counsel-load-theme :which-key "choose theme")
     "ts"  '(hydra-text-scale/body :which-key "scale text")
 
     "a"   '(:ignore t :which-key "apps")
-
-    "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
+    "au"   '(undo-tree-visualize :which-key "undo tree")
 
     "q"   '(:ignore t :which-key "quit")
     "qq"  '(save-buffers-kill-terminal :which-key "quit")
@@ -112,8 +125,9 @@
     "bb"  '(ivy-switch-buffer :which-key "switch buffer")
     "bd"  '(kill-this-buffer :which-key "kill buffer")
     "bs"  '(scratch-buffer :which-key "go to scratch")
-    ;; TODO: Implement previous buffer on TAB
-    ;; TODO: Add revert-buffer
+    "bp"  '(hydra-buffer-next-prev/previous-buffer :which-key "previous buffer")
+    "bn"  '(hydra-buffer-next-prev/next-buffer :which-key "next buffer")
+    "br"  '(revert-buffer :which-key "reload buffer")
 
     "f"   '(:ignore t :which-key "files")
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
@@ -121,14 +135,9 @@
     "v"   '(:ignore t :which-key "eval (elisp)")
     "v:"  '(eval-expression :which-key "expression")
     "vl"  '(eval-last-sexp :which-key "last-sexp")
-    "vt"  '(eval-defun :which-key "top-level form")
+    "vv"  '(eval-defun :which-key "top-level form")
 
-    ;; TODO: When inside counsel-projectile-rg, you can do C-c C-o to persist the search results in a special buffer,
-    ;;   and then in that buffer you can press enter on any of them and jump to that location.
-    ;;   This is awesome, but how will I remember this? Somehow help myself remember this. Another candidate for "hint"/"help" zone?
-    ;;   Btw Helm (in Spacemacs) has this bar at the bottom where it shows which command was just run and some hints (C-z for actions, ...).
-    ;;   Is this something I can replicate, at least for Ivy?
-    "/"   '(counsel-projectile-rg :which-key "search in project")
+    "p"   '(projectile-command-map :which-key "projects")
   )
 )
 
@@ -149,12 +158,20 @@
   "Scale text"
   ("j" text-scale-decrease "out")
   ("k" text-scale-increase "in")
+  ("q" nil "quit" :exit t)
+)
+
+(defhydra hydra-buffer-next-prev ()
+  "Next/previous buffer"
+  ("p" previous-buffer "previous")
+  ("n" next-buffer "next")
+  ("q" nil "quit" :exit t)
 )
 
 (defhydra hydra-window-resize (:hint nil)
   "
-Resize Window
------------
+Resize window
+-------------
              _h_: ⇾ ⇽          ↑        ↓
                            _k_:     _j_:
              _l_: ⇽ ⇾          ↓        ↑
@@ -168,7 +185,7 @@ Resize Window
 
 (defhydra hydra-window-move (:hint nil)
   "
-Move Window
+Move window
 -----------
                      _k_: top
              _h_: left       _l_: right
@@ -227,6 +244,19 @@ Move Window
 
 ;;;;;;;;;;;;
 
+(defun alternate-buffer (&optional window)
+  "Switch back and forth between current and last buffer in the current window."
+  (interactive)
+  (cl-destructuring-bind (buf start pos)
+    (or (cl-find (window-buffer window) (window-prev-buffers) :key #'car :test-not #'eq)
+        (list (other-buffer) nil nil)
+    )
+    (if (not buf)
+      (message "Last buffer not found.")
+      (set-window-buffer-start-and-point window buf start pos)
+    )
+  )
+)
 
 ;; Delight is used to hide/edit information about major or minor modes from the modeline.
 (use-package delight)
@@ -384,8 +414,20 @@ Move Window
 
 ;; Provides better integration of Projectile and Counsel.
 (use-package counsel-projectile
-  :config (counsel-projectile-mode)
+  :config
+  (defun counsel-projectile-rg-region-or-symbol ()
+    "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
+    (interactive)
+    (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
+         (counsel-projectile-rg)
+    )
+  )
+
+  (counsel-projectile-mode)
 )
+
+;; Magit is all you need to work with git.
+(use-package magit)
 
 ;; Highlight TODO and similar keywords in comments and strings.
 (use-package hl-todo
@@ -504,6 +546,8 @@ Move Window
 
 ;; TODO: Remove delight/diminish package and its usage, it is too much to mantain / remember and I don't need it.
 
+;; TODO: There seems to be something wrong with my undo ("u"), it doesn't want to undo after I save the file?
+
 ;; TODO: Enable that new smooth/pixel scroll setting in emacs?
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
@@ -518,7 +562,7 @@ Move Window
 
 ;; TODO: Add some of the temporary files to the .gitignore.
 
-;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote?
+;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
 
 ;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
@@ -550,6 +594,8 @@ Move Window
 
 ;; TODO: Another emacs config to check out, kickstarter for neovimers, might have some good stuff for evil: https://github.com/LionyxML/emacs-kick . I also saw it uses vertico, marginalia, ... .
 
+;; TODO: Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; CHEATSHEET ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -559,6 +605,10 @@ Move Window
 ;;
 ;; C-h -> help! find out about v (variable), f (function), face, ... .
 ;; C-h h -> help for symbola at point.
+;;
+;; m <char> -> set mark
+;; ` <char> -> go to mark
+;; ` ` -> go to last mark
 ;;
 ;;
 ;; Troubleshooting:
