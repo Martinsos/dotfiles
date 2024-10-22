@@ -1,0 +1,17 @@
+
+;; ----- smex-history -----
+(
+ package-delete
+ butterfly
+ cd
+ 5x5
+ arp
+ dbx
+ dig
+)
+
+;; ----- smex-data -----
+(
+ (butterfly . 1)
+ (package-delete . 1)
+)

@@ -1,0 +1,19 @@
+
+;; ----- amx-history -----
+(
+ package-delete
+ package-autoremove
+ ert
+ counsel-M-x
+ cd
+ 5x5
+ amx
+)
+
+;; ----- amx-data -----
+(
+ (counsel-M-x . 1)
+ (ert . 1)
+ (package-autoremove . 1)
+ (package-delete . 1)
+)
