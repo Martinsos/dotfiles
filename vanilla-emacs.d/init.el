@@ -597,6 +597,8 @@ Move window
 
 ;; TODO: Enable that new smooth/pixel scroll setting in emacs?
 
+;; TODO: Go through my spacemacs config and copy stuff I liked from there.
+
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
 
 ;; TODO: Use native installation of emacs.
