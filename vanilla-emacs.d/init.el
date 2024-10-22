@@ -61,6 +61,12 @@
   (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
 )
 
+;; This makes copy/paste properly work when emacs is running via the terminal.
+(use-package xclip
+  :config
+  (xclip-mode 1)
+)
+
 ;; general.el provides convenient, unified interface for key definitions.
 ;; It can do many cool things, one of them is specifying leader key and prefixes.
 ;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
@@ -84,7 +90,7 @@
   ;;   and possibly rewrite it to follow the advice there.
   (my/leader-keys
     "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
-    "TAB" '(alternate-buffer :which-key "previous buffer")
+    "TAB" '(my/alternate-buffer :which-key "previous buffer")
 
     "0"   '(winum-select-window-0 :which-key "jump to window 0")
     "1"   '(winum-select-window-1 :which-key "jump to window 1")
@@ -108,6 +114,23 @@
 
     "a"   '(:ignore t :which-key "apps")
     "au"   '(undo-tree-visualize :which-key "undo tree")
+    "af"   '(:ignore t :which-key "fun")
+    "afa" '(animate-birthday-present :which-key "birthday")
+    "afb" '(blackbox :which-key "blackbox")
+    "afc" '(butterfly :which-key "butterfly")
+    "afd" '(doctor :which-key "doctor")
+    "afe" '(bubbles :which-key "bubbles")
+    "aff" '(dunnet :which-key "dunnet")
+    "afg" '(gnugo :which-key "gnugo")
+    "afh" '(hanoi :which-key "hanoi")
+    "afi" '(gomoku :which-key "gomoku")
+    "afj" '(solitaire :which-key "solitaire")
+    "afl" '(life :which-key "life")
+    "afp" '(pong :which-key "pong")
+    "afs" '(snake :which-key "snake")
+    "aft" '(tetris :which-key "tetris")
+    "afx" '(5x5 :which-key "5x5")
+    "afz" '(zone :which-key "zone")
 
     "q"   '(:ignore t :which-key "quit")
     "qq"  '(save-buffers-kill-terminal :which-key "quit")
@@ -131,6 +154,10 @@
 
     "f"   '(:ignore t :which-key "files")
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
+    "ff"  '(counsel-find-file :which-key "find file")
+    "fs"  '(save-buffer :which-key "save")
+    "fe"  '(:ignore t :which-key "emacs")
+    "fei" '(my/open-init-file :which-key "open init file")
 
     "v"   '(:ignore t :which-key "eval (elisp)")
     "v:"  '(eval-expression :which-key "expression")
@@ -244,7 +271,7 @@ Move window
 
 ;;;;;;;;;;;;
 
-(defun alternate-buffer (&optional window)
+(defun my/alternate-buffer (&optional window)
   "Switch back and forth between current and last buffer in the current window."
   (interactive)
   (cl-destructuring-bind (buf start pos)
@@ -258,13 +285,16 @@ Move window
   )
 )
 
-;; Delight is used to hide/edit information about major or minor modes from the modeline.
-(use-package delight)
+(defun my/open-init-file ()
+  "Open the init file."
+  (interactive)
+  (find-file user-init-file)
+)
+
 
 ;; TODO: Make it open nicely (undo-tree-visualize) on SPC a u.
 ;;   Also, tie `u` keybinding to use undo-tree, not normal undo (should I do that?).
 (use-package undo-tree
-  :delight
   :custom
   (undo-tree-visualizer-diff t)  ; Display diff in undo-tree visualizer.
   :config
@@ -278,6 +308,7 @@ Move window
 ;; Ivy is the main thing (nice search through list of stuff, in minibuffer and elsewhere),
 ;; while Counsel and Swiper extend its usage through more of the Emacs.
 
+;; TODO: Check out Ivy hydra -> I saw it in Ivy manual but don't know how to use it (it doesn't seem to be installed?).
 ;; TODO: Should I set Ivy to use fuzzy search? Is that better or not?
 ;; TODO: In Spacemacs (helm), coloring of listed files on C-x C-f is richer than I have in Ivy here.
 ;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
@@ -287,7 +318,6 @@ Move window
 ;; - M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
 ;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
 (use-package ivy
-  :delight
   :bind (
 	 ;; I define some evil-ish keybindings here since neither evil not evil-connection
 	 ;; define these specific ones for Ivy.
@@ -324,6 +354,16 @@ Move window
   ;; This is recommended by ivy-rich, as a setting.
   (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-arrow-line)
 
+  ;; ivy-re-builders-alist defines which completion styles (fuzzy, in order, ...) to use for which ivy usage.
+  ;; Here I define that we use ivy--regex-ignore-order for all situations, instead of the default ivy--regex-plus,
+  ;; which is the same but cares about the order of words in the query, which I found to not be useful.
+  (setq ivy-re-builders-alist
+        '((t . ivy--regex-ignore-order)))
+
+  ;; ivy-initial-inputs-alist defines what to start specific searches with. Default is ^ for all searches,
+  ;; which makes queries start from the start of each completion candidate, but I set it to nil to avoid that.
+  (setq ivy-initial-inputs-alist nil)
+
   ;; This will enhance specific emacs commands with ivy automatically.
   (ivy-mode 1)
 )
@@ -332,7 +372,6 @@ Move window
 ;; It brings enhanced versions of common emacs commands, powered by Ivy.
 ;; Ivy already offers some enhanced commands, but Counsel offers more and better.
 (use-package counsel
-  :delight
   :config
   (setq counsel-describe-function-function 'helpful-callable)
   (setq counsel-describe-variable-function 'helpful-variable)
@@ -342,11 +381,12 @@ Move window
 ;; Swiper is a package that is part of Ivy ecosystem.
 ;; Better isearch (incremental search), powered by Ivy.
 (use-package swiper
-  :bind (("C-s" . swiper)
-	 :map evil-normal-state-map
-	      ("/" . swiper)
-	      ("?" . swiper-backward)
-	)
+  :bind
+  (("C-s" . swiper)
+    :map evil-normal-state-map
+      ("/" . swiper)
+      ("?" . swiper-backward)
+  )
 )
 
 ;; This is my custom function for how Ivy shows candidates when finding a file.
@@ -397,10 +437,6 @@ Move window
 ;;   add .projectile file to the project root to explicitly mark it as a project.
 (use-package projectile
   :init
-  ;; TODO: See if I like this or not. I think I don't, it doesn't pick up wasp/ because it is inside wasp-lang/ dir.
-  (when (file-directory-p "~/git")
-    (setq projectile-project-search-path '("~/git"))
-  )
   ;; First thing that happens on switching to a new project.
   ;; TODO: Try without this, see if I like that better or not, or if I would like something else.
   (setq projectile-switch-project-action #'projectile-dired)
@@ -449,7 +485,6 @@ Move window
 )
 
 (use-package which-key
-  :diminish
   :config
   (setq which-key-idle-delay 0.5)
   (setq which-key-add-column-padding 2)
@@ -544,8 +579,6 @@ Move window
   (prog-mode . rainbow-delimiters-mode)
 )
 
-;; TODO: Remove delight/diminish package and its usage, it is too much to mantain / remember and I don't need it.
-
 ;; TODO: There seems to be something wrong with my undo ("u"), it doesn't want to undo after I save the file?
 
 ;; TODO: Enable that new smooth/pixel scroll setting in emacs?
@@ -579,6 +612,8 @@ Move window
 ;; TODO: Add keybinding for counsel-load-theme -> that is the fucntion I want to ineractively use to load themes, not load-theme, because counsel also removes old themes which is great.
 
 ;; TODO: Can I make it so that in M-x, I get, somewhere on top maybe, a list of recent commands I ran? I guess "just" sorting commands by when they were used last would do it?
+
+;; TODO: Implement transient yanking, so I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
 
 ;; TODO: Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
 
@@ -617,3 +652,16 @@ Move window
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(xclip winum which-key undo-tree rainbow-mode rainbow-delimiters magit ivy-rich hydra hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel-projectile company command-log-mode colorful-mode all-the-icons ace-window)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
