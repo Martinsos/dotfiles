@@ -114,6 +114,7 @@
 
     "a"   '(:ignore t :which-key "apps")
     "au"   '(undo-tree-visualize :which-key "undo tree")
+
     "af"   '(:ignore t :which-key "fun")
     "afa" '(animate-birthday-present :which-key "birthday")
     "afb" '(blackbox :which-key "blackbox")
@@ -156,6 +157,7 @@
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
     "ff"  '(counsel-find-file :which-key "find file")
     "fs"  '(save-buffer :which-key "save")
+
     "fe"  '(:ignore t :which-key "emacs")
     "fei" '(my/open-init-file :which-key "open init file")
 
@@ -164,7 +166,15 @@
     "vl"  '(eval-last-sexp :which-key "last-sexp")
     "vv"  '(eval-defun :which-key "top-level form")
 
-    "p"   '(projectile-command-map :which-key "projects")
+    "p"   '(:ignore t :which-key "projects")
+    "pf"  '(counsel-projectile-find-file :which-key "find file")
+    "pd"  '(projectile-find-dir :which-key "find dir")
+    "pb"  '(projectile-switch-to-buffer :which-key "switch buffer")
+    "pp"  '(counsel-projectile-switch-project :which-key "switch project")
+    "pr"  '(projectile-replace :which-key "find and replace")
+    "p."  '(projectile-command-map :which-key "all commands")
+
+    "g"   '(magit :which-key "magit")
   )
 )
 
@@ -236,6 +246,10 @@ Move window
   :config
   (winum-mode)
 )
+
+;; Remembers last used commands and puts them on top of M-x's list of commands.
+;; Integrates seamlessly with Ivy/Counsel, Ido and some other.
+(use-package amx)
 
 ;;;;;;;;;;;;
 ;;; Evil ;;;
@@ -585,8 +599,6 @@ Move window
 
 ;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
 
-;; TODO: How should I proerly format parenthesses in elisp? Allegedly I should use something like paredit or lispy. Bah maybe I don't need anything.
-
 ;; TODO: Use native installation of emacs.
 
 ;; TODO: Set up Company, Flycheck, LSP and LSP-UI. Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
@@ -599,34 +611,38 @@ Move window
 
 ;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
-;; TODO: To figure out what packages to install, I should take a look at what Doomemacs, Spacemacs (and their layers), Emacs-bedrock, and others, use, for inspiration, and how they have it configured.
-;;   Recommendation by user: projectile, helm or ivy, company (or other auto-completion package), lsp mode, which-key. Don't forget those that come with emacs: org, dired, eshell, magit, ... .
-;;   I can also look at Melpa to see which are the most used packages.
-
 ;; TODO: How do I pin down package version? What if one of them introduces a breaking change and emacs breaks? I need to have a way to pin them down / freeze them.
 
 ;; TODO: Use smartparens or electric-pair-mode?
 
 ;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) , chatgpt-shell, evedel, copilot.el .
 
-;; TODO: Add keybinding for counsel-load-theme -> that is the fucntion I want to ineractively use to load themes, not load-theme, because counsel also removes old themes which is great.
-
-;; TODO: Can I make it so that in M-x, I get, somewhere on top maybe, a list of recent commands I ran? I guess "just" sorting commands by when they were used last would do it?
+;; TODO: Try Nano theme.
 
 ;; TODO: Implement transient yanking, so I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
 
-;; TODO: Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
+;; TODO: Stop that custom block from appearing at the end of this file.
 
+;; TODO: Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
 ;; TODO: Write down following next to lsp-mode: I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
+
+;; TODO: I would love to show some kind of hints in certain situations. Couple of useful keybindings when I am in some context. Kind of like Helm in Spacemacs shows it at that footer it has.
+;;   But for Ivy. Also, for stuff like company when in completion popup, to remind me of C-s and C-M-s. What if I had an area in my emacs where contextual tips are shown as you do some actions?
+;;   For example they get shown when you open completion popup, or when you start using Ivy? Could I make this a universal mechanism? Maybe I can expand it then for a bit more info if I want,
+;;   for my custom cheasheet? It would be kind of a "publish" mechanism I guess.
 
 ;; TODO: Try replacing Ivy, Counsel, Swiper, and Company even, with Vertico, Marginalia, Orderless, Embark, Corfu, ...
 ;;   Vertico is alternative to Ivy, the rest are supporting packages for it same like Counsel and Swiper are for Ivy, and then Corfu is a replacement for Company.
 ;;   Seems like a lot of people like Vertico, ... , Corfu and the rest. Allegedly they using more of native Emacs stuff, so are simpler but also make more sense? Hm.
+;;   Embark seems great, it is a quite unique package: the idea is that you have a keybinding for it and then whenever you are doing something, you hit that keybinding and Embark
+;;   offers you actions that you can do in that situation / with that thing. It does however work best if Marginalia is used, because it gives it more context on stuff, and Marginalia
+;;   works best with the rest of the stuff above, so it kind of pulls one another hm, so it probably makes sense to try to go for all of it at once.
 
+;; TODO: To figure out what packages to install, I should take a look at what Doomemacs, Spacemacs (and their layers), Emacs-bedrock, and others, use, for inspiration, and how they have it configured.
+;;   Recommendation by user: projectile, helm or ivy, company (or other auto-completion package), lsp mode, which-key. Don't forget those that come with emacs: org, dired, eshell, magit, ... .
+;;   I can also look at Melpa to see which are the most used packages.
 ;; TODO: Check out bedrock emacs, simple starting config but has good stuff allegedly: https://sr.ht/~ashton314/emacs-bedrock/ .
-
 ;; TODO: Check out config by this Prot guy, people say it is good: https://protesilaos.com/emacs/dotemacs .
-
 ;; TODO: Another emacs config to check out, kickstarter for neovimers, might have some good stuff for evil: https://github.com/LionyxML/emacs-kick . I also saw it uses vertico, marginalia, ... .
 
 ;; TODO: Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
@@ -652,16 +668,3 @@ Move window
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(xclip winum which-key undo-tree rainbow-mode rainbow-delimiters magit ivy-rich hydra hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel-projectile company command-log-mode colorful-mode all-the-icons ace-window)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
