@@ -17,6 +17,8 @@
 
 (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
 
+(global-hl-line-mode 1) ; Highlights the line in which cursor is.
+
 ;; Start in fullscreen.
 (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
@@ -27,25 +29,58 @@
 
 ;;;;;;;;;;
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Package management ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(require 'package)  ;; Load package.el, emacs's built-in package system.
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-			 ("org" . "https://orgmode.org/elpa/")
-			 ("elpa" . "https://elpa.gnu.org/packages/")))
-;; Initializes the package.el by loading and activating all installed packages.
-(package-initialize)
-;; Downloads the package list if it hasn't been downloaded yet.
-(unless package-archive-contents (package-refresh-contents))
+;; TODO: Explain package.el, elpaca, use-package, their relationship, who does what.
 
-;; TODO: Write a bit of cheatsheet / docs for myself about use-package. What is it,
-;;   what the most important keywords in it do, when to use which one, ... .
-;; Installs use-package (advanced package management for emacs) if not installed yet.  
-(unless (package-installed-p 'use-package) (package-install 'use-package))
-(require 'use-package)
+;; Install and set up Elpaca. Also, in early-init.el, we disable package.el.
+;; NOTE: With Elpaca, one must use elpaca-after-init-hook instead of init-hook, because elpaca is async,
+;;   so after init, packages might still not be installed. Only after elpaca-after-init-hook are packages
+;;   guaranteed to be all loaded/installed.
+(defvar elpaca-installer-version 0.7)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil :depth 1
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                 ,@(when-let ((depth (plist-get order :depth)))
+                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                 ,(plist-get order :repo) ,repo))))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; Install/setup use-package.
+(elpaca elpaca-use-package
+  (elpaca-use-package-mode))
 (setq use-package-always-ensure t)  ; Tells use-package to have :ensure t by default for every package it manages.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,7 +95,7 @@
   ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
   ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-  (add-hook 'after-init-hook (lambda () (load-theme 'doom-dracula t)))
+  (add-hook 'elpaca-after-init-hook (lambda () (load-theme 'doom-dracula t)))
 )
 
 ;; This makes copy/paste properly work when emacs is running via the terminal.
@@ -229,8 +264,8 @@
 ;; iterate through kill ring, or something like that. So then you go into
 ;; "text scale resizing mode" to put it that way, and you can easily resize it
 ;; with e.g. one letter commands.
-(use-package hydra)
-
+(use-package hydra
+  :config
 ;; TODO: Is it ok to have this here, and not in :config of hydra's use-package?
 ;;   Does it work only because it is after `(use-package hydra)`?
 ;;   Understand where should I be writing defhydra definitions.
@@ -277,6 +312,10 @@ Move window
   ("l" evil-window-move-far-right)
   ("q" nil "quit" :exit t)
 )
+
+  
+  )
+
 
 ;; Allows fast jumping inside the buffer (to word, to line, ...).
 (use-package avy)
@@ -549,6 +588,8 @@ Move window
 )
 
 ;; Magit is all you need to work with git.
+;; TODO: Version pulled in is too new for my version of emacs, so elpaca throws errors.
+;;   Either use older version of magit, or upgrade emacs version.
 (use-package magit)
 
 ;; Highlight TODO and similar keywords in comments and strings.
@@ -576,12 +617,6 @@ Move window
   (setq which-key-add-column-padding 2)
   (setq which-key-min-display-lines 5)
   (which-key-mode)
-)
-
-;; Highlights the line in which cursor is.
-(use-package hl-line
-  :config
-  (global-hl-line-mode)
 )
 
 ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
@@ -656,7 +691,7 @@ Move window
      (t              "    ." shadow))
   )
   :config
-  (add-hook 'after-init-hook 'global-company-mode)
+  (add-hook 'elpaca-after-init-hook 'global-company-mode)
 )
 
 ;; It colors each pair of parenthesses into their own color.
@@ -697,8 +732,7 @@ Move window
 
 ;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
-;; TODO: How do I pin down package version? What if one of them introduces a breaking change and emacs breaks? I need to have a way to pin them down / freeze them.
-;;   Allegedly straight.el can take care of this! It has some kind of lockfiles for this. That sounds great.
+;; TODO: Set up Elpaca. It should also allow me to pin down package versions -> lockfile / freezing. But also search a bit how others do package version pinning down.
 
 ;; TODO: Use smartparens or electric-pair-mode?
 
