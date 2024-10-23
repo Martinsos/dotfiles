@@ -15,6 +15,8 @@
 
 (column-number-mode) ; Show row:column in mode line.
 
+(visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
+
 ;; Start in fullscreen.
 (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
 
@@ -187,6 +189,7 @@
     "bb"  '(ivy-switch-buffer :which-key "switch buffer")
     "bd"  '(kill-this-buffer :which-key "kill buffer")
     "bs"  '(scratch-buffer :which-key "go to scratch")
+    "bm"  '(my/switch-to-messages-buffer :which-key "go to messages")
     "bp"  '(hydra-buffer-next-prev/previous-buffer :which-key "previous buffer")
     "bn"  '(hydra-buffer-next-prev/next-buffer :which-key "next buffer")
     "br"  '(revert-buffer :which-key "reload buffer")
@@ -195,6 +198,7 @@
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
     "ff"  '(counsel-find-file :which-key "find file")
     "fs"  '(save-buffer :which-key "save")
+    "fr"  '(counsel-recentf :which-key "recent files")
 
     "fe"  '(:ignore t :which-key "emacs")
     "fei" '(my/open-init-file :which-key "open init file")
@@ -203,6 +207,7 @@
     "v:"  '(eval-expression :which-key "expression")
     "vl"  '(eval-last-sexp :which-key "last-sexp")
     "vv"  '(eval-defun :which-key "top-level form")
+    "vr"  '(eval-region :which-key "region")
 
     "p"   '(:ignore t :which-key "projects")
     "pf"  '(counsel-projectile-find-file :which-key "find file")
@@ -324,6 +329,38 @@ Move window
 
 ;;;;;;;;;;;;
 
+;;;;;;;;;;;;;; ORG MODE ;;;;;;;;;;;;;;;
+
+;; CHEATSHEET
+;; - Shift-Tab -> cycles through expanding headers.
+(use-package org
+  :hook
+  (org-mode . (lambda ()
+    (org-indent-mode) ; Enforces correct indentation under each heading.
+    (visual-line-mode 1)
+    (setq evil-auto-indent nil)
+  ))
+  :config
+  ;; Set headers to have different sizes.
+  (dolist (face '((org-level-1 . 1.2)
+	          (org-level-2 . 1.1)
+		  (org-level-3 . 1.05)
+		  (org-level-4 . 1.0)
+		  (org-level-5 . 1.0)
+		  (org-level-6 . 1.0)
+		  (org-level-7 . 1.0)
+		  (org-level-8 . 1.0)))
+    (set-face-attribute (car face) nil :height (cdr face))
+  )
+)
+
+;; Replace stars (*) with nice bullets.
+(use-package org-bullets
+  :hook (org-mode . org-bullets-mode)
+)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun my/alternate-buffer (&optional window)
   "Switch back and forth between current and last buffer in the current window."
   (interactive)
@@ -342,6 +379,12 @@ Move window
   "Open the init file."
   (interactive)
   (find-file user-init-file)
+)
+
+(defun my/switch-to-messages-buffer ()
+  "Switch to the messages buffer."
+  (interactive)
+  (switch-to-buffer "*Messages*")
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -712,3 +755,16 @@ Move window
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(org-bullets xclip winum which-key vundo undo-tree undo-fu rainbow-mode rainbow-delimiters magit ivy-rich hydra hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel-projectile company command-log-mode colorful-mode amx all-the-icons ace-window)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
