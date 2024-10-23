@@ -34,11 +34,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; TODO: Explain package.el, elpaca, use-package, their relationship, who does what.
+;; TODO: Read elpaca manual / wiki.
+;; TODO: Add (:wait t) for general.el?
 
 ;; Install and set up Elpaca. Also, in early-init.el, we disable package.el.
-;; NOTE: With Elpaca, one must use elpaca-after-init-hook instead of init-hook, because elpaca is async,
+;; NOTE: With Elpaca, one will usually want to use elpaca-after-init-hook instead of init-hook, because elpaca is async,
 ;;   so after init, packages might still not be installed. Only after elpaca-after-init-hook are packages
 ;;   guaranteed to be all loaded/installed.
+;; Good to know:
+;;  - Elpaca modifies how :ensure behaves in use-package.
+;;    - To have use-package install stuff via elpaca, set `:ensure t`.
+;;    - use-package's :ensure can now be given an elpaca recipe (instructions for elpaca how to install a package).
+;;    - `:ensure nil` in use-package makes use-package not use elpaca (or anything) to install package.
+;;      Can be useful when e.g. doing (use-package emacs ...) which is a special case where emacs is not a package to install.
+;;  - `:ensure (:wait t)` ensures elpa installs package synchronously, not async, which can be useful for some packages if you need them
+;;    in definitions of other packages immediately. For example for general.el, if you are using :general in other use-package defs.
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
