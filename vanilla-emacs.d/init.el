@@ -11,7 +11,7 @@
 
 (set-fringe-mode 10)
 
-(setq-default fill-column 80)
+(setq-default fill-column 100)
 
 (column-number-mode) ; Show row:column in mode line.
 
@@ -67,6 +67,44 @@
   (xclip-mode 1)
 )
 
+;;;;;; UNDO ;;;;;;;;
+
+;; Default emacs undo limits are quite low so we increase them here.
+(setq undo-limit         50000000) ; ~50mb.
+(setq undo-strong-limit 100000000) ; ~100mb.
+(setq undo-outer-limit  300000000) ; ~300mb.
+
+;; Simple package that brings undo/redo commands that behave in a simple, linear
+;; fashion, like you would expect. However, it still keeps emacs' undo/redo
+;; complex system intact with all the state it keeps, these commands just serve
+;; as a simpler interface toward it, so you can still interact with it if you
+;; wish (e.g. with vundo which visualizes the undo state as tree).
+;; I don't set any keybindings here because it is enough to set undo-fu as
+;; evil's undo system (check my evil config) and then evil uses it.
+(use-package undo-fu
+  :config
+  (setq undo-fu-ignore-keyboard-quit t) ; I don't want C-g to trigger normal emacs undo behavior.
+)
+
+;; Displays undo history as a tree and lets you move through it.
+;; TODO: It can't at the moment show live "diff" as you move around the tree, only
+;;   on demand, but you have to do marking and unmarking and that is tedious.
+;;   I opened an issue for it (https://github.com/casouri/vundo/issues/112),
+;;   but I could also look into hacking it by using advice on tree movement functions
+;;   and doing the (un)marking upon each movement?
+(use-package vundo
+  :config
+  (setq vundo-glyph-alist vundo-unicode-symbols)
+)
+
+;; TODO: Install undo-fu-session? Do I need persistent undo between the emacs sessions? I think not?
+
+;; TODO: Install undo-hl (highlights changes by undo in buffer)?
+;;   Seems to not be on any package manager though, so I need straight.el probably.
+
+;;;;;;;;;;;;;;;;;;;;;
+
+
 ;; general.el provides convenient, unified interface for key definitions.
 ;; It can do many cool things, one of them is specifying leader key and prefixes.
 ;; For best results, you should do all/most of the key defining via general (e.g. `general-define-key`).
@@ -113,7 +151,7 @@
     "ts"  '(hydra-text-scale/body :which-key "scale text")
 
     "a"   '(:ignore t :which-key "apps")
-    "au"   '(undo-tree-visualize :which-key "undo tree")
+    "au"  '(vundo :which-key "undo tree")
 
     "af"   '(:ignore t :which-key "fun")
     "afa" '(animate-birthday-present :which-key "birthday")
@@ -260,6 +298,7 @@ Move window
   :init
   (setq evil-want-integration t)  ; Required by evil-collection.
   (setq evil-want-keybinding nil) ; Required by evil-collection.
+  (setq evil-undo-system 'undo-fu)
   ;; C-u-scroll needs explicit enabling because in Emacs C-u is important, it is
   ;; universal argument. But I don't use it much, so I rather go with vi's
   ;; scroll, which I use a lot.
@@ -303,22 +342,6 @@ Move window
   "Open the init file."
   (interactive)
   (find-file user-init-file)
-)
-
-
-;; TODO: Allegedly undo-tree is not maintained anymore, so it might make sense
-;;   to consider replacing it with a combo of undo-fu, undo-fu-session and vundo:
-;;   undo-fu brings "normal" undo-redo behaviour at your fingers while preserving
-;;   the complex emacs's undo states in the background, undo-fu-session brings it ability to
-;;   save undo data to disk, and vundo allows visualizing the complex emacs's undo states,
-;;   same like undo-tree does. So they should bring the same or even better experience, while
-;;   being newer and maintained. undo-tree is super impressive but it works in a much more complex
-;;   way and that is why it is hard to maintain it.
-(use-package undo-tree
-  :custom
-  (undo-tree-visualizer-diff t)  ; Display diff in undo-tree visualizer.
-  :config
-  (global-undo-tree-mode)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -599,43 +622,19 @@ Move window
   (prog-mode . rainbow-delimiters-mode)
 )
 
-;; TODO: There seems to be something wrong with my undo ("u"), it doesn't want to undo after I save the file?
-;;   I googled, allegedly it might be a bug with undo-tree.
-;;   I have this in my spacemacs and I don't have issues there: (setq undo-tree-auto-save-history nil) -> so maybe I could try setting this?
-;;   Alternatives to explore: undo-fu, vundo.
-;;   Here is spacemacs config for undo-tree, so it also might make sense to copy stuff from here, it might help:
-;; (defun spacemacs-editing/init-undo-tree ()
-;;   (use-package undo-tree
-;;     :defer t
-;;     :init
-;;     (setq undo-tree-visualizer-timestamps t
-;;           undo-tree-visualizer-diff t
-;;           ;; See `vim-style-enable-undo-region'.
-;;           undo-tree-enable-undo-in-region t
-;;           undo-tree-history-directory-alist
-;;           `(("." . ,(let ((dir (expand-file-name "undo-tree-history" spacemacs-cache-directory)))
-;;                       (if (file-exists-p dir)
-;;                           (unless (file-accessible-directory-p dir)
-;;                             (warn "Cannot access directory `%s'.
-;; Perhaps you don't have required permissions, or it's not a directory.
-;; See variable `undo-tree-history-directory-alist'." dir))
-;;                         (make-directory dir))
-;;                       dir))))
-;;     (global-undo-tree-mode)
-;;     (spacemacs/set-leader-keys "au" 'undo-tree-visualize)
-;;     :config
-;;     ;; restore diff window after quit.  TODO fix upstream
-;;     (defun spacemacs/undo-tree-restore-default ()
-;;       (setq undo-tree-visualizer-diff t))
-;;     (advice-add 'undo-tree-visualizer-quit :after #'spacemacs/undo-tree-restore-default)
-;;     (spacemacs|hide-lighter undo-tree-mode)
-;;     (evilified-state-evilify-map undo-tree-visualizer-mode-map
-;;       :mode undo-tree-visualizer-mode
-;;       :bindings
-;;       (kbd "j") 'undo-tree-visualize-redo
-;;       (kbd "k") 'undo-tree-visualize-undo
-;;       (kbd "h") 'undo-tree-visualize-switch-branch-left
-;;       (kbd "l") 'undo-tree-visualize-switch-branch-right)))
+;; TODO: Set up shell, below is my spacemacs setup:
+;; ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
+;; ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
+;; (with-eval-after-load 'vterm
+;;   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
+;;   (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
+;; )
+;; (shell :variables
+;;     shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
+;;     shell-default-width 50
+;;     shell-default-position 'right
+;;     spacemacs-vterm-history-file-location "~/.bash_history"
+;;     )
 
 ;; TODO: Enable that new smooth/pixel scroll setting in emacs?
 
@@ -647,7 +646,7 @@ Move window
 
 ;; TODO: Set up Company, Flycheck, LSP and LSP-UI. Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
 
-;; TODO: Take care of the temporary files being created by emacs and undo-tree.
+;; TODO: Take care of the temporary files being created by emacs and undo.
 
 ;; TODO: Add some of the temporary files to the .gitignore.
 
@@ -656,6 +655,7 @@ Move window
 ;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
 ;; TODO: How do I pin down package version? What if one of them introduces a breaking change and emacs breaks? I need to have a way to pin them down / freeze them.
+;;   Allegedly straight.el can take care of this! It has some kind of lockfiles for this. That sounds great.
 
 ;; TODO: Use smartparens or electric-pair-mode?
 
