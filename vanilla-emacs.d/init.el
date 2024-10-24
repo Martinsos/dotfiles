@@ -182,15 +182,36 @@
 )
 
 ;; Displays undo history as a tree and lets you move through it.
-;; TODO: It can't at the moment show live "diff" as you move around the tree, only
-;;   on demand, but you have to do marking and unmarking and that is tedious.
-;;   I opened an issue for it (https://github.com/casouri/vundo/issues/112),
-;;   but I could also look into hacking it by using advice on tree movement functions
-;;   and doing the (un)marking upon each movement?
 (use-package vundo
   :defer t
   :config
   (setq vundo-glyph-alist vundo-unicode-symbols)
+
+  ;;;;;; Vundo Live Diff ;;;;;;
+  ;; In vundo, you have to manually mark one node and call diff on another node to get their diff.
+  ;; Here we extend vundo to have "live diff mode", that always shows diff between current node and its parent.
+  ;; I turn it on by default. It can be toggled by pressing "F".
+  (defun vundo-live-diff-post-command ()
+    "Post command hook function for live diffing."
+    (when (not (memq this-command '(vundo-quit vundo-confirm)))
+      (progn
+	(vundo-diff-mark (vundo-m-parent (vundo--current-node vundo--prev-mod-list)))
+        (vundo-diff)
+      )
+    )
+    ; Error in post-command-hook (vundo-live-diff-post-command): (error "No possible route")
+  )
+  (define-minor-mode vundo-live-diff-mode
+    "Shows live diff between the current node and its parent."
+    :lighter nil
+    (if vundo-live-diff-mode
+      (add-hook 'post-command-hook #'vundo-live-diff-post-command 0 t)
+      (remove-hook 'post-command-hook #'vundo-live-diff-post-command t)
+    )
+  )
+  (evil-define-key 'normal vundo-mode-map (kbd "F") #'vundo-live-diff-mode)
+  (add-hook 'vundo-mode-hook (lambda () (vundo-live-diff-mode 1)))
+  ;;;;;/ Vundo Live Diff ;;;;;;
 )
 
 ;; TODO: Install undo-fu-session? Do I need persistent undo between the emacs sessions? I think not?
