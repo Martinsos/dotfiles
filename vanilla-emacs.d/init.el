@@ -33,22 +33,82 @@
 ;;; Package management ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Explain package.el, elpaca, use-package, their relationship, who does what.
-;; TODO: Read elpaca manual / wiki.
+;; There are three important "packages" to understand here: package.el, use-package, and elpaca.
+;; - package.el is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
+;; - use-package is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
+;;   It uses package.el in the background to install packages, but it is not a package manager, instead it is a layer
+;;   above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
+;; - elpaca is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant.
+;;
+;;   In this config I use elpaca + use-package (package.el is not even loaded).
+;;
+;; Installing vs loading vs configuring packages:
+;; - Installing package means downloading (and building) the package to your machine, so it can be loaded when you want.
+;;   This is what package manager does for you.
+;; - Loading package means importing/requiring it in our emacs config (init.el), so it can be used. It needs to be installed
+;;   first in order to be loaded (unless it comes with emacs already).
+;;   This is what use-package takes care of.
+;; - Configuring means exactly that: adapting the package to your needs by defining variables, key bindings, hooks, ... .
+;;   use-package also helps with this, giving us structure and reducing boilerplate.
+;;
+;; Lifecycle of a package:
+;; 1. Installation typically happens when you start emacs for first time on new machine, or when you update packages or add new package.
+;; 2. Loading typically happens each time you start emacs, and it can happen immediately on init, or it can happen later, on demand,
+;;    when package is needed (in lazy fashion), depending on how you set it up for that package.
+;; 3. Configuration typically happens right after loading.
+;;
+;; # Use-package
+;;
+;; The idea is that you organize all your code in `(use-package <package-name> ...)` declarations.
+;; There is even `(use-package emacs ...)` where `emacs` is a special "package" that won't trigger any installation or loading,
+;; allowing you to put general emacs config under it (e.g. `(column-number-mode)`).
+;;
+;; use-package has a bunch of keywords that you can use to configure your package or define how it is loaded / installed.
+;; Mostly you will use keywords that come with use-package, but other packages can also extend use-package with their own keywords.
+;; I will quickly explain some of the more important/confusing ones:
+;; - :ensure -> This is really an interface toward package manager (who does package installation). Any value passed to
+;;     :ensure is passed to the package manager as instructions for installation, e.g. `:ensure (:host "github" :repo "user/repo")`.
+;;     Therefore, its behaviour depends on the package manager used. But generally, `:ensure nil` will not allow package installation,
+;;     while `:ensure t` or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
+;;     Normally you will want `:ensure t` for most of the packages, in which case you can (I do) configure use-package to have it be `t` by default.
+;;     When using elpaca, you can pass elpaca recipe to :ensure.
+;;   - TODO: Explain this better, that this goes into ensure: :wait -> This keyword is added to use-package by elpaca, and it tells elpaca to install package right now, instead of deffering its installation for after init.
+;;       This can be useful for packages that e.g. add keywords to use-package, you need those installed and loaded first.
+;; - :defer -> `:defer t` tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
+;;     Alternatively, you can pass it a number of seconds emacs needs to be idle before package is loaded.
+;; - :demand -> Opposite of defer, `:demand t` tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
+;; - :init -> happens right before package is loaded.
+;; - :config -> happens right after package is loaded.
+;; - ...
+;; 
+;; ## Deferred loading 
+;; It is generally recommended to postpone/defer loading of packages till they are needed (if applicable), for faster emacs startup.
+;; use-package will defer loading of packages if `:defer <non-nil>` is set, or if any of the keywords with the "autoloading side effect" are used
+;; (e.g. `bind`, `command`, `hook`, ... : these all will make use-package defer loading and then autoload package once
+;; corresponding binding / command / hook / ... has happeend). If you use any of the "autoload" keywords but don't want
+;; use-package to be "smart" and assume you want autoloading, you can use `:demand t`.
+;; It can be good practice to add `:defer t` even when autoloading keywords are used, to be explicit about the intention.
+;;
+;; # Elpaca
+;;  TODO: Explain a bit about recipes? Or no.
+;; ## Deferred installing
+;;  TODO: write
+;;    Mention elpaca-after-init-hook.
+;;      NOTE: With Elpaca, one will usually want to use elpaca-after-init-hook instead of init-hook, because elpaca is async,
+;;      so after init, packages might still not be installed. Only after elpaca-after-init-hook are packages
+;;      guaranteed to be all loaded/installed.
+;;
+;; # What happens when at the end (init, installing, loading)
+;;  TODO: Explain that first whole init happens, only then packages are installed (because of elpaca) (unless a package has :wait), and only then are packages loaded and configured, well some of them, some are deffered.
+;; If not for elpaca (but .e.g package-el), then it would all happen during init.
+
+
+;; TODO: :defer some packages! Magit, org, ... . Some probably already are deferred. Doesn't hurt to add :defer t though.
 ;; TODO: Add (:wait t) for general.el?
+;; TODO: Use (use-package emacs :ensure nil ...)
+;; TODO: Use `after` more?
 
 ;; Install and set up Elpaca. Also, in early-init.el, we disable package.el.
-;; NOTE: With Elpaca, one will usually want to use elpaca-after-init-hook instead of init-hook, because elpaca is async,
-;;   so after init, packages might still not be installed. Only after elpaca-after-init-hook are packages
-;;   guaranteed to be all loaded/installed.
-;; Good to know:
-;;  - Elpaca modifies how :ensure behaves in use-package.
-;;    - To have use-package install stuff via elpaca, set `:ensure t`.
-;;    - use-package's :ensure can now be given an elpaca recipe (instructions for elpaca how to install a package).
-;;    - `:ensure nil` in use-package makes use-package not use elpaca (or anything) to install package.
-;;      Can be useful when e.g. doing (use-package emacs ...) which is a special case where emacs is not a package to install.
-;;  - `:ensure (:wait t)` ensures elpa installs package synchronously, not async, which can be useful for some packages if you need them
-;;    in definitions of other packages immediately. For example for general.el, if you are using :general in other use-package defs.
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -444,6 +504,7 @@ Move window
 ;; while Counsel and Swiper extend its usage through more of the Emacs.
 
 ;; TODO: Check out Ivy hydra -> I saw it in Ivy manual but don't know how to use it (it doesn't seem to be installed?).
+;;   Allegedly (use-package ivy-hydra :after (ivy hydra)) should do the job? Try it.
 ;; TODO: Should I set Ivy to use fuzzy search? Is that better or not?
 ;; TODO: In Spacemacs (helm), coloring of listed files on C-x C-f is richer than I have in Ivy here.
 ;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
