@@ -1,33 +1,3 @@
-;;;;;;;;;;
-;;; UI ;;;
-;;;;;;;;;;
-
-(setq inhibit-startup-message t)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(tooltip-mode -1)
-(menu-bar-mode -1)
-(setq ring-bell-function 'ignore)
-
-(set-fringe-mode 10)
-
-(setq-default fill-column 100)
-
-(column-number-mode) ; Show row:column in mode line.
-
-(visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
-
-(global-hl-line-mode 1) ; Highlights the line in which cursor is.
-
-;; Start in fullscreen.
-(add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
-
-;; We define our own hook that runs after any call to enable-theme.
-(defvar after-enable-theme-hook nil
-  "Hook run after a theme is enabled using `enable-theme'.")
-(advice-add 'enable-theme :after (lambda (&rest _) (run-hooks 'after-enable-theme-hook)))
-
-;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Package management ;;;
@@ -72,8 +42,6 @@
 ;;     while `:ensure t` or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
 ;;     Normally you will want `:ensure t` for most of the packages, in which case you can (I do) configure use-package to have it be `t` by default.
 ;;     When using elpaca, you can pass elpaca recipe to :ensure.
-;;   - TODO: Explain this better, that this goes into ensure: :wait -> This keyword is added to use-package by elpaca, and it tells elpaca to install package right now, instead of deffering its installation for after init.
-;;       This can be useful for packages that e.g. add keywords to use-package, you need those installed and loaded first.
 ;; - :defer -> `:defer t` tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
 ;;     Alternatively, you can pass it a number of seconds emacs needs to be idle before package is loaded.
 ;; - :demand -> Opposite of defer, `:demand t` tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
@@ -90,23 +58,20 @@
 ;; It can be good practice to add `:defer t` even when autoloading keywords are used, to be explicit about the intention.
 ;;
 ;; # Elpaca
-;;  TODO: Explain a bit about recipes? Or no.
-;; ## Deferred installing
-;;  TODO: write
-;;    Mention elpaca-after-init-hook.
-;;      NOTE: With Elpaca, one will usually want to use elpaca-after-init-hook instead of init-hook, because elpaca is async,
-;;      so after init, packages might still not be installed. Only after elpaca-after-init-hook are packages
-;;      guaranteed to be all loaded/installed.
+;; Elpaca can install package directly: `(elpaca some-package (message "this happens after package is installed"))`, but we use it via use-package.
+;; In the background, a call to `(use-package some-package :ensure t :some-keyword <smth>)` becomes `(elpaca some-package (use-package some-package :some-keyword <smth>))`.
 ;;
-;; # What happens when at the end (init, installing, loading)
-;;  TODO: Explain that first whole init happens, only then packages are installed (because of elpaca) (unless a package has :wait), and only then are packages loaded and configured, well some of them, some are deffered.
-;; If not for elpaca (but .e.g package-el), then it would all happen during init.
-
-
-;; TODO: :defer some packages! Magit, org, ... . Some probably already are deferred. Doesn't hurt to add :defer t though.
-;; TODO: Add (:wait t) for general.el?
-;; TODO: Use (use-package emacs :ensure nil ...)
-;; TODO: Use `after` more?
+;; ## Recipes
+;; Elpaca allows you to define how the package should be installed via a `recipe`, which is provided as an argument to `:ensure` if using `use-package`.
+;; Example of a recipe: `(some-package :host github :repo "user/example")`.
+;;
+;; ## Deferred installing
+;; Elpaca, unlike package.el, doesn't install packages immediately, instead it waits for emacs init to finish, and then installs them asynchronously, in parallel for fast, non-blocking installations.
+;; To prevent this behaviour and make elpaca install package right now, when the corresponding `use-package` declaration is evaluated, one can pass `:wait t` keyword do the elpaca recipe: `:ensure (:wait t ...)`. This can be useful for packages that e.g. add keywords to use-package, since you need those installed and loaded first.
+;;
+;; Due to elpaca's deffered installing, instead of installing and loading happening during init phase (evaluation of init.el), we have following order of events: init -> installation of packages -> loading packages.
+;; Exception are packages with `:wait t` in their recipe, those will get installed / loaded at init.
+;; That also means that `after-init-hook` is often not the right choice any more, and we should instead use `elpaca-after-init-hook`, which will guarantee packages are installed / loaded.
 
 ;; Install and set up Elpaca. Also, in early-init.el, we disable package.el.
 (defvar elpaca-installer-version 0.7)
@@ -148,24 +113,43 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
-;; Install/setup use-package.
-(elpaca elpaca-use-package
-  (elpaca-use-package-mode))
-(setq use-package-always-ensure t)  ; Tells use-package to have :ensure t by default for every package it manages.
+(elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
+(setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(use-package emacs
+  :ensure nil
+  :config
+  (setq inhibit-startup-message t)
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (tooltip-mode -1)
+  (menu-bar-mode -1)
+  (setq ring-bell-function 'ignore)
+
+  (set-fringe-mode 10)
+
+  (setq-default fill-column 100)
+
+  (column-number-mode) ; Show row:column in mode line.
+
+  (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
+
+  (global-hl-line-mode 1) ; Highlights the line in which cursor is.
+
+  ;; Start in fullscreen.
+  (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+)
+
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
+  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
   :config
   ;; I went with dracula for now. palenight is also nice.
-  ;; TODO: I don't quite like though how it colors the ivy selection. I will want to customize ivy-current-match face.
-  ;;   I want it to not modify the foreground of the ivy match, right now it loses coloring from it.
-  ;; I run this as after-init-hook because that gives time during init to register any after-enable-theme-hooks.
-  ;; If I decide to not use after-enable-theme-hook, I should just make this run here and now, no hook.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
   ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-  (add-hook 'elpaca-after-init-hook (lambda () (load-theme 'doom-dracula t)))
+  (load-theme 'doom-dracula t)
 )
 
 ;; This makes copy/paste properly work when emacs is running via the terminal.
@@ -176,10 +160,14 @@
 
 ;;;;;; UNDO ;;;;;;;;
 
-;; Default emacs undo limits are quite low so we increase them here.
-(setq undo-limit         50000000) ; ~50mb.
-(setq undo-strong-limit 100000000) ; ~100mb.
-(setq undo-outer-limit  300000000) ; ~300mb.
+(use-package emacs
+  :ensure nil
+  :config
+  ;; Default emacs undo limits are quite low so we increase them here.
+  (setq undo-limit         50000000) ; ~50mb.
+  (setq undo-strong-limit 100000000) ; ~100mb.
+  (setq undo-outer-limit  300000000) ; ~300mb.
+)
 
 ;; Simple package that brings undo/redo commands that behave in a simple, linear
 ;; fashion, like you would expect. However, it still keeps emacs' undo/redo
@@ -200,6 +188,7 @@
 ;;   but I could also look into hacking it by using advice on tree movement functions
 ;;   and doing the (un)marking upon each movement?
 (use-package vundo
+  :defer t
   :config
   (setq vundo-glyph-alist vundo-unicode-symbols)
 )
@@ -219,6 +208,7 @@
 ;;   Therefore, I don't completely understand if the config below is written in the best way, but
 ;;   it was recommended by others and it seems to work.
 (use-package general
+  :ensure (:wait t) ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
   :config
   (general-evil-setup t)
 
@@ -233,6 +223,8 @@
   ;; TODO: In general.el README, this way of defining keys is listed as ineficient (slows down startup time).
   ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
   ;;   and possibly rewrite it to follow the advice there.
+  ;;   Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
+  ;;   should they all be here, or in their respective packages, or what.
   (my/leader-keys
     "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
     "TAB" '(my/alternate-buffer :which-key "previous buffer")
@@ -336,56 +328,50 @@
 ;; with e.g. one letter commands.
 (use-package hydra
   :config
-;; TODO: Is it ok to have this here, and not in :config of hydra's use-package?
-;;   Does it work only because it is after `(use-package hydra)`?
-;;   Understand where should I be writing defhydra definitions.
-(defhydra hydra-text-scale ()
-  "Scale text"
-  ("j" text-scale-decrease "out")
-  ("k" text-scale-increase "in")
-  ("q" nil "quit" :exit t)
-)
-
-(defhydra hydra-buffer-next-prev ()
-  "Next/previous buffer"
-  ("p" previous-buffer "previous")
-  ("n" next-buffer "next")
-  ("q" nil "quit" :exit t)
-)
-
-(defhydra hydra-window-resize (:hint nil)
-  "
-Resize window
--------------
-             _h_: ⇾ ⇽          ↑        ↓
-                           _k_:     _j_:
-             _l_: ⇽ ⇾          ↓        ↑
-"
-  ("h" shrink-window-horizontally)
-  ("j" shrink-window)
-  ("k" enlarge-window)
-  ("l" enlarge-window-horizontally)
-  ("q" nil "quit" :exit t)
-)
-
-(defhydra hydra-window-move (:hint nil)
-  "
-Move window
------------
-                     _k_: top
-             _h_: left       _l_: right
-                     _j_: bottom
-"
-  ("h" evil-window-move-far-left)
-  ("j" evil-window-move-very-bottom)
-  ("k" evil-window-move-very-top)
-  ("l" evil-window-move-far-right)
-  ("q" nil "quit" :exit t)
-)
-
-  
+  (defhydra hydra-text-scale ()
+    "Scale text"
+    ("j" text-scale-decrease "out")
+    ("k" text-scale-increase "in")
+    ("q" nil "quit" :exit t)
   )
 
+  (defhydra hydra-buffer-next-prev ()
+    "Next/previous buffer"
+    ("p" previous-buffer "previous")
+    ("n" next-buffer "next")
+    ("q" nil "quit" :exit t)
+  )
+
+  (defhydra hydra-window-resize (:hint nil)
+    "
+  Resize window
+  -------------
+	      _h_: ⇾ ⇽          ↑        ↓
+			    _k_:     _j_:
+	      _l_: ⇽ ⇾          ↓        ↑
+  "
+    ("h" shrink-window-horizontally)
+    ("j" shrink-window)
+    ("k" enlarge-window)
+    ("l" enlarge-window-horizontally)
+    ("q" nil "quit" :exit t)
+  )
+
+  (defhydra hydra-window-move (:hint nil)
+    "
+  Move window
+  -----------
+		      _k_: top
+	      _h_: left       _l_: right
+		      _j_: bottom
+  "
+    ("h" evil-window-move-far-left)
+    ("j" evil-window-move-very-bottom)
+    ("k" evil-window-move-very-top)
+    ("l" evil-window-move-far-right)
+    ("q" nil "quit" :exit t)
+  )
+)
 
 ;; Allows fast jumping inside the buffer (to word, to line, ...).
 (use-package avy)
@@ -417,6 +403,8 @@ Move window
   ;; universal argument. But I don't use it much, so I rather go with vi's
   ;; scroll, which I use a lot.
   (setq evil-want-C-u-scroll t)
+  :custom
+  (evil-shift-width 2) ; When shifting text left or right with < or >, do it for 2 spaces.
   :config
   (evil-mode 1)
 )
@@ -443,6 +431,7 @@ Move window
 ;; CHEATSHEET
 ;; - Shift-Tab -> cycles through expanding headers.
 (use-package org
+  :defer t
   :hook
   (org-mode . (lambda ()
     (org-indent-mode) ; Enforces correct indentation under each heading.
@@ -465,35 +454,40 @@ Move window
 
 ;; Replace stars (*) with nice bullets.
 (use-package org-bullets
+  :defer t
   :hook (org-mode . org-bullets-mode)
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun my/alternate-buffer (&optional window)
-  "Switch back and forth between current and last buffer in the current window."
-  (interactive)
-  (cl-destructuring-bind (buf start pos)
-    (or (cl-find (window-buffer window) (window-prev-buffers) :key #'car :test-not #'eq)
-        (list (other-buffer) nil nil)
-    )
-    (if (not buf)
-      (message "Last buffer not found.")
-      (set-window-buffer-start-and-point window buf start pos)
+(use-package emacs
+  :ensure nil
+  :config
+  (defun my/alternate-buffer (&optional window)
+    "Switch back and forth between current and last buffer in the current window."
+    (interactive)
+    (cl-destructuring-bind (buf start pos)
+      (or (cl-find (window-buffer window) (window-prev-buffers) :key #'car :test-not #'eq)
+	  (list (other-buffer) nil nil)
+      )
+      (if (not buf)
+	(message "Last buffer not found.")
+	(set-window-buffer-start-and-point window buf start pos)
+      )
     )
   )
-)
 
-(defun my/open-init-file ()
-  "Open the init file."
-  (interactive)
-  (find-file user-init-file)
-)
+  (defun my/open-init-file ()
+    "Open the init file."
+    (interactive)
+    (find-file user-init-file)
+  )
 
-(defun my/switch-to-messages-buffer ()
-  "Switch to the messages buffer."
-  (interactive)
-  (switch-to-buffer "*Messages*")
+  (defun my/switch-to-messages-buffer ()
+    "Switch to the messages buffer."
+    (interactive)
+    (switch-to-buffer "*Messages*")
+  )
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -585,33 +579,33 @@ Move window
   )
 )
 
-;; This is my custom function for how Ivy shows candidates when finding a file.
-;; Unlike default function used by ivy(-rich), here I do some additional formatting:
-;;  - I stylize dot(files/dirs).
-;;  - I stylize executables.
-(defun my/ivy-read-file-transformer (filename)
-  "Transform candidate STR when reading files."
-  (let*
-     ((current-dir (or (ivy-state-directory ivy-last) default-directory))
-     (filepath (expand-file-name filename current-dir))
-     (is-dir (ivy--dirname-p filename))
-     (is-dotfile (string-prefix-p "." filename))
-     (is-exec (file-executable-p filepath))
-    )
-    (cond
-      ((and is-dir is-dotfile) (propertize filename 'face '(:inherit (font-lock-comment-face ivy-subdir))))
-      (is-dotfile (propertize filename 'face 'font-lock-comment-face))
-      (is-dir (propertize filename 'face 'ivy-subdir))
-      (is-exec (propertize filename 'face 'font-lock-keyword-face))
-      (t filename)
-    )
-  )
-)
-
 ;; Show more info for some usages of Ivy. Also allows easier customization of Ivy output.
 (use-package ivy-rich
   :after (ivy counsel)
   :config
+  ;; This is my custom function for how Ivy shows candidates when finding a file.
+  ;; Unlike default function used by ivy(-rich), here I do some additional formatting:
+  ;;  - I stylize dot(files/dirs).
+  ;;  - I stylize executables.
+  (defun my/ivy-read-file-transformer (filename)
+    "Transform candidate STR when reading files."
+    (let*
+      ((current-dir (or (ivy-state-directory ivy-last) default-directory))
+      (filepath (expand-file-name filename current-dir))
+      (is-dir (ivy--dirname-p filename))
+      (is-dotfile (string-prefix-p "." filename))
+      (is-exec (file-executable-p filepath))
+      )
+      (cond
+	((and is-dir is-dotfile) (propertize filename 'face '(:inherit (font-lock-comment-face ivy-subdir))))
+	(is-dotfile (propertize filename 'face 'font-lock-comment-face))
+	(is-dir (propertize filename 'face 'ivy-subdir))
+	(is-exec (propertize filename 'face 'font-lock-keyword-face))
+	(t filename)
+      )
+    )
+  )
+
   ;; With ivy-rich-set-columns, you can add new ones or replace existing columns when ivy is used in specific commands.
   ;; For details check out ivy-rich docs and docs of ivy-rich-display-transformers-list .
   (ivy-rich-set-columns
@@ -661,7 +655,9 @@ Move window
 ;; Magit is all you need to work with git.
 ;; TODO: Version pulled in is too new for my version of emacs, so elpaca throws errors.
 ;;   Either use older version of magit, or upgrade emacs version.
-(use-package magit)
+(use-package magit
+  :defer t
+)
 
 ;; Highlight TODO and similar keywords in comments and strings.
 (use-package hl-todo
@@ -692,6 +688,7 @@ Move window
 
 ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
 (use-package helpful
+  :defer t
   :custom
   (counsel-describe-function-function #'helpful-callable)
   (counsel-describe-variable-function #'helpful-variable)
@@ -762,7 +759,7 @@ Move window
      (t              "    ." shadow))
   )
   :config
-  (add-hook 'elpaca-after-init-hook 'global-company-mode)
+  (global-company-mode 1)
 )
 
 ;; It colors each pair of parenthesses into their own color.
@@ -789,8 +786,6 @@ Move window
 
 ;; TODO: Go through my spacemacs config and copy stuff I liked from there.
 
-;; TODO: Sometimes I use :config in use-package, sometimes :init, how do I know which one to use when and what goes where?
-
 ;; TODO: Use native installation of emacs.
 
 ;; TODO: Set up Company, Flycheck, LSP and LSP-UI. Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
@@ -803,7 +798,7 @@ Move window
 
 ;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
-;; TODO: Set up Elpaca. It should also allow me to pin down package versions -> lockfile / freezing. But also search a bit how others do package version pinning down.
+;; TODO: Figure out how to pin down package versions -> lockfile / freezing. But also search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
 
 ;; TODO: Use smartparens or electric-pair-mode?
 
@@ -860,16 +855,3 @@ Move window
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(org-bullets xclip winum which-key vundo undo-tree undo-fu rainbow-mode rainbow-delimiters magit ivy-rich hydra hl-todo helpful general evil-escape evil-collection doom-themes doom-modeline delight counsel-projectile company command-log-mode colorful-mode amx all-the-icons ace-window)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
