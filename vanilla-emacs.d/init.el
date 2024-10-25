@@ -807,6 +807,8 @@
 
 ;; TODO: Go through my spacemacs config and copy stuff I liked from there.
 
+;; TODO: Take a look at dogears.el -> sounds potentially useful, not sure though.
+
 ;; TODO: Use native installation of emacs.
 
 ;; TODO: Set up Company, Flycheck, LSP and LSP-UI. Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
@@ -828,6 +830,14 @@
 ;; TODO: Try Nano theme.
 
 ;; TODO: Implement transient yanking, so I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
+;;   There is counsel-yank-pop, to nicely choose from the kill ring.
+;;   So what I want is once yank is done, to be offered something like hydra, so transient keys, that allow to easily rotate to through kill ring.
+;;   In spacemacs, it activates Pasting Transient State, where [C-j/C-k] cycles through yanked text, [p/P] pastes the same text above or below, [C-v] creates a visual selection from last paste and exits. Anything else exits.
+;;   I really need only cycling.
+;;   Maybe I can just offer a hydra that has one key, maybe "/", that opens counsel-yank-pop. That way, "p/" becomes "advanced" yank. It could also offer C-j and C-k next to it.
+;;   Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives next (evil-paste-pop-next), that is evil thing. But it is not hydra. So maybe just make a hydra that mentions these + a way to start counsel-yank-pop.
+
+;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) , chatgpt-shell, evedel, copilot.el .
 
 ;; TODO: Stop that custom block from appearing at the end of this file.
 
