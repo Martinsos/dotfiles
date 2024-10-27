@@ -337,6 +337,12 @@
 
     "g"   '(magit :which-key "magit")
   )
+
+  (general-define-key
+    :states '(normal visual)
+    :keymaps 'override
+    "p" 'my/paste-then-hydra
+  )
 )
 
 ;; Hydra enables you to define a small "menu", which when you activate, activates
@@ -356,11 +362,29 @@
     ("q" nil "quit" :exit t)
   )
 
+;; e.g. scale text (in / out), or resize window (left / right / up / down), or
   (defhydra hydra-buffer-next-prev ()
     "Next/previous buffer"
     ("p" previous-buffer "previous")
     ("n" next-buffer "next")
     ("q" nil "quit" :exit t)
+  )
+
+  (defhydra hydra-paste ()
+    "Choose what to paste from the kill ring"
+    ("C-j" evil-paste-pop "previous")
+    ("C-k" evil-paste-pop-next "next")
+    ("/" (progn (evil-undo-pop) (counsel-yank-pop)) "browse") ; TODO: This inserts text too below (at pointer?), not sure why.
+    ("q" nil "quit" :exit t)
+    )
+  (defun my/paste-then-hydra ()
+    (interactive)
+    (call-interactively 'evil-paste-after)
+    (hydra-paste/body)
+    ;; This way this command is recognized as evil-paste-after, making evil-paste-after a last-command,
+    ;; which is a requirement for evil-paste-pop functions from hydra-paste to be able to be executed
+    ;; after this one.
+    (setq this-command 'evil-paste-after)
   )
 
   (defhydra hydra-window-resize (:hint nil)
