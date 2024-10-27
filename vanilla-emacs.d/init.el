@@ -341,7 +341,8 @@
   (general-define-key
     :states '(normal visual)
     :keymaps 'override
-    "p" 'my/paste-then-hydra
+    "p" 'my/paste-after-then-hydra
+    "P" 'my/paste-before-then-hydra
   )
 )
 
@@ -374,10 +375,26 @@
     "Choose what to paste from the kill ring"
     ("C-j" evil-paste-pop "previous")
     ("C-k" evil-paste-pop-next "next")
-    ("/" (progn (evil-undo-pop) (counsel-yank-pop)) "browse") ; TODO: This inserts text too below (at pointer?), not sure why.
-    ("q" nil "quit" :exit t)
+    ("/" (progn
+	   (evil-undo-pop) ; Undo last paste.
+	   ;; NOTE: Ideally, I would put the new paste (about to be selected by counsel-yank-pop)
+	   ;; starting exactly from the same place as previous paste, as e.g. evil-paste-pop does,
+	   ;; but I haven't found a simple way to implement that, so I do a more simplistic
+	   ;; approach, below that is a bit less precise (e.g. adds redundant newline). However I
+	   ;; don't think that is a big problem if one decided to browse kill ring visually, you
+	   ;; care less about speed / formatting then.
+	   (goto-char (nth 2 evil-last-paste)) ; Put cursor back where it was before the last paste.
+           (if (eq last-command 'evil-paste-before)
+	       (evil-insert-newline-above)
+	       (evil-insert-newline-below)
+	   )
+	   (counsel-yank-pop) ; Browse kill ring, pick entry and paste it.
+	 )
+         "browse"
     )
-  (defun my/paste-then-hydra ()
+    ("q" nil "quit" :exit t)
+  )
+  (defun my/paste-after-then-hydra ()
     (interactive)
     (call-interactively 'evil-paste-after)
     (hydra-paste/body)
@@ -385,6 +402,12 @@
     ;; which is a requirement for evil-paste-pop functions from hydra-paste to be able to be executed
     ;; after this one.
     (setq this-command 'evil-paste-after)
+  )
+  (defun my/paste-before-then-hydra ()
+    (interactive)
+    (call-interactively 'evil-paste-before)
+    (hydra-paste/body)
+    (setq this-command 'evil-paste-before)
   )
 
   (defhydra hydra-window-resize (:hint nil)
