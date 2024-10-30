@@ -508,14 +508,14 @@
   ))
   :config
   ;; Set headers to have different sizes.
-  (dolist (face '((org-level-1 . 1.2)
-	          (org-level-2 . 1.1)
-		  (org-level-3 . 1.05)
-		  (org-level-4 . 1.0)
-		  (org-level-5 . 1.0)
-		  (org-level-6 . 1.0)
-		  (org-level-7 . 1.0)
-		  (org-level-8 . 1.0)))
+  (dolist (face '((org-level-1 . 1.5)
+	          (org-level-2 . 1.3)
+		  (org-level-3 . 1.2)
+		  (org-level-4 . 1.1)
+		  (org-level-5 . 1.1)
+		  (org-level-6 . 1.1)
+		  (org-level-7 . 1.1)
+		  (org-level-8 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
   )
 )
@@ -720,10 +720,18 @@
   (counsel-projectile-mode)
 )
 
+;; NOTE: I installed transient not because I use it directly, but because magit
+;;   needs a newer version of it than what comes with emacs by default, and this
+;;   takes care of it. If magit at some point stops needing it, I can remove this.
+(use-package transient)
+
 ;; Magit is all you need to work with git.
-;; TODO: Version pulled in is too new for my version of emacs, so elpaca throws errors.
-;;   Either use older version of magit, or upgrade emacs version.
+;; TODO: I had to explicitly install new transient above to get magit to work because
+;;   it expects a newer version than what emacs ships with. Once I update emacs
+;;   or magit, drop the :after transient and remove (use-package transient) unless
+;;   I also use it for something else.
 (use-package magit
+  :after transient
   :defer t
 )
 
