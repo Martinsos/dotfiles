@@ -1042,6 +1042,9 @@ Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 
 * TODOs
+*** TODO Make is so that init.el and early-init.el are read only by default?
+I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
+make them read only by default.
 *** DONE Organize general.el, which-key, hydra, evil under Keybindings header.
 *** TODO How to split use-package into multiple blocks, in Org babel blocks?
  - SO: including snippets: https://emacs.stackexchange.com/questions/78624/splitting-use-package-declarations-in-literate-config
