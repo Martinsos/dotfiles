@@ -1,79 +1,4 @@
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Package management ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; There are three important "packages" to understand here: package.el, use-package, and elpaca.
-;; - package.el is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
-;; - use-package is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
-;;   It uses package.el in the background to install packages, but it is not a package manager, instead it is a layer
-;;   above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
-;; - elpaca is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant.
-;;
-;;   In this config I use elpaca + use-package (package.el is not even loaded).
-;;
-;; Installing vs loading vs configuring packages:
-;; - Installing package means downloading (and building) the package to your machine, so it can be loaded when you want.
-;;   This is what package manager does for you.
-;; - Loading package means importing/requiring it in our emacs config (init.el), so it can be used. It needs to be installed
-;;   first in order to be loaded (unless it comes with emacs already).
-;;   This is what use-package takes care of.
-;; - Configuring means exactly that: adapting the package to your needs by defining variables, key bindings, hooks, ... .
-;;   use-package also helps with this, giving us structure and reducing boilerplate.
-;;
-;; Lifecycle of a package:
-;; 1. Installation typically happens when you start emacs for first time on new machine, or when you update packages or add new package.
-;; 2. Loading typically happens each time you start emacs, and it can happen immediately on init, or it can happen later, on demand,
-;;    when package is needed (in lazy fashion), depending on how you set it up for that package.
-;; 3. Configuration typically happens right after loading.
-;;
-;; # Use-package
-;;
-;; The idea is that you organize all your code in `(use-package <package-name> ...)` declarations.
-;; There is even `(use-package emacs ...)` where `emacs` is a special "package" that won't trigger any installation or loading,
-;; allowing you to put general emacs config under it (e.g. `(column-number-mode)`).
-;;
-;; use-package has a bunch of keywords that you can use to configure your package or define how it is loaded / installed.
-;; Mostly you will use keywords that come with use-package, but other packages can also extend use-package with their own keywords.
-;; I will quickly explain some of the more important/confusing ones:
-;; - :ensure -> This is really an interface toward package manager (who does package installation). Any value passed to
-;;     :ensure is passed to the package manager as instructions for installation, e.g. `:ensure (:host "github" :repo "user/repo")`.
-;;     Therefore, its behaviour depends on the package manager used. But generally, `:ensure nil` will not allow package installation,
-;;     while `:ensure t` or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
-;;     Normally you will want `:ensure t` for most of the packages, in which case you can (I do) configure use-package to have it be `t` by default.
-;;     When using elpaca, you can pass elpaca recipe to :ensure.
-;; - :defer -> `:defer t` tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
-;;     Alternatively, you can pass it a number of seconds emacs needs to be idle before package is loaded.
-;; - :demand -> Opposite of defer, `:demand t` tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
-;; - :init -> happens right before package is loaded.
-;; - :config -> happens right after package is loaded.
-;; - ...
-;; 
-;; ## Deferred loading 
-;; It is generally recommended to postpone/defer loading of packages till they are needed (if applicable), for faster emacs startup.
-;; use-package will defer loading of packages if `:defer <non-nil>` is set, or if any of the keywords with the "autoloading side effect" are used
-;; (e.g. `bind`, `command`, `hook`, ... : these all will make use-package defer loading and then autoload package once
-;; corresponding binding / command / hook / ... has happeend). If you use any of the "autoload" keywords but don't want
-;; use-package to be "smart" and assume you want autoloading, you can use `:demand t`.
-;; It can be good practice to add `:defer t` even when autoloading keywords are used, to be explicit about the intention.
-;;
-;; # Elpaca
-;; Elpaca can install package directly: `(elpaca some-package (message "this happens after package is installed"))`, but we use it via use-package.
-;; In the background, a call to `(use-package some-package :ensure t :some-keyword <smth>)` becomes `(elpaca some-package (use-package some-package :some-keyword <smth>))`.
-;;
-;; ## Recipes
-;; Elpaca allows you to define how the package should be installed via a `recipe`, which is provided as an argument to `:ensure` if using `use-package`.
-;; Example of a recipe: `(some-package :host github :repo "user/example")`.
-;;
-;; ## Deferred installing
-;; Elpaca, unlike package.el, doesn't install packages immediately, instead it waits for emacs init to finish, and then installs them asynchronously, in parallel for fast, non-blocking installations.
-;; To prevent this behaviour and make elpaca install package right now, when the corresponding `use-package` declaration is evaluated, one can pass `:wait t` keyword do the elpaca recipe: `:ensure (:wait t ...)`. This can be useful for packages that e.g. add keywords to use-package, since you need those installed and loaded first.
-;;
-;; Due to elpaca's deffered installing, instead of installing and loading happening during init phase (evaluation of init.el), we have following order of events: init -> installation of packages -> loading packages.
-;; Exception are packages with `:wait t` in their recipe, those will get installed / loaded at init.
-;; That also means that `after-init-hook` is often not the right choice any more, and we should instead use `elpaca-after-init-hook`, which will guarantee packages are installed / loaded.
-
-;; Install and set up Elpaca. Also, in early-init.el, we disable package.el.
+;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -83,26 +8,26 @@
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
+      (build (expand-file-name "elpaca/" elpaca-builds-directory))
+      (order (cdr elpaca-order))
+      (default-directory repo))
   (add-to-list 'load-path (if (file-exists-p build) build repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
     (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
         (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                 ,@(when-let ((depth (plist-get order :depth)))
-                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                 ,(plist-get order :repo) ,repo))))
-                 ((zerop (call-process "git" nil buffer t "checkout"
-                                       (or (plist-get order :ref) "--"))))
-                 (emacs (concat invocation-directory invocation-name))
-                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                 ((require 'elpaca))
-                 ((elpaca-generate-autoloads "elpaca" repo)))
+                ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                ,@(when-let ((depth (plist-get order :depth)))
+                                                    (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                ,(plist-get order :repo) ,repo))))
+                ((zerop (call-process "git" nil buffer t "checkout"
+                                      (or (plist-get order :ref) "--"))))
+                (emacs (concat invocation-directory invocation-name))
+                ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                      "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                ((require 'elpaca))
+                ((elpaca-generate-autoloads "elpaca" repo)))
             (progn (message "%s" (buffer-string)) (kill-buffer buffer))
           (error "%s" (with-current-buffer buffer (buffer-string))))
       ((error) (warn "%s" err) (delete-directory repo 'recursive))))
@@ -116,8 +41,6 @@
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (use-package emacs
   :ensure nil
   :config
@@ -127,19 +50,13 @@
   (tooltip-mode -1)
   (menu-bar-mode -1)
   (setq ring-bell-function 'ignore)
-
   (set-fringe-mode 10)
-
   (setq-default fill-column 100)
-
   (column-number-mode) ; Show row:column in mode line.
-
   (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
-
   (global-hl-line-mode 1) ; Highlights the line in which cursor is.
-
-  ;; Start in fullscreen.
-  (add-hook 'window-setup-hook 'toggle-frame-fullscreen t)
+  (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
+  (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -152,13 +69,12 @@
   (load-theme 'doom-dracula t)
 )
 
-;; This makes copy/paste properly work when emacs is running via the terminal.
-(use-package xclip
+;; TODO: Configure better or use some other modeline.
+(use-package doom-modeline
   :config
-  (xclip-mode 1)
+  (setq doom-modeline-height 40)
+  (doom-modeline-mode 1)
 )
-
-;;;;;; UNDO ;;;;;;;;
 
 (use-package emacs
   :ensure nil
@@ -169,13 +85,6 @@
   (setq undo-outer-limit  300000000) ; ~300mb.
 )
 
-;; Simple package that brings undo/redo commands that behave in a simple, linear
-;; fashion, like you would expect. However, it still keeps emacs' undo/redo
-;; complex system intact with all the state it keeps, these commands just serve
-;; as a simpler interface toward it, so you can still interact with it if you
-;; wish (e.g. with vundo which visualizes the undo state as tree).
-;; I don't set any keybindings here because it is enough to set undo-fu as
-;; evil's undo system (check my evil config) and then evil uses it.
 (use-package undo-fu
   :config
   (setq undo-fu-ignore-keyboard-quit t) ; I don't want C-g to trigger normal emacs undo behavior.
@@ -195,7 +104,7 @@
     "Post command hook function for live diffing."
     (when (not (memq this-command '(vundo-quit vundo-confirm)))
       (progn
-	(vundo-diff-mark (vundo-m-parent (vundo--current-node vundo--prev-mod-list)))
+        (vundo-diff-mark (vundo-m-parent (vundo--current-node vundo--prev-mod-list)))
         (vundo-diff)
       )
     )
@@ -213,14 +122,6 @@
   (add-hook 'vundo-mode-hook (lambda () (vundo-live-diff-mode 1)))
   ;;;;;/ Vundo Live Diff ;;;;;;
 )
-
-;; TODO: Install undo-fu-session? Do I need persistent undo between the emacs sessions? I think not?
-
-;; TODO: Install undo-hl (highlights changes by undo in buffer)?
-;;   Seems to not be on any package manager though, so I need straight.el probably.
-
-;;;;;;;;;;;;;;;;;;;;;
-
 
 ;; general.el provides convenient, unified interface for key definitions.
 ;; It can do many cool things, one of them is specifying leader key and prefixes.
@@ -346,14 +247,14 @@
   )
 )
 
-;; Hydra enables you to define a small "menu", which when you activate, activates
-;; transient unique keybindings (which you also defined) that you can use only
-;; then, and lists them in the minibuffer in a nice menu.
-;; It is convenient when you need to spam a lot of very specific commands,
-;; e.g. scale text (in / out), or resize window (left / right / up / down), or
-;; iterate through kill ring, or something like that. So then you go into
-;; "text scale resizing mode" to put it that way, and you can easily resize it
-;; with e.g. one letter commands.
+(use-package which-key
+  :config
+  (setq which-key-idle-delay 0.5)
+  (setq which-key-add-column-padding 2)
+  (setq which-key-min-display-lines 5)
+  (which-key-mode)
+)
+
 (use-package hydra
   :config
   (defhydra hydra-text-scale ()
@@ -363,7 +264,6 @@
     ("q" nil "quit" :exit t)
   )
 
-;; e.g. scale text (in / out), or resize window (left / right / up / down), or
   (defhydra hydra-buffer-next-prev ()
     "Next/previous buffer"
     ("p" previous-buffer "previous")
@@ -376,21 +276,21 @@
     ("C-j" evil-paste-pop "previous")
     ("C-k" evil-paste-pop-next "next")
     ("/" (progn
-	   (evil-undo-pop) ; Undo last paste.
-	   ;; NOTE: Ideally, I would put the new paste (about to be selected by counsel-yank-pop)
-	   ;; starting exactly from the same place as previous paste, as e.g. evil-paste-pop does,
-	   ;; but I haven't found a simple way to implement that, so I do a more simplistic
-	   ;; approach, below that is a bit less precise (e.g. adds redundant newline). However I
-	   ;; don't think that is a big problem if one decided to browse kill ring visually, you
-	   ;; care less about speed / formatting then.
-	   (goto-char (nth 2 evil-last-paste)) ; Put cursor back where it was before the last paste.
-           (if (eq last-command 'evil-paste-before)
-	       (evil-insert-newline-above)
-	       (evil-insert-newline-below)
-	   )
-	   (counsel-yank-pop) ; Browse kill ring, pick entry and paste it.
-	 )
-         "browse"
+          (evil-undo-pop) ; Undo last paste.
+          ;; NOTE: Ideally, I would put the new paste (about to be selected by counsel-yank-pop)
+          ;; starting exactly from the same place as previous paste, as e.g. evil-paste-pop does,
+          ;; but I haven't found a simple way to implement that, so I do a more simplistic
+          ;; approach, below that is a bit less precise (e.g. adds redundant newline). However I
+          ;; don't think that is a big problem if one decided to browse kill ring visually, you
+          ;; care less about speed / formatting then.
+          (goto-char (nth 2 evil-last-paste)) ; Put cursor back where it was before the last paste.
+          (if (eq last-command 'evil-paste-before)
+              (evil-insert-newline-above)
+              (evil-insert-newline-below)
+          )
+          (counsel-yank-pop) ; Browse kill ring, pick entry and paste it.
+        )
+        "browse"
     )
     ("q" nil "quit" :exit t)
   )
@@ -414,9 +314,9 @@
     "
   Resize window
   -------------
-	      _h_: ⇾ ⇽          ↑        ↓
-			    _k_:     _j_:
-	      _l_: ⇽ ⇾          ↓        ↑
+              _h_: ⇾ ⇽          ↑        ↓
+                            _k_:     _j_:
+              _l_: ⇽ ⇾          ↓        ↑
   "
     ("h" shrink-window-horizontally)
     ("j" shrink-window)
@@ -429,9 +329,9 @@
     "
   Move window
   -----------
-		      _k_: top
-	      _h_: left       _l_: right
-		      _j_: bottom
+                      _k_: top
+              _h_: left       _l_: right
+                      _j_: bottom
   "
     ("h" evil-window-move-far-left)
     ("j" evil-window-move-very-bottom)
@@ -440,26 +340,6 @@
     ("q" nil "quit" :exit t)
   )
 )
-
-;; Allows fast jumping inside the buffer (to word, to line, ...).
-(use-package avy)
-
-;; Allows jumping to any window by typing just a single letter.
-(use-package ace-window)
-
-;; This package gives me commands to jump to a window with specific number (ace-window doesn't do that).
-(use-package winum
-  :config
-  (winum-mode)
-)
-
-;; Remembers last used commands and puts them on top of M-x's list of commands.
-;; Integrates seamlessly with Ivy/Counsel, Ido and some other.
-(use-package amx)
-
-;;;;;;;;;;;;
-;;; Evil ;;;
-;;;;;;;;;;;;
 
 ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
 (use-package evil
@@ -478,6 +358,7 @@
 )
 
 (use-package evil-escape
+  :after evil
   :custom
   (evil-escape-key-sequence "fd")
   :config
@@ -492,12 +373,10 @@
   :config (evil-collection-init)
 )
 
-;;;;;;;;;;;;
-
-;;;;;;;;;;;;;; ORG MODE ;;;;;;;;;;;;;;;
-
 ;; CHEATSHEET
 ;; - Shift-Tab -> cycles through expanding headers.
+;; - structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet.
+;; - org-babel is org package (comes with org) that allows execution of code blocks.
 (use-package org
   :defer t
   :hook
@@ -509,14 +388,36 @@
   :config
   ;; Set headers to have different sizes.
   (dolist (face '((org-level-1 . 1.5)
-	          (org-level-2 . 1.3)
-		  (org-level-3 . 1.2)
-		  (org-level-4 . 1.1)
-		  (org-level-5 . 1.1)
-		  (org-level-6 . 1.1)
-		  (org-level-7 . 1.1)
-		  (org-level-8 . 1.1)))
+                  (org-level-2 . 1.3)
+                  (org-level-3 . 1.2)
+                  (org-level-4 . 1.1)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
+  )
+
+  ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
+  (use-package org-tempo :ensure nil)
+  ;; Defining structure templates (snippets) for quickly creating code blocks.
+  ;; Typing "<shTAB" will expand it to snippet.
+  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  
+  ;; Configure org babel language
+  (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((emacs-lisp . t)
+      (python . t))
+  )
+
+  ;; Automatically tangle any org file in our emacs directory when we save it.
+  (add-hook 'org-mode-hook (lambda ()
+    (when (string-equal (file-name-directory (buffer-file-name)) (expand-file-name user-emacs-directory))
+      (add-hook 'after-save-hook (lambda ()
+        (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))))))
   )
 )
 
@@ -526,8 +427,6 @@
   :hook (org-mode . org-bullets-mode)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (use-package emacs
   :ensure nil
   :config
@@ -536,11 +435,11 @@
     (interactive)
     (cl-destructuring-bind (buf start pos)
       (or (cl-find (window-buffer window) (window-prev-buffers) :key #'car :test-not #'eq)
-	  (list (other-buffer) nil nil)
+          (list (other-buffer) nil nil)
       )
       (if (not buf)
-	(message "Last buffer not found.")
-	(set-window-buffer-start-and-point window buf start pos)
+        (message "Last buffer not found.")
+        (set-window-buffer-start-and-point window buf start pos)
       )
     )
   )
@@ -558,10 +457,6 @@
   )
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Ivy, Counsel and Swiper ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Ivy is the main thing (nice search through list of stuff, in minibuffer and elsewhere),
 ;; while Counsel and Swiper extend its usage through more of the Emacs.
 
@@ -572,30 +467,28 @@
 ;; Directories have stronger contrast, hidden files are grey, symbolic links neon, ... .
 ;; I should also get Ivy to behave like this! Right now it shows dirs in too similar color uses the same
 ;; color for all the rest.
-;; CHEATSHEET:
-;; - M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
 ;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
 (use-package ivy
   :bind (
-	 ;; I define some evil-ish keybindings here since neither evil not evil-connection
-	 ;; define these specific ones for Ivy.
-	 :map ivy-minibuffer-map ;; When in the minibuffer.
-	      ("C-h" . ivy-backward-kill-word)
-	      ("C-j" . ivy-next-line)
-	      ("C-k" . ivy-previous-line)
-	      ("C-l" . ivy-alt-done)
+        ;; I define some evil-ish keybindings here since neither evil not evil-connection
+        ;; define these specific ones for Ivy.
+        :map ivy-minibuffer-map ;; When in the minibuffer.
+              ("C-h" . ivy-backward-kill-word)
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              ("C-l" . ivy-alt-done)
               ("TAB" . ivy-alt-done)
-	 :map ivy-switch-buffer-map ; When in the buffer switching mode.
-	      ("C-j" . ivy-next-line)
-	      ("C-k" . ivy-previous-line)
-	      ("C-l" . ivy-done)
-	      ("C-d" . ivy-switch-buffer-kill)
-	 :map ivy-reverse-i-search-map ; When doing incremental search.
-	      ("C-j" . ivy-next-line)
-	      ("C-k" . ivy-previous-line)
-	      ("C-l" . ivy-done)
-	      ("C-d" . ivy-reverse-i-search-kill)
-	 )
+        :map ivy-switch-buffer-map ; When in the buffer switching mode.
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              ("C-l" . ivy-done)
+              ("C-d" . ivy-switch-buffer-kill)
+        :map ivy-reverse-i-search-map ; When doing incremental search.
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              ("C-l" . ivy-done)
+              ("C-d" . ivy-reverse-i-search-kill)
+        )
   :custom
   (ivy-height 20)
   (ivy-use-virtual-buffers t)  ; Adds recent files and bookmarks and similar to results.
@@ -686,13 +579,7 @@
   (ivy-rich-mode 1)
 )
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
-;; CHEATSHEET:
-;; - Projectile recognizes projects with its heuristics (.git/, maven files, ...), but you can
-;;   add .projectile file to the project root to explicitly mark it as a project.
 (use-package projectile
   :init
   ;; First thing that happens on switching to a new project.
@@ -713,7 +600,7 @@
     "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
     (interactive)
     (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
-         (counsel-projectile-rg)
+        (counsel-projectile-rg)
     )
   )
 
@@ -735,62 +622,6 @@
   :defer t
 )
 
-;; Highlight TODO and similar keywords in comments and strings.
-(use-package hl-todo
-  :config
-  (global-hl-todo-mode)
-)
-
-;; Utility package that provides nice icons to be used in emacs, by other packages.
-;; NOTE: The first time you load your config on a new machine, you'll have to
-;; run the following command interactively:
-;; M-x all-the-icons-install-fonts
-(use-package all-the-icons)
-
-;; TODO: Configure more or use some other modeline.
-(use-package doom-modeline
-  :config
-  (setq doom-modeline-height 40)
-  (doom-modeline-mode 1)
-)
-
-(use-package which-key
-  :config
-  (setq which-key-idle-delay 0.5)
-  (setq which-key-add-column-padding 2)
-  (setq which-key-min-display-lines 5)
-  (which-key-mode)
-)
-
-;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
-(use-package helpful
-  :defer t
-  :custom
-  (counsel-describe-function-function #'helpful-callable)
-  (counsel-describe-variable-function #'helpful-variable)
-  :bind
-  (([remap describe-command] . helpful-command)
-   ([remap describe-key] . helpful-key)
-   ("C-h h" . helpful-at-point)
-  )
-)
-
-;; Colorizes color names in buffers.
-;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
-(use-package colorful-mode
-  :config
-  (add-to-list 'global-colorful-modes 'help-mode)
-  (global-colorful-mode)
-)
-
-;; CHEATSHEET:
-;;  - C-s to search among the candidates. C-M-s to not just highlight but also filter. C-g to quit search mode.
-;;   TODO: Can I somehow show this "cheatsheet" info when candidate popup pops up? Maybe in the header/footer of the popup?
-;;     Seems there is no directly supported way to do that, and would be too
-;;     complex.  Ok, maybe then I can print it in the echo buffer, or somewhere
-;;     else, when popup shows up (this I can do via company-provided hooks). I
-;;     could maybe have dedicated space somewhere to show help / cheatsheet
-;;     info?
 ;; TODO: Fix highlight and search faces in tooltip/popup, or have theme that makes them nice. Company has faces that we can customize.
 ;; TODO: Either make scroll more visible, or use lines instead.
 (use-package company
@@ -804,38 +635,93 @@
   ;; so I made my own mapping here that provides more info. For the context, icons are
   ;; short descriptions left of the completion candidates in the popup.
   (company-text-icons-mapping
-   '((array          "   []" font-lock-type-face)
-     (boolean        " bool" font-lock-builtin-face)
-     (class          "class" font-lock-type-face)
-     (color          "color" success)
-     (constant       "const" font-lock-constant-face)
-     (constructor    "cnstr" font-lock-function-name-face)
-     (enum-member    "enumv" font-lock-builtin-face)
-     (enum           " enum" font-lock-builtin-face)
-     (field          "field" font-lock-variable-name-face)
-     (file           " file" font-lock-string-face)
-     (folder         "  dir" font-lock-doc-face)
-     (interface      " intf" font-lock-type-face)
-     (keyword        "  kwd" font-lock-keyword-face)
-     (method         " mthd" font-lock-function-name-face)
-     (function       " func" font-lock-function-name-face)
-     (module         "  mdl" font-lock-type-face)
-     (numeric        "  num" font-lock-builtin-face)
-     (operator       "   op" font-lock-comment-delimiter-face)
-     (property       " prop" font-lock-variable-name-face)
-     (reference      "  ref" font-lock-doc-face)
-     (snippet        " snip" font-lock-string-face)
-     (string         "  str" font-lock-string-face)
-     (struct         "strct" font-lock-variable-name-face)
-     (text           " text" shadow)
-     (type-parameter "typep" font-lock-type-face)
-     (unit           " unit" shadow)
-     (value          "  val" font-lock-builtin-face)
-     (variable       "  var" font-lock-variable-name-face)
-     (t              "    ." shadow))
+  '((array          "   []" font-lock-type-face)
+    (boolean        " bool" font-lock-builtin-face)
+    (class          "class" font-lock-type-face)
+    (color          "color" success)
+    (constant       "const" font-lock-constant-face)
+    (constructor    "cnstr" font-lock-function-name-face)
+    (enum-member    "enumv" font-lock-builtin-face)
+    (enum           " enum" font-lock-builtin-face)
+    (field          "field" font-lock-variable-name-face)
+    (file           " file" font-lock-string-face)
+    (folder         "  dir" font-lock-doc-face)
+    (interface      " intf" font-lock-type-face)
+    (keyword        "  kwd" font-lock-keyword-face)
+    (method         " mthd" font-lock-function-name-face)
+    (function       " func" font-lock-function-name-face)
+    (module         "  mdl" font-lock-type-face)
+    (numeric        "  num" font-lock-builtin-face)
+    (operator       "   op" font-lock-comment-delimiter-face)
+    (property       " prop" font-lock-variable-name-face)
+    (reference      "  ref" font-lock-doc-face)
+    (snippet        " snip" font-lock-string-face)
+    (string         "  str" font-lock-string-face)
+    (struct         "strct" font-lock-variable-name-face)
+    (text           " text" shadow)
+    (type-parameter "typep" font-lock-type-face)
+    (unit           " unit" shadow)
+    (value          "  val" font-lock-builtin-face)
+    (variable       "  var" font-lock-variable-name-face)
+    (t              "    ." shadow))
   )
   :config
   (global-company-mode 1)
+)
+
+;; This makes copy/paste properly work when emacs is running via the terminal.
+(use-package xclip
+  :config
+  (xclip-mode 1)
+)
+
+;; Allows fast jumping inside the buffer (to word, to line, ...).
+(use-package avy)
+
+;; Allows jumping to any window by typing just a single letter.
+(use-package ace-window)
+
+;; This package gives me commands to jump to a window with specific number (ace-window doesn't do that).
+(use-package winum
+  :config
+  (winum-mode)
+)
+
+;; Remembers last used commands and puts them on top of M-x's list of commands.
+;; Integrates seamlessly with Ivy/Counsel, Ido and some other.
+(use-package amx)
+
+;; Highlight TODO and similar keywords in comments and strings.
+(use-package hl-todo
+  :config
+  (global-hl-todo-mode)
+)
+
+;; Utility package that provides nice icons to be used in emacs, by other packages.
+;; NOTE: The first time you load your config on a new machine, you'll have to
+;; run the following command interactively:
+;; M-x all-the-icons-install-fonts
+(use-package all-the-icons)
+
+;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
+(use-package helpful
+  :defer t
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  (([remap describe-command] . helpful-command)
+  ([remap describe-key] . helpful-key)
+  ("C-h h" . helpful-at-point)
+  )
+)
+
+;; Colorizes color names in buffers.
+;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
+(use-package colorful-mode
+  :config
+  (add-to-list 'global-colorful-modes 'help-mode)
+  (global-colorful-mode)
 )
 
 ;; It colors each pair of parenthesses into their own color.
@@ -843,101 +729,3 @@
   :hook
   (prog-mode . rainbow-delimiters-mode)
 )
-
-;; TODO: Set up shell, below is my spacemacs setup:
-;; ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
-;; ;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
-;; (with-eval-after-load 'vterm
-;;   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
-;;   (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
-;; )
-;; (shell :variables
-;;     shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
-;;     shell-default-width 50
-;;     shell-default-position 'right
-;;     spacemacs-vterm-history-file-location "~/.bash_history"
-;;     )
-
-;; TODO: Enable that new smooth/pixel scroll setting in emacs?
-
-;; TODO: Go through my spacemacs config and copy stuff I liked from there.
-
-;; TODO: Take a look at dogears.el -> sounds potentially useful, not sure though.
-
-;; TODO: Use native installation of emacs.
-
-;; TODO: Set up Company, Flycheck, LSP and LSP-UI. Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
-
-;; TODO: Take care of the temporary files being created by emacs and undo.
-
-;; TODO: Add some of the temporary files to the .gitignore.
-
-;; TODO: Add a nice splash screen with recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
-
-;; TODO: I will want some way to easily restore where I stopped working. Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
-
-;; TODO: Figure out how to pin down package versions -> lockfile / freezing. But also search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
-
-;; TODO: Use smartparens or electric-pair-mode?
-
-;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) , chatgpt-shell, evedel, copilot.el .
-
-;; TODO: Try Nano theme.
-
-;; TODO: Implement transient yanking, so I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
-;;   There is counsel-yank-pop, to nicely choose from the kill ring.
-;;   So what I want is once yank is done, to be offered something like hydra, so transient keys, that allow to easily rotate to through kill ring.
-;;   In spacemacs, it activates Pasting Transient State, where [C-j/C-k] cycles through yanked text, [p/P] pastes the same text above or below, [C-v] creates a visual selection from last paste and exits. Anything else exits.
-;;   I really need only cycling.
-;;   Maybe I can just offer a hydra that has one key, maybe "/", that opens counsel-yank-pop. That way, "p/" becomes "advanced" yank. It could also offer C-j and C-k next to it.
-;;   Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives next (evil-paste-pop-next), that is evil thing. But it is not hydra. So maybe just make a hydra that mentions these + a way to start counsel-yank-pop.
-
-;; TODO: Set up AI support. GPTel, Elysium, Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/) , chatgpt-shell, evedel, copilot.el .
-
-;; TODO: Stop that custom block from appearing at the end of this file.
-
-;; TODO: Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
-;; TODO: Write down following next to lsp-mode: I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
-
-;; TODO: I would love to show some kind of hints in certain situations. Couple of useful keybindings when I am in some context. Kind of like Helm in Spacemacs shows it at that footer it has.
-;;   But for Ivy. Also, for stuff like company when in completion popup, to remind me of C-s and C-M-s. What if I had an area in my emacs where contextual tips are shown as you do some actions?
-;;   For example they get shown when you open completion popup, or when you start using Ivy? Could I make this a universal mechanism? Maybe I can expand it then for a bit more info if I want,
-;;   for my custom cheasheet? It would be kind of a "publish" mechanism I guess.
-
-;; TODO: Try replacing Ivy, Counsel, Swiper, and Company even, with Vertico, Marginalia, Orderless, Embark, Corfu, ...
-;;   Vertico is alternative to Ivy, the rest are supporting packages for it same like Counsel and Swiper are for Ivy, and then Corfu is a replacement for Company.
-;;   Seems like a lot of people like Vertico, ... , Corfu and the rest. Allegedly they using more of native Emacs stuff, so are simpler but also make more sense? Hm.
-;;   Embark seems great, it is a quite unique package: the idea is that you have a keybinding for it and then whenever you are doing something, you hit that keybinding and Embark
-;;   offers you actions that you can do in that situation / with that thing. It does however work best if Marginalia is used, because it gives it more context on stuff, and Marginalia
-;;   works best with the rest of the stuff above, so it kind of pulls one another hm, so it probably makes sense to try to go for all of it at once.
-
-;; TODO: To figure out what packages to install, I should take a look at what Doomemacs, Spacemacs (and their layers), Emacs-bedrock, and others, use, for inspiration, and how they have it configured.
-;;   Recommendation by user: projectile, helm or ivy, company (or other auto-completion package), lsp mode, which-key. Don't forget those that come with emacs: org, dired, eshell, magit, ... .
-;;   I can also look at Melpa to see which are the most used packages.
-;; TODO: Check out bedrock emacs, simple starting config but has good stuff allegedly: https://sr.ht/~ashton314/emacs-bedrock/ .
-;; TODO: Check out config by this Prot guy, people say it is good: https://protesilaos.com/emacs/dotemacs .
-;; TODO: Another emacs config to check out, kickstarter for neovimers, might have some good stuff for evil: https://github.com/LionyxML/emacs-kick . I also saw it uses vertico, marginalia, ... .
-
-;; TODO: Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;; CHEATSHEET ;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; M-: -> eval in echo buffer
-;;
-;; check-parens -> find unbalanced parenthesses in the buffer
-;;
-;; C-h -> help! find out about v (variable), f (function), face, ... .
-;; C-h h -> help for symbola at point.
-;;
-;; m <char> -> set mark
-;; ` <char> -> go to mark
-;; ` ` -> go to last mark
-;;
-;;
-;; Troubleshooting:
-;; - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
