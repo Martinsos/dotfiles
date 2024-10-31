@@ -1060,6 +1060,13 @@ Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 
 * TODOs
+*** TODO Add "SPC j" prefix for "jump" and then put jump/goto commands under that?.
+Or, go for "SPC g" and move magit to "SPC a g"? I think I should move magit there in any case, to free up "SPC g".
+Stuff I could put under "SPC j" (or "SPC g") is avy/ace jumping around the file/window, stuff like "counsel-imenu" that lets me move around the definitions in file, ... .
+Hm or it could even be "SPC n" for navigation? Maybe that is the best one, it is broad and niche enough at the same time.
+Of course I would still keep some specific navigation like window or buffer under buffer/window prefixes, while I would put more general stuff here.
+Or, maybe I don't need "SPC j" and I should just organize navigating by domain? So jumping around file -> under "SPC f". Jumping around the window -> under "SPC w". Counsel-imenu -> under "SPC b" or "SPC f".
+
 *** TODO Make is so that init.el and early-init.el are read only by default?
 I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
 make them read only by default.
