@@ -586,6 +586,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+end_src
 
 * Org mode
+** Basic setup
 
 #+begin_src emacs-lisp
 
@@ -660,6 +661,68 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   )
 
 #+end_src
+
+** org-present
+
+Turns any org document into a presentation!
+
+#+begin_src emacs-lisp
+
+  (use-package org-present
+    :after (org visual-fill-column evil hl-line)
+    :bind (
+      :map org-present-mode-keymap
+             ("q" . org-present-quit)
+    )
+    :config
+
+    ;; TODO: What if I moved adding of "quit" hook inside of "start" hook?
+    ;;   Then, I could make remember initial values of stuff like evil-mode or hl-line-mode
+    ;;   in the "start" hook and pass those to the "quit" hook to restore them!
+    ;;   Instead of making assumptions that evil-mode and hl-line-mode are on.
+
+    (add-hook 'org-present-mode-hook (lambda ()
+      (evil-mode 0) ; Otherwise it messes up org-present.
+
+      (global-hl-line-mode -1)
+
+      (org-present-big)
+      (org-display-inline-images)
+      (org-present-hide-cursor)
+      (org-present-read-only)
+
+      ;; Soft wraps the text at fixed width while also centering it.
+      ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
+      ;;   is used above, while I would normally expect 80 to do it.
+      ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
+      ;;   uses somehow mess things up?
+      (setq visual-fill-column-width 20
+    	visual-fill-column-center-text t)
+      (visual-line-fill-column-mode 1)
+    ))
+
+    (add-hook 'org-present-mode-quit-hook (lambda ()
+      (evil-mode 1)
+
+      (global-hl-line-mode t)
+
+      ;; Stop text centering and wrapping at fixed width.
+      (visual-line-fill-column-mode 0)
+
+      (org-present-small)
+      (org-remove-inline-images)
+      (org-present-show-cursor)
+      (org-present-read-write)
+    ))
+  )
+
+#+end_src
+
+*** Cheatsheet :cheatsheet:
+- `org-present` to go into presentation mode, and current header will become a slide with all its contents.
+- left and right arrow take you to previous or next header (which is actually now a slide).
+- If you start `org-present` from a nested header, it will use that level of headers as slides.
+- "C-c C-q" to exit the presentation.
 
 ** Cheatsheet :cheatsheet:
 - Shift-Tab -> cycles through expanding headers.
@@ -981,6 +1044,17 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
+  ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
+  ;; visual-fill-column, when used with visual-line-mode, modifies the wrapping to happen at the fixed (by default fill-column) width,
+  ;; instead of at the window end.
+  ;; It can also center the text.
+  ;; Useful for making the buffer look "document" like.
+  (use-package visual-fill-column)
+
+#+end_src
+
+#+begin_src emacs-lisp
+
   ;; This makes copy/paste properly work when emacs is running via the terminal.
   (use-package xclip
     :config
@@ -1120,6 +1194,8 @@ make them read only by default.
 *** TODO Improve my Org faces / look.
 - [ ] Better way to communicate that header is collapsed (something more visible than three dots).
 - [ ] Give a try at non-monospace font for not-code (check System Crafters video).
+   - Fixed-pitch font: JetBrains Mono, light weight.
+   - Variable-pitch font: Iosevka Aile, light weight.
 - [ ] Play with toggling org-indent and org-bullets.
 *** TODO Set up shell, below is my spacemacs setup:
 

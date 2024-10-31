@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2024-10-31 15:22:06 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-01 00:53:54 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -434,6 +434,54 @@
   )
 )
 
+(use-package org-present
+  :after (org visual-fill-column evil hl-line)
+  :bind (
+    :map org-present-mode-keymap
+           ("q" . org-present-quit)
+  )
+  :config
+
+  ;; TODO: What if I moved adding of "quit" hook inside of "start" hook?
+  ;;   Then, I could make remember initial values of stuff like evil-mode or hl-line-mode
+  ;;   in the "start" hook and pass those to the "quit" hook to restore them!
+  ;;   Instead of making assumptions that evil-mode and hl-line-mode are on.
+
+  (add-hook 'org-present-mode-hook (lambda ()
+    (evil-mode 0) ; Otherwise it messes up org-present.
+
+    (global-hl-line-mode -1)
+
+    (org-present-big)
+    (org-display-inline-images)
+    (org-present-hide-cursor)
+    (org-present-read-only)
+
+    ;; Soft wraps the text at fixed width while also centering it.
+    ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
+    ;;   is used above, while I would normally expect 80 to do it.
+    ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
+    ;;   uses somehow mess things up?
+    (setq visual-fill-column-width 20
+  	visual-fill-column-center-text t)
+    (visual-line-fill-column-mode 1)
+  ))
+
+  (add-hook 'org-present-mode-quit-hook (lambda ()
+    (evil-mode 1)
+
+    (global-hl-line-mode t)
+
+    ;; Stop text centering and wrapping at fixed width.
+    (visual-line-fill-column-mode 0)
+
+    (org-present-small)
+    (org-remove-inline-images)
+    (org-present-show-cursor)
+    (org-present-read-write)
+  ))
+)
+
 (use-package emacs
   :ensure nil
   :config
@@ -685,6 +733,13 @@
   :config
   (global-company-mode 1)
 )
+
+;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
+;; visual-fill-column, when used with visual-line-mode, modifies the wrapping to happen at the fixed (by default fill-column) width,
+;; instead of at the window end.
+;; It can also center the text.
+;; Useful for making the buffer look "document" like.
+(use-package visual-fill-column)
 
 ;; This makes copy/paste properly work when emacs is running via the terminal.
 (use-package xclip
