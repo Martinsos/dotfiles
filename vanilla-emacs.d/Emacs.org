@@ -2,7 +2,7 @@
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
 * Preamble
-Whenever this file is saved from my emacs, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Org mode]] for logic that does this.
+Whenever this file is saved from my emacs, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Automatically tangle this file (Emacs.org)]] for logic that does this.
 
 Even though =init.el= and =early-init.el= are generated, I still keep them in version control (git), because it helps me avoid the situation where I don't have them on disk (maybe I deleted them, or I did fresh checkout) and can't easily start emacs and evaluate this very org file in order to generate them! By keeping them in version control, I have easy access to them, and I can even more easily see the diffs that were done.
 
@@ -20,6 +20,9 @@ Even though =init.el= and =early-init.el= are generated, I still keep them in ve
   ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
 
 #+end_src
+
+** NOTE: Splitting (use-package) declarations into multiple org code blocks
+This can be useful in order to nicely group and document the code. In this case, best way to do this is to use =(with-eval-after-load 'packagename <code that would normally go under :config>)=, for code that would go under =:config=, which is usually what we need, this is better then having multiple =(use-package ...)= declarations for the same package, because those can allegedly mess up with each other then.
 
 * Package management
 ** Tutorial
@@ -393,7 +396,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "fr"  '(counsel-recentf :which-key "recent files")
 
       "fe"  '(:ignore t :which-key "emacs")
-      "fei" '(my/open-init-file :which-key "open init file")
+      "feo" '(my/open-emacs-org-file :which-key "open Emacs.org file")
+      "fei" '(my/open-init-file :which-key "open init.el file")
 
       "v"   '(:ignore t :which-key "eval (elisp)")
       "v:"  '(eval-expression :which-key "expression")
@@ -421,6 +425,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
   )
 
 #+end_src
+
+#+RESULTS:
 
 ** which-key
 
@@ -583,52 +589,25 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
-    ;; CHEATSHEET
-    ;; - Shift-Tab -> cycles through expanding headers.
-    ;; - structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet.
-    ;; - org-babel is org package (comes with org) that allows execution of code blocks.
-    (use-package org
-      :defer t
-      :hook
-      (org-mode . (lambda ()
-        (org-indent-mode) ; Enforces correct indentation under each heading.
-        (visual-line-mode 1)
-        (setq evil-auto-indent nil)
-      ))
-      :config
-      ;; Set headers to have different sizes.
-      (dolist (face '((org-level-1 . 1.5)
-                      (org-level-2 . 1.3)
-                      (org-level-3 . 1.2)
-                      (org-level-4 . 1.1)
-                      (org-level-5 . 1.1)
-                      (org-level-6 . 1.1)
-                      (org-level-7 . 1.1)
-                      (org-level-8 . 1.1)))
-        (set-face-attribute (car face) nil :height (cdr face))
-      )
-
-      ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
-      (use-package org-tempo :ensure nil)
-      ;; Defining structure templates (snippets) for quickly creating code blocks.
-      ;; Typing "<shTAB" will expand it to snippet.
-      (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-      (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-      (add-to-list 'org-structure-template-alist '("py" . "src python"))
-      
-      ;; Configure org babel language
-      (org-babel-do-load-languages
-        'org-babel-load-languages
-        '((emacs-lisp . t)
-          (python . t))
-      )
-
-      ;; Automatically tangle any org file in our emacs directory when we save it.
-      (add-hook 'org-mode-hook (lambda ()
-        (when (string-equal (file-name-directory (buffer-file-name)) (expand-file-name user-emacs-directory))
-          (add-hook 'after-save-hook (lambda ()
-            (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))))))
-      )
+  (use-package org
+    :defer t
+    :hook
+    (org-mode . (lambda ()
+      (org-indent-mode) ; Enforces correct indentation under each heading.
+      (visual-line-mode 1)
+      (setq evil-auto-indent nil)
+    ))
+    :config
+    ;; Set headers to have different sizes.
+    (dolist (face '((org-level-1 . 1.5)
+                    (org-level-2 . 1.3)
+                    (org-level-3 . 1.2)
+                    (org-level-4 . 1.1)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :height (cdr face))
     )
 
     ;; Replace stars (*) with nice bullets.
@@ -637,9 +616,57 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       :hook (org-mode . org-bullets-mode)
     )
 
+    ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
+    (use-package org-tempo :ensure nil)
+  )
+
 #+end_src
 
-*** TODO Split this code above into multiple blocks
+** Supported languages
+
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+    ;; Here we define our custom structure templates (snippets) for quickly creating code blocks.
+    ;; Typing e.g. "<elTAB" will expand it to snippet.
+    (dolist (key-to-block-type '(("sh" . "src shell")
+                                 ("el" . "src emacs-lisp")
+  			       ("py" . "src python")))
+      (add-to-list 'org-structure-template-alist key-to-block-type)
+    )
+    
+    ;; Define which languages can be evaluated/executed in org files.
+    ;; Org will load support for them.
+    (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((emacs-lisp . t)
+        (python . t))
+    )
+  )
+
+#+end_src
+
+** Automatically tangle this file (Emacs.org)
+
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+    ;; Automatically tangle this file (Emacs.org) when we save it.
+    (add-hook 'org-mode-hook (lambda ()
+      (when (string-equal buffer-file-name (my/emacs-org-file-path))
+        (add-hook 'after-save-hook (lambda ()
+          (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))))))
+    )
+  )
+
+#+end_src
+
+** Cheatsheet :cheatsheet:
+- Shift-Tab -> cycles through expanding headers.
+- structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet. e.g. "<el". Be faster than completion or reject it first with C-g.
+- org-babel is org package (comes with org) that allows execution of code blocks, sharing data between code blocks (polyglot), tangling (exporting code into file / literal programming), ... .
+- When in code block, to get full support for that language (proper completion, ...), open it in separate buffer with "C-c '" and do the editing there.
+
 * My buffer/file functions
 
 #+begin_src emacs-lisp
@@ -665,6 +692,16 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       "Open the init file."
       (interactive)
       (find-file user-init-file)
+    )
+
+    (defun my/open-emacs-org-file ()
+      "Open the init file."
+      (interactive)
+      (find-file (my/emacs-org-file-path))
+    )
+
+    (defun my/emacs-org-file-path ()
+      (file-name-concat user-emacs-directory "Emacs.org")
     )
 
     (defun my/switch-to-messages-buffer ()
@@ -1071,7 +1108,7 @@ Or, maybe I don't need "SPC j" and I should just organize navigating by domain? 
 I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
 make them read only by default.
 *** DONE Organize general.el, which-key, hydra, evil under Keybindings header.
-*** TODO How to split use-package into multiple blocks, in Org babel blocks?
+*** DONE How to split use-package into multiple blocks, in Org babel blocks?
  - SO: including snippets: https://emacs.stackexchange.com/questions/78624/splitting-use-package-declarations-in-literate-config
  - System Crafters: they use =(with-eval-after-load 'some-package ...)= to do extra config stuff. This is most reasonable solution probably.
 *** TODO Check out how System Crafters organized their Emacs.org

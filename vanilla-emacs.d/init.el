@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2024-10-31 11:10:29 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-10-31 15:22:06 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -222,7 +222,8 @@
     "fr"  '(counsel-recentf :which-key "recent files")
 
     "fe"  '(:ignore t :which-key "emacs")
-    "fei" '(my/open-init-file :which-key "open init file")
+    "feo" '(my/open-emacs-org-file :which-key "open Emacs.org file")
+    "fei" '(my/open-init-file :which-key "open init.el file")
 
     "v"   '(:ignore t :which-key "eval (elisp)")
     "v:"  '(eval-expression :which-key "expression")
@@ -375,10 +376,6 @@
   :config (evil-collection-init)
 )
 
-;; CHEATSHEET
-;; - Shift-Tab -> cycles through expanding headers.
-;; - structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet.
-;; - org-babel is org package (comes with org) that allows execution of code blocks.
 (use-package org
   :defer t
   :hook
@@ -400,33 +397,41 @@
     (set-face-attribute (car face) nil :height (cdr face))
   )
 
+  ;; Replace stars (*) with nice bullets.
+  (use-package org-bullets
+    :defer t
+    :hook (org-mode . org-bullets-mode)
+  )
+
   ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
   (use-package org-tempo :ensure nil)
-  ;; Defining structure templates (snippets) for quickly creating code blocks.
-  ;; Typing "<shTAB" will expand it to snippet.
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+)
+
+(with-eval-after-load 'org
+  ;; Here we define our custom structure templates (snippets) for quickly creating code blocks.
+  ;; Typing e.g. "<elTAB" will expand it to snippet.
+  (dolist (key-to-block-type '(("sh" . "src shell")
+                               ("el" . "src emacs-lisp")
+			       ("py" . "src python")))
+    (add-to-list 'org-structure-template-alist key-to-block-type)
+  )
   
-  ;; Configure org babel language
+  ;; Define which languages can be evaluated/executed in org files.
+  ;; Org will load support for them.
   (org-babel-do-load-languages
     'org-babel-load-languages
     '((emacs-lisp . t)
       (python . t))
   )
+)
 
-  ;; Automatically tangle any org file in our emacs directory when we save it.
+(with-eval-after-load 'org
+  ;; Automatically tangle this file (Emacs.org) when we save it.
   (add-hook 'org-mode-hook (lambda ()
-    (when (string-equal (file-name-directory (buffer-file-name)) (expand-file-name user-emacs-directory))
+    (when (string-equal buffer-file-name (my/emacs-org-file-path))
       (add-hook 'after-save-hook (lambda ()
         (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))))))
   )
-)
-
-;; Replace stars (*) with nice bullets.
-(use-package org-bullets
-  :defer t
-  :hook (org-mode . org-bullets-mode)
 )
 
 (use-package emacs
@@ -450,6 +455,16 @@
     "Open the init file."
     (interactive)
     (find-file user-init-file)
+  )
+
+  (defun my/open-emacs-org-file ()
+    "Open the init file."
+    (interactive)
+    (find-file (my/emacs-org-file-path))
+  )
+
+  (defun my/emacs-org-file-path ()
+    (file-name-concat user-emacs-directory "Emacs.org")
   )
 
   (defun my/switch-to-messages-buffer ()
