@@ -1,7 +1,25 @@
 #+TITLE: My Vanilla Emacs Configuration
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
-Whenever this file is saved, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Org mode]] for more details.
+* Preamble
+Whenever this file is saved from my emacs, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Org mode]] for logic that does this.
+
+Even though =init.el= and =early-init.el= are generated, I still keep them in version control (git), because it helps me avoid the situation where I don't have them on disk (maybe I deleted them, or I did fresh checkout) and can't easily start emacs and evaluate this very org file in order to generate them! By keeping them in version control, I have easy access to them, and I can even more easily see the diffs that were done.
+
+#+name: timestamp
+#+begin_src emacs-lisp :tangle no :results value none
+  (format-time-string "%Y-%m-%d %H:%M:%S %Z")
+#+end_src
+
+#+begin_src emacs-lisp :tangle ./early-init.el :noweb yes
+  ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
+
+#+end_src
+
+#+begin_src emacs-lisp :tangle ./init.el :noweb yes
+  ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
+
+#+end_src
 
 * Package management
 ** Tutorial
