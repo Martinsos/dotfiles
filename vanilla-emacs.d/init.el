@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2024-11-01 00:53:54 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-01 17:02:55 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -110,7 +110,6 @@
         (vundo-diff)
       )
     )
-    ; Error in post-command-hook (vundo-live-diff-post-command): (error "No possible route")
   )
   (define-minor-mode vundo-live-diff-mode
     "Shows live diff between the current node and its parent."
@@ -426,31 +425,36 @@
 )
 
 (with-eval-after-load 'org
-  ;; Automatically tangle this file (Emacs.org) when we save it.
-  (add-hook 'org-mode-hook (lambda ()
-    (when (string-equal buffer-file-name (my/emacs-org-file-path))
-      (add-hook 'after-save-hook (lambda ()
-        (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))))))
+  (defun my/org-babel-tangle-no-confirm ()
+    (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
   )
+  (defun my/when-emacs-org-file-tangle-on-save ()
+    (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
+      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
+    )
+  )
+  (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
 (use-package org-present
-  :after (org visual-fill-column evil hl-line)
+  :after (org visual-fill-column evil)
   :bind (
     :map org-present-mode-keymap
            ("q" . org-present-quit)
   )
   :config
+  ;; TODO: Add usage of this awesome library https://github.com/jxq0/org-tidy that hides
+  ;;   property drawers. Toggle it on presentation start / end.
 
   ;; TODO: What if I moved adding of "quit" hook inside of "start" hook?
-  ;;   Then, I could make remember initial values of stuff like evil-mode or hl-line-mode
+  ;;   Then, I could make remember initial values of stuff like evil-mode
   ;;   in the "start" hook and pass those to the "quit" hook to restore them!
-  ;;   Instead of making assumptions that evil-mode and hl-line-mode are on.
+  ;;   Instead of making assumptions that evil-mode is on.
+  ;;   I guess the "quit" hook would also need to remove itself at its very end, so next time
+  ;;   presentation is started, new "quit" hook can be added again?
 
-  (add-hook 'org-present-mode-hook (lambda ()
+  (defun my/on-presentation-start ()
     (evil-mode 0) ; Otherwise it messes up org-present.
-
-    (global-hl-line-mode -1)
 
     (org-present-big)
     (org-display-inline-images)
@@ -465,21 +469,22 @@
     (setq visual-fill-column-width 20
   	visual-fill-column-center-text t)
     (visual-line-fill-column-mode 1)
-  ))
+  )
 
-  (add-hook 'org-present-mode-quit-hook (lambda ()
+  (defun my/on-presentation-quit ()
     (evil-mode 1)
-
-    (global-hl-line-mode t)
-
-    ;; Stop text centering and wrapping at fixed width.
-    (visual-line-fill-column-mode 0)
 
     (org-present-small)
     (org-remove-inline-images)
     (org-present-show-cursor)
     (org-present-read-write)
-  ))
+
+    ;; Stop text centering and wrapping at fixed width.
+    (visual-line-fill-column-mode 0)
+  )
+
+  (add-hook 'org-present-mode-hook 'my/on-presentation-start)
+  (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
 )
 
 (use-package emacs
