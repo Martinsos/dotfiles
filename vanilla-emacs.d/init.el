@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2024-11-01 17:02:55 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-01 21:21:02 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -436,6 +436,10 @@
   (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
+(use-package org-tidy
+  :defer t
+)
+
 (use-package org-present
   :after (org visual-fill-column evil)
   :bind (
@@ -443,13 +447,12 @@
            ("q" . org-present-quit)
   )
   :config
-  ;; TODO: Add usage of this awesome library https://github.com/jxq0/org-tidy that hides
-  ;;   property drawers. Toggle it on presentation start / end.
 
   ;; TODO: What if I moved adding of "quit" hook inside of "start" hook?
-  ;;   Then, I could make remember initial values of stuff like evil-mode
-  ;;   in the "start" hook and pass those to the "quit" hook to restore them!
-  ;;   Instead of making assumptions that evil-mode is on.
+  ;;   Then, I could make remember (via let) initial values of stuff like evil-mode
+  ;;   in the "start" hook, and also of vars like visual-fill-column-width and org-tidy-...
+  ;;   and pass those to the "quit" hook to restore them!
+  ;;   Instead of making assumptions that evil-mode is on, and never restoring those vars.
   ;;   I guess the "quit" hook would also need to remove itself at its very end, so next time
   ;;   presentation is started, new "quit" hook can be added again?
 
@@ -466,9 +469,15 @@
     ;;   is used above, while I would normally expect 80 to do it.
     ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
     ;;   uses somehow mess things up?
-    (setq visual-fill-column-width 20
-  	visual-fill-column-center-text t)
+    (setq-local visual-fill-column-width 20
+  	        visual-fill-column-center-text t)
     (visual-line-fill-column-mode 1)
+
+    ;; Hide org drawers (:PROPERTY: and :NOTES:).
+    (setq-local org-tidy-properties-style 'invisible
+                org-tidy-general-drawer-flag t
+                org-tidy-general-drawer-name-whitelist '("NOTES"))
+    (org-tidy-mode 1)
   )
 
   (defun my/on-presentation-quit ()
@@ -481,6 +490,8 @@
 
     ;; Stop text centering and wrapping at fixed width.
     (visual-line-fill-column-mode 0)
+
+    (org-tidy-mode 0) ;; Stop hiding org drawers.
   )
 
   (add-hook 'org-present-mode-hook 'my/on-presentation-start)
