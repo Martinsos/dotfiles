@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-02 01:12:48 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-02 12:18:57 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -265,6 +265,7 @@
     "Scale text"
     ("j" text-scale-decrease "out")
     ("k" text-scale-increase "in")
+    ("r" (progn (text-scale-increase 0)) "restore")
     ("q" nil "quit" :exit t)
   )
 
@@ -397,15 +398,19 @@
                   (org-level-8 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
   )
+)
 
-  ;; Replace stars (*) with nice bullets.
-  (use-package org-bullets
-    :defer t
-    :hook (org-mode . org-bullets-mode)
-  )
+;; Replace stars (*) with nice bullets.
+(use-package org-bullets
+  :after (org)
+  :defer t
+  :hook (org-mode . org-bullets-mode)
+)
 
-  ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
-  (use-package org-tempo :ensure nil)
+;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
+(use-package org-tempo
+  :after (org)
+  :ensure nil ; Comes with org already.
 )
 
 (with-eval-after-load 'org
@@ -441,62 +446,128 @@
 (use-package org-tidy)
 
 (use-package org-present
-  :after (org visual-fill-column evil org-tidy)
-  :bind (
-    :map org-present-mode-keymap
-           ("q" . org-present-quit)
+    :after (org visual-fill-column evil org-tidy)
+    :bind (
+      :map org-present-mode-keymap
+             ("q" . org-present-quit)
+    )
+    :config
+
+    ;; TODO: Move all these var state restoration functions outside of here, since they are general functions.
+
+    (defun my/var-state (var)
+      (if (boundp var) (symbol-value var) 'my/var-unbound)
+    )
+
+    (defun my/local-var-state (var)
+      (if (local-variable-p var) (symbol-value var) 'my/local-var-unbound)
+    )
+
+    (defun set-local (var value)
+      (set (make-local-variable var) value)
+    )
+
+    (defun my/save-local-var-state (var)
+      "Save the current state of buffer-local VAR (symbol) and return a lambda that restores VAR to its original state.
+
+       USAGE:
+         (let ((restore-foo (my/save-local-var-state 'foo)))
+           ...
+           (funcall restore-foo)
+         )"
+      (let ((og-state (my/local-var-state var)))
+        (lambda ()
+          (if (eq og-state 'my/local-var-unbound)
+            (kill-local-variable var)
+  	  (set-local var og-state)
+  	)
+        )
+      )
+    )
+
+    (defun my/save-local-vars-state (vars)
+      (let ((restore-fns (mapcar #'my/save-local-var-state vars)))
+        (lambda () (dolist (restore-fn restore-fns) (funcall restore-fn)))
+      )
+    )
+
+    (defun my/set-local-vars-with-restore (vars-and-values)
+      "Set each variable in VARS-AND-VALUES as a buffer-local variable with the specified value.
+Returns a lambda that, when called, restores each variable to its original buffer-local state.
+VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
+      (let* ((vars (mapcar #'car vars-and-values))
+             (restore-fn (my/save-local-vars-state vars)))
+        (dolist (var-and-value vars-and-values)
+          (let ((var (car var-and-value))
+                (value (cdr var-and-value)))
+            (set-local var value)
+	  )
+        )
+        restore-fn
+      )
+    )
+
+    (defun my/on-presentation-start ()
+      (let ((restore-local-vars
+	      (my/save-local-vars-state
+	        '(visual-fill-column-width
+		  visual-fill-column-center-text
+		  org-tidy-properties-style
+		  org-tidy-general-drawer-flag
+		  org-tidy-general-drawer-name-whitelist)))
+	   )
+
+        ;; TODO: use my/var-state to save the state of modes: evil-mode, visual-line-fill-column-mode, and org-tidy-mode.
+	;;   Then, I can correctly restore them in "quit" hook.
+        ;;   I can't use same approach with vars restoration since here I need to read and save value of mode vars,
+	;;   and then pass that to functions for activating modes, which is why I need more low-level approach.
+	;;   Also, I am not sure if I can just e.g. pass old value of evil-mode var to (evil-mode) function,
+	;;   there might be some conversion needed (`nil` to -1) or something like that.
+
+        (evil-mode 0) ; Otherwise it messes up org-present.
+
+        (org-present-big)
+        (org-display-inline-images)
+        (org-present-hide-cursor)
+        (org-present-read-only)
+
+        ;; Soft wraps the text at fixed width while also centering it.
+        ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
+        ;;   is used above, while I would normally expect 80 to do it.
+        ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
+        ;;   uses somehow mess things up?
+        (setq-local visual-fill-column-width 20
+  		    visual-fill-column-center-text t)
+        (visual-line-fill-column-mode 1)
+
+        ;; Hide org drawers (:PROPERTY: and :NOTES:).
+        (setq-local org-tidy-properties-style 'invisible
+  		    org-tidy-general-drawer-flag t
+  		    org-tidy-general-drawer-name-whitelist '("NOTES"))
+        (org-tidy-mode 1)
+
+        (defun my/on-presentation-quit ()
+	  (evil-mode 1)
+
+	  (org-present-small)
+	  (org-remove-inline-images)
+	  (org-present-show-cursor)
+	  (org-present-read-write)
+
+	  (funcall restore-local-vars)
+
+	  ;; Stop text centering and wrapping at fixed width.
+	  (visual-line-fill-column-mode 0)
+
+	  (org-tidy-mode 0) ;; Stop hiding org drawers.
+
+	  (remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+        )
+        (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+      )
+    )
+    (add-hook 'org-present-mode-hook 'my/on-presentation-start)
   )
-  :config
-
-  ;; TODO: What if I moved adding of "quit" hook inside of "start" hook?
-  ;;   Then, I could make remember (via let) initial values of stuff like evil-mode
-  ;;   in the "start" hook, and also of vars like visual-fill-column-width and org-tidy-...
-  ;;   and pass those to the "quit" hook to restore them!
-  ;;   Instead of making assumptions that evil-mode is on, and never restoring those vars.
-  ;;   I guess the "quit" hook would also need to remove itself at its very end, so next time
-  ;;   presentation is started, new "quit" hook can be added again?
-
-  (defun my/on-presentation-start ()
-    (evil-mode 0) ; Otherwise it messes up org-present.
-
-    (org-present-big)
-    (org-display-inline-images)
-    (org-present-hide-cursor)
-    (org-present-read-only)
-
-    ;; Soft wraps the text at fixed width while also centering it.
-    ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
-    ;;   is used above, while I would normally expect 80 to do it.
-    ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
-    ;;   uses somehow mess things up?
-    (setq-local visual-fill-column-width 20
-  	        visual-fill-column-center-text t)
-    (visual-line-fill-column-mode 1)
-
-    ;; Hide org drawers (:PROPERTY: and :NOTES:).
-    (setq-local org-tidy-properties-style 'invisible
-                org-tidy-general-drawer-flag t
-                org-tidy-general-drawer-name-whitelist '("NOTES"))
-    (org-tidy-mode 1)
-  )
-
-  (defun my/on-presentation-quit ()
-    (evil-mode 1)
-
-    (org-present-small)
-    (org-remove-inline-images)
-    (org-present-show-cursor)
-    (org-present-read-write)
-
-    ;; Stop text centering and wrapping at fixed width.
-    (visual-line-fill-column-mode 0)
-
-    (org-tidy-mode 0) ;; Stop hiding org drawers.
-  )
-
-  (add-hook 'org-present-mode-hook 'my/on-presentation-start)
-  (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
-)
 
 (use-package emacs
   :ensure nil
