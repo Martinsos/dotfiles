@@ -2,6 +2,10 @@
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 #+STARTUP: fold
 
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
+#+end_src
+
 * Preamble
 Whenever this file is saved from my emacs, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Automatically tangle this file (Emacs.org)]] for logic that does this.
 
@@ -669,9 +673,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
-  (use-package org-tidy
-    :defer t
-  )
+  (use-package org-tidy)
 
 #+end_src
 
@@ -682,7 +684,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
 #+begin_src emacs-lisp
 
     (use-package org-present
-      :after (org visual-fill-column evil)
+      :after (org visual-fill-column evil org-tidy)
       :bind (
         :map org-present-mode-keymap
                ("q" . org-present-quit)

@@ -1,4 +1,6 @@
-;; NOTE: This file was generated from Emacs.org on 2024-11-01 21:21:02 CET, don't edit it manually.
+;;; -*- lexical-binding: t; -*-
+
+;; NOTE: This file was generated from Emacs.org on 2024-11-02 01:12:48 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -436,12 +438,10 @@
   (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
-(use-package org-tidy
-  :defer t
-)
+(use-package org-tidy)
 
 (use-package org-present
-  :after (org visual-fill-column evil)
+  :after (org visual-fill-column evil org-tidy)
   :bind (
     :map org-present-mode-keymap
            ("q" . org-present-quit)
