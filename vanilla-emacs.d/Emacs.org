@@ -175,6 +175,80 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+end_src
 
+* Utils
+** Vars
+
+#+begin_src emacs-lisp
+
+  (defun my/var-state (var)
+    "Returns the value of a variable with specified name, or 'my/var-unbound if it is not bound."
+    (if (boundp var) (symbol-value var) 'my/var-unbound)
+  )
+
+  (defun my/local-var-state (var)
+    "Returns the value of a buffer-local variable with specified name, or 'my/var-unbound if it is not bound."
+    (if (local-variable-p var) (symbol-value var) 'my/var-unbound)
+  )
+
+  (defun set-local (var value)
+    "Like setq-local but takes a var symbol (analogous to setq and set)."
+    (set (make-local-variable var) value)
+  )
+
+#+end_src
+
+*** Saving and restoring buffer-local vars
+
+#+begin_src emacs-lisp
+
+  (defun my/save-local-var-state (var)
+    "Save the current state of buffer-local VAR (symbol) and return a lambda that restores VAR to its original state.
+  USAGE:
+    (let ((restore-foo (my/save-local-var-state 'foo)))
+      ...
+      (funcall restore-foo)
+    )"
+    (let ((og-state (my/local-var-state var)))
+      (lambda ()
+        (if (eq og-state 'my/var-unbound)
+  	(kill-local-variable var)
+        (set-local var og-state)
+      )
+      )
+    )
+  )
+
+  (defun my/save-local-vars-state (vars)
+    "Like my/save-local-var-state but takes a list of vars.
+  USAGE:
+    (let ((restore-foo (my/save-local-vars-state '((foo . 42)
+                                                   (bar .  t)))))
+      ...
+      (funcall restore-foo)
+    )"
+    (let ((restore-fns (mapcar #'my/save-local-var-state vars)))
+      (lambda () (dolist (restore-fn restore-fns) (funcall restore-fn)))
+    )
+  )
+
+  (defun my/set-local-vars-with-restore (vars-and-values)
+    "Set each variable in VARS-AND-VALUES as a buffer-local variable with the specified value.
+  Returns a lambda that, when called, restores each variable to its original buffer-local state.
+  VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
+    (let* ((vars (mapcar #'car vars-and-values))
+  	  (restore-fn (my/save-local-vars-state vars)))
+      (dolist (var-and-value vars-and-values)
+        (let ((var (car var-and-value))
+  	    (value (cdr var-and-value)))
+  	(set-local var value)
+        )
+      )
+      restore-fn
+    )
+  )
+
+#+end_src
+
 * Basic emacs config
 
 #+begin_src emacs-lisp
@@ -699,60 +773,6 @@ Turns any org document into a presentation! Each top-level header is one slide.
                ("q" . org-present-quit)
       )
       :config
-
-      ;; TODO: Move all these var state restoration functions outside of here, since they are general functions.
-
-      (defun my/var-state (var)
-        (if (boundp var) (symbol-value var) 'my/var-unbound)
-      )
-
-      (defun my/local-var-state (var)
-        (if (local-variable-p var) (symbol-value var) 'my/local-var-unbound)
-      )
-
-      (defun set-local (var value)
-        (set (make-local-variable var) value)
-      )
-
-      (defun my/save-local-var-state (var)
-        "Save the current state of buffer-local VAR (symbol) and return a lambda that restores VAR to its original state.
-
-         USAGE:
-           (let ((restore-foo (my/save-local-var-state 'foo)))
-             ...
-             (funcall restore-foo)
-           )"
-        (let ((og-state (my/local-var-state var)))
-          (lambda ()
-            (if (eq og-state 'my/local-var-unbound)
-              (kill-local-variable var)
-    	  (set-local var og-state)
-    	)
-          )
-        )
-      )
-
-      (defun my/save-local-vars-state (vars)
-        (let ((restore-fns (mapcar #'my/save-local-var-state vars)))
-          (lambda () (dolist (restore-fn restore-fns) (funcall restore-fn)))
-        )
-      )
-
-      (defun my/set-local-vars-with-restore (vars-and-values)
-        "Set each variable in VARS-AND-VALUES as a buffer-local variable with the specified value.
-  Returns a lambda that, when called, restores each variable to its original buffer-local state.
-  VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
-        (let* ((vars (mapcar #'car vars-and-values))
-               (restore-fn (my/save-local-vars-state vars)))
-          (dolist (var-and-value vars-and-values)
-            (let ((var (car var-and-value))
-                  (value (cdr var-and-value)))
-              (set-local var value)
-  	  )
-          )
-          restore-fn
-        )
-      )
 
       (defun my/on-presentation-start ()
         (let ((restore-local-vars
