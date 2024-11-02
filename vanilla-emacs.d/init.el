@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-02 17:33:19 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-02 21:30:17 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -80,10 +80,9 @@ USAGE:
 (defun my/save-local-vars-state (vars)
   "Like my/save-local-var-state but takes a list of vars.
 USAGE:
-  (let ((restore-foo (my/save-local-vars-state '((foo . 42)
-                                                 (bar .  t)))))
+  (let ((restore-vars (my/save-local-vars-state '(foo bar buzz))))
     ...
-    (funcall restore-foo)
+    (funcall restore-vars)
   )"
   (let ((restore-fns (mapcar #'my/save-local-var-state vars)))
     (lambda () (dolist (restore-fn restore-fns) (funcall restore-fn)))
@@ -93,13 +92,67 @@ USAGE:
 (defun my/set-local-vars-with-restore (vars-and-values)
   "Set each variable in VARS-AND-VALUES as a buffer-local variable with the specified value.
 Returns a lambda that, when called, restores each variable to its original buffer-local state.
-VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
+VARS-AND-VALUES should be a list of (VAR . VALUE) pairs.
+USAGE:
+  (let ((restore-vars (my/save-local-vars-with-restore '((foo . 42) (bar .  t)))))
+    ...
+    (funcall restore-vars)
+  )"
   (let* ((vars (mapcar #'car vars-and-values))
-	  (restore-fn (my/save-local-vars-state vars)))
+	 (restore-fn (my/save-local-vars-state vars)))
     (dolist (var-and-value vars-and-values)
       (let ((var (car var-and-value))
 	    (value (cdr var-and-value)))
 	(set-local var value)
+      )
+    )
+    restore-fn
+  )
+)
+
+(defun my/save-mode-state (mode)
+  "Save the current state (enabled or disabled) of MODE (symbol) and return a lambda that restores MODE to its original state.
+USAGE:
+  (let ((restore-evil-local-mode (my/save-mode-state 'evil-local-mode)))
+    ...
+    (funcall restore-evil-local-mode)
+  )"
+  (let ((og-mode-var-state (my/var-state mode)))
+    (lambda ()
+      (when (not (eq og-mode-var-state 'my/var-unbound))
+        (funcall mode (if (eq og-mode-var-state nil) -1 1))
+      )
+    )
+  )
+)
+
+(defun my/save-modes-state (modes)
+  "Like my/save-mode-state but takes a list of modes.
+USAGE:
+  (let ((restore-modes (my/save-modes-state '(evil-local-mode org-tidy-mode))))
+    ...
+    (funcall restore-modes)
+  )"
+  (let ((restore-fns (mapcar #'my/save-mode-state modes)))
+    (lambda () (dolist (restore-fn restore-fns) (funcall restore-fn)))
+  )
+)
+
+(defun my/set-modes-with-restore (modes-and-values)
+  "Set each mode in MODES-AND-VALUES with the specified value.
+Returns a lambda that, when called, restores each mode to its original state (enabled/disabled).
+MODES-AND-VALUES should be a list of (MODE . VALUE) pairs.
+USAGE:
+  (let ((restore-modes (my/save-modes-with-restore '((evil-local-mode . -1) (org-tidy-mode . 1)))))
+    ...
+    (funcall restore-modes)
+  )"
+  (let* ((modes (mapcar #'car modes-and-values))
+	 (restore-fn (my/save-modes-state modes)))
+    (dolist (mode-and-value modes-and-values)
+      (let ((mode (car mode-and-value))
+	    (value (cdr mode-and-value)))
+	(funcall mode value)
       )
     )
     restore-fn
@@ -507,7 +560,7 @@ VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
 (use-package org-tidy)
 
 (use-package org-present
-  :after (org visual-fill-column evil org-tidy)
+  :after (org visual-fill-column org-tidy)
   :bind (
     :map org-present-mode-keymap
            ("q" . org-present-quit)
@@ -522,16 +575,16 @@ VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
 		  org-tidy-properties-style
 		  org-tidy-general-drawer-flag
 		  org-tidy-general-drawer-name-whitelist)))
-	   )
+          (restore-modes
+              (my/save-modes-state
+                '(evil-local-mode
+		  visual-line-fill-column-mode
+                  org-tidy-mode)))
+	 )
 
-      ;; TODO: use my/var-state to save the state of modes: evil-mode, visual-line-fill-column-mode, and org-tidy-mode.
-	;;   Then, I can correctly restore them in "quit" hook.
-      ;;   I can't use same approach with vars restoration since here I need to read and save value of mode vars,
-	;;   and then pass that to functions for activating modes, which is why I need more low-level approach.
-	;;   Also, I am not sure if I can just e.g. pass old value of evil-mode var to (evil-mode) function,
-	;;   there might be some conversion needed (`nil` to -1) or something like that.
-
-      (evil-mode 0) ; Otherwise it messes up org-present.
+      (when (featurep 'evil)
+        (evil-local-mode -1) ; Otherwise evil messes up org-present.
+      )
 
       (org-present-big)
       (org-display-inline-images)
@@ -542,33 +595,30 @@ VARS-AND-VALUES should be a list of (VAR . VALUE) pairs."
       ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
       ;;   is used above, while I would normally expect 80 to do it.
       ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
-      ;;   uses somehow mess things up?
+      ;;   uses somehow mess things up? This is because it is after inline-images!
+      ;;   NOTE: Actually, I think this is caused by this being after (org-present-big) line?
+      ;;         Or (org-display-inline-images)?
+      ;;         Try moving it earlier!
       (setq-local visual-fill-column-width 20
-		    visual-fill-column-center-text t)
+                  visual-fill-column-center-text t)
       (visual-line-fill-column-mode 1)
 
       ;; Hide org drawers (:PROPERTY: and :NOTES:).
       (setq-local org-tidy-properties-style 'invisible
-		    org-tidy-general-drawer-flag t
-		    org-tidy-general-drawer-name-whitelist '("NOTES"))
+		  org-tidy-general-drawer-flag t
+		  org-tidy-general-drawer-name-whitelist '("NOTES"))
       (org-tidy-mode 1)
 
       (defun my/on-presentation-quit ()
-	  (evil-mode 1)
+	(org-present-small)
+	(org-remove-inline-images)
+	(org-present-show-cursor)
+	(org-present-read-write)
 
-	  (org-present-small)
-	  (org-remove-inline-images)
-	  (org-present-show-cursor)
-	  (org-present-read-write)
+	(funcall restore-local-vars)
+	(funcall restore-modes)
 
-	  (funcall restore-local-vars)
-
-	  ;; Stop text centering and wrapping at fixed width.
-	  (visual-line-fill-column-mode 0)
-
-	  (org-tidy-mode 0) ;; Stop hiding org drawers.
-
-	  (remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+	(remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
       )
       (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
     )
