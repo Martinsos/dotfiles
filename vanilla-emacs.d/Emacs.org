@@ -863,9 +863,8 @@ Turns any org document into a presentation! Each top-level header is one slide.
         ;;   is used above, while I would normally expect 80 to do it.
         ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
         ;;   uses somehow mess things up? This is because it is after inline-images!
-        ;;   NOTE: Actually, I think this is caused by this being after (org-present-big) line?
-        ;;         Or (org-display-inline-images)?
-        ;;         Try moving it earlier!
+        ;; TODO: There also seems to be some weird interaction between this mode and (org-display-inline-images).
+        ;;   If this happens before inlining images, then ATTR_ORG :width behaves weird.
         (setq-local visual-fill-column-width 20
                     visual-fill-column-center-text t)
         (visual-line-fill-column-mode 1)

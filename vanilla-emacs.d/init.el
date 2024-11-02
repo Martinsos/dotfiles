@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-02 21:30:17 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-02 22:41:25 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -596,9 +596,8 @@ USAGE:
       ;;   is used above, while I would normally expect 80 to do it.
       ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
       ;;   uses somehow mess things up? This is because it is after inline-images!
-      ;;   NOTE: Actually, I think this is caused by this being after (org-present-big) line?
-      ;;         Or (org-display-inline-images)?
-      ;;         Try moving it earlier!
+      ;; TODO: There also seems to be some weird interaction between this mode and (org-display-inline-images).
+      ;;   If this happens before inlining images, then ATTR_ORG :width behaves weird.
       (setq-local visual-fill-column-width 20
                   visual-fill-column-center-text t)
       (visual-line-fill-column-mode 1)
