@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-02 22:41:25 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-04 22:38:39 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -567,6 +567,9 @@ USAGE:
   )
   :config
 
+  ;; TODO: I should make it work with evil-mode.
+  ;;   Then I could not probably even need to go read-only.
+
   (defun my/on-presentation-start ()
     (let ((restore-local-vars
 	      (my/save-local-vars-state
@@ -623,6 +626,14 @@ USAGE:
     )
   )
   (add-hook 'org-present-mode-hook 'my/on-presentation-start)
+
+  (defun my/org-present-eval-print-last-sexp ()
+    "Evaluate and print (in buffer) the last sexp while in presentation mode."
+    (interactive)
+    (org-present-read-write)
+    (eval-print-last-sexp)
+    (org-present-read-only)
+  )
 )
 
 (use-package emacs

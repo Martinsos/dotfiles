@@ -834,6 +834,9 @@ Turns any org document into a presentation! Each top-level header is one slide.
     )
     :config
 
+    ;; TODO: I should make it work with evil-mode.
+    ;;   Then I could not probably even need to go read-only.
+
     (defun my/on-presentation-start ()
       (let ((restore-local-vars
   	      (my/save-local-vars-state
@@ -890,6 +893,14 @@ Turns any org document into a presentation! Each top-level header is one slide.
       )
     )
     (add-hook 'org-present-mode-hook 'my/on-presentation-start)
+
+    (defun my/org-present-eval-print-last-sexp ()
+      "Evaluate and print (in buffer) the last sexp while in presentation mode."
+      (interactive)
+      (org-present-read-write)
+      (eval-print-last-sexp)
+      (org-present-read-only)
+    )
   )
 
 #+end_src
