@@ -1409,6 +1409,11 @@ make them read only by default.
 
 Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
 
+*** TODO Set up TypeScript (TS) support
+
+- https://www.reddit.com/r/emacs/s/1WdZ4AXxhi
+
+*** TODO Set up Haskell support
 *** TODO Take care of the temporary files being created by emacs and undo.
 *** TODO Add some of the temporary files to the .gitignore.
 *** TODO Add a nice splash screen
@@ -1432,7 +1437,15 @@ Search a bit how others do package version pinning down. There is :pin for use-p
 - chatgpt-shell
 - evedel
 - copilot.el
+- Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
+- https://www.reddit.com/r/emacs/s/g5deSIDOUZ
 
+*** TODO Try using command pallete
+Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.
+So instead of showing everything down there in the minibuffer, show some stuff in the command pallete at the top / middle of the screen.
+I am not sure if I will like this or not, but I think it is worth trying it out.
+- ivy-posframe package -> just for ivy completions
+- emacs-miniframe -> for anything happening in the minibuffer
 *** TODO Try Nano theme.
 *** DONE Implement transient yanking
 So I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
