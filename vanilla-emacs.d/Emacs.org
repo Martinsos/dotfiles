@@ -1439,6 +1439,7 @@ Search a bit how others do package version pinning down. There is :pin for use-p
 - copilot.el
 - Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
 - https://www.reddit.com/r/emacs/s/g5deSIDOUZ
+- https://www.reddit.com/r/emacs/s/tSCyJdXkJW
 
 *** TODO Try using command pallete
 Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.
@@ -1484,6 +1485,7 @@ works best with the rest of the stuff above, so it kind of pulls one another hm,
 - [ ] Check out bedrock emacs, simple starting config but has good stuff allegedly: https://sr.ht/~ashton314/emacs-bedrock/ .
 - [ ] Check out config by this Prot guy, people say it is good: https://protesilaos.com/emacs/dotemacs .
 - [ ] Another emacs config to check out, kickstarter for neovimers, might have some good stuff for evil: https://github.com/LionyxML/emacs-kick . I also saw it uses vertico, marginalia, ... .
+- [ ] Check out Zuzic's emacs config: https://mail.google.com/mail/u/0/#all/KtbxLwHDghsHQDzKGkxWCWmFZsNSCGcHQq
 
 *** TODO Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
 
