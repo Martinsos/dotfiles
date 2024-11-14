@@ -547,6 +547,11 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "vv"  '(eval-defun :which-key "top-level form")
       "vr"  '(eval-region :which-key "region")
 
+      "o"   '(:ignore t :which-key "org")
+      "oa"  '(org-agenda :which-key "agenda")
+      "oc"  '(org-capture :which-key "capture")
+      "ol"  '(org-store-link :which-key "store link")
+
       "p"   '(:ignore t :which-key "projects")
       "pf"  '(counsel-projectile-find-file :which-key "find file")
       "pd"  '(projectile-find-dir :which-key "find dir")
@@ -729,7 +734,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+end_src
 
 * Org mode
-** Basic setup
+** Basic setup (org)
 
 #+begin_src emacs-lisp
 
@@ -770,7 +775,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+end_src
 
-** Supported languages
+** Code blocks (org-babel)
 
 #+begin_src emacs-lisp
 
@@ -794,20 +799,60 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+end_src
 
-** Automatically tangle this file (Emacs.org)
+** org-agenda
+
+org-super-agenda allows both easier and smarter grouping of entries under a day/week of org agenda view.
+Each org-super-agenda group "consumes" entries it shows, leaving the next group with less entries.
+
+#+begin_src emacs-lisp
+  (use-package org-super-agenda
+    :after org
+    :config
+    (org-super-agenda-mode)
+  )
+#+end_src
+
 
 #+begin_src emacs-lisp
 
   (with-eval-after-load 'org
-    (defun my/org-babel-tangle-no-confirm ()
-      (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
+    (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
+    (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+    (setq org-agenda-custom-commands
+  	'(("w" "Work Diary"
+  	   ((agenda ""
+  		    ((org-agenda-span 'day)
+                       (org-agenda-prefix-format " %i %6c %8s")
+                       (org-super-agenda-groups
+  		      '((:name "Daily Checklist"
+                                 :category "dc"
+  			)
+                          (:name "To Do"
+                                 :and (:scheduled t :category "task")
+  			)
+                          (:discard (:time-grid t))  ; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+  		       )
+                       )
+  		    )
+              )
+              (agenda ""
+  		    ((org-agenda-span 'day)
+                       (org-agenda-prefix-format " %i %6c %8s %?-12t")
+                       (org-super-agenda-groups
+  		      '((:name "Time schedule"
+                                 :time-grid t
+  	                )
+                          (:discard (:anything t))
+  		       )
+                       )
+  		    )
+              )
+  	   )
+  	   ((org-agenda-files '("~/work-diary.org"))
+  	   )
+  	  )
+  	 )
     )
-    (defun my/when-emacs-org-file-tangle-on-save ()
-      (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
-        (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
-      )
-    )
-    (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
   )
 
 #+end_src
@@ -910,6 +955,24 @@ Turns any org document into a presentation! Each top-level header is one slide.
 - left and right arrow take you to previous or next header (which is actually now a slide).
 - "q" to exit the presentation.
 - I configured it so that it hides :NOTES: org drawer, so you can use it to add speaker notes to each slide.
+
+** Automatically tangle this file (Emacs.org)
+
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+    (defun my/org-babel-tangle-no-confirm ()
+      (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
+    )
+    (defun my/when-emacs-org-file-tangle-on-save ()
+      (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
+        (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
+      )
+    )
+    (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
+  )
+
+#+end_src
 
 ** Cheatsheet :cheatsheet:
 - Shift-Tab -> cycles through expanding headers.

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-13 21:57:07 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-14 19:19:36 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -346,6 +346,11 @@ USAGE:
     "vv"  '(eval-defun :which-key "top-level form")
     "vr"  '(eval-region :which-key "region")
 
+    "o"   '(:ignore t :which-key "org")
+    "oa"  '(org-agenda :which-key "agenda")
+    "oc"  '(org-capture :which-key "capture")
+    "ol"  '(org-store-link :which-key "store link")
+
     "p"   '(:ignore t :which-key "projects")
     "pf"  '(counsel-projectile-find-file :which-key "find file")
     "pd"  '(projectile-find-dir :which-key "find dir")
@@ -545,16 +550,50 @@ USAGE:
   )
 )
 
+(use-package org-super-agenda
+  :after org
+  :config
+  (org-super-agenda-mode)
+)
+
 (with-eval-after-load 'org
-  (defun my/org-babel-tangle-no-confirm ()
-    (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
+  (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
+  (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+  (setq org-agenda-custom-commands
+	'(("w" "Work Diary"
+	   ((agenda ""
+		    ((org-agenda-span 'day)
+                     (org-agenda-prefix-format " %i %6c %8s")
+                     (org-super-agenda-groups
+		      '((:name "Daily Checklist"
+                               :category "dc"
+			)
+                        (:name "To Do"
+                               :and (:scheduled t :category "task")
+			)
+                        (:discard (:time-grid t))  ; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+		       )
+                     )
+		    )
+            )
+            (agenda ""
+		    ((org-agenda-span 'day)
+                     (org-agenda-prefix-format " %i %6c %8s %?-12t")
+                     (org-super-agenda-groups
+		      '((:name "Time schedule"
+                               :time-grid t
+	                )
+                        (:discard (:anything t))
+		       )
+                     )
+		    )
+            )
+	   )
+	   ((org-agenda-files '("~/work-diary.org"))
+	   )
+	  )
+	 )
   )
-  (defun my/when-emacs-org-file-tangle-on-save ()
-    (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
-      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
-    )
-  )
-  (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
 (use-package org-tidy)
@@ -634,6 +673,18 @@ USAGE:
     (eval-print-last-sexp)
     (org-present-read-only)
   )
+)
+
+(with-eval-after-load 'org
+  (defun my/org-babel-tangle-no-confirm ()
+    (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
+  )
+  (defun my/when-emacs-org-file-tangle-on-save ()
+    (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
+      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
+    )
+  )
+  (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
 (use-package emacs
