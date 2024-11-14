@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-14 19:19:36 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-14 21:59:42 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -564,6 +564,7 @@ USAGE:
 	   ((agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-prefix-format " %i %6c %8s")
+		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
                      (org-super-agenda-groups
 		      '((:name "Daily Checklist"
                                :category "dc"
@@ -578,6 +579,7 @@ USAGE:
             )
             (agenda ""
 		    ((org-agenda-span 'day)
+                     (org-agenda-overriding-header "")
                      (org-agenda-prefix-format " %i %6c %8s %?-12t")
                      (org-super-agenda-groups
 		      '((:name "Time schedule"
@@ -588,6 +590,18 @@ USAGE:
                      )
 		    )
             )
+            (alltodo ""
+                     ((org-agenda-overriding-header "")
+		      (org-super-agenda-groups
+                       '((:discard (:scheduled t :deadline t :time-grid t))
+                         (:name "All tasks with no schedule / deadline"
+                                :category "task"
+                         )
+			 (:discard (:anything t))
+		        )
+		      )
+                     )
+	    )
 	   )
 	   ((org-agenda-files '("~/work-diary.org"))
 	   )

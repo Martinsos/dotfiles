@@ -823,6 +823,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   	   ((agenda ""
   		    ((org-agenda-span 'day)
                        (org-agenda-prefix-format " %i %6c %8s")
+  		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
                        (org-super-agenda-groups
   		      '((:name "Daily Checklist"
                                  :category "dc"
@@ -837,6 +838,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
               )
               (agenda ""
   		    ((org-agenda-span 'day)
+                       (org-agenda-overriding-header "")
                        (org-agenda-prefix-format " %i %6c %8s %?-12t")
                        (org-super-agenda-groups
   		      '((:name "Time schedule"
@@ -847,6 +849,18 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                        )
   		    )
               )
+              (alltodo ""
+                       ((org-agenda-overriding-header "")
+  		      (org-super-agenda-groups
+                         '((:discard (:scheduled t :deadline t :time-grid t))
+                           (:name "All tasks with no schedule / deadline"
+                                  :category "task"
+                           )
+  			 (:discard (:anything t))
+  		        )
+  		      )
+                       )
+  	    )
   	   )
   	   ((org-agenda-files '("~/work-diary.org"))
   	   )
