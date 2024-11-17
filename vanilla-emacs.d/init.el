@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-14 21:59:42 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-17 02:04:38 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -254,8 +254,9 @@ USAGE:
   ;; general-create-definer allows you to create a function with some defaults set, that you can use to define more keys.
   ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
   (general-create-definer my/leader-keys
-    :keymaps '(normal insert visual emacs) ; NOTE: Doesn't work without this, but I am not sure why I need it, why can't it just be global (default).
-    :prefix "SPC" ; This will be active only in "normal"-like states (so `normal` and `emacs`).
+    :states '(motion normal insert visual emacs)
+    :keymaps 'general-override-mode-map ; Override any other keymaps with same keybindings.
+    :prefix "SPC" ; This will be active only in "normal"-like states (so `normal`, `motion` and `emacs`).
     :global-prefix "C-SPC" ; This will be always active.
   )
 
@@ -479,6 +480,7 @@ USAGE:
   (evil-shift-width 2) ; When shifting text left or right with < or >, do it for 2 spaces.
   :config
   (evil-mode 1)
+  (define-key evil-motion-state-map (kbd "SPC") nil) ; To avoid conflict with me using SPC as leader key (defined via general.el).
 )
 
 (use-package evil-escape
@@ -532,6 +534,14 @@ USAGE:
   :ensure nil ; Comes with org already.
 )
 
+(use-package evil-org
+  :after org
+  :hook (org-mode . (lambda () evil-org-mode))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys)
+)
+
 (with-eval-after-load 'org
   ;; Here we define our custom structure templates (snippets) for quickly creating code blocks.
   ;; Typing e.g. "<elTAB" will expand it to snippet.
@@ -552,6 +562,14 @@ USAGE:
 
 (use-package org-super-agenda
   :after org
+  :init 
+  ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
+  ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
+  ;; org-super-agenda-header-map sticking to the old keybindings and having super agenda headers behave
+  ;; in default, non-evil way (e.g. "j" when on them doesn't move down but opens calendar).
+  ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
+  ;; it completely, and that works great.
+  (setq org-super-agenda-header-map nil)
   :config
   (org-super-agenda-mode)
 )
@@ -559,20 +577,29 @@ USAGE:
 (with-eval-after-load 'org
   (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
   (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+
   (setq org-agenda-custom-commands
 	'(("w" "Work Diary"
 	   ((agenda ""
 		    ((org-agenda-span 'day)
-                     (org-agenda-prefix-format " %i %6c %8s")
+                     (org-agenda-prefix-format " %i %12s %5e ")
 		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
                      (org-super-agenda-groups
 		      '((:name "Daily Checklist"
                                :category "dc"
 			)
-                        (:name "To Do"
-                               :and (:scheduled t :category "task")
+                        (:name "Todo"
+                               :and (:category "task"
+				     :scheduled t
+				     :not (:scheduled future)
+				     :not (:log t))
 			)
-                        (:discard (:time-grid t))  ; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+                        (:name none
+                               :and (:category "task"
+                                     :log closed)
+			)
+                        ;; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+                        (:discard (:time-grid t))
 		       )
                      )
 		    )
@@ -580,10 +607,13 @@ USAGE:
             (agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-overriding-header "")
-                     (org-agenda-prefix-format " %i %6c %8s %?-12t")
+                     (org-agenda-prefix-format " %i %12s %5e %?-12t")
+                     ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
+                     (org-agenda-skip-scheduled-if-done nil)
+                     (org-agenda-skip-deadline-if-done nil)
                      (org-super-agenda-groups
 		      '((:name "Time schedule"
-                               :time-grid t
+                               :and (:time-grid t :not (:log t))
 	                )
                         (:discard (:anything t))
 		       )
@@ -592,6 +622,7 @@ USAGE:
             )
             (alltodo ""
                      ((org-agenda-overriding-header "")
+                      (org-agenda-prefix-format " %i %5e ")
 		      (org-super-agenda-groups
                        '((:discard (:scheduled t :deadline t :time-grid t))
                          (:name "All tasks with no schedule / deadline"
@@ -603,7 +634,11 @@ USAGE:
                      )
 	    )
 	   )
-	   ((org-agenda-files '("~/work-diary.org"))
+	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
+            ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this case for entries that were closed. I could also have added 'clocked' and 'state' if needed. I do this in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that there are not normal but special log entries which are a bit different.
+	    (org-agenda-start-with-log-mode '(closed))
+            (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+            (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
 	   )
 	  )
 	 )

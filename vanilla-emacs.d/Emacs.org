@@ -455,8 +455,9 @@ Seems to not be on any package manager though, so I need straight.el probably.
     ;; general-create-definer allows you to create a function with some defaults set, that you can use to define more keys.
     ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
     (general-create-definer my/leader-keys
-      :keymaps '(normal insert visual emacs) ; NOTE: Doesn't work without this, but I am not sure why I need it, why can't it just be global (default).
-      :prefix "SPC" ; This will be active only in "normal"-like states (so `normal` and `emacs`).
+      :states '(motion normal insert visual emacs)
+      :keymaps 'general-override-mode-map ; Override any other keymaps with same keybindings.
+      :prefix "SPC" ; This will be active only in "normal"-like states (so `normal`, `motion` and `emacs`).
       :global-prefix "C-SPC" ; This will be always active.
     )
 
@@ -705,6 +706,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (evil-shift-width 2) ; When shifting text left or right with < or >, do it for 2 spaces.
     :config
     (evil-mode 1)
+    (define-key evil-motion-state-map (kbd "SPC") nil) ; To avoid conflict with me using SPC as leader key (defined via general.el).
   )
 
 #+end_src
@@ -775,6 +777,19 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+end_src
 
+** evil-org
+#+begin_src emacs-lisp
+
+  (use-package evil-org
+    :after org
+    :hook (org-mode . (lambda () evil-org-mode))
+    :config
+    (require 'evil-org-agenda)
+    (evil-org-agenda-set-keys)
+  )
+
+#+end_src
+
 ** Code blocks (org-babel)
 
 #+begin_src emacs-lisp
@@ -805,11 +820,21 @@ org-super-agenda allows both easier and smarter grouping of entries under a day/
 Each org-super-agenda group "consumes" entries it shows, leaving the next group with less entries.
 
 #+begin_src emacs-lisp
+
   (use-package org-super-agenda
     :after org
+    :init 
+    ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
+    ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
+    ;; org-super-agenda-header-map sticking to the old keybindings and having super agenda headers behave
+    ;; in default, non-evil way (e.g. "j" when on them doesn't move down but opens calendar).
+    ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
+    ;; it completely, and that works great.
+    (setq org-super-agenda-header-map nil)
     :config
     (org-super-agenda-mode)
   )
+
 #+end_src
 
 
@@ -818,20 +843,29 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   (with-eval-after-load 'org
     (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
     (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+
     (setq org-agenda-custom-commands
   	'(("w" "Work Diary"
   	   ((agenda ""
   		    ((org-agenda-span 'day)
-                       (org-agenda-prefix-format " %i %6c %8s")
+                       (org-agenda-prefix-format " %i %12s %5e ")
   		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
                        (org-super-agenda-groups
   		      '((:name "Daily Checklist"
                                  :category "dc"
   			)
-                          (:name "To Do"
-                                 :and (:scheduled t :category "task")
+                          (:name "Todo"
+                                 :and (:category "task"
+  				     :scheduled t
+  				     :not (:scheduled future)
+  				     :not (:log t))
   			)
-                          (:discard (:time-grid t))  ; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+                          (:name none
+                                 :and (:category "task"
+                                       :log closed)
+  			)
+                          ;; Drop anything that is left to show on time-grid because we show time-grid below, separately.
+                          (:discard (:time-grid t))
   		       )
                        )
   		    )
@@ -839,10 +873,13 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
               (agenda ""
   		    ((org-agenda-span 'day)
                        (org-agenda-overriding-header "")
-                       (org-agenda-prefix-format " %i %6c %8s %?-12t")
+                       (org-agenda-prefix-format " %i %12s %5e %?-12t")
+                       ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
+                       (org-agenda-skip-scheduled-if-done nil)
+                       (org-agenda-skip-deadline-if-done nil)
                        (org-super-agenda-groups
   		      '((:name "Time schedule"
-                                 :time-grid t
+                                 :and (:time-grid t :not (:log t))
   	                )
                           (:discard (:anything t))
   		       )
@@ -851,6 +888,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
               )
               (alltodo ""
                        ((org-agenda-overriding-header "")
+                        (org-agenda-prefix-format " %i %5e ")
   		      (org-super-agenda-groups
                          '((:discard (:scheduled t :deadline t :time-grid t))
                            (:name "All tasks with no schedule / deadline"
@@ -862,7 +900,11 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                        )
   	    )
   	   )
-  	   ((org-agenda-files '("~/work-diary.org"))
+  	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
+              ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this case for entries that were closed. I could also have added 'clocked' and 'state' if needed. I do this in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that there are not normal but special log entries which are a bit different.
+  	    (org-agenda-start-with-log-mode '(closed))
+              (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+              (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
   	   )
   	  )
   	 )
@@ -1539,6 +1581,7 @@ Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives 
 *** TODO Write down following next to lsp-mode
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
 
+*** TODO Look into workgroups
 *** TODO Does emacs have this thing where you can easily get a list of keybindings to do stuff specific for current major mode?
 I think it is something like "." or ","? If yes, copy that if I can, if not, it would be nice to have that, or if not that, then some other way where I can easily figure out the main commands for this major mode (e.g. org). I konw there is C-h m, but that has too much noise for me usually.
 I know that some modes (e.g. Org) have keymaps, and I see Orgs keymap mapped to C-c. Maybe that is it, the convention? I just need to add additional map to what C-c maps to?
