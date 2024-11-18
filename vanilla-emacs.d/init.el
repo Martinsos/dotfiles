@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-17 02:04:38 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-18 11:46:36 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -268,6 +268,7 @@ USAGE:
   (my/leader-keys
     "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
     "TAB" '(my/alternate-buffer :which-key "previous buffer")
+    "RET" '((lambda () (interactive) (org-agenda nil "w")) :which-key "work diary")
 
     "0"   '(winum-select-window-0 :which-key "jump to window 0")
     "1"   '(winum-select-window-1 :which-key "jump to window 1")
@@ -519,6 +520,8 @@ USAGE:
                   (org-level-8 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
   )
+
+  (setq org-log-into-drawer t)
 )
 
 ;; Replace stars (*) with nice bullets.
@@ -560,6 +563,11 @@ USAGE:
   )
 )
 
+(with-eval-after-load 'org
+  (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
+  (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+)
+
 (use-package org-super-agenda
   :after org
   :init 
@@ -570,20 +578,18 @@ USAGE:
   ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
   ;; it completely, and that works great.
   (setq org-super-agenda-header-map nil)
+  (setq org-super-agenda-keep-order t)
   :config
   (org-super-agenda-mode)
 )
 
 (with-eval-after-load 'org
-  (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
-  (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
-
   (setq org-agenda-custom-commands
 	'(("w" "Work Diary"
 	   ((agenda ""
 		    ((org-agenda-span 'day)
-                     (org-agenda-prefix-format " %i %12s %5e ")
-		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
+                     (org-agenda-prefix-format " %12s %5e ")
+		     (org-agenda-sorting-strategy '(todo-state-down urgency-down effort-down))
                      (org-super-agenda-groups
 		      '((:name "Daily Checklist"
                                :category "dc"
@@ -607,7 +613,7 @@ USAGE:
             (agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-overriding-header "")
-                     (org-agenda-prefix-format " %i %12s %5e %?-12t")
+                     (org-agenda-prefix-format " %12s %5e %?-12t")
                      ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
                      (org-agenda-skip-scheduled-if-done nil)
                      (org-agenda-skip-deadline-if-done nil)
@@ -620,9 +626,22 @@ USAGE:
                      )
 		    )
             )
+            (agenda ""
+		    ((org-agenda-span 'day)
+                     (org-agenda-overriding-header "")
+                     (org-agenda-prefix-format " %12s %5e %?-12t")
+                     (org-super-agenda-groups
+		      '((:name "Clock log"
+                               :log clocked
+	                )
+                        (:discard (:anything t))
+		       )
+                     )
+		    )
+            )
             (alltodo ""
                      ((org-agenda-overriding-header "")
-                      (org-agenda-prefix-format " %i %5e ")
+                      (org-agenda-prefix-format " %5e ")
 		      (org-super-agenda-groups
                        '((:discard (:scheduled t :deadline t :time-grid t))
                          (:name "All tasks with no schedule / deadline"
@@ -635,8 +654,8 @@ USAGE:
 	    )
 	   )
 	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
-            ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this case for entries that were closed. I could also have added 'clocked' and 'state' if needed. I do this in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that there are not normal but special log entries which are a bit different.
-	    (org-agenda-start-with-log-mode '(closed))
+            ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
+	    (org-agenda-start-with-log-mode '(closed clock))
             (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
             (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
 	   )

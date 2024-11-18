@@ -469,6 +469,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
     (my/leader-keys
       "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
       "TAB" '(my/alternate-buffer :which-key "previous buffer")
+      "RET" '((lambda () (interactive) (org-agenda nil "w")) :which-key "work diary")
 
       "0"   '(winum-select-window-0 :which-key "jump to window 0")
       "1"   '(winum-select-window-1 :which-key "jump to window 1")
@@ -740,40 +741,42 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
-  (use-package org
-    :defer t
-    :hook
-    (org-mode . (lambda ()
-      (org-indent-mode) ; Enforces correct indentation under each heading.
-      (visual-line-mode 1)
-      (setq evil-auto-indent nil)
-    ))
-    :config
-    ;; Set headers to have different sizes.
-    (dolist (face '((org-level-1 . 1.5)
-                    (org-level-2 . 1.3)
-                    (org-level-3 . 1.2)
-                    (org-level-4 . 1.1)
-                    (org-level-5 . 1.1)
-                    (org-level-6 . 1.1)
-                    (org-level-7 . 1.1)
-                    (org-level-8 . 1.1)))
-      (set-face-attribute (car face) nil :height (cdr face))
+    (use-package org
+      :defer t
+      :hook
+      (org-mode . (lambda ()
+        (org-indent-mode) ; Enforces correct indentation under each heading.
+        (visual-line-mode 1)
+        (setq evil-auto-indent nil)
+      ))
+      :config
+      ;; Set headers to have different sizes.
+      (dolist (face '((org-level-1 . 1.5)
+                      (org-level-2 . 1.3)
+                      (org-level-3 . 1.2)
+                      (org-level-4 . 1.1)
+                      (org-level-5 . 1.1)
+                      (org-level-6 . 1.1)
+                      (org-level-7 . 1.1)
+                      (org-level-8 . 1.1)))
+        (set-face-attribute (car face) nil :height (cdr face))
+      )
+
+      (setq org-log-into-drawer t)
     )
-  )
 
-  ;; Replace stars (*) with nice bullets.
-  (use-package org-bullets
-    :after (org)
-    :defer t
-    :hook (org-mode . org-bullets-mode)
-  )
+    ;; Replace stars (*) with nice bullets.
+    (use-package org-bullets
+      :after (org)
+      :defer t
+      :hook (org-mode . org-bullets-mode)
+    )
 
-  ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
-  (use-package org-tempo
-    :after (org)
-    :ensure nil ; Comes with org already.
-  )
+    ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
+    (use-package org-tempo
+      :after (org)
+      :ensure nil ; Comes with org already.
+    )
 
 #+end_src
 
@@ -816,8 +819,19 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 ** org-agenda
 
-org-super-agenda allows both easier and smarter grouping of entries under a day/week of org agenda view.
-Each org-super-agenda group "consumes" entries it shows, leaving the next group with less entries.
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+    (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
+    (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+  )
+
+#+end_src
+
+*** org-super-agenda
+
+Org-super-agenda allows both easier and smarter grouping of entries under a day/week org agenda view.
+Each org-super-agenda group "consumes" entries it shows, leaving the next group with less entries, kind of like a parser. Whatever is left at the end is shown at the end of agenda as "Other items".
 
 #+begin_src emacs-lisp
 
@@ -831,25 +845,24 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
     ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
     ;; it completely, and that works great.
     (setq org-super-agenda-header-map nil)
+    (setq org-super-agenda-keep-order t)
     :config
     (org-super-agenda-mode)
   )
 
 #+end_src
 
+*** agenda custom commands
 
 #+begin_src emacs-lisp
 
   (with-eval-after-load 'org
-    (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
-    (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
-
     (setq org-agenda-custom-commands
   	'(("w" "Work Diary"
   	   ((agenda ""
   		    ((org-agenda-span 'day)
-                       (org-agenda-prefix-format " %i %12s %5e ")
-  		     (org-agenda-sorting-strategy '(habit-down category-keep todo-state-down time-up urgency-down))
+                       (org-agenda-prefix-format " %12s %5e ")
+  		     (org-agenda-sorting-strategy '(todo-state-down urgency-down effort-down))
                        (org-super-agenda-groups
   		      '((:name "Daily Checklist"
                                  :category "dc"
@@ -873,7 +886,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
               (agenda ""
   		    ((org-agenda-span 'day)
                        (org-agenda-overriding-header "")
-                       (org-agenda-prefix-format " %i %12s %5e %?-12t")
+                       (org-agenda-prefix-format " %12s %5e %?-12t")
                        ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
                        (org-agenda-skip-scheduled-if-done nil)
                        (org-agenda-skip-deadline-if-done nil)
@@ -886,9 +899,22 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                        )
   		    )
               )
+              (agenda ""
+  		    ((org-agenda-span 'day)
+                       (org-agenda-overriding-header "")
+                       (org-agenda-prefix-format " %12s %5e %?-12t")
+                       (org-super-agenda-groups
+  		      '((:name "Clock log"
+                                 :log clocked
+  	                )
+                          (:discard (:anything t))
+  		       )
+                       )
+  		    )
+              )
               (alltodo ""
                        ((org-agenda-overriding-header "")
-                        (org-agenda-prefix-format " %i %5e ")
+                        (org-agenda-prefix-format " %5e ")
   		      (org-super-agenda-groups
                          '((:discard (:scheduled t :deadline t :time-grid t))
                            (:name "All tasks with no schedule / deadline"
@@ -901,8 +927,8 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   	    )
   	   )
   	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
-              ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this case for entries that were closed. I could also have added 'clocked' and 'state' if needed. I do this in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that there are not normal but special log entries which are a bit different.
-  	    (org-agenda-start-with-log-mode '(closed))
+              ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
+  	    (org-agenda-start-with-log-mode '(closed clock))
               (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
               (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
   	   )
