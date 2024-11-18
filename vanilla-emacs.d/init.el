@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-18 14:34:42 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-18 23:30:12 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -255,7 +255,7 @@ USAGE:
   ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
   (general-create-definer my/leader-keys
     :states '(motion normal insert visual emacs)
-    :keymaps 'general-override-mode-map ; Override any other keymaps with same keybindings.
+    :keymaps 'override ; Override any other keymaps with same keybindings. Otherwise I get issues with the `motion` and SPC, since `motion` already defines keybindings for SPC.
     :prefix "SPC" ; This will be active only in "normal"-like states (so `normal`, `motion` and `emacs`).
     :global-prefix "C-SPC" ; This will be always active.
   )
@@ -540,9 +540,6 @@ USAGE:
 (use-package evil-org
   :after org
   :hook (org-mode . (lambda () evil-org-mode))
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys)
 )
 
 (with-eval-after-load 'org
@@ -578,9 +575,108 @@ USAGE:
   ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
   ;; it completely, and that works great.
   (setq org-super-agenda-header-map nil)
-  (setq org-super-agenda-keep-order t)
+  (setq org-super-agenda-keep-order t) ; Can degrade performance, which is why it isn't enabled by default.
   :config
   (org-super-agenda-mode)
+)
+
+(with-eval-after-load 'evil
+  ;; TODO: I am basing these keybindings on the evil-org-agenda-set-keys function from
+  ;;   evil-org-agenda.el (from evil-org package), but I copied them directly here so I can easily modify
+  ;;   them as I wish.
+
+  (evil-set-initial-state 'org-agenda-mode 'motion)
+
+  (evil-define-key 'motion org-agenda-mode-map
+    ;; Opening org file.
+    (kbd "<tab>") 'org-agenda-goto
+    (kbd "RET") 'org-agenda-switch-to
+    (kbd "M-RET") 'org-agenda-recenter
+
+    ;; Motion.
+    "j" 'org-agenda-next-line
+    "k" 'org-agenda-previous-line
+    "gH" 'evil-window-top
+    "gM" 'evil-window-middle
+    "gL" 'evil-window-bottom
+    (kbd "C-j") 'org-agenda-next-item
+    (kbd "C-k") 'org-agenda-previous-item
+    (kbd "[[") 'org-agenda-earlier
+    (kbd "]]") 'org-agenda-later
+
+    ;; manipulation
+    ;; We follow standard org-mode bindings (not org-agenda bindings):
+    ;; <HJKL> change todo items and priorities.
+    ;; M-<jk> drag lines.
+    ;; M-<hl> cannot demote/promote, we use it for "do-date".
+    "J" 'org-agenda-priority-down
+    "K" 'org-agenda-priority-up
+    "H" 'org-agenda-do-date-earlier
+    "L" 'org-agenda-do-date-later
+    "t" 'org-agenda-todo
+    (kbd "M-j") 'org-agenda-drag-line-forward
+    (kbd "M-k") 'org-agenda-drag-line-backward
+    (kbd "C-S-h") 'org-agenda-todo-previousset ; Original binding "C-S-<left>"
+    (kbd "C-S-l") 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
+
+    ;; undo
+    "u" 'org-agenda-undo
+
+    ;; actions
+    "dd" 'org-agenda-kill
+    "dA" 'org-agenda-archive
+    "da" 'org-agenda-archive-default-with-confirmation
+    "ct" 'org-agenda-set-tags
+    "ce" 'org-agenda-set-effort
+    "cT" 'org-timer-set-timer
+    "i" 'org-agenda-diary-entry
+    "a" 'org-agenda-add-note
+    "A" 'org-agenda-append-agenda
+    "C" 'org-agenda-capture
+
+    ;; mark
+    "m" 'org-agenda-bulk-toggle
+    "~" 'org-agenda-bulk-toggle-all
+    "*" 'org-agenda-bulk-mark-all
+    "%" 'org-agenda-bulk-mark-regexp
+    "M" 'org-agenda-bulk-unmark-all
+    "x" 'org-agenda-bulk-action
+
+    ;; refresh
+    "gr" 'org-agenda-redo
+    "gR" 'org-agenda-redo-all
+
+    ;; quit
+    "ZQ" 'org-agenda-exit
+    "ZZ" 'org-agenda-quit
+
+    ;; display
+    "gD" 'org-agenda-view-mode-dispatch
+    "ZD" 'org-agenda-dim-blocked-tasks
+
+    ;; clock
+    "I" 'org-agenda-clock-in ; Original binding
+    "O" 'org-agenda-clock-out ; Original binding
+    "cg" 'org-agenda-clock-goto
+    "cc" 'org-agenda-clock-cancel
+    "cr" 'org-agenda-clockreport-mode
+
+    ;; go and show
+    "." 'org-agenda-goto-today
+    "gc" 'org-agenda-goto-calendar
+    "gC" 'org-agenda-convert-date
+    "gd" 'org-agenda-goto-date
+    "gh" 'org-agenda-holidays
+    "gm" 'org-agenda-phases-of-moon
+    "gs" 'org-agenda-sunrise-sunset
+    "gt" 'org-agenda-show-tags
+
+    "p" 'org-agenda-date-prompt
+    "P" 'org-agenda-show-the-flagging-note
+
+    "+" 'org-agenda-manipulate-query-add
+    "-" 'org-agenda-manipulate-query-subtract
+  )
 )
 
 (with-eval-after-load 'org
