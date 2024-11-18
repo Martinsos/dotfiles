@@ -862,10 +862,11 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   	   ((agenda ""
   		    ((org-agenda-span 'day)
                        (org-agenda-prefix-format " %12s %5e ")
-  		     (org-agenda-sorting-strategy '(todo-state-down urgency-down effort-down))
+  		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
                        (org-super-agenda-groups
   		      '((:name "Daily Checklist"
-                                 :category "dc"
+                                 :and (:category "dc"
+                                       :not (:log t))
   			)
                           (:name "Todo"
                                  :and (:category "task"
@@ -878,7 +879,8 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                                        :log closed)
   			)
                           ;; Drop anything that is left to show on time-grid because we show time-grid below, separately.
-                          (:discard (:time-grid t))
+                          ;; Also discard any clock logs since those we also show separately.
+                          (:discard (:time-grid t :log clocked))
   		       )
                        )
   		    )
@@ -1585,6 +1587,7 @@ Search a bit how others do package version pinning down. There is :pin for use-p
 - Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
 - https://www.reddit.com/r/emacs/s/g5deSIDOUZ
 - https://www.reddit.com/r/emacs/s/tSCyJdXkJW
+- RAG in emacs: https://www.reddit.com/r/emacs/s/YSoLgzSuRd
 
 *** TODO Try using command pallete
 Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.

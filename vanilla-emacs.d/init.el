@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-18 11:46:36 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-18 14:34:42 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -589,10 +589,11 @@ USAGE:
 	   ((agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-prefix-format " %12s %5e ")
-		     (org-agenda-sorting-strategy '(todo-state-down urgency-down effort-down))
+		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
                      (org-super-agenda-groups
 		      '((:name "Daily Checklist"
-                               :category "dc"
+                               :and (:category "dc"
+                                     :not (:log t))
 			)
                         (:name "Todo"
                                :and (:category "task"
@@ -605,7 +606,8 @@ USAGE:
                                      :log closed)
 			)
                         ;; Drop anything that is left to show on time-grid because we show time-grid below, separately.
-                        (:discard (:time-grid t))
+                        ;; Also discard any clock logs since those we also show separately.
+                        (:discard (:time-grid t :log clocked))
 		       )
                      )
 		    )
