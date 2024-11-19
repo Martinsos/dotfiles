@@ -1712,18 +1712,28 @@ Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives 
 *** TODO Write down following next to lsp-mode
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
 
+*** TODO Look into [[https://github.com/karthink/popper][popper]] -> specify which buffers should appear in a popup
 *** TODO Look into workgroups
 *** TODO Does emacs have this thing where you can easily get a list of keybindings to do stuff specific for current major mode?
 I think it is something like "." or ","? If yes, copy that if I can, if not, it would be nice to have that, or if not that, then some other way where I can easily figure out the main commands for this major mode (e.g. org). I konw there is C-h m, but that has too much noise for me usually.
 I know that some modes (e.g. Org) have keymaps, and I see Orgs keymap mapped to C-c. Maybe that is it, the convention? I just need to add additional map to what C-c maps to?
 
 *** TODO Hint system
-I would love to show some kind of hints in certain situations. Couple of useful keybindings when I am in some context. Kind of like Helm in Spacemacs shows it at that footer it has.
+I would love to show some kind of hints in certain situations. Couple of useful keybindings when I am in some context. Kind of like Helm in Spacemacs shows it at that footer it has. Maybe some text also.
 But for Ivy. Also, for stuff like company when in completion popup, to remind me of C-s and C-M-s. What if I had an area in my emacs where contextual tips are shown as you do some actions?
 For example they get shown when you open completion popup, or when you start using Ivy? Could I make this a universal mechanism? Maybe I can expand it then for a bit more info if I want,
 for my custom cheasheet? It would be kind of a "publish" mechanism I guess.
 Btw I started, in this org document, having headers with :cheatsheet: tag, where I collect these "cheatsheets".
 
+Ok, so refinement of the idea:
+- I implement logic that, at current moment, determines what the context is. Looks at buffer name, thing at point, major mode, couple of things like that. This is the core of things.
+- Then, I allow them to connect pieces of .org markup with specific contexts. For example, they can say "this piece of .org markup will be a hint for any context with this buffer name (and or this major mode, this minor mode, ...)". How do they do that? I imagine that in some .org file, they put a property under PROPERTIES that describes to which context does this header attach. I could imagine they can specify it narrower or wider: each condition they add is combined via AND with the rest of the conditions that describe a context.
+  This also means they would need to specify which org file(s) to search in for these hints.
+- I implement a command `hints-show` that recognizes current context and based on it displays relevant hints. They are using .org markup so I imagine it would show them in a readonly org buffer, that was somehow produced by adding all hints that are connected with this context.
+- For easier usage, I should also implement a function `hints-add` that recognizes current context, and then based on it creates a new entry in the .org file that is used for hints (if there are multiple, it can ask which one you want to add this to). I can also ask if you want to reuse existing entry, if such entry exists. This would make it easier to add new hints easily, exactly in the situation where you want to see them. I wonder if orgs capture templates would be of any help here.
+- Might also be convenient to have `hints-context` which just shows current context. It could be useful in some situations, when debugging.
+- Possible fun name for package: intel! Intel for the context. int.el .
+  
 *** TODO Try replacing Ivy, Counsel, Swiper, and Company even, with Vertico, Marginalia, Orderless, Embark, Corfu, ...
 Vertico is alternative to Ivy, the rest are supporting packages for it same like Counsel and Swiper are for Ivy, and then Corfu is a replacement for Company.
 Seems like a lot of people like Vertico, ... , Corfu and the rest. Allegedly they using more of native Emacs stuff, so are simpler but also make more sense? Hm.
