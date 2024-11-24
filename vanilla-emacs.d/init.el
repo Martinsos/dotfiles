@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-19 12:29:45 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-24 18:33:55 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -522,6 +522,10 @@ USAGE:
   )
 
   (setq org-log-into-drawer t)
+
+  (add-to-list 'org-modules
+	'org-habit
+  )
 )
 
 ;; Replace stars (*) with nice bullets.
@@ -633,6 +637,7 @@ USAGE:
     "a" 'org-agenda-add-note
     "A" 'org-agenda-append-agenda
     "C" 'org-agenda-capture
+    "e" 'org-agenda-tree-to-indirect-buffer
 
     ;; mark
     "m" 'org-agenda-bulk-toggle
@@ -670,6 +675,7 @@ USAGE:
     "gm" 'org-agenda-phases-of-moon
     "gs" 'org-agenda-sunrise-sunset
     "gt" 'org-agenda-show-tags
+    "ge" 'org-agenda-entry-text-mode
 
     "p" 'org-agenda-date-prompt
     "P" 'org-agenda-show-the-flagging-note
@@ -701,9 +707,10 @@ USAGE:
                                :and (:category "task"
                                      :log closed)
 			)
-                        ;; Drop anything that is left to show on time-grid because we show time-grid below, separately.
-                        ;; Also discard any clock logs since those we also show separately.
-                        (:discard (:time-grid t :log clocked))
+                        (:discard (:time-grid t ; because we show time-grid below, separately
+				   :log clocked ; because we show these below, separately
+				  )
+			)
 		       )
                      )
 		    )
@@ -752,10 +759,28 @@ USAGE:
 	    )
 	   )
 	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
+
             ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
 	    (org-agenda-start-with-log-mode '(closed clock))
             (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
             (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+
+            ;; Org agenda shows both scheduled and deadline entries for an item, when available.
+	    ;; I don't want that, so this way I avoid having both.
+            ;; Instead, if before deadline, scheduled item is shown, but deadline warning is not.
+	    ;; And if after deadline, only item with deadline delay is shown, not the one with scheduled delay.
+            ;; The only thing there was no way to configure is to avoid showing both scheduled and deadline entries
+	    ;; on the day of the deadline itself, so in that case both are shown, but ok I can live with that.
+            (org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+            (org-agenda-skip-scheduled-repeats-after-deadline t)
+	   )
+	  )
+
+          ("p" "Private Todo"
+	   ((agenda "")
+            (alltodo "")
+	   )
+	   ((org-agenda-files '("~/Dropbox/private-todo.org"))
 	   )
 	  )
 	 )
@@ -1172,3 +1197,6 @@ USAGE:
   :hook
   (prog-mode . rainbow-delimiters-mode)
 )
+
+;; Brings functions for converting buffer text and decorations to html.
+(use-package htmlize)
