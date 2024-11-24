@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-24 18:33:55 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-11-24 22:45:45 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -522,6 +522,7 @@ USAGE:
   )
 
   (setq org-log-into-drawer t)
+  (setq org-habit-graph-column 60)
 
   (add-to-list 'org-modules
 	'org-habit
@@ -539,6 +540,10 @@ USAGE:
 (use-package org-tempo
   :after (org)
   :ensure nil ; Comes with org already.
+)
+
+(use-package org-habit-stats
+  :after (org)
 )
 
 (use-package evil-org
@@ -671,7 +676,7 @@ USAGE:
     "gc" 'org-agenda-goto-calendar
     "gC" 'org-agenda-convert-date
     "gd" 'org-agenda-goto-date
-    "gh" 'org-agenda-holidays
+    "gh" 'org-habit-stats-view-habit-at-point-agenda
     "gm" 'org-agenda-phases-of-moon
     "gs" 'org-agenda-sunrise-sunset
     "gt" 'org-agenda-show-tags
@@ -688,21 +693,25 @@ USAGE:
 (with-eval-after-load 'org
   (setq org-agenda-custom-commands
 	'(("w" "Work Diary"
-	   ((agenda ""
+	   (;; The main view: a list of tasks for today.
+	    (agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-prefix-format " %12s %5e ")
 		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
                      (org-super-agenda-groups
-		      '((:name "Daily Checklist"
+		      '(;; Repeating tasks to be done every day, including today.
+			(:name "Daily Checklist"
                                :and (:category "dc"
                                      :not (:log t))
 			)
+			;; Tasks to be done today.
                         (:name "Todo"
                                :and (:category "task"
 				     :scheduled t
 				     :not (:scheduled future)
 				     :not (:log t))
 			)
+			;; Tasks that were done today.
                         (:name none
                                :and (:category "task"
                                      :log closed)
@@ -715,6 +724,7 @@ USAGE:
                      )
 		    )
             )
+            ;; Time schedule: timeline with any items that have a specific time scheduled for today.
             (agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-overriding-header "")
@@ -731,6 +741,7 @@ USAGE:
                      )
 		    )
             )
+            ;; Clock log: list of all the clock entries for today.
             (agenda ""
 		    ((org-agenda-span 'day)
                      (org-agenda-overriding-header "")
@@ -744,6 +755,7 @@ USAGE:
                      )
 		    )
             )
+            ;; All tasks without a schedule or a deadline.
             (alltodo ""
                      ((org-agenda-overriding-header "")
                       (org-agenda-prefix-format " %5e ")
@@ -777,10 +789,55 @@ USAGE:
 	  )
 
           ("p" "Private Todo"
-	   ((agenda "")
-            (alltodo "")
+	   (;; The main view: a list of tasks for today.
+	    (agenda ""
+		    ((org-agenda-span 'day)
+                     (org-agenda-prefix-format " %12s %5e ")
+		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
+                     (org-super-agenda-groups
+		      '((:name "Habits"
+                               :and (:category "habit"
+                                     :not (:log t))
+			)
+			;; Tasks to be done today.
+                        (:name "Todo"
+                               :and (:category "task"
+				     :scheduled t
+				     :not (:scheduled future)
+				     :not (:log t))
+			)
+			;; Tasks that were done today.
+                        (:name none
+                               :and (:category "task"
+                                     :log closed)
+			)
+		       )
+                     )
+		    )
+            )
+            ;; All tasks without a schedule or a deadline.
+            (alltodo ""
+                     ((org-agenda-overriding-header "")
+                      (org-agenda-prefix-format " %5e ")
+		      (org-super-agenda-groups
+                       '((:discard (:scheduled t :deadline t :time-grid t))
+                         (:name "All tasks with no schedule / deadline"
+                                :category "task"
+                         )
+			 (:discard (:anything t))
+		        )
+		      )
+                     )
+	    )
 	   )
 	   ((org-agenda-files '("~/Dropbox/private-todo.org"))
+
+	    (org-agenda-start-with-log-mode '(closed clock))
+            (org-agenda-skip-scheduled-if-done t)
+            (org-agenda-skip-deadline-if-done t)
+
+            (org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+            (org-agenda-skip-scheduled-repeats-after-deadline t)
 	   )
 	  )
 	 )
