@@ -830,6 +830,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   (with-eval-after-load 'org
     (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
     (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
+    ;; Make the current time in the time-grid (<- now --------) stand out.
+    (set-face-attribute 'org-agenda-current-time nil :inherit 'font-lock-constant-face :weight 'bold)
   )
 
 #+end_src
@@ -970,109 +972,142 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 #+begin_src emacs-lisp
 
   (with-eval-after-load 'org
-    (setq org-agenda-custom-commands
-  	'(("w" "Work Diary"
-  	   (;; The main view: a list of tasks for today.
-  	    (agenda ""
-  		    ((org-agenda-span 'day)
-                       (org-agenda-prefix-format " %12s %5e ")
-  		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
-                       (org-super-agenda-groups
-  		      '(;; Repeating tasks to be done every day, including today.
-  			(:name "Daily Checklist"
-                                 :and (:category "dc"
-                                       :not (:log t))
-  			)
-  			;; Tasks to be done today.
-                          (:name "Todo"
-                                 :and (:category "task"
-  				     :scheduled t
-  				     :not (:scheduled future)
-  				     :not (:log t))
-  			)
-  			;; Tasks that were done today.
-                          (:name none
-                                 :and (:category "task"
-                                       :log closed)
-  			)
-                          (:discard (:time-grid t ; because we show time-grid below, separately
-  				   :log clocked ; because we show these below, separately
-  				  )
-  			)
-  		       )
-                       )
+    (defun make-work-diary-command (cmd-key cmd-name cmd-start-day)
+      `(,cmd-key ,cmd-name
+         (;; The main view: a list of tasks for today.
+  	(agenda ""
+  		((org-agenda-span 'day)
+  		 (org-agenda-prefix-format " %12s %5e ")
+  		 (org-agenda-sorting-strategy '(todo-state-down scheduled-up priority-down urgency-down effort-down))
+  		 (org-habit-show-all-today t)
+  		 (org-super-agenda-groups
+  		  '(;; Repeating tasks to be done every day, including today.
+  		    (:name "Daily Checklist"
+  			    :and (:category "dc"
+  				  :not (:log t))
   		    )
-              )
-              ;; Time schedule: timeline with any items that have a specific time scheduled for today.
-              (agenda ""
-  		    ((org-agenda-span 'day)
-                       (org-agenda-overriding-header "")
-                       (org-agenda-prefix-format " %12s %5e %?-12t")
-                       ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
-                       (org-agenda-skip-scheduled-if-done nil)
-                       (org-agenda-skip-deadline-if-done nil)
-                       (org-super-agenda-groups
-  		      '((:name "Time schedule"
-                                 :and (:time-grid t :not (:log t))
-  	                )
-                          (:discard (:anything t))
-  		       )
-                       )
+  		    ;; Tasks to be done today.
+  		    (:name "Todo"
+  			    :and (:category "task"
+  				  :scheduled t
+  				  :not (:log t))
   		    )
-              )
-              ;; Clock log: list of all the clock entries for today.
-              (agenda ""
-  		    ((org-agenda-span 'day)
-                       (org-agenda-overriding-header "")
-                       (org-agenda-prefix-format " %12s %5e %?-12t")
-                       (org-super-agenda-groups
-  		      '((:name "Clock log"
-                                 :log clocked
-  	                )
-                          (:discard (:anything t))
-  		       )
-                       )
+  		    ;; Tasks that were done today.
+  		    (:name "Todo (DONE)"
+  			    :and (:category "task"
+  				  :log closed)
   		    )
-              )
-              ;; All tasks without a schedule or a deadline.
-              (alltodo ""
-                       ((org-agenda-overriding-header "")
-                        (org-agenda-prefix-format " %5e ")
-  		      (org-super-agenda-groups
-                         '((:discard (:scheduled t :deadline t :time-grid t))
-                           (:name "All tasks with no schedule / deadline"
-                                  :category "task"
-                           )
-  			 (:discard (:anything t))
-  		        )
+  		    (:discard (:time-grid t ; because we show time-grid below, separately
+  				:log clocked ; because we show these below, separately
+  			      )
+  		    )
+  		    )
+  		 )
+  		)
+  	)
+  	(alltodo ""
+  		 ((org-agenda-overriding-header "")
+  		  (org-agenda-prefix-format "       ")
+  		  (org-super-agenda-groups
+  		   '((:name "Notes"
+  			    :category "note"
+  		     )
+  		     (:discard (:anything t))
+  		    )
+  		  )
+  		 )
+  	)
+  	;; Time schedule: timeline with any items that have a specific time scheduled for today.
+  	(agenda ""
+  		((org-agenda-span 'day)
+  		 (org-agenda-overriding-header "")
+  		 (org-agenda-prefix-format " %12s %5e %?-12t")
+  		 ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
+  		 (org-agenda-skip-scheduled-if-done nil)
+  		 (org-agenda-skip-deadline-if-done nil)
+                   (org-agenda-time-grid '((daily today remove-match)
+  					 (800 1000 1200 1400 1600 1800 2000)
+                                           " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+  			                )
+  		 )
+  		 (org-super-agenda-groups
+  		  '((:name "Time schedule"
+  		           :and (:time-grid t :not (:log t))
+  		    )
+  		    (:discard (:anything t))
+  		   )
+  		 )
+  		)
+  	)
+  	;; Clock log: list of all the clock entries for today.
+  	(agenda ""
+  		((org-agenda-span 'day)
+  		 (org-agenda-overriding-header "")
+  		 (org-agenda-prefix-format " %12s %5e %?-12t")
+  		 (org-super-agenda-groups
+  		  '((:name "Clock log"
+  	                   :log clocked
+  		    )
+  		    (:discard (:anything t))
+  		   )
+  		 )
+  		)
+  	)
+  	(alltodo ""
+  		 ((org-agenda-overriding-header "")
+  		  (org-agenda-prefix-format " %5e ")
+  		  (org-super-agenda-groups
+  		   '((:discard (:scheduled t :deadline t :time-grid t))
+  		     (:name "All tasks with no schedule / deadline"
+  			    :category "task"
   		      )
-                       )
-  	    )
-  	   )
-  	   ((org-agenda-files '("~/Dropbox/work-diary.org"))
+  		      (:discard (:anything t))
+  		    )
+  		  )
+  		 )
+  	)
+         )
+         ((org-agenda-files '("~/Dropbox/work-diary.org"))
 
-              ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
-  	    (org-agenda-start-with-log-mode '(closed clock))
-              (org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
-              (org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+  	(org-agenda-start-day ,cmd-start-day)
 
-              ;; Org agenda shows both scheduled and deadline entries for an item, when available.
-  	    ;; I don't want that, so this way I avoid having both.
-              ;; Instead, if before deadline, scheduled item is shown, but deadline warning is not.
-  	    ;; And if after deadline, only item with deadline delay is shown, not the one with scheduled delay.
-              ;; The only thing there was no way to configure is to avoid showing both scheduled and deadline entries
-  	    ;; on the day of the deadline itself, so in that case both are shown, but ok I can live with that.
-              (org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
-              (org-agenda-skip-scheduled-repeats-after-deadline t)
-  	   )
+  	;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
+  	(org-agenda-start-with-log-mode '(closed clock))
+  	(org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+  	(org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
+
+  	;; Org agenda shows both scheduled and deadline entries for an item, when available.
+  	;; I don't want that, so this way I avoid having both.
+  	;; Instead, if before deadline, scheduled item is shown, but deadline warning is not.
+  	;; And if after deadline, only item with deadline delay is shown, not the one with scheduled delay.
+  	;; The only thing there was no way to configure is to avoid showing both scheduled and deadline entries
+  	;; on the day of the deadline itself, so in that case both are shown, but ok I can live with that.
+  	(org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+  	(org-agenda-skip-scheduled-repeats-after-deadline t)
+
+          (org-todo-keyword-faces
+           '(("EPIC" . (:foreground "orchid" :weight bold))
+             ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+             ("CHKL" . (:foreground "grey" :weight bold))
   	  )
+          )
+         )
+      )
+    )
 
-            ("p" "Private Todo"
+    (setq org-agenda-custom-commands
+  	(list
+  	 (make-work-diary-command "W" "Work Diary (tomorrow)" "+1d")
+
+  	 (make-work-diary-command "w" "Work Diary"            nil)
+
+           '("p" "Private Todo"
   	   (;; The main view: a list of tasks for today.
   	    (agenda ""
   		    ((org-agenda-span 'day)
                        (org-agenda-prefix-format " %12s %5e ")
   		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
+  		     (org-habit-show-all-today t)
                        (org-super-agenda-groups
   		      '((:name "Habits"
                                  :and (:category "habit"
@@ -1694,34 +1729,51 @@ Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 
 * TODOs
-*** TODO Add whitespace mode (or smth like that)
-*** TODO Take care of TODOs in org-present config.
-*** TODO Add "SPC j" prefix for "jump" and then put jump/goto commands under that?.
-Or, go for "SPC g" and move magit to "SPC a g"? I think I should move magit there in any case, to free up "SPC g".
-Stuff I could put under "SPC j" (or "SPC g") is avy/ace jumping around the file/window, stuff like "counsel-imenu" that lets me move around the definitions in file, ... .
-Hm or it could even be "SPC n" for navigation? Maybe that is the best one, it is broad and niche enough at the same time.
-Of course I would still keep some specific navigation like window or buffer under buffer/window prefixes, while I would put more general stuff here.
-Or, maybe I don't need "SPC j" and I should just organize navigating by domain? So jumping around file -> under "SPC f". Jumping around the window -> under "SPC w". Counsel-imenu -> under "SPC b" or "SPC f".
+** A must
+*** TODO Set up Company, Flycheck, LSP and LSP-UI.
 
-*** TODO Make is so that init.el and early-init.el are read only by default?
-I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
-make them read only by default.
-*** DONE Organize general.el, which-key, hydra, evil under Keybindings header.
-*** DONE How to split use-package into multiple blocks, in Org babel blocks?
- - SO: including snippets: https://emacs.stackexchange.com/questions/78624/splitting-use-package-declarations-in-literate-config
- - System Crafters: they use =(with-eval-after-load 'some-package ...)= to do extra config stuff. This is most reasonable solution probably.
-*** TODO Check out how System Crafters organized their Emacs.org
-*** TODO Learn some Org keybindings / tricks
-- [ ] How can I easily hide / fold / show current header and its parents?
-- [ ] How can I easily navigate through headers?
-- [ ] How can I increase/decreaese level of whole hierarchy/region of headers?
-      A: Seems like that is done with M-<left> or M-<right>
-*** TODO Improve my Org faces / look.
-- [ ] Better way to communicate that header is collapsed (something more visible than three dots).
-- [ ] Give a try at non-monospace font for not-code (check System Crafters video).
-   - Fixed-pitch font: JetBrains Mono, light weight.
-   - Variable-pitch font: Iosevka Aile, light weight.
-- [ ] Play with toggling org-indent and org-bullets.
+Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
+
+*** TODO Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
+*** TODO Write down following next to lsp-mode
+I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
+
+*** TODO Set up TypeScript (TS) support
+
+- https://www.reddit.com/r/emacs/s/1WdZ4AXxhi
+
+*** TODO Set up Haskell support
+*** TODO Set up AI support
+- GPTel
+- Elysium
+- Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/)
+- chatgpt-shell
+- evedel
+- copilot.el
+- Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
+- https://www.reddit.com/r/emacs/s/g5deSIDOUZ
+- https://www.reddit.com/r/emacs/s/tSCyJdXkJW
+- RAG in emacs: https://www.reddit.com/r/emacs/s/YSoLgzSuRd
+- https://www.reddit.com/r/emacs/s/6hlCzJ8GQq
+- Should I look into using PrivateGPT? With RAG that has Wasp docs in it for example?
+  
+** Should do
+*** TODO Take care of the temporary files being created by emacs and undo.
+*** TODO Add whitespace mode (or smth like that)
+*** TODO Figure out how to pin down package versions (lockfile / freezing).
+
+Search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
+
+*** TODO Add a nice splash screen
+
+With recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
+
+*** TODO I will want some way to easily restore where I stopped working.
+
+Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
+
+*** TODO Go through my spacemacs config and copy stuff I liked from there.
+*** TODO Take care of TODOs in org-present config.
 *** TODO Set up shell, below is my spacemacs setup:
 
 ;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
@@ -1737,54 +1789,8 @@ make them read only by default.
     spacemacs-vterm-history-file-location "~/.bash_history"
     )
 
-*** TODO Enable that new smooth/pixel scroll setting in emacs?
-*** TODO Go through my spacemacs config and copy stuff I liked from there.
-*** TODO Take a look at dogears.el -> sounds potentially useful, not sure though.
-*** DONE Use native installation of emacs.
-*** TODO Set up Company, Flycheck, LSP and LSP-UI.
-
-Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
-
-*** TODO Set up TypeScript (TS) support
-
-- https://www.reddit.com/r/emacs/s/1WdZ4AXxhi
-
-*** TODO Set up Haskell support
-*** TODO Take care of the temporary files being created by emacs and undo.
-*** TODO Add some of the temporary files to the .gitignore.
-*** TODO Add a nice splash screen
-
-With recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
-
-*** TODO I will want some way to easily restore where I stopped working.
-
-Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
-
-*** TODO Figure out how to pin down package versions (lockfile / freezing).
-
-Search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
-
-*** TODO Use smartparens or electric-pair-mode?
-*** TODO Set up AI support.
-
-- GPTel
-- Elysium
-- Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/)
-- chatgpt-shell
-- evedel
-- copilot.el
-- Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
-- https://www.reddit.com/r/emacs/s/g5deSIDOUZ
-- https://www.reddit.com/r/emacs/s/tSCyJdXkJW
-- RAG in emacs: https://www.reddit.com/r/emacs/s/YSoLgzSuRd
-
-*** TODO Try using command pallete
-Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.
-So instead of showing everything down there in the minibuffer, show some stuff in the command pallete at the top / middle of the screen.
-I am not sure if I will like this or not, but I think it is worth trying it out.
-- ivy-posframe package -> just for ivy completions
-- emacs-miniframe -> for anything happening in the minibuffer
-*** TODO Try Nano theme.
+*** TODO Stop that custom block from appearing at the end of this file.
+*** TODO Look into workgroups
 *** DONE Implement transient yanking
 So I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
 There is counsel-yank-pop, to nicely choose from the kill ring.
@@ -1793,18 +1799,53 @@ In spacemacs, it activates Pasting Transient State, where [C-j/C-k] cycles throu
 I really need only cycling.
 Maybe I can just offer a hydra that has one key, maybe "/", that opens counsel-yank-pop. That way, "p/" becomes "advanced" yank. It could also offer C-j and C-k next to it.
 Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives next (evil-paste-pop-next), that is evil thing. But it is not hydra. So maybe just make a hydra that mentions these + a way to start counsel-yank-pop.
+*** DONE Use native installation of emacs.
+*** DONE Organize general.el, which-key, hydra, evil under Keybindings header.
+*** DONE How to split use-package into multiple blocks, in Org babel blocks?
+ - SO: including snippets: https://emacs.stackexchange.com/questions/78624/splitting-use-package-declarations-in-literate-config
+ - System Crafters: they use =(with-eval-after-load 'some-package ...)= to do extra config stuff. This is most reasonable solution probably.
 
-*** TODO Stop that custom block from appearing at the end of this file.
-*** TODO Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
-*** TODO Write down following next to lsp-mode
-I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
+** Going beyond
+*** TODO Check out Prot's basic [[https://protesilaos.com/codelog/2024-11-28-basic-emacs-configuration/][emacs config]]
+*** TODO Try using command pallete
+Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.
+So instead of showing everything down there in the minibuffer, show some stuff in the command pallete at the top / middle of the screen.
+I am not sure if I will like this or not, but I think it is worth trying it out.
+- ivy-posframe package -> just for ivy completions
+- emacs-miniframe -> for anything happening in the minibuffer
+*** TODO Try Nano theme.
+*** TODO Enable that new smooth/pixel scroll setting in emacs?
+*** TODO Use smartparens or electric-pair-mode?
+*** TODO Take a look at dogears.el -> sounds potentially useful, not sure though.
+*** TODO Make is so that init.el and early-init.el are read only by default?
+I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
+make them read only by default.
+*** TODO Check out how System Crafters organized their Emacs.org
+*** TODO Learn some Org keybindings / tricks
+- [ ] How can I easily hide / fold / show current header and its parents?
+- [ ] How can I easily navigate through headers?
+- [ ] How can I increase/decreaese level of whole hierarchy/region of headers?
+      A: Seems like that is done with M-<left> or M-<right>
+*** TODO Improve my Org faces / look.
+- [ ] Better way to communicate that header is collapsed (something more visible than three dots).
+- [ ] Give a try at non-monospace font for not-code (check System Crafters video).
+   - Fixed-pitch font: JetBrains Mono, light weight.
+   - Variable-pitch font: Iosevka Aile, light weight.
+- [ ] Play with toggling org-indent and org-bullets.
+*** TODO Add "SPC j" prefix for "jump" and then put jump/goto commands under that?.
+Or, go for "SPC g" and move magit to "SPC a g"? I think I should move magit there in any case, to free up "SPC g".
+Stuff I could put under "SPC j" (or "SPC g") is avy/ace jumping around the file/window, stuff like "counsel-imenu" that lets me move around the definitions in file, ... .
+Hm or it could even be "SPC n" for navigation? Maybe that is the best one, it is broad and niche enough at the same time.
+Of course I would still keep some specific navigation like window or buffer under buffer/window prefixes, while I would put more general stuff here.
+Or, maybe I don't need "SPC j" and I should just organize navigating by domain? So jumping around file -> under "SPC f". Jumping around the window -> under "SPC w". Counsel-imenu -> under "SPC b" or "SPC f".
 
 *** TODO Look into [[https://github.com/karthink/popper][popper]] -> specify which buffers should appear in a popup
-*** TODO Look into workgroups
 *** TODO Does emacs have this thing where you can easily get a list of keybindings to do stuff specific for current major mode?
 I think it is something like "." or ","? If yes, copy that if I can, if not, it would be nice to have that, or if not that, then some other way where I can easily figure out the main commands for this major mode (e.g. org). I konw there is C-h m, but that has too much noise for me usually.
 I know that some modes (e.g. Org) have keymaps, and I see Orgs keymap mapped to C-c. Maybe that is it, the convention? I just need to add additional map to what C-c maps to?
 
+*** TODO Check this emacs eyecandy post for good ideas
+https://lmno.lol/alvaro/my-emacs-eye-candy
 *** TODO Hint system
 I would love to show some kind of hints in certain situations. Couple of useful keybindings when I am in some context. Kind of like Helm in Spacemacs shows it at that footer it has. Maybe some text also.
 But for Ivy. Also, for stuff like company when in completion popup, to remind me of C-s and C-M-s. What if I had an area in my emacs where contextual tips are shown as you do some actions?
@@ -1837,4 +1878,3 @@ works best with the rest of the stuff above, so it kind of pulls one another hm,
 
 *** TODO Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
 *** TODO Read more about other [[https://www.reddit.com/r/emacs/comments/1gux2bi/org_search_vs_organization/?share_id=f51nt5J93w5gxGj6rjjqm&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10][people's org workflows]]: 
-
