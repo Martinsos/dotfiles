@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-11-29 00:58:44 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-02 22:24:01 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -809,6 +809,7 @@ USAGE:
         (org-todo-keyword-faces
          '(("EPIC" . (:foreground "orchid" :weight bold))
            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+           ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
 	  )
         )

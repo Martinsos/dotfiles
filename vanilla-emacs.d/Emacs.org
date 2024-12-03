@@ -1088,6 +1088,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
           (org-todo-keyword-faces
            '(("EPIC" . (:foreground "orchid" :weight bold))
              ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+             ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
              ("CHKL" . (:foreground "grey" :weight bold))
   	  )
           )
@@ -1806,6 +1807,7 @@ Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives 
  - System Crafters: they use =(with-eval-after-load 'some-package ...)= to do extra config stuff. This is most reasonable solution probably.
 
 ** Going beyond
+*** TODO Read [[https://www.reddit.com/r/emacs/s/mnpkOjzbOT][Article with nice explanation of IDE packages (lsp, dap, ...)]]
 *** TODO Check out Prot's basic [[https://protesilaos.com/codelog/2024-11-28-basic-emacs-configuration/][emacs config]]
 *** TODO Try using command pallete
 Similar to what VSCode has, and Sublime Text made popular. Also similar to vim telescope.
@@ -1817,6 +1819,7 @@ I am not sure if I will like this or not, but I think it is worth trying it out.
 *** TODO Enable that new smooth/pixel scroll setting in emacs?
 *** TODO Use smartparens or electric-pair-mode?
 *** TODO Take a look at dogears.el -> sounds potentially useful, not sure though.
+*** TODO symbol-overlay, multiple-cursors, and their [[https://lmno.lol/alvaro/its-all-up-for-grabs-and-it-compounds][combo]].
 *** TODO Make is so that init.el and early-init.el are read only by default?
 I could, in org-mode-hook, check buffer-file-name, and if it is one of these two files,
 make them read only by default.
