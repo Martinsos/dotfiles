@@ -1,5 +1,5 @@
 #+TITLE: My Vanilla Emacs Configuration
-#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes :results none
 #+STARTUP: fold
 
 * Lexical binding
@@ -819,6 +819,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       '((emacs-lisp . t)
         (python . t))
     )
+
+    (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluation a block.
   )
 
 #+end_src
@@ -967,7 +969,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
 #+end_src
 
-*** Agenda custom commands
+*** COMMENT Agenda custom commands
 
 #+begin_src emacs-lisp
 
@@ -977,8 +979,13 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
          (;; The main view: a list of tasks for today.
   	(agenda ""
   		((org-agenda-span 'day)
-  		 (org-agenda-prefix-format " %12s %5e ")
-  		 (org-agenda-sorting-strategy '(todo-state-down priority-down scheduled-up urgency-down))
+  		 (org-agenda-prefix-format " %12s %5e %?-12t")
+  		 (org-agenda-sorting-strategy '(time-up todo-state-down priority-down scheduled-up urgency-down))
+                   (org-agenda-time-grid '((daily today remove-match)
+  					 (800 1000 1200 1400 1600 1800 2000)
+                                           " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+  			                )
+                   )
   		 (org-habit-show-all-today t)
   		 (org-super-agenda-groups
   		  '(;; Repeating tasks to be done every day, including today.
@@ -986,69 +993,24 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   			    :and (:category "dc"
   				  :not (:log t))
   		    )
-  		    ;; Tasks to be done today.
-  		    (:name "Todo"
+                      (:name "Todo"
+  		            :and (:time-grid t :not (:log t))
+  		    )
+  		    (:name "                   ----"
   			    :and (:category "task"
   				  :scheduled t
   				  :not (:log t))
   		    )
-  		    ;; Tasks that were done today.
-  		    (:name "Todo (DONE)"
+                      ;; Discard "closed" logs for items scheduled for today because they will be shown
+  		    ;; as done already above, so we don't want to repeat it.
+                      (:discard (:and (:scheduled today :log closed)))
+  		    (:name none
   			    :and (:category "task"
   				  :log closed)
   		    )
-  		    (:discard (:time-grid t ; because we show time-grid below, separately
-  				:log clocked ; because we show these below, separately
-  			      )
-  		    )
-  		    )
-  		 )
-  		)
-  	)
-  	(alltodo ""
-  		 ((org-agenda-overriding-header "")
-  		  (org-agenda-prefix-format "       ")
-  		  (org-super-agenda-groups
-  		   '((:name "Notes"
-  			    :category "note"
-  		     )
-  		     (:discard (:anything t))
-  		    )
-  		  )
-  		 )
-  	)
-  	;; Time schedule: timeline with any items that have a specific time scheduled for today.
-  	(agenda ""
-  		((org-agenda-span 'day)
-  		 (org-agenda-overriding-header "")
-  		 (org-agenda-prefix-format " %12s %5e %?-12t")
-  		 ;; Below we discard logs and instead keep done tasks with schedule / deadline, that is what is interesting on the time grid.
-  		 (org-agenda-skip-scheduled-if-done nil)
-  		 (org-agenda-skip-deadline-if-done nil)
-                   (org-agenda-time-grid '((daily today remove-match)
-  					 (800 1000 1200 1400 1600 1800 2000)
-                                           " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
-  			                )
-  		 )
-  		 (org-super-agenda-groups
-  		  '((:name "Time schedule"
-  		           :and (:time-grid t :not (:log t))
-  		    )
-  		    (:discard (:anything t))
-  		   )
-  		 )
-  		)
-  	)
-  	;; Clock log: list of all the clock entries for today.
-  	(agenda ""
-  		((org-agenda-span 'day)
-  		 (org-agenda-overriding-header "")
-  		 (org-agenda-prefix-format " %12s %5e %?-12t")
-  		 (org-super-agenda-groups
-  		  '((:name "Clock log"
+  		    (:name "Clock log"
   	                   :log clocked
   		    )
-  		    (:discard (:anything t))
   		   )
   		 )
   		)
@@ -1057,11 +1019,14 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   		 ((org-agenda-overriding-header "")
   		  (org-agenda-prefix-format " %5e ")
   		  (org-super-agenda-groups
-  		   '((:discard (:scheduled t :deadline t :time-grid t))
+  		   '((:name "Notes"
+    			    :category "note"
+    		     )
+  		     (:discard (:scheduled t :deadline t :time-grid t))
   		     (:name "All tasks with no schedule / deadline"
   			    :category "task"
-  		      )
-  		      (:discard (:anything t))
+  		     )
+  		     (:discard (:anything t))
   		    )
   		  )
   		 )
@@ -1073,8 +1038,6 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
   	;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
   	(org-agenda-start-with-log-mode '(closed clock))
-  	(org-agenda-skip-scheduled-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
-  	(org-agenda-skip-deadline-if-done t) ; Skipping because log-mode will show them already, so we would have duplicates.
 
   	;; Org agenda shows both scheduled and deadline entries for an item, when available.
   	;; I don't want that, so this way I avoid having both.
