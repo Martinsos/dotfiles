@@ -978,7 +978,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   	(agenda ""
   		((org-agenda-span 'day)
   		 (org-agenda-prefix-format " %12s %5e ")
-  		 (org-agenda-sorting-strategy '(todo-state-down scheduled-up priority-down urgency-down effort-down))
+  		 (org-agenda-sorting-strategy '(todo-state-down priority-down scheduled-up urgency-down))
   		 (org-habit-show-all-today t)
   		 (org-super-agenda-groups
   		  '(;; Repeating tasks to be done every day, including today.
@@ -1591,8 +1591,52 @@ Turns any org document into a presentation! Each top-level header is one slide.
 
 #+end_src
 
+** TODO Find a way to also show additional docs next to each item. E.g. company-box
+But company-box currently overrides my setting for company-text-icons-mapping with its icons and is for some reason slow.
+
 ** Cheatsheet :cheatsheet:
 - C-s to search among the candidates. C-M-s to not just highlight but also filter. C-g to quit search mode.
+  
+* Development
+
+** LSP
+
+#+begin_src emacs-lisp
+  (defun my/lsp-mode-setup ()
+    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    (lsp-headerline-breadcrumb-mode)
+  )
+
+  (use-package lsp-mode
+    :commands (lsp lsp-deferred)
+    :hook (lsp-mode . my/lsp-mode-setup)
+    :init
+    (setq lsp-keymap-prefix "C-c l") ;; TODO: Check spacemacs -> I think they used just '.' or ','?
+    :config
+    (lsp-enable-which-key-integration t)
+  )
+
+  (use-package lsp-ui
+    :hook (lsp-mode . lsp-ui-mode)
+  )
+#+end_src
+
+*** TODO LSP's completion-at-point -> how to get that working with Company properly?
+*** TODO Set up Flycheck and use it instead of Flymake
+
+** TypeScript
+
+
+#+begin_src emacs-lisp
+  (use-package typescript-mode
+    :mode "\\.ts\\'"
+    :hook (typescript-mode . lsp-deferred)
+    :config
+    (setq typescript-indent-level 2)
+  )
+#+end_src
+
+*** TODO Follow this reddit guide on how to set up IDE for TypeScript:  https://www.reddit.com/r/emacs/comments/1dwl8v0/modern_emacs_typescript_web_react_config_with/ 
 
 * Misc
 

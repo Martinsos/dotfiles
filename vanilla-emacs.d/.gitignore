@@ -8,3 +8,5 @@
 /transient/
 /games/
 /eshell/
+/.cache/
+/.lsp-session-v*

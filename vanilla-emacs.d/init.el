@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-02 22:24:01 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-06 12:13:16 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -699,7 +699,7 @@ USAGE:
 	(agenda ""
 		((org-agenda-span 'day)
 		 (org-agenda-prefix-format " %12s %5e ")
-		 (org-agenda-sorting-strategy '(todo-state-down scheduled-up priority-down urgency-down effort-down))
+		 (org-agenda-sorting-strategy '(todo-state-down priority-down scheduled-up urgency-down))
 		 (org-habit-show-all-today t)
 		 (org-super-agenda-groups
 		  '(;; Repeating tasks to be done every day, including today.
@@ -1221,6 +1221,31 @@ USAGE:
   )
   :config
   (global-company-mode 1)
+)
+
+(defun my/lsp-mode-setup ()
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  (lsp-headerline-breadcrumb-mode)
+)
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . my/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-c l") ;; TODO: Check spacemacs -> I think they used just '.' or ','?
+  :config
+  (lsp-enable-which-key-integration t)
+)
+
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode)
+)
+
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  (setq typescript-indent-level 2)
 )
 
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
