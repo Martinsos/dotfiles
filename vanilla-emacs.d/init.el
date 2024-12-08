@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-08 00:32:06 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-08 21:38:16 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -691,6 +691,155 @@ USAGE:
 
     "+" 'org-agenda-manipulate-query-add
     "-" 'org-agenda-manipulate-query-subtract
+  )
+)
+
+(with-eval-after-load 'org
+  (defun make-work-diary-command (cmd-key cmd-name cmd-start-day)
+    `(,cmd-key ,cmd-name
+       (;; The main view: a list of tasks for today.
+	(agenda ""
+		((org-agenda-span 'day)
+		 (org-agenda-prefix-format " %12s %5e %?-12t")
+		 (org-agenda-sorting-strategy '(time-up todo-state-down priority-down scheduled-up urgency-down))
+                 (org-agenda-time-grid '((daily today remove-match)
+					 (800 1000 1200 1400 1600 1800 2000)
+                                         " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+			                )
+                 )
+		 (org-habit-show-all-today t)
+		 (org-super-agenda-groups
+		  '(;; Repeating tasks to be done every day, including today.
+		    (:name "Daily Checklist"
+			    :and (:category "dc"
+				  :not (:log t))
+		    )
+                    (:name "Todo"
+		            :and (:time-grid t :not (:log t))
+		    )
+		    (:name "                   ----"
+			    :and (:category "task"
+				  :scheduled t
+				  :not (:log t))
+		    )
+                    ;; Discard "closed" logs for items scheduled for today because they will be shown
+		    ;; as done already above, so we don't want to repeat it.
+                    (:discard (:and (:scheduled today :log closed)))
+		    (:name none
+			    :and (:category "task"
+				  :log closed)
+		    )
+		    (:name "Clock log"
+	                   :log clocked
+		    )
+		   )
+		 )
+		)
+	)
+	(alltodo ""
+		 ((org-agenda-overriding-header "")
+		  (org-agenda-prefix-format " %5e ")
+		  (org-super-agenda-groups
+		   '((:name "Notes"
+  			    :category "note"
+  		     )
+		     (:discard (:scheduled t :deadline t :time-grid t))
+		     (:name "All tasks with no schedule / deadline"
+			    :category "task"
+		     )
+		     (:discard (:anything t))
+		    )
+		  )
+		 )
+	)
+       )
+       ((org-agenda-files '("~/Dropbox/work-diary.org"))
+
+	(org-agenda-start-day ,cmd-start-day)
+
+	;; Starts agenda log mode, which means that special extra "log" entries are added to agenda, in this logs about closing an entry and logs about clocking an entry. I could also have added 'state' if needed. I track "closed" logs in order to ensure that entries that are DONE but have been scheduled in the past are shown in agenda (normally they are not). What is not great is that they are not normal but special log entries which are a bit different, so a bit harder to organize.
+	(org-agenda-start-with-log-mode '(closed clock))
+
+	;; Org agenda shows both scheduled and deadline entries for an item, when available.
+	;; I don't want that, so this way I avoid having both.
+	;; Instead, if before deadline, scheduled item is shown, but deadline warning is not.
+	;; And if after deadline, only item with deadline delay is shown, not the one with scheduled delay.
+	;; The only thing there was no way to configure is to avoid showing both scheduled and deadline entries
+	;; on the day of the deadline itself, so in that case both are shown, but ok I can live with that.
+	(org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+	(org-agenda-skip-scheduled-repeats-after-deadline t)
+
+        (org-todo-keyword-faces
+         '(("EPIC" . (:foreground "orchid" :weight bold))
+           ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+           ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
+           ("CHKL" . (:foreground "grey" :weight bold))
+	  )
+        )
+       )
+    )
+  )
+
+  (setq org-agenda-custom-commands
+	(list
+	 (make-work-diary-command "W" "Work Diary (tomorrow)" "+1d")
+
+	 (make-work-diary-command "w" "Work Diary"            nil)
+
+         '("p" "Private Todo"
+	   (;; The main view: a list of tasks for today.
+	    (agenda ""
+		    ((org-agenda-span 'day)
+                     (org-agenda-prefix-format " %12s %5e ")
+		     (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
+		     (org-habit-show-all-today t)
+                     (org-super-agenda-groups
+		      '((:name "Habits"
+                               :and (:category "habit"
+                                     :not (:log t))
+			)
+			;; Tasks to be done today.
+                        (:name "Todo"
+                               :and (:category "task"
+				     :scheduled t
+				     :not (:scheduled future)
+				     :not (:log t))
+			)
+			;; Tasks that were done today.
+                        (:name none
+                               :and (:category "task"
+                                     :log closed)
+			)
+		       )
+                     )
+		    )
+            )
+            ;; All tasks without a schedule or a deadline.
+            (alltodo ""
+                     ((org-agenda-overriding-header "")
+                      (org-agenda-prefix-format " %5e ")
+		      (org-super-agenda-groups
+                       '((:discard (:scheduled t :deadline t :time-grid t))
+                         (:name "All tasks with no schedule / deadline"
+                                :category "task"
+                         )
+			 (:discard (:anything t))
+		        )
+		      )
+                     )
+	    )
+	   )
+	   ((org-agenda-files '("~/Dropbox/private-todo.org"))
+
+	    (org-agenda-start-with-log-mode '(closed clock))
+            (org-agenda-skip-scheduled-if-done t)
+            (org-agenda-skip-deadline-if-done t)
+
+            (org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+            (org-agenda-skip-scheduled-repeats-after-deadline t)
+	   )
+	  )
+	 )
   )
 )
 

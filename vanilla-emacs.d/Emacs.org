@@ -969,7 +969,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
 #+end_src
 
-*** COMMENT Agenda custom commands
+*** Agenda custom commands
 
 #+begin_src emacs-lisp
 
