@@ -1629,7 +1629,7 @@ LSP as a general protocol has some of its own nomenclature. Some of it that is u
 Rough summary how my configuration currently displays all this info:
  - Parts of code with diagnostics are marked with **squiggly lines** (by Flycheck).
  - **Short version of hover** info for a symbol is shown on cursor/mouse, in the minibuffer (by ~eldoc~).
- - **Full version of hover** info for a symbol under cursor is displayed in a popup, on demand, which I trigger with "?" (by ~lsp-ui-doc~).
+ - **Full version of hover** info for a symbol under cursor is displayed in a popup, on demand, which I trigger with "K" or "?" (by ~lsp-ui-doc~).
  - Full info on **diagnostics** for a symbol is shown on cursor/mouse (by ~flycheck~, in a popup).
  - Only "quickfix" **code actions** for a symobl are shown on cursor/mouse, on the right side of the screen next to the code (by ~lsp-ui-sideline~).
 
@@ -1638,6 +1638,7 @@ Rough summary how my configuration currently displays all this info:
   (use-package lsp-mode
     :init
     (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
+    (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
     :hook (lsp-mode . lsp-enable-which-key-integration)
     :commands (lsp lsp-deferred)
     :custom
@@ -1659,7 +1660,15 @@ Rough summary how my configuration currently displays all this info:
     ;; At the top of the file, show info about the position of the cursor (path, module, symbol, ...).
     (lsp-headerline-breadcrumb-enable t)
     (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+
+    (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
   )
+
+#+end_src
+
+#+begin_src emacs-lisp :tangle ./early-init.el
+
+  (setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization.
 
 #+end_src
 
@@ -1672,6 +1681,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 #+begin_src emacs-lisp
 
   (use-package lsp-ui
+    :after (lsp-mode evil)
     :commands lsp-ui-mode
     :custom
     ;; Show "hover" documentation for a thing under cursor/pointer in a popup.
@@ -1683,6 +1693,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
     (lsp-ui-doc-show-with-mouse t)
     ;; Show the docs next to the cursor/point.
     (lsp-ui-doc-position 'at-point)
+    (lsp-ui-doc-include-signature t)
 
     ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)
     ;; on the right side of the window, inline with the code.
@@ -1700,7 +1711,10 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
     :config
     (general-define-key :states '(normal visual)
                         :keymaps 'lsp-mode-map
-                        "?" 'lsp-ui-doc-toggle) ; TODO: This is sometimes being overshadowed with ? from evil mode, fix that.
+                        "?" 'lsp-ui-doc-glance ; TODO: This is sometimes being overshadowed with ? from evil mode, fix that.
+                        "F" 'lsp-ui-doc-focus-frame
+    ) 
+    (setq evil-lookup-func 'lsp-ui-doc-glance)
   )
 
 #+end_src
@@ -1718,8 +1732,27 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 
 #+end_src
 
+*** TODO Use lsp-booster
+- https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config#orgf6d33f7 -> search for lsp-booster
 *** TODO LSP's completion-at-point -> how to get that working with Company properly?
-*** TODO Write a blog post explaining this setup, since I am sure others are also confused.
+- https://emacs-lsp.github.io/lsp-mode/page/settings/completion/ -> useful?
+** TODO Set up Treesitter?
+Treesitter is for syntax highlighting / process what is LSP for semantic understanding of the code.
+You could say that Treesitter brings syntax-level understanding, while LSP brings semantic-level understanding.
+Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language.
+
+- Emacs 29 brings its own built-in treesitter package and I see that I have it in my installation of emacs.
+  What is left though is to tell it which grammars to pull for which language, and then also to get the major language modes to use the treesitter for their specific languages.
+  - https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
+  - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config#orgf6d33f7
+- It does seem that getting it to work for Haskell won't be easy, haskell-mode doesn't know how to use treesitter,
+and haskell-ts-mode, which is a new mode that somebody made that should replace haskell-mode but with ts support,
+has much less features than haskell-mode and is less mature. But maybe that is ok and worth trying? Do I use any of
+advanced haskell-mode features anyway?
+  - https://codeberg.org/pranshu/haskell-ts-mode
+
+Maybe using treesitter is not so urgent and I should wait for better support in popular major modes.
+
 ** TypeScript
 NOTE: I chose ts-ls as a language server, when asked.
 
@@ -1734,6 +1767,42 @@ NOTE: I chose ts-ls as a language server, when asked.
 
 *** TODO Follow this reddit guide on how to set up IDE for TypeScript:  https://www.reddit.com/r/emacs/comments/1dwl8v0/modern_emacs_typescript_web_react_config_with/ 
 
+*** TODO Add support for TSX
+- There is tsx-mode.el.
+- There is tide.
+- Check what they do in Spacemacs/Doomemacs.
+** Haskell
+
+#+begin_src emacs-lisp
+
+  (use-package haskell-mode
+    :hook
+    (haskell-mode . lsp-deferred)
+    (haskell-literate-mode . lsp-deferred)
+    :custom
+    (haskell-indentation-layout-offset 4)
+    (haskell-indentation-starter-offset 4)
+    (haskell-indentation-left-offset 4)
+    (haskell-indentation-where-pre-offset 2)
+    (haskell-indentation-where-post-offset 2)
+  )
+
+  ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
+  (use-package lsp-haskell)
+
+  ;; NOTE: Requires ormolu to be installed on the machine.
+  (use-package ormolu
+    :hook (haskell-mode . ormolu-format-on-save-mode)
+  )
+
+#+end_src
+
+*** Cheatsheet :cheatsheet:
+- haskell-mode brings interactive mode where you get a ghci session in which you can easily load specific files and run stuff from them. To start it, run `interactive-haskell-mode`. File is added to it by ~haskell-process-load-file~ while in a Haskell file buffer.
+- Haskell mode registers its keymap under "C-c", so check that for common commands.
+
+** TODO Web (HTML, CSS, ...)
+  - Check what they do in Spacemacs/Doomemacs.
 * Misc
 
 #+begin_src emacs-lisp
@@ -1880,9 +1949,8 @@ Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so th
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
 
 *** TODO Set up TypeScript (TS) support
-
-- https://www.reddit.com/r/emacs/s/1WdZ4AXxhi
-
+https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
+- especially the treesitter!
 *** TODO Set up Haskell support
 *** TODO Set up AI support
 - GPTel

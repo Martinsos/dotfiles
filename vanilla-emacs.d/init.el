@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-14 16:14:14 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-14 23:59:04 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -1227,6 +1227,7 @@ USAGE:
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
+  (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
   :hook (lsp-mode . lsp-enable-which-key-integration)
   :commands (lsp lsp-deferred)
   :custom
@@ -1248,9 +1249,12 @@ USAGE:
   ;; At the top of the file, show info about the position of the cursor (path, module, symbol, ...).
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+
+  (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
 )
 
 (use-package lsp-ui
+  :after (lsp-mode evil)
   :commands lsp-ui-mode
   :custom
   ;; Show "hover" documentation for a thing under cursor/pointer in a popup.
@@ -1262,6 +1266,7 @@ USAGE:
   (lsp-ui-doc-show-with-mouse t)
   ;; Show the docs next to the cursor/point.
   (lsp-ui-doc-position 'at-point)
+  (lsp-ui-doc-include-signature t)
 
   ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)
   ;; on the right side of the window, inline with the code.
@@ -1279,7 +1284,10 @@ USAGE:
   :config
   (general-define-key :states '(normal visual)
                       :keymaps 'lsp-mode-map
-                      "?" 'lsp-ui-doc-toggle) ; TODO: This is sometimes being overshadowed with ? from evil mode, fix that.
+                      "?" 'lsp-ui-doc-glance ; TODO: This is sometimes being overshadowed with ? from evil mode, fix that.
+                      "F" 'lsp-ui-doc-focus-frame
+  ) 
+  (setq evil-lookup-func 'lsp-ui-doc-glance)
 )
 
 ;; Brings lsp-ivy-workspace-symbol that searches for a symbol in project as you type its name.
@@ -1294,6 +1302,26 @@ USAGE:
   :hook (typescript-mode . lsp-deferred)
   :config
   (setq typescript-indent-level 2)
+)
+
+(use-package haskell-mode
+  :hook
+  (haskell-mode . lsp-deferred)
+  (haskell-literate-mode . lsp-deferred)
+  :custom
+  (haskell-indentation-layout-offset 4)
+  (haskell-indentation-starter-offset 4)
+  (haskell-indentation-left-offset 4)
+  (haskell-indentation-where-pre-offset 2)
+  (haskell-indentation-where-post-offset 2)
+)
+
+;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
+(use-package lsp-haskell)
+
+;; NOTE: Requires ormolu to be installed on the machine.
+(use-package ormolu
+  :hook (haskell-mode . ormolu-format-on-save-mode)
 )
 
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
