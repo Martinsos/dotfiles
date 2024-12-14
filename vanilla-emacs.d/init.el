@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-08 21:38:16 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-14 02:39:04 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -175,6 +175,9 @@ USAGE:
   (global-hl-line-mode 1) ; Highlights the line in which cursor is.
   (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
   (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
+
+  (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
+  (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -331,6 +334,11 @@ USAGE:
     "bp"  '(hydra-buffer-next-prev/previous-buffer :which-key "previous buffer")
     "bn"  '(hydra-buffer-next-prev/next-buffer :which-key "next buffer")
     "br"  '(revert-buffer :which-key "reload buffer")
+
+    "e"   '(:ignore t :which-key "errors")
+    "en"  '(flycheck-next-error :which-key "next")
+    "ep"  '(flycheck-previous-error :which-key "previous")
+    "el"  '(flycheck-list-errors :which-key "list")
 
     "f"   '(:ignore t :which-key "files")
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
@@ -546,6 +554,16 @@ USAGE:
   :after (org)
 )
 
+; Colors tags in org mode with "random" colors based on their string hash.
+(use-package org-rainbow-tags
+  :after (org)
+  :hook (org-mode . org-rainbow-tags-mode)
+  :custom
+  (org-rainbow-tags-extra-face-attributes
+   ;; Default is '(:weight 'bold)
+   '(:inverse-video t :weight 'bold))
+)
+
 (use-package evil-org
   :after org
   :hook (org-mode . (lambda () evil-org-mode))
@@ -724,6 +742,10 @@ USAGE:
 		    )
                     ;; Discard "closed" logs for items scheduled for today because they will be shown
 		    ;; as done already above, so we don't want to repeat it.
+		    ;; NOTE: Due to this bug in super-agenda https://github.com/alphapapa/org-super-agenda/issues/42,
+		    ;;   `:scheduled today` works as you would expect only when agenda is actually focused on today,
+		    ;;   because today means the actual day today, not the day that agenda daily view is focusing on.
+                    ;;   Therefore if I look at yesterday, this discarding doesn't work and I get double done entries.
                     (:discard (:and (:scheduled today :log closed)))
 		    (:name none
 			    :and (:category "task"
@@ -1053,7 +1075,6 @@ USAGE:
   (("C-s" . swiper)
     :map evil-normal-state-map
       ("/" . swiper)
-      ("?" . swiper-backward)
   )
 )
 
@@ -1144,7 +1165,7 @@ USAGE:
 (use-package company
   :custom
   (company-idle-delay 0.2)
-  (company-minimum-prefix-length 2)
+  (company-minimum-prefix-length 1)
   (company-selection-wrap-around t)
   (company-format-margin-function 'company-text-icons-margin)
   (company-text-face-extra-attributes '(:weight semi-light :slant italic))
@@ -1186,22 +1207,67 @@ USAGE:
   (global-company-mode 1)
 )
 
+(use-package flycheck
+  :init (global-flycheck-mode)
+  :custom
+  (flycheck-display-errors-delay 0.5)
+)
+
+;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
+(use-package flycheck-posframe
+  :after flycheck
+  :custom
+  (flycheck-auto-display-errors-after-checking nil) ; Prevents repeated displaying of errors at point.
+  (flycheck-posframe-border-width 10)
+  :config
+  (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
+  (flycheck-posframe-configure-pretty-defaults)
+)
+
 (defun my/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   (lsp-headerline-breadcrumb-mode)
+  (lsp-enable-which-key-integration t)
 )
 
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
   :hook (lsp-mode . my/lsp-mode-setup)
   :init
-  (setq lsp-keymap-prefix "C-c l") ;; TODO: Check spacemacs -> I think they used just '.' or ','?
+  (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
   :config
-  (lsp-enable-which-key-integration t)
 )
+
+;; Brings lsp-ivy-workspace-symbol that searches for a symbol in project as you type its name.
+;; TODO: Add a keybinding, under lsp-keymap-prefix, for this command, I guess under goto?
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  ;; TODO: Configure stuff!
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-show-with-cursor nil) ; I instead below define "?" as a key for toggling it.
+  (lsp-ui-doc-show-with-mouse t)
+  (lsp-ui-doc-position 'at-point) ; Where to show docs upon hovering with cursor.
+
+  ;; I disable sideline because it becomes a mess if errors are longer and in multiple lines.
+  ;; Instead, diagnostics get shown in the minibuffer.
+  (lsp-ui-sideline-enable nil)
+
+  ;; Useful for languages where compilation might be broken due to errors in other files (e.g. Java, Haskell).
+  (lsp-modeline-diagnostics-enable t)
+  (lsp-modeline-diagnostics-scope :workspace) ; Whole project.
+  (lsp-modeline-code-actions-enable t)
+
+  (lsp-eldoc-enable-hover t)
+  (lsp-eldoc-render-all nil) ; Don't show all info in minibuffer on hover, we can get it via "?" if we need it.
+  :config
+  (general-define-key :states '(normal visual)
+		      :keymaps 'lsp-mode-map
+		      "?" 'lsp-ui-doc-toggle)
 )
 
 (use-package typescript-mode
