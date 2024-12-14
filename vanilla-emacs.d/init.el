@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-14 02:39:04 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-14 16:14:14 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -1210,7 +1210,7 @@ USAGE:
 (use-package flycheck
   :init (global-flycheck-mode)
   :custom
-  (flycheck-display-errors-delay 0.5)
+  (flycheck-display-errors-delay 0.2)
 )
 
 ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
@@ -1224,51 +1224,70 @@ USAGE:
   (flycheck-posframe-configure-pretty-defaults)
 )
 
-(defun my/lsp-mode-setup ()
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  (lsp-headerline-breadcrumb-mode)
-  (lsp-enable-which-key-integration t)
-)
-
 (use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :hook (lsp-mode . my/lsp-mode-setup)
   :init
   (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
+  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :commands (lsp lsp-deferred)
+  :custom
+  ;; lsp-modeline is about showing "stats" in the modeline: number of errors, warnings, code actions.
+  ;; Useful for languages where compilation might be broken due to errors in other files (e.g. Java, Haskell).
+  (lsp-modeline-diagnostics-enable t) ; Show info about diagnostics (errors, warnings, ...) in the modeline.
+  (lsp-modeline-diagnostics-scope :workspace) ; Whole project and not just this file.
+  (lsp-modeline-code-actions-enable t) ; Show info about code actions in the modeline.
+
+  ;; eldoc is the most "native" way for emacs to display docs for a thing under cursor.
+  ;; It displays information about the thing under cursor/mouse in the minibuffer.
+  ;; Here we tell lsp-mode to use eldoc to display "hover" lsp info (which is docs for function/symbol).
+  (lsp-eldoc-enable-hover t)
+  ;; Don't show all the info in minibuffer on hover, instead show only most basic info (what it is, type).
+  ;; Otherwise, there is too much noise and jumping of minibuffer up and down.
+  ;; If I want full docs for a thing under cursor, I will rather summon it manually: I use lsp-ui-docs-toggle for that and have bound it to "?" -> check lsp ui config for details.
+  (lsp-eldoc-render-all nil)
+
+  ;; At the top of the file, show info about the position of the cursor (path, module, symbol, ...).
+  (lsp-headerline-breadcrumb-enable t)
+  (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+)
+
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :custom
+  ;; Show "hover" documentation for a thing under cursor/pointer in a popup.
+  (lsp-ui-doc-enable t)
+  ;; I don't want it to popup constantly as I move around, instead I want to summon it when I need it.
+  ;; That is why below I define "?" as a key for toggling it.
+  (lsp-ui-doc-show-with-cursor nil)
+  ;; If I hover with a mouse, then do show the docs, that is not too intrusive.
+  (lsp-ui-doc-show-with-mouse t)
+  ;; Show the docs next to the cursor/point.
+  (lsp-ui-doc-position 'at-point)
+
+  ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)
+  ;; on the right side of the window, inline with the code.
+  (lsp-ui-sideline-enable t)
+  ;; If diagnostics are longer and in multiple lines, it becomes a mess, it doesn't align them nicely
+  ;; and they are all over the place, really hard to read, which is why I disabled showing diagnostics
+  ;; in the sideline.
+  ;; When you disable it, lsp-mode instead sends diagnostics to flymake/flycheck, which by default show
+  ;; then in the minibuffer.
+  (lsp-ui-sideline-show-diagnostics nil)
+  (lsp-ui-sideline-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
+  (lsp-ui-sideline-show-symbol nil) ; This I didn't find useful.
+  (lsp-ui-sideline-show-code-actions t) ; But I do find it useful to see code actions.
+  (lsp-ui-sideline-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
   :config
+  (general-define-key :states '(normal visual)
+                      :keymaps 'lsp-mode-map
+                      "?" 'lsp-ui-doc-toggle) ; TODO: This is sometimes being overshadowed with ? from evil mode, fix that.
 )
 
 ;; Brings lsp-ivy-workspace-symbol that searches for a symbol in project as you type its name.
-;; TODO: Add a keybinding, under lsp-keymap-prefix, for this command, I guess under goto?
+;; TODO: Add a keybinding, under lsp-keymap-prefix, for this command, I guess under goto? So ", g s"?
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 
+;; Shows list of all errors in a nice treemacs fashion.
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-
-(use-package lsp-ui
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  ;; TODO: Configure stuff!
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-show-with-cursor nil) ; I instead below define "?" as a key for toggling it.
-  (lsp-ui-doc-show-with-mouse t)
-  (lsp-ui-doc-position 'at-point) ; Where to show docs upon hovering with cursor.
-
-  ;; I disable sideline because it becomes a mess if errors are longer and in multiple lines.
-  ;; Instead, diagnostics get shown in the minibuffer.
-  (lsp-ui-sideline-enable nil)
-
-  ;; Useful for languages where compilation might be broken due to errors in other files (e.g. Java, Haskell).
-  (lsp-modeline-diagnostics-enable t)
-  (lsp-modeline-diagnostics-scope :workspace) ; Whole project.
-  (lsp-modeline-code-actions-enable t)
-
-  (lsp-eldoc-enable-hover t)
-  (lsp-eldoc-render-all nil) ; Don't show all info in minibuffer on hover, we can get it via "?" if we need it.
-  :config
-  (general-define-key :states '(normal visual)
-		      :keymaps 'lsp-mode-map
-		      "?" 'lsp-ui-doc-toggle)
-)
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
