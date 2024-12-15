@@ -1694,6 +1694,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
     ;; Show the docs next to the cursor/point.
     (lsp-ui-doc-position 'at-point)
     (lsp-ui-doc-include-signature t)
+    (lsp-ui-doc-max-height 30)
 
     ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)
     ;; on the right side of the window, inline with the code.

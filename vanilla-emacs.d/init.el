@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-14 23:59:04 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-15 13:58:59 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -1267,6 +1267,7 @@ USAGE:
   ;; Show the docs next to the cursor/point.
   (lsp-ui-doc-position 'at-point)
   (lsp-ui-doc-include-signature t)
+  (lsp-ui-doc-max-height 30)
 
   ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)
   ;; on the right side of the window, inline with the code.
