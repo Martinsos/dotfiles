@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-15 13:58:59 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-18 00:14:57 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -187,7 +187,7 @@ USAGE:
   ;; I went with dracula for now. palenight is also nice.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
   ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-  (load-theme 'doom-dracula t)
+  (load-theme 'doom-moonlight t)
 )
 
 ;; TODO: Configure better or use some other modeline.
@@ -796,6 +796,7 @@ USAGE:
            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
+           ("NOTE" . (:foreground "white" :weight bold))
 	  )
         )
        )
@@ -1305,10 +1306,30 @@ USAGE:
   (setq typescript-indent-level 2)
 )
 
+(defun my/lsp-haskell-local-face-setup ()
+  ;; semhl stands for "semantic highlight" -> faces with "semhl" are faces for lsp semantic tokens.
+  ;; By default, lsp-face-semhl-operator just inherits lsp-face-semhl-function, which I found to be a shame.
+  ;; By setting them to keyword face, operators are nicely visible.
+  (face-remap-add-relative 'lsp-face-semhl-operator '(:foregrund unspecified :inherit lsp-face-semhl-keyword))
+  ;; I don't want to differentiate class methods from functions by color, that is just confusing.
+  (face-remap-add-relative 'lsp-face-semhl-method '(:foreground unspecified :inherit lsp-face-semhl-function))
+  ;; haskell-operator-face is used for stuff like `::`, `->` and similar. By default they were the same as
+  ;; variables, I didn't like that so I made them more "boring"/default.
+  (face-remap-add-relative 'haskell-operator-face '(:foreground unspecified :inherit font-lock-default-face))
+  ;; By default haskell keywords (import, where, ...) already are set to font-lock-keyword-face,
+  ;; I just added :weight semi-bold to make them stand out a bit.
+  (face-remap-add-relative 'haskell-keyword-face '(:weight semi-bold :inherit font-lock-keyword-face))
+)
+
+(defun my/haskell-mode-setup ()
+  (lsp-deferred)
+  (add-hook 'lsp-after-open-hook 'my/lsp-haskell-local-face-setup nil t)
+)
+
 (use-package haskell-mode
   :hook
-  (haskell-mode . lsp-deferred)
-  (haskell-literate-mode . lsp-deferred)
+  (haskell-mode . my/haskell-mode-setup)
+  (haskell-literate-mode . my/haskell-mode-setup)
   :custom
   (haskell-indentation-layout-offset 4)
   (haskell-indentation-starter-offset 4)
@@ -1318,7 +1339,11 @@ USAGE:
 )
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
-(use-package lsp-haskell)
+(use-package lsp-haskell
+  :custom
+  ; This brings much more info on how to color syntax. It does make coloring somewhat slower though!
+  (lsp-haskell-plugin-semantic-tokens-global-on t)
+)
 
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu
@@ -1385,12 +1410,6 @@ USAGE:
   :config
   (add-to-list 'global-colorful-modes 'help-mode)
   (global-colorful-mode)
-)
-
-;; It colors each pair of parenthesses into their own color.
-(use-package rainbow-delimiters
-  :hook
-  (prog-mode . rainbow-delimiters-mode)
 )
 
 ;; Brings functions for converting buffer text and decorations to html.
