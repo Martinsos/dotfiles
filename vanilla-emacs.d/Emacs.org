@@ -1784,8 +1784,8 @@ NOTE: I chose ts-ls as a language server, when asked.
     ;; I don't want to differentiate class methods from functions by color, that is just confusing.
     (face-remap-add-relative 'lsp-face-semhl-method '(:foreground unspecified :inherit lsp-face-semhl-function))
     ;; haskell-operator-face is used for stuff like `::`, `->` and similar. By default they were the same as
-    ;; variables, I didn't like that so I made them more "boring"/default.
-    (face-remap-add-relative 'haskell-operator-face '(:foreground unspecified :inherit font-lock-default-face))
+    ;; variables, I didn't like that so I made them same as other operators, which is keyword face.
+    (face-remap-add-relative 'haskell-operator-face '(:foreground unspecified :inherit font-lock-keyword-face))
     ;; By default haskell keywords (import, where, ...) already are set to font-lock-keyword-face,
     ;; I just added :weight semi-bold to make them stand out a bit.
     (face-remap-add-relative 'haskell-keyword-face '(:weight semi-bold :inherit font-lock-keyword-face))
@@ -1933,8 +1933,20 @@ NOTE: I chose ts-ls as a language server, when asked.
 #+end_src
 
 #+begin_src emacs-lisp
+
+  ;; It colors each pair of parenthesses into their own color.
+  (use-package rainbow-delimiters
+    :hook
+    (prog-mode . rainbow-delimiters-mode)
+  )
+
+#+end_src
+
+#+begin_src emacs-lisp
+
   ;; Brings functions for converting buffer text and decorations to html.
   (use-package htmlize)
+
 #+end_src
 
 * Cheatsheet :cheatsheet:

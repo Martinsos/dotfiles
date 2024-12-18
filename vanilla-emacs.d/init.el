@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-18 00:14:57 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-18 01:17:51 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -1314,8 +1314,8 @@ USAGE:
   ;; I don't want to differentiate class methods from functions by color, that is just confusing.
   (face-remap-add-relative 'lsp-face-semhl-method '(:foreground unspecified :inherit lsp-face-semhl-function))
   ;; haskell-operator-face is used for stuff like `::`, `->` and similar. By default they were the same as
-  ;; variables, I didn't like that so I made them more "boring"/default.
-  (face-remap-add-relative 'haskell-operator-face '(:foreground unspecified :inherit font-lock-default-face))
+  ;; variables, I didn't like that so I made them same as other operators, which is keyword face.
+  (face-remap-add-relative 'haskell-operator-face '(:foreground unspecified :inherit font-lock-keyword-face))
   ;; By default haskell keywords (import, where, ...) already are set to font-lock-keyword-face,
   ;; I just added :weight semi-bold to make them stand out a bit.
   (face-remap-add-relative 'haskell-keyword-face '(:weight semi-bold :inherit font-lock-keyword-face))
@@ -1412,5 +1412,23 @@ USAGE:
   (global-colorful-mode)
 )
 
+;; It colors each pair of parenthesses into their own color.
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode)
+)
+
 ;; Brings functions for converting buffer text and decorations to html.
 (use-package htmlize)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values '((dante-target . "--test"))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
