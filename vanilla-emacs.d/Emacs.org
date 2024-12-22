@@ -1255,8 +1255,8 @@ Turns any org document into a presentation! Each top-level header is one slide.
       (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
     )
     (defun my/when-emacs-org-file-tangle-on-save ()
-      (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
-        (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
+      (when (and buffer-file-name (file-equal-p buffer-file-name (my/emacs-org-file-path)))
+        (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil 'local)
       )
     )
     (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
@@ -1304,7 +1304,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
     )
 
     (defun my/emacs-org-file-path ()
-      (file-name-concat user-emacs-directory "Emacs.org")
+      (expand-file-name (file-name-concat user-emacs-directory "Emacs.org"))
     )
 
     (defun my/switch-to-messages-buffer ()

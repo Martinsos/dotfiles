@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-18 01:17:51 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-22 09:51:00 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -950,8 +950,8 @@ USAGE:
     (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
   )
   (defun my/when-emacs-org-file-tangle-on-save ()
-    (when (and buffer-file-name (string-equal buffer-file-name (my/emacs-org-file-path)))
-      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil t) ; t here makes this hook buffer local.
+    (when (and buffer-file-name (file-equal-p buffer-file-name (my/emacs-org-file-path)))
+      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil 'local)
     )
   )
   (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
@@ -987,7 +987,7 @@ USAGE:
   )
 
   (defun my/emacs-org-file-path ()
-    (file-name-concat user-emacs-directory "Emacs.org")
+    (expand-file-name (file-name-concat user-emacs-directory "Emacs.org"))
   )
 
   (defun my/switch-to-messages-buffer ()
@@ -1420,15 +1420,3 @@ USAGE:
 
 ;; Brings functions for converting buffer text and decorations to html.
 (use-package htmlize)
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(safe-local-variable-values '((dante-target . "--test"))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
