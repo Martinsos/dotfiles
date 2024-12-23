@@ -15,6 +15,8 @@ Whenever this file is saved from my emacs, =init.el= and =early-init.el= are aut
 
 Even though =init.el= and =early-init.el= are generated, I still keep them in version control (git), because it helps me avoid the situation where I don't have them on disk (maybe I deleted them, or I did fresh checkout) and can't easily start emacs and evaluate this very org file in order to generate them! By keeping them in version control, I have easy access to them, and I can even more easily see the diffs that were done.
 
+Sometimes manual setup is needed for certain parts of this config to work, for example installing external dependencies or setting up API keys -> settings local to the machine. In such case, you will find instructions how to do it spread through this file, and they will be labeled with =manual_setup= org label.
+
 #+name: timestamp
 #+begin_src emacs-lisp :tangle no :results value none
   (format-time-string "%Y-%m-%d %H:%M:%S %Z")
@@ -551,8 +553,15 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "feo" '(my/open-emacs-org-file :which-key "open Emacs.org file")
       "fei" '(my/open-init-file :which-key "open init.el file")
 
+      "i"   '(:ignore t :which-key "ai")
+      "ii"  '(gptel-menu :which-key "interactive menu")
+      "ic"  '(gptel :which-key "chat")
+      "is"  '(gptel-send :which-key "send (point/selection)")
+      "ir"  '(gptel-rewrite :which-key "rewrite")
+      "ia"  '(gptel-add :which-key "add to context (region/buffer)")
+      "if"  '(gptel-add :which-key "add to context (file)")
+
       "v"   '(:ignore t :which-key "eval (elisp)")
-      "v:"  '(eval-expression :which-key "expression")
       "vl"  '(eval-last-sexp :which-key "last-sexp")
       "vv"  '(eval-defun :which-key "top-level form")
       "vr"  '(eval-region :which-key "region")
@@ -1767,8 +1776,10 @@ NOTE: I chose ts-ls as a language server, when asked.
   )
 #+end_src
 
-*** TODO Follow this reddit guide on how to set up IDE for TypeScript:  https://www.reddit.com/r/emacs/comments/1dwl8v0/modern_emacs_typescript_web_react_config_with/ 
-
+*** TODO Figure how to best set up Typescript
+- https://www.reddit.com/r/emacs/comments/1dwl8v0/modern_emacs_typescript_web_react_config_with/
+- https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
+  - especially the treesitter!
 *** TODO Add support for TSX
 - There is tsx-mode.el.
 - There is tide.
@@ -1828,6 +1839,79 @@ NOTE: I chose ts-ls as a language server, when asked.
 
 ** TODO Web (HTML, CSS, ...)
   - Check what they do in Spacemacs/Doomemacs.
+* AI
+** Overview of popular packages
+Last updated: <2024-12-23 Mon> 
+
+Quick summary:
+For now I will go with gpt.el (for general usage), copilot.el (for completion) and copilot-chat.el (for general usage). gpt.el and copilot-chat.el are overlapping in what they can do, so I have to figure out which I like better. gpt.el however can use any model, while copilot-chat has to use copilot, but is free for me.
+Out of higher-level models, I think Ellama and aider.el might be worth trying out for me. Elisa is also interesting, although it might be better if I just set up PrivateGPT and use it with gpt.el.
+I might also want to try out chatgpt-shell at some point, it is similar to gptel uses different approach.
+
+*** High level
+- [[https://github.com/s-kostyaev/ellama][Ellama]]
+  Has cmds to ask llm to summarize, translate, complete, code review, use CoT, ... . A lot of very specific commands for specific tasks.
+  Seems to me like I can do most of this with gpt.el directly with just a bit more work, so I will skip trying out Ellama for now, and maybe try it once I feel that I want more from gpt.el and Ellama offers it.
+- [[https://github.com/tninja/aider.el][aider.el]]
+  Makes it easy to use Aider from emacs, for the current project, and send it buffers and similar.
+  Has nice transient menu.
+  Certainly worth trying if using Aider.
+- [[https://github.com/daedsidog/evedel][Evedel]]
+  Uses gpt.el as a backend and needs it installed.
+  Introduces unique workflow for working with LLM where you add instructions(directives) and references in the text/code in your buffer and that is sent to the LLM in order to modify it.
+  Sounds powerful, but for now I don't need that level of control over how LLM refactors piece of my code.
+- [[https://github.com/s-kostyaev/elisa][Elisa]]
+  Implementation of RAG to be used in your emacs.
+  Combines local files/dirs, Emacs info manuals, and web search -> all these are added to "collection(s)".
+  And then you can ask questions about it.
+  Sounds awesome for working on specific projects with specific knowledge, but is a bit limited in the way that it can do only chatting. Probably it is better for me to sure PrivateGPT then, as a backend for gpt.el.
+- [[https://github.com/lanceberge/elysium][elysium]]
+  Uses gpt.el as backend and needs it installed.
+  Narrow-focused: given the query, it applies changes directly to the selected code. But I believe gpt.el can also do that?
+*** Mid-level
+- [[https://github.com/karthink/gptel][gptel]]
+  Allows for chatting with llm of choice anywhere in Emacs, with a lot of care about DX and being inobtrusive.
+  Quite flexible, allows a lot of customization on the fly with nice transient menu.
+  Also has commands for stuff like rewriting a piece of code, adding buffers to the context, ... .
+  Has support for multi-modal: specifically images.
+  Most popular emacs LLM package at the moment.
+- [[https://github.com/copilot-emacs/copilot.el][copilot.el]]
+  Brings copilot completion to Emacs.
+- [[https://github.com/chep/copilot-chat.el][copilot-chat.el]]
+  Brings copilot-chat capabilities to Emacs. Similar to gptel in what it can do, but only for copilot as a backend.
+- [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]]
+  Similar to gptel, but as a comint shell, which is a kind of specific emacs's mechanism for prompts / convos.
+*** Low-level
+- [[https://github.com/ahyatt/llm][llm]]
+
+** GPTel
+
+#+begin_src emacs-lisp
+
+  (use-package gptel
+    :config
+    (setq gptel-prompt-prefix-alist '((markdown-mode . "## You:\n")
+                                      (org-mode . "** You:\n")
+                                      (text-mode . "## You:\n")))
+    (setq gptel-response-prefix-alist '((markdown-mode . "## AI:\n")
+                                        (org-mode . "** AI:\n")
+                                        (text-mode . "## AI:\n")))
+    (setq gptel-default-mode 'org-mode)
+  )
+
+#+end_src
+
+*** Setting up the OpenAI API key :manual_setup:
+By default, it pulls in the API key for OpenAI from the ~/.authinfo file (check the gptel docs for details), so that is what I use to provide the OpenAI API key.
+*** TODO Set up and try
+Doesn't work at the moment, I haven't set up OpenAI API key it seems.
+Although I think I have one in the ENV, that is not enough?
+**** TODO Install markdown-mode, it is useful?
+** TODOs
+*** TODO Set up copilot.el
+*** TODO Set up and try copilot-shell.el. See how I like it vs gpt.el
+*** TODO Set up and try chatgpt-shell
+
 * Misc
 
 #+begin_src emacs-lisp
@@ -1976,23 +2060,7 @@ Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so th
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
 
 *** TODO Set up TypeScript (TS) support
-https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
-- especially the treesitter!
 *** TODO Set up Haskell support
-*** TODO Set up AI support
-- GPTel
-- Elysium
-- Aider.el (https://www.reddit.com/r/emacs/comments/1fwwjgw/introduce_aider_ai_programming_in_terminal_and/)
-- chatgpt-shell
-- evedel
-- copilot.el
-- Using LLMs in Emacs: https://blog.aheymans.xyz/post/llm_in_emacs/
-- https://www.reddit.com/r/emacs/s/g5deSIDOUZ
-- https://www.reddit.com/r/emacs/s/tSCyJdXkJW
-- RAG in emacs: https://www.reddit.com/r/emacs/s/YSoLgzSuRd
-- https://www.reddit.com/r/emacs/s/6hlCzJ8GQq
-- Should I look into using PrivateGPT? With RAG that has Wasp docs in it for example?
-  
 ** Should do
 *** TODO Take care of the temporary files being created by emacs and undo.
 *** TODO Add whitespace mode (or smth like that)

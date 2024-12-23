@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-22 09:51:00 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2024-12-23 16:05:33 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -350,8 +350,15 @@ USAGE:
     "feo" '(my/open-emacs-org-file :which-key "open Emacs.org file")
     "fei" '(my/open-init-file :which-key "open init.el file")
 
+    "i"   '(:ignore t :which-key "ai")
+    "ii"  '(gptel-menu :which-key "interactive menu")
+    "ic"  '(gptel :which-key "chat")
+    "is"  '(gptel-send :which-key "send (point/selection)")
+    "ir"  '(gptel-rewrite :which-key "rewrite")
+    "ia"  '(gptel-add :which-key "add to context (region/buffer)")
+    "if"  '(gptel-add :which-key "add to context (file)")
+
     "v"   '(:ignore t :which-key "eval (elisp)")
-    "v:"  '(eval-expression :which-key "expression")
     "vl"  '(eval-last-sexp :which-key "last-sexp")
     "vv"  '(eval-defun :which-key "top-level form")
     "vr"  '(eval-region :which-key "region")
@@ -1348,6 +1355,17 @@ USAGE:
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu
   :hook (haskell-mode . ormolu-format-on-save-mode)
+)
+
+(use-package gptel
+  :config
+  (setq gptel-prompt-prefix-alist '((markdown-mode . "## You:\n")
+                                    (org-mode . "** You:\n")
+                                    (text-mode . "## You:\n")))
+  (setq gptel-response-prefix-alist '((markdown-mode . "## AI:\n")
+                                      (org-mode . "** AI:\n")
+                                      (text-mode . "## AI:\n")))
+  (setq gptel-default-mode 'org-mode)
 )
 
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
