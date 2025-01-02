@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2024-12-23 16:05:33 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-02 23:27:30 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -159,6 +159,24 @@ USAGE:
   )
 )
 
+(defun random-atom (xs)
+  "Returns a random atom from the given list."
+  (nth (random (length xs)) xs)
+)
+
+(defvar my-motivational-quotes
+  '("\"You have power over your mind – not outside events. Realize this, and you will find strength.\" – Marcus Aurelius"
+    "\"First say to yourself what you would be; and then do what you have to do.\" – Epictetus"
+    "\"Waste no more time arguing about what a good man should be. Be one.\" - Marcus Aurelius"
+    "\"No man is free who is not master of himself.\" – Epictetus"
+    "\"Well-being is attained by little and little, and nevertheless is no little thing itself.\" – Zeno of Citium"
+    "\"Don’t explain your philosophy. Embody it.\" - Epictetus"
+    "\"No great thing is created suddenly.\" – Epictetus"
+    "\"Begin at once to live, and count each separate day as a separate life.\" – Seneca"
+    "\"Dwell on the beauty of life. Watch the stars, and see yourself running with them.\" – Marcus Aurelius"
+    )
+)
+
 (use-package emacs
   :ensure nil
   :config
@@ -178,6 +196,9 @@ USAGE:
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
+
+  (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
+  (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes)))
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -1366,6 +1387,7 @@ USAGE:
                                       (org-mode . "** AI:\n")
                                       (text-mode . "## AI:\n")))
   (setq gptel-default-mode 'org-mode)
+  (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
 )
 
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).

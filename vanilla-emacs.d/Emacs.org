@@ -311,6 +311,36 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+end_src
 
+** List
+
+#+begin_src emacs-lisp
+
+  (defun random-atom (xs)
+    "Returns a random atom from the given list."
+    (nth (random (length xs)) xs)
+  )
+
+#+end_src
+
+** Quotes
+
+#+begin_src emacs-lisp
+
+  (defvar my-motivational-quotes
+    '("\"You have power over your mind – not outside events. Realize this, and you will find strength.\" – Marcus Aurelius"
+      "\"First say to yourself what you would be; and then do what you have to do.\" – Epictetus"
+      "\"Waste no more time arguing about what a good man should be. Be one.\" - Marcus Aurelius"
+      "\"No man is free who is not master of himself.\" – Epictetus"
+      "\"Well-being is attained by little and little, and nevertheless is no little thing itself.\" – Zeno of Citium"
+      "\"Don’t explain your philosophy. Embody it.\" - Epictetus"
+      "\"No great thing is created suddenly.\" – Epictetus"
+      "\"Begin at once to live, and count each separate day as a separate life.\" – Seneca"
+      "\"Dwell on the beauty of life. Watch the stars, and see yourself running with them.\" – Marcus Aurelius"
+      )
+  )
+
+#+end_src
+
 * Basic emacs config
 
 #+begin_src emacs-lisp
@@ -334,6 +364,9 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
+
+    (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
+    (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes)))
   )
 
 #+end_src
@@ -1897,19 +1930,39 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
                                         (org-mode . "** AI:\n")
                                         (text-mode . "## AI:\n")))
     (setq gptel-default-mode 'org-mode)
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
   )
 
 #+end_src
 
 *** Setting up the OpenAI API key :manual_setup:
 By default, it pulls in the API key for OpenAI from the ~/.authinfo file (check the gptel docs for details), so that is what I use to provide the OpenAI API key.
+*** Cheatsheet :cheatsheet:
+- =C-c ENT= is for sending the query to AI when in the Gptel buffer.
 *** TODO Set up and try
 Doesn't work at the moment, I haven't set up OpenAI API key it seems.
 Although I think I have one in the ENV, that is not enough?
 **** TODO Install markdown-mode, it is useful?
 ** TODOs
+*** TODO Learn/configure gptel
+- Ok, so I get that I can do a lot of on-the-fly configuring via its transient menu, including where input comes from and where it goes, but the whole things feels a bit overly clunky / manual.
+  I should try to learn more about it to see if I can use it better, and also spend some time trying it out, but maybe it is just too low level for me, and I should instead use something higher level.
+  Or just use copilot-chat. Hm.
+- There might be a nice way to color the responses, this is what I found suggested by the author of the package, give it a try:
+  #+begin_src emacs-lisp :tangle no
+    (defun gptel--color-response ()
+      (let ((prop))
+        (save-excursion
+          (setq prop (text-property-search-forward 'gptel 'response t))
+          (put-text-property (prop-match-beginning prop)
+                            (prop-match-end prop)
+                            'font-lock-face
+                            'warning))))
+
+    (add-hook 'gptel-post-response-hook #'gptel--color-response t)
+  #+end_src
 *** TODO Set up copilot.el
-*** TODO Set up and try copilot-shell.el. See how I like it vs gpt.el
+*** TODO Set up and try copilot-chat.el. See how I like it vs gpt.el
 *** TODO Set up and try chatgpt-shell
 
 * Misc
@@ -2119,6 +2172,7 @@ I am not sure if I will like this or not, but I think it is worth trying it out.
 - ivy-posframe package -> just for ivy completions
 - emacs-miniframe -> for anything happening in the minibuffer
 *** TODO Try Nano theme.
+- Some additional work by Rougier that is interesting: https://www.reddit.com/r/emacs/comments/1hoehaa/boxes_everywhere/?share_id=H0m8UzpeWYzXfvp6dOXXu&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 *** TODO Enable that new smooth/pixel scroll setting in emacs?
 *** TODO Use smartparens or electric-pair-mode?
 *** TODO Take a look at dogears.el -> sounds potentially useful, not sure though.
