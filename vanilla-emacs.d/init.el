@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-02 23:27:30 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-09 00:41:26 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -198,7 +198,7 @@ USAGE:
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
   (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
-  (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes)))
+  (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes) "\n\n"))
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -342,6 +342,7 @@ USAGE:
     "w"   '(:ignore t :which-key "windows")
     "ww"  '(ace-window :which-key "other window")
     "wd"  '(delete-window :which-key "delete window")
+    "wx"  '(kill-buffer-and-window :which-key "delete window and buffer")
     "w/"  '(split-window-right :which-key "split vertically")
     "w-"  '(split-window-below :which-key "split horizontally")
     "wr"  '(hydra-window-resize/body :which-key "resize window")
@@ -837,7 +838,7 @@ USAGE:
 
 	 (make-work-diary-command "w" "Work Diary"            nil)
 
-         '("p" "Private Todo"
+         '("p" "Private Diary"
 	   (;; The main view: a list of tasks for today.
 	    (agenda ""
 		    ((org-agenda-span 'day)
@@ -880,7 +881,7 @@ USAGE:
                      )
 	    )
 	   )
-	   ((org-agenda-files '("~/Dropbox/private-todo.org"))
+	   ((org-agenda-files '("~/Dropbox/private-diary.org"))
 
 	    (org-agenda-start-with-log-mode '(closed clock))
             (org-agenda-skip-scheduled-if-done t)
@@ -1327,11 +1328,37 @@ USAGE:
 ;; Shows list of all errors in a nice treemacs fashion.
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
-(use-package typescript-mode
-  :mode "\\.ts\\'"
-  :hook (typescript-mode . lsp-deferred)
+(use-package treesit
+  :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+  :preface
+  (defun my/setup-install-grammars ()
+    "Install Tree-sitter grammars if they are absent."
+    (interactive)
+    (dolist (grammar
+             ;; Note the version numbers. These are the versions that with Emacs 29.
+             ;; I picked those up from https://github.com/mickeynp/combobulate .
+             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+               (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.20.0"))
+               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
+               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
+               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
+               (markdown . ("https://github.com/ikatyang/tree-sitter-markdown" "v0.7.1"))
+               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
+               (rust . ("https://github.com/tree-sitter/tree-sitter-rust" "v0.21.2"))
+               (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
+               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
+               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+      (add-to-list 'treesit-language-source-alist grammar)
+      ;; Only install `grammar' if we don't already have it installed.
+      ;; However, if we update a grammar version above then this won't update it since it is already installed,
+      ;; I should instead run `treesit-install-language-grammar' manually for it.
+      (unless (treesit-language-available-p (car grammar))
+        (treesit-install-language-grammar (car grammar))))
+  )
   :config
-  (setq typescript-indent-level 2)
+  (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details when doing syntax highlihting.
+  (my/setup-install-grammars)
 )
 
 (defun my/lsp-haskell-local-face-setup ()
@@ -1376,6 +1403,21 @@ USAGE:
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu
   :hook (haskell-mode . ormolu-format-on-save-mode)
+)
+
+;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
+;; It defines typescript-ts-mode and tsx-ts-mode.
+(use-package typescript-ts-mode
+  :ensure nil ; This is built-in package, so we don't want elpaca to try to install it.
+  :mode (("\\.js\\'"  . typescript-ts-mode)
+	 ("\\.ts\\'"  . typescript-ts-mode)
+	 ("\\.mjs\\'" . typescript-ts-mode)
+	 ("\\.mts\\'" . typescript-ts-mode)
+	 ("\\.cjs\\'" . typescript-ts-mode)
+         ("\\.tsx\\'" . tsx-ts-mode)
+	 ("\\.jsx\\'" . tsx-ts-mode)
+        )
+  :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
 )
 
 (use-package gptel

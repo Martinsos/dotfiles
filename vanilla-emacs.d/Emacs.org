@@ -366,7 +366,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
     (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
-    (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes)))
+    (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes) "\n\n"))
   )
 
 #+end_src
@@ -557,6 +557,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "w"   '(:ignore t :which-key "windows")
       "ww"  '(ace-window :which-key "other window")
       "wd"  '(delete-window :which-key "delete window")
+      "wx"  '(kill-buffer-and-window :which-key "delete window and buffer")
       "w/"  '(split-window-right :which-key "split vertically")
       "w-"  '(split-window-below :which-key "split horizontally")
       "wr"  '(hydra-window-resize/body :which-key "resize window")
@@ -1130,7 +1131,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
   	 (make-work-diary-command "w" "Work Diary"            nil)
 
-           '("p" "Private Todo"
+           '("p" "Private Diary"
   	   (;; The main view: a list of tasks for today.
   	    (agenda ""
   		    ((org-agenda-span 'day)
@@ -1173,7 +1174,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                        )
   	    )
   	   )
-  	   ((org-agenda-files '("~/Dropbox/private-todo.org"))
+  	   ((org-agenda-files '("~/Dropbox/private-diary.org"))
 
   	    (org-agenda-start-with-log-mode '(closed clock))
               (org-agenda-skip-scheduled-if-done t)
@@ -1780,43 +1781,59 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config#orgf6d33f7 -> search for lsp-booster
 *** TODO LSP's completion-at-point -> how to get that working with Company properly?
 - https://emacs-lsp.github.io/lsp-mode/page/settings/completion/ -> useful?
-** TODO Set up Treesitter?
-Treesitter is for syntax highlighting / process what is LSP for semantic understanding of the code.
-You could say that Treesitter brings syntax-level understanding, while LSP brings semantic-level understanding.
-Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language.
+** Treesitter
+Treesitter is for syntax understanding of the code what LSP is for semantic understanding of the code.
+Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language. In return, you get syntax highlighting, cleverer editing and movement through code, better indentation, ... .
 
-- Emacs 29 brings its own built-in treesitter package and I see that I have it in my installation of emacs.
-  What is left though is to tell it which grammars to pull for which language, and then also to get the major language modes to use the treesitter for their specific languages.
-  - https://www.masteringemacs.org/article/how-to-get-started-tree-sitter
-  - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config#orgf6d33f7
-- It does seem that getting it to work for Haskell won't be easy, haskell-mode doesn't know how to use treesitter,
-and haskell-ts-mode, which is a new mode that somebody made that should replace haskell-mode but with ts support,
-has much less features than haskell-mode and is less mature. But maybe that is ok and worth trying? Do I use any of
-advanced haskell-mode features anyway?
-  - https://codeberg.org/pranshu/haskell-ts-mode
+Emacs 29 brings its own built-in treesitter package (~treesit~).
+It also comes, for a set of popular languages, with built-in major modes that use treesitter: typescript-ts-mode, markdown-ts-mode, ... . We can easily which exist by doing ~apropos~ and then ~-ts-mode$~.
 
-Maybe using treesitter is not so urgent and I should wait for better support in popular major modes.
+What is left though is to tell it which grammars to pull for which language, and then to either make sure that we use built-in ~*-ts-mode~ modes, or use the third-party one that uses or can be configured to use treesitter.
 
-** TypeScript
-NOTE: I chose ts-ls as a language server, when asked.
+For more details, this article is a great tutorial on treesitter support in Emacs: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter .
+
+I should keep in mind that I probably want to disable lsp-mode's syntax coloring (both normal and semantic tokens) if I am using treesitter instead for a specific language. Right?
 
 #+begin_src emacs-lisp
-  (use-package typescript-mode
-    :mode "\\.ts\\'"
-    :hook (typescript-mode . lsp-deferred)
+
+  (use-package treesit
+    :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+    :preface
+    (defun my/setup-install-grammars ()
+      "Install Tree-sitter grammars if they are absent."
+      (interactive)
+      (dolist (grammar
+               ;; Note the version numbers. These are the versions that with Emacs 29.
+               ;; I picked those up from https://github.com/mickeynp/combobulate .
+               '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+                 (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.20.0"))
+                 (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
+                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
+                 (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
+                 (markdown . ("https://github.com/ikatyang/tree-sitter-markdown" "v0.7.1"))
+                 (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
+                 (rust . ("https://github.com/tree-sitter/tree-sitter-rust" "v0.21.2"))
+                 (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
+                 (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
+                 (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
+                 (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+        (add-to-list 'treesit-language-source-alist grammar)
+        ;; Only install `grammar' if we don't already have it installed.
+        ;; However, if we update a grammar version above then this won't update it since it is already installed,
+        ;; I should instead run `treesit-install-language-grammar' manually for it.
+        (unless (treesit-language-available-p (car grammar))
+          (treesit-install-language-grammar (car grammar))))
+    )
     :config
-    (setq typescript-indent-level 2)
+    (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details when doing syntax highlihting.
+    (my/setup-install-grammars)
   )
+
 #+end_src
 
-*** TODO Figure how to best set up Typescript
-- https://www.reddit.com/r/emacs/comments/1dwl8v0/modern_emacs_typescript_web_react_config_with/
-- https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
-  - especially the treesitter!
-*** TODO Add support for TSX
-- There is tsx-mode.el.
-- There is tide.
-- Check what they do in Spacemacs/Doomemacs.
+*** Cheatsheet :cheatsheet:
+- Cool commands are ~treesit-explore-mode~ and ~treesit-inspect-mode~: they allow inspecting the concrete syntax tree in a buffer!
+
 ** Haskell
 
 #+begin_src emacs-lisp
@@ -1870,8 +1887,50 @@ NOTE: I chose ts-ls as a language server, when asked.
 - haskell-mode brings interactive mode where you get a ghci session in which you can easily load specific files and run stuff from them. To start it, run `interactive-haskell-mode`. File is added to it by ~haskell-process-load-file~ while in a Haskell file buffer.
 - Haskell mode registers its keymap under "C-c", so check that for common commands.
 
+
+*** TODO Try using haskell-ts-mode instead of haskell-mode
+haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a new mode that somebody made that should replace haskell-mode but with ts support, has much less features than haskell-mode and is less mature. But maybe that is ok and worth trying? Do I use any of advanced haskell-mode features anyway? I don't think so.
+  - https://codeberg.org/pranshu/haskell-ts-mode
+
+    
+** TypeScript
+NOTE: I chose ts-ls as a language server, when asked.
+
+#+begin_src emacs-lisp
+
+  ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
+  ;; It defines typescript-ts-mode and tsx-ts-mode.
+  (use-package typescript-ts-mode
+    :ensure nil ; This is built-in package, so we don't want elpaca to try to install it.
+    :mode (("\\.js\\'"  . typescript-ts-mode)
+  	 ("\\.ts\\'"  . typescript-ts-mode)
+  	 ("\\.mjs\\'" . typescript-ts-mode)
+  	 ("\\.mts\\'" . typescript-ts-mode)
+  	 ("\\.cjs\\'" . typescript-ts-mode)
+           ("\\.tsx\\'" . tsx-ts-mode)
+  	 ("\\.jsx\\'" . tsx-ts-mode)
+          )
+    :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
+  )
+
+#+end_src
+
+*** TODO Turn of LSP's syntax coloring? Right now it overrides treesitter's one.
+*** TODO Follow the rest of the article
+- https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
+- I already did the most from it, but there is a bit more I think? I should check it.
+  
 ** TODO Web (HTML, CSS, ...)
   - Check what they do in Spacemacs/Doomemacs.
+- web-mode.el -> I probably want to use this for HTML / CSS.
+- Doom emacs:
+  - https://github.com/doomemacs/doomemacs/tree/master/modules/lang/web
+    - web-mode, company-web, counsel-css, emmet-mode, haml-mode, less-css-mode, pug-mode, sass-mode, slim-mode, stylus-mode, sws-mode
+    - lsp and treesitter
+- Spacemacs:
+  - web-mode, emmet-mode for generating HTML / CSS coding, impatient-mode, counsel-css, web-beautify.
+
+- Sounds to me, all together, like web-mode is essential, while emmet-mode and impatient-mode might be interesting. Also company-web and counsel-css.
 * AI
 ** Overview of popular packages
 Last updated: <2024-12-23 Mon> 
