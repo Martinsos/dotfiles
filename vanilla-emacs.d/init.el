@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-09 00:41:26 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-09 09:25:58 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)

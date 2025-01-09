@@ -1892,7 +1892,6 @@ I should keep in mind that I probably want to disable lsp-mode's syntax coloring
 haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a new mode that somebody made that should replace haskell-mode but with ts support, has much less features than haskell-mode and is less mature. But maybe that is ok and worth trying? Do I use any of advanced haskell-mode features anyway? I don't think so.
   - https://codeberg.org/pranshu/haskell-ts-mode
 
-    
 ** TypeScript
 NOTE: I chose ts-ls as a language server, when asked.
 
@@ -1916,6 +1915,17 @@ NOTE: I chose ts-ls as a language server, when asked.
 #+end_src
 
 *** TODO Turn of LSP's syntax coloring? Right now it overrides treesitter's one.
+From what I read, I can use just treesitter, or just lsp semantic coloring, or both together, depends on how I set it up and what works better. It will depend on the specific language also, what works better. Some languages get more benefits from semantic highlight, some don't.
+
+What would be ideal is to have both, treesitter being first and then lsp adding extra info on top, stacking.
+But I should in that case adjust LSP's coloring in such way that it is aligned with treesitter, so it doesn't appear as if all the coloring just changed, but instead some of it was just added. It is also important that treesitter's highlighting runs first, in order to achieve that stacking.
+
+Or, I can turn off lsp's highlighting and just use treesitter -> it will work quite well for most cases.
+
+Using only LSP, with no treesitter, makes sense to me only if I couldn't get the two to align / stack, and LSP indeed provides better highlighting. But then I need something else to provide the highlithing of basic tokens, because LSP's semantic highlighitng does't color every single token, but only the "interesting" ones, so you end up with a lot of unhighlighted stuff.
+
+TODO: I should, under LSP section (or under treesitter?), add a piece explaining treesitter vs LSP semantic tokens, how those fit together. The main conclusion is that LSP semantic tokens are not enough because they don't color everything, so you want either treesitter also, or some other logic that does the basic highlithing, next to LSP semantic tokens. Also speed and resistance to errors and all that, but this is the main argument why LSP semantic tokens on their own are not enough. And Treesitter is cool because it allows much easier way to provide very good highlighitng, compared to previous methods of using regexes and what not. Oh and btw treesitter allows for other stuff also, like code folding and so on, that LSP doesn't provide, here we are talking just about syntax highlighting.
+
 *** TODO Follow the rest of the article
 - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
 - I already did the most from it, but there is a bit more I think? I should check it.
