@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-09 09:25:58 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-11 00:26:44 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.7)
@@ -761,7 +761,7 @@ USAGE:
 			    :and (:category "dc"
 				  :not (:log t))
 		    )
-                    (:name "Todo"
+                    (:name "Todo (today)"
 		            :and (:time-grid t :not (:log t))
 		    )
 		    (:name "                   ----"
@@ -783,6 +783,9 @@ USAGE:
 		    (:name "Clock log"
 	                   :log clocked
 		    )
+                    (:name "Other (e.g. deadline w/o scheduled)"
+                           :anything t
+                    )
 		   )
 		 )
 		)
@@ -1348,7 +1351,9 @@ USAGE:
                (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
                (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
                (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+               (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
+	     ))
       (add-to-list 'treesit-language-source-alist grammar)
       ;; Only install `grammar' if we don't already have it installed.
       ;; However, if we update a grammar version above then this won't update it since it is already installed,
@@ -1378,8 +1383,12 @@ USAGE:
 
 (defun my/haskell-mode-setup ()
   (lsp-deferred)
+  (ormolu-format-on-save-mode)
   (add-hook 'lsp-after-open-hook 'my/lsp-haskell-local-face-setup nil t)
 )
+
+;; NOTE: Requires ormolu to be installed on the machine.
+(use-package ormolu)
 
 (use-package haskell-mode
   :hook
@@ -1393,16 +1402,28 @@ USAGE:
   (haskell-indentation-where-post-offset 2)
 )
 
+;; ;; TODO: Some current problems:
+;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+;; ;;  - Is too smart while highlighting signature.
+;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+;; ;;  - What is with literate mode?
+;; (use-package haskell-ts-mode
+;;   :hook
+;;   (haskell-ts-mode . my/haskell-mode-setup)
+;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+;;   :config
+;;   (setq haskell-ts-highlight-signature nil)
+;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+;; )
+
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
   :custom
-  ; This brings much more info on how to color syntax. It does make coloring somewhat slower though!
+  ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
   (lsp-haskell-plugin-semantic-tokens-global-on t)
-)
-
-;; NOTE: Requires ormolu to be installed on the machine.
-(use-package ormolu
-  :hook (haskell-mode . ormolu-format-on-save-mode)
 )
 
 ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.

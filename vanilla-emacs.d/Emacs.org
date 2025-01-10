@@ -1054,7 +1054,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   			    :and (:category "dc"
   				  :not (:log t))
   		    )
-                      (:name "Todo"
+                      (:name "Todo (today)"
   		            :and (:time-grid t :not (:log t))
   		    )
   		    (:name "                   ----"
@@ -1076,6 +1076,9 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   		    (:name "Clock log"
   	                   :log clocked
   		    )
+                      (:name "Other (e.g. deadline w/o scheduled)"
+                             :anything t
+                      )
   		   )
   		 )
   		)
@@ -1664,6 +1667,7 @@ Might also be worthy trying it with eglot!
 
 * Development
 ** LSP
+LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
 
 LSP as a general protocol has some of its own nomenclature. Some of it that is useful to know to better understand the config below, is how they name the most important information that LS returns.
  - =hover= info: Documentation about the symbol/function/thing under the cursor that LS sends.
@@ -1676,6 +1680,11 @@ Rough summary how my configuration currently displays all this info:
  - **Full version of hover** info for a symbol under cursor is displayed in a popup, on demand, which I trigger with "K" or "?" (by ~lsp-ui-doc~).
  - Full info on **diagnostics** for a symbol is shown on cursor/mouse (by ~flycheck~, in a popup).
  - Only "quickfix" **code actions** for a symobl are shown on cursor/mouse, on the right side of the screen next to the code (by ~lsp-ui-sideline~).
+
+One functionality that LSP also defines are =semantic tokens=, where LS returns semantic information about specific tokens, which is then usually used by the editor for very detailed and smart syntax highlighting.
+It is important to notice here that it doesn't return this information for every single token in the code, but only for specific types of tokens, meaning it can't be used to fully highlight the code. Instead, it is intended to be used as an additional, detailed syntax highlighting that is applied on top of some other, more basic syntax highlighting (i.e. usually implemented via regexes, textmate grammar, or recently treesitter). Additionally, LSP semantic token syntax highlighting is usually slower and less robust to syntax errors than other more basic methods, but those are secondary reasons.
+Therefore, for optimal experience, we should customize the faces used for semantic tokens to be aligned with the faces used for basic highlighting, per language if needed.
+**NOTE**: For stacking of syntax highlights to happen correctly, it is important that basic syntax highlighting (e.g. treesitter) is applied first, and then lsp semantic token syntax highlighting after it.
 
 #+begin_src emacs-lisp
 
@@ -1783,16 +1792,16 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 - https://emacs-lsp.github.io/lsp-mode/page/settings/completion/ -> useful?
 ** Treesitter
 Treesitter is for syntax understanding of the code what LSP is for semantic understanding of the code.
-Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language. In return, you get syntax highlighting, cleverer editing and movement through code, better indentation, ... .
+Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language. In return, you get very good syntax highlighting, cleverer editing and movement through code, better indentation, ... -> anything that can be built with konwledge of concrete syntax tree.
 
 Emacs 29 brings its own built-in treesitter package (~treesit~).
-It also comes, for a set of popular languages, with built-in major modes that use treesitter: typescript-ts-mode, markdown-ts-mode, ... . We can easily which exist by doing ~apropos~ and then ~-ts-mode$~.
+The only thing we need to configure is to tell it which grammars to pull in for which language.
+Now we have working treesitter for those languages! It is not used anywhere yet though.
 
-What is left though is to tell it which grammars to pull for which language, and then to either make sure that we use built-in ~*-ts-mode~ modes, or use the third-party one that uses or can be configured to use treesitter.
+Easiest way to start using treesitter is to use one of the built-in major language modes that come with Emacs 29, that are made around using treesitter (they mostly use it for syntax highlighting): typescript-ts-mode, markdown-ts-mode, ... . We can easily check which exist by doing ~apropos~ and then ~-ts-mode$~. There are also third party major modes made with treesitter in mind (e.g. ~haskell-ts-mode~) that we can use, and additionaly, some older packages have added support for treesitter so we can toggle it there.
+It't not all about syntax highligthing though, there is for example cool ~combobulate~ package that brings structural editing for multiple languages, based on treesitter.
 
 For more details, this article is a great tutorial on treesitter support in Emacs: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter .
-
-I should keep in mind that I probably want to disable lsp-mode's syntax coloring (both normal and semantic tokens) if I am using treesitter instead for a specific language. Right?
 
 #+begin_src emacs-lisp
 
@@ -1816,7 +1825,9 @@ I should keep in mind that I probably want to disable lsp-mode's syntax coloring
                  (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
                  (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
                  (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-                 (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+                 (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+                 (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
+  	     ))
         (add-to-list 'treesit-language-source-alist grammar)
         ;; Only install `grammar' if we don't already have it installed.
         ;; However, if we update a grammar version above then this won't update it since it is already installed,
@@ -1854,8 +1865,12 @@ I should keep in mind that I probably want to disable lsp-mode's syntax coloring
 
   (defun my/haskell-mode-setup ()
     (lsp-deferred)
+    (ormolu-format-on-save-mode)
     (add-hook 'lsp-after-open-hook 'my/lsp-haskell-local-face-setup nil t)
   )
+
+  ;; NOTE: Requires ormolu to be installed on the machine.
+  (use-package ormolu)
 
   (use-package haskell-mode
     :hook
@@ -1869,17 +1884,30 @@ I should keep in mind that I probably want to disable lsp-mode's syntax coloring
     (haskell-indentation-where-post-offset 2)
   )
 
+  ;; ;; TODO: Some current problems:
+  ;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+  ;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+  ;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+  ;; ;;  - Is too smart while highlighting signature.
+  ;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+  ;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+  ;; ;;  - What is with literate mode?
+  ;; (use-package haskell-ts-mode
+  ;;   :hook
+  ;;   (haskell-ts-mode . my/haskell-mode-setup)
+  ;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+  ;;   :config
+  ;;   (setq haskell-ts-highlight-signature nil)
+  ;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+  ;; )
+
   ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
   (use-package lsp-haskell
     :custom
-    ; This brings much more info on how to color syntax. It does make coloring somewhat slower though!
+    ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
     (lsp-haskell-plugin-semantic-tokens-global-on t)
   )
 
-  ;; NOTE: Requires ormolu to be installed on the machine.
-  (use-package ormolu
-    :hook (haskell-mode . ormolu-format-on-save-mode)
-  )
 
 #+end_src
 
@@ -1914,18 +1942,7 @@ NOTE: I chose ts-ls as a language server, when asked.
 
 #+end_src
 
-*** TODO Turn of LSP's syntax coloring? Right now it overrides treesitter's one.
-From what I read, I can use just treesitter, or just lsp semantic coloring, or both together, depends on how I set it up and what works better. It will depend on the specific language also, what works better. Some languages get more benefits from semantic highlight, some don't.
-
-What would be ideal is to have both, treesitter being first and then lsp adding extra info on top, stacking.
-But I should in that case adjust LSP's coloring in such way that it is aligned with treesitter, so it doesn't appear as if all the coloring just changed, but instead some of it was just added. It is also important that treesitter's highlighting runs first, in order to achieve that stacking.
-
-Or, I can turn off lsp's highlighting and just use treesitter -> it will work quite well for most cases.
-
-Using only LSP, with no treesitter, makes sense to me only if I couldn't get the two to align / stack, and LSP indeed provides better highlighting. But then I need something else to provide the highlithing of basic tokens, because LSP's semantic highlighitng does't color every single token, but only the "interesting" ones, so you end up with a lot of unhighlighted stuff.
-
-TODO: I should, under LSP section (or under treesitter?), add a piece explaining treesitter vs LSP semantic tokens, how those fit together. The main conclusion is that LSP semantic tokens are not enough because they don't color everything, so you want either treesitter also, or some other logic that does the basic highlithing, next to LSP semantic tokens. Also speed and resistance to errors and all that, but this is the main argument why LSP semantic tokens on their own are not enough. And Treesitter is cool because it allows much easier way to provide very good highlighitng, compared to previous methods of using regexes and what not. Oh and btw treesitter allows for other stuff also, like code folding and so on, that LSP doesn't provide, here we are talking just about syntax highlighting.
-
+*** TODO Customize LSP semantic token faces to be aligned with treesitter highlighting.
 *** TODO Follow the rest of the article
 - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
 - I already did the most from it, but there is a bit more I think? I should check it.
@@ -2217,6 +2234,8 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 
 *** TODO Stop that custom block from appearing at the end of this file.
 *** TODO Look into workgroups
+*** TODO Smooth scrolling package
+https://github.com/jdtsmith/ultra-scroll
 *** DONE Implement transient yanking
 So I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
 There is counsel-yank-pop, to nicely choose from the kill ring.
