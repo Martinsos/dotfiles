@@ -491,19 +491,19 @@ Seems to not be on any package manager though, so I need straight.el probably.
     :config
     (general-evil-setup t)
 
-    ;; general-create-definer allows you to create a function with some defaults set, that you can use to define more keys.
-    ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
-    (general-create-definer my/leader-keys
+    ;; Here we use the following two expressions to create a function ~my/leader-keys~ that we can then use to created
+    ;; new keys that all start with SPC prefix (leader key).
+    (general-define-key
+      :prefix-map 'my/leader-map
       :states '(motion normal insert visual emacs)
       :keymaps 'override ; Override any other keymaps with same keybindings. Otherwise I get issues with the `motion` and SPC, since `motion` already defines keybindings for SPC.
       :prefix "SPC" ; This will be active only in "normal"-like states (so `normal`, `motion` and `emacs`).
       :global-prefix "C-SPC" ; This will be always active.
     )
+    (general-create-definer my/leader-keys
+      :keymaps 'my/leader-map)
 
-    ;; TODO: In general.el README, this way of defining keys is listed as ineficient (slows down startup time).
-    ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
-    ;;   and possibly rewrite it to follow the advice there.
-    ;;   Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
+    ;; TODO: Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
     ;;   should they all be here, or in their respective packages, or what.
     (my/leader-keys
       "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
@@ -574,9 +574,6 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "br"  '(revert-buffer :which-key "reload buffer")
 
       "e"   '(:ignore t :which-key "errors")
-      "en"  '(flycheck-next-error :which-key "next")
-      "ep"  '(flycheck-previous-error :which-key "previous")
-      "el"  '(flycheck-list-errors :which-key "list")
 
       "f"   '(:ignore t :which-key "files")
       "fj"  '(avy-goto-char-timer :which-key "jump in file")
@@ -1631,13 +1628,21 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
   
 * Flycheck
 
+I disabled it all for now since I am currently trying out Flymake.
+
 #+begin_src emacs-lisp
 
-  (use-package flycheck
-    :init (global-flycheck-mode)
-    :custom
-    (flycheck-display-errors-delay 0.2)
-  )
+  ;; (use-package flycheck
+  ;;   :init (global-flycheck-mode)
+  ;;   :custom
+  ;;   (flycheck-display-errors-delay 0.2)
+  ;;   :config
+  ;;   (my/leader-keys
+  ;;     "en"  '(flycheck-next-error :which-key "next")
+  ;;     "ep"  '(flycheck-previous-error :which-key "previous")
+  ;;     "el"  '(flycheck-list-errors :which-key "list")
+  ;;   )
+  ;; )
 
   ;; TODO: This stopped working with flycheck, I commented it out till I get it working again. I opened issue here: https://github.com/alexmurray/flycheck-posframe/issues/34 .
   ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
@@ -1667,6 +1672,29 @@ Flymake is emacs native checker, and long time flycheck was much better, but rec
 Reading its docs, it actually makes more sense to me than flycheck. So I think I should give it a try.
 Might also be worthy trying it with eglot!
 
+* Flymake
+
+#+begin_src emacs-lisp
+  (use-package flymake
+    :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+    :hook (prog-mode . flymake-mode)
+    :custom
+    (flymake-no-changes-timeout 0.2)
+    :config
+    (my/leader-keys
+      "en"  '(flymake-goto-next-error :which-key "next")
+      "ep"  '(flymake-goto-prev-error :which-key "previous")
+      "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
+      "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
+    )
+  )
+
+  (use-package flymake-posframe
+    :ensure (:host github :repo "Ladicle/flymake-posframe")
+    :hook (flymake-mode . flymake-posframe-mode)
+  )
+#+end_src
+
 * Development
 ** LSP
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
@@ -1677,10 +1705,10 @@ LSP as a general protocol has some of its own nomenclature. Some of it that is u
  - =code actions=: actions that LS suggests and that you can then ask it to execute. E.g. add missing import.
 
 Rough summary how my configuration currently displays all this info:
- - Parts of code with diagnostics are marked with **squiggly lines** (by Flycheck).
+ - Parts of code with diagnostics are marked with **squiggly lines** (by Fly(check/make)).
  - **Short version of hover** info for a symbol is shown on cursor/mouse, in the minibuffer (by ~eldoc~).
  - **Full version of hover** info for a symbol under cursor is displayed in a popup, on demand, which I trigger with "K" or "?" (by ~lsp-ui-doc~).
- - Full info on **diagnostics** for a symbol is shown on cursor/mouse (by ~flycheck~, in a popup).
+ - Full info on **diagnostics** for a symbol is shown on cursor/mouse (by ~fly(check/make)~, in a popup).
  - Only "quickfix" **code actions** for a symobl are shown on cursor/mouse, on the right side of the screen next to the code (by ~lsp-ui-sideline~).
 
 One functionality that LSP also defines are =semantic tokens=, where LS returns semantic information about specific tokens, which is then usually used by the editor for very detailed and smart syntax highlighting.
@@ -1757,7 +1785,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
     ;; If diagnostics are longer and in multiple lines, it becomes a mess, it doesn't align them nicely
     ;; and they are all over the place, really hard to read, which is why I disabled showing diagnostics
     ;; in the sideline.
-    ;; When you disable it, lsp-mode instead sends diagnostics to flymake/flycheck, which by default show
+    ;; When you disable it, lsp-mode instead sends diagnostics to fly(check/make), which by default show
     ;; then in the minibuffer.
     (lsp-ui-sideline-show-diagnostics nil)
     (lsp-ui-sideline-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
@@ -2195,10 +2223,6 @@ Troubleshooting:
 
 * TODOs
 ** A must
-*** TODO Set up Company, Flycheck, LSP and LSP-UI.
-
-Flycheck and LSP-UI overlap a bit, so I will likely want to configure them so they don't display same stuff -> confiugre just one of them to display LSP diagnostics. I can maybe start with flycheck, and then add LSP-UI and see who I like better doing what.
-
 *** TODO Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
 *** TODO Write down following next to lsp-mode
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
