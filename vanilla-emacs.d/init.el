@@ -1,9 +1,9 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-11 00:26:44 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-19 00:15:43 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
-(defvar elpaca-installer-version 0.7)
+(defvar elpaca-installer-version 0.8)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -174,6 +174,7 @@ USAGE:
     "\"No great thing is created suddenly.\" – Epictetus"
     "\"Begin at once to live, and count each separate day as a separate life.\" – Seneca"
     "\"Dwell on the beauty of life. Watch the stars, and see yourself running with them.\" – Marcus Aurelius"
+    "\"Nulla dies sine linea.\" - Pliny the Elder"
     )
 )
 
@@ -1246,16 +1247,17 @@ USAGE:
   (flycheck-display-errors-delay 0.2)
 )
 
-;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
-(use-package flycheck-posframe
-  :after flycheck
-  :custom
-  (flycheck-auto-display-errors-after-checking nil) ; Prevents repeated displaying of errors at point.
-  (flycheck-posframe-border-width 10)
-  :config
-  (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
-  (flycheck-posframe-configure-pretty-defaults)
-)
+;; TODO: This stopped working with flycheck, I commented it out till I get it working again. I opened issue here: https://github.com/alexmurray/flycheck-posframe/issues/34 .
+;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
+;; (use-package flycheck-posframe
+;;   :after flycheck
+;;   :custom
+;;   (flycheck-auto-display-errors-after-checking nil) ; Prevents repeated displaying of errors at point.
+;;   (flycheck-posframe-border-width 10)
+;;   :config
+;;   (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
+;;   (flycheck-posframe-configure-pretty-defaults)
+;; )
 
 (use-package lsp-mode
   :init
@@ -1283,7 +1285,7 @@ USAGE:
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 
-  (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
+  (lsp-semantic-tokens-enable nil) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
 )
 
 (use-package lsp-ui
@@ -1384,40 +1386,43 @@ USAGE:
 (defun my/haskell-mode-setup ()
   (lsp-deferred)
   (ormolu-format-on-save-mode)
+  (face-remap-add-relative 'font-lock-operator-face '(:foreground unspecified :inherit font-lock-keyword-face))
   (add-hook 'lsp-after-open-hook 'my/lsp-haskell-local-face-setup nil t)
 )
 
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu)
 
-(use-package haskell-mode
-  :hook
-  (haskell-mode . my/haskell-mode-setup)
-  (haskell-literate-mode . my/haskell-mode-setup)
-  :custom
-  (haskell-indentation-layout-offset 4)
-  (haskell-indentation-starter-offset 4)
-  (haskell-indentation-left-offset 4)
-  (haskell-indentation-where-pre-offset 2)
-  (haskell-indentation-where-post-offset 2)
-)
-
-;; ;; TODO: Some current problems:
-;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
-;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
-;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
-;; ;;  - Is too smart while highlighting signature.
-;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
-;; ;;  - What is with literate mode?
-;; (use-package haskell-ts-mode
+;; (use-package haskell-mode
 ;;   :hook
-;;   (haskell-ts-mode . my/haskell-mode-setup)
-;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
-;;   :config
-;;   (setq haskell-ts-highlight-signature nil)
-;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+;;   (haskell-mode . my/haskell-mode-setup)
+;;   (haskell-literate-mode . my/haskell-mode-setup)
+;;   :custom
+;;   (haskell-indentation-layout-offset 4)
+;;   (haskell-indentation-starter-offset 4)
+;;   (haskell-indentation-left-offset 4)
+;;   (haskell-indentation-where-pre-offset 2)
+;;   (haskell-indentation-where-post-offset 2)
 ;; )
+
+;; TODO: Some current problems:
+;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+;;  - Is too smart while highlighting signature.
+;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+;;  - What is with literate mode?
+(use-package haskell-ts-mode
+  :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
+  :mode (("\\.hs\\'" . haskell-ts-mode))
+  :hook
+  (haskell-ts-mode . my/haskell-mode-setup)
+  ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+  :config
+  (setq haskell-ts-highlight-signature nil)
+  (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+)
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
