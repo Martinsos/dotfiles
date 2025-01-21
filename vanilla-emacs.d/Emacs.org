@@ -44,7 +44,7 @@ There are three important "packages" to understand here: package.el, use-package
 - **package.el** is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
 - **use-package** is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
   It uses package.el in the background to install packages, but it is not a package manager, instead it is a layer above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
-- **elpaca** is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant.
+- **elpaca** is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant. Instead of downloading tarballs from .e.g melpa, it pulls package sources directly from their git repos.
 
 In this config I use elpaca + use-package (package.el is not even loaded).
 
@@ -97,6 +97,8 @@ It can be good practice to add `:defer t` even when autoloading keywords are use
 Elpaca can install package directly: `(elpaca some-package (message "this happens after package is installed"))`, but we use it via use-package.
 In the background, a call to `(use-package some-package :ensure t :some-keyword <smth>)` becomes `(elpaca some-package (use-package some-package :some-keyword <smth>))`.
 
+Compared to native package.el, that pulls in tarballs from package repos, Elpaca (and also Straight) work in a different way -> they pull package sources directly from their github repos, based on the "recipes", which say for each package where to pull from (and optionally how to build them).
+
 **** Recipes
 
 Elpaca allows you to define how the package should be installed via a `recipe`, which is provided as an argument to `:ensure` if using `use-package`.
@@ -127,35 +129,35 @@ That also means that `after-init-hook` is often not the right choice any more, a
 #+begin_src emacs-lisp
 
   ;; Install and set up Elpaca. 
-  (defvar elpaca-installer-version 0.8)
+  (defvar elpaca-installer-version 0.9)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
   (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
   (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                                :ref nil :depth 1
+                                :ref nil :depth 1 :inherit ignore
                                 :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                                 :build (:not elpaca--activate-package)))
   (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-        (build (expand-file-name "elpaca/" elpaca-builds-directory))
-        (order (cdr elpaca-order))
-        (default-directory repo))
+         (build (expand-file-name "elpaca/" elpaca-builds-directory))
+         (order (cdr elpaca-order))
+         (default-directory repo))
     (add-to-list 'load-path (if (file-exists-p build) build repo))
     (unless (file-exists-p repo)
       (make-directory repo t)
       (when (< emacs-major-version 28) (require 'subr-x))
       (condition-case-unless-debug err
-          (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                  ,@(when-let ((depth (plist-get order :depth)))
-                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                  ,(plist-get order :repo) ,repo))))
-                  ((zerop (call-process "git" nil buffer t "checkout"
-                                        (or (plist-get order :ref) "--"))))
-                  (emacs (concat invocation-directory invocation-name))
-                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                  ((require 'elpaca))
-                  ((elpaca-generate-autoloads "elpaca" repo)))
+          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                    ,@(when-let* ((depth (plist-get order :depth)))
+                                                        (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                    ,(plist-get order :repo) ,repo))))
+                    ((zerop (call-process "git" nil buffer t "checkout"
+                                          (or (plist-get order :ref) "--"))))
+                    (emacs (concat invocation-directory invocation-name))
+                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                    ((require 'elpaca))
+                    ((elpaca-generate-autoloads "elpaca" repo)))
               (progn (message "%s" (buffer-string)) (kill-buffer buffer))
             (error "%s" (with-current-buffer buffer (buffer-string))))
         ((error) (warn "%s" err) (delete-directory repo 'recursive))))

@@ -1,37 +1,37 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-19 00:15:43 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-21 13:05:07 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
-(defvar elpaca-installer-version 0.8)
+(defvar elpaca-installer-version 0.9)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1
+                              :ref nil :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-      (build (expand-file-name "elpaca/" elpaca-builds-directory))
-      (order (cdr elpaca-order))
-      (default-directory repo))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
   (add-to-list 'load-path (if (file-exists-p build) build repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
     (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
-        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                ,@(when-let ((depth (plist-get order :depth)))
-                                                    (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                ,(plist-get order :repo) ,repo))))
-                ((zerop (call-process "git" nil buffer t "checkout"
-                                      (or (plist-get order :ref) "--"))))
-                (emacs (concat invocation-directory invocation-name))
-                ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                      "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                ((require 'elpaca))
-                ((elpaca-generate-autoloads "elpaca" repo)))
+        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                  ,@(when-let* ((depth (plist-get order :depth)))
+                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                  ,(plist-get order :repo) ,repo))))
+                  ((zerop (call-process "git" nil buffer t "checkout"
+                                        (or (plist-get order :ref) "--"))))
+                  (emacs (concat invocation-directory invocation-name))
+                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                  ((require 'elpaca))
+                  ((elpaca-generate-autoloads "elpaca" repo)))
             (progn (message "%s" (buffer-string)) (kill-buffer buffer))
           (error "%s" (with-current-buffer buffer (buffer-string))))
       ((error) (warn "%s" err) (delete-directory repo 'recursive))))
@@ -276,19 +276,19 @@ USAGE:
   :config
   (general-evil-setup t)
 
-  ;; general-create-definer allows you to create a function with some defaults set, that you can use to define more keys.
-  ;; We use it here to create a definer that sets SPC as a prefix (leader key) for any key that is defined with it.
-  (general-create-definer my/leader-keys
+  ;; Here we use the following two expressions to create a function ~my/leader-keys~ that we can then use to created
+  ;; new keys that all start with SPC prefix (leader key).
+  (general-define-key
+    :prefix-map 'my/leader-map
     :states '(motion normal insert visual emacs)
     :keymaps 'override ; Override any other keymaps with same keybindings. Otherwise I get issues with the `motion` and SPC, since `motion` already defines keybindings for SPC.
     :prefix "SPC" ; This will be active only in "normal"-like states (so `normal`, `motion` and `emacs`).
     :global-prefix "C-SPC" ; This will be always active.
   )
+  (general-create-definer my/leader-keys
+    :keymaps 'my/leader-map)
 
-  ;; TODO: In general.el README, this way of defining keys is listed as ineficient (slows down startup time).
-  ;;   I should check https://github.com/noctuid/general.el?tab=readme-ov-file#will-generalel-slow-my-initialization-time
-  ;;   and possibly rewrite it to follow the advice there.
-  ;;   Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
+  ;; TODO: Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
   ;;   should they all be here, or in their respective packages, or what.
   (my/leader-keys
     "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
@@ -359,9 +359,6 @@ USAGE:
     "br"  '(revert-buffer :which-key "reload buffer")
 
     "e"   '(:ignore t :which-key "errors")
-    "en"  '(flycheck-next-error :which-key "next")
-    "ep"  '(flycheck-previous-error :which-key "previous")
-    "el"  '(flycheck-list-errors :which-key "list")
 
     "f"   '(:ignore t :which-key "files")
     "fj"  '(avy-goto-char-timer :which-key "jump in file")
@@ -1241,11 +1238,17 @@ USAGE:
   (global-company-mode 1)
 )
 
-(use-package flycheck
-  :init (global-flycheck-mode)
-  :custom
-  (flycheck-display-errors-delay 0.2)
-)
+;; (use-package flycheck
+;;   :init (global-flycheck-mode)
+;;   :custom
+;;   (flycheck-display-errors-delay 0.2)
+;;   :config
+;;   (my/leader-keys
+;;     "en"  '(flycheck-next-error :which-key "next")
+;;     "ep"  '(flycheck-previous-error :which-key "previous")
+;;     "el"  '(flycheck-list-errors :which-key "list")
+;;   )
+;; )
 
 ;; TODO: This stopped working with flycheck, I commented it out till I get it working again. I opened issue here: https://github.com/alexmurray/flycheck-posframe/issues/34 .
 ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
@@ -1258,6 +1261,25 @@ USAGE:
 ;;   (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
 ;;   (flycheck-posframe-configure-pretty-defaults)
 ;; )
+
+(use-package flymake
+  :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+  :hook (prog-mode . flymake-mode)
+  :custom
+  (flymake-no-changes-timeout 0.2)
+  :config
+  (my/leader-keys
+    "en"  '(flymake-goto-next-error :which-key "next")
+    "ep"  '(flymake-goto-prev-error :which-key "previous")
+    "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
+    "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
+  )
+)
+
+(use-package flymake-posframe
+  :ensure (:host github :repo "Ladicle/flymake-posframe")
+  :hook (flymake-mode . flymake-posframe-mode)
+)
 
 (use-package lsp-mode
   :init
@@ -1310,7 +1332,7 @@ USAGE:
   ;; If diagnostics are longer and in multiple lines, it becomes a mess, it doesn't align them nicely
   ;; and they are all over the place, really hard to read, which is why I disabled showing diagnostics
   ;; in the sideline.
-  ;; When you disable it, lsp-mode instead sends diagnostics to flymake/flycheck, which by default show
+  ;; When you disable it, lsp-mode instead sends diagnostics to fly(check/make), which by default show
   ;; then in the minibuffer.
   (lsp-ui-sideline-show-diagnostics nil)
   (lsp-ui-sideline-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
