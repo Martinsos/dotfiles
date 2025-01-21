@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-21 13:05:07 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-21 17:36:52 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -44,6 +44,10 @@
 
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+
+;; Package for displaying content in a nice inline overlay.
+;; I use it in the rest of the config in some place(s).
+(use-package quick-peek)
 
 (defun my/var-state (var)
   "Returns the value of a variable with specified name, or 'my/var-unbound if it is not bound."
@@ -1238,19 +1242,19 @@ USAGE:
   (global-company-mode 1)
 )
 
-;; (use-package flycheck
-;;   :init (global-flycheck-mode)
-;;   :custom
-;;   (flycheck-display-errors-delay 0.2)
-;;   :config
-;;   (my/leader-keys
-;;     "en"  '(flycheck-next-error :which-key "next")
-;;     "ep"  '(flycheck-previous-error :which-key "previous")
-;;     "el"  '(flycheck-list-errors :which-key "list")
-;;   )
-;; )
+(use-package flycheck
+  :init (global-flycheck-mode)
+  :custom
+  (flycheck-display-errors-delay 0.2)
+  :config
+  (my/leader-keys
+    "en"  '(flycheck-next-error :which-key "next")
+    "ep"  '(flycheck-previous-error :which-key "previous")
+    "el"  '(flycheck-list-errors :which-key "list")
+  )
+)
 
-;; TODO: This stopped working with flycheck, I commented it out till I get it working again. I opened issue here: https://github.com/alexmurray/flycheck-posframe/issues/34 .
+;; NOTE: Commented out since I am now using flycheck-inline.
 ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
 ;; (use-package flycheck-posframe
 ;;   :after flycheck
@@ -1262,24 +1266,41 @@ USAGE:
 ;;   (flycheck-posframe-configure-pretty-defaults)
 ;; )
 
-(use-package flymake
-  :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
-  :hook (prog-mode . flymake-mode)
-  :custom
-  (flymake-no-changes-timeout 0.2)
+;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
+(use-package flycheck-inline
+  :after (quick-peek)
+  :hook (flycheck-mode . flycheck-inline-mode)
   :config
-  (my/leader-keys
-    "en"  '(flymake-goto-next-error :which-key "next")
-    "ep"  '(flymake-goto-prev-error :which-key "previous")
-    "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
-    "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
-  )
+  ;; Use quick-peek to show errors in a nicer way (with bars).
+  (setq flycheck-inline-display-function
+    (lambda (msg pos err)
+      (let* ((ov (quick-peek-overlay-ensure-at pos))
+             (contents (quick-peek-overlay-contents ov)))
+        (setf (quick-peek-overlay-contents ov)
+              (concat contents (when contents "\n") msg))
+        (quick-peek-update ov))))
+  (setq flycheck-inline-clear-function
+    'quick-peek-hide)
 )
 
-(use-package flymake-posframe
-  :ensure (:host github :repo "Ladicle/flymake-posframe")
-  :hook (flymake-mode . flymake-posframe-mode)
-)
+;; (use-package flymake
+;;   :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+;;   :hook (prog-mode . flymake-mode)
+;;   :custom
+;;   (flymake-no-changes-timeout 0.2)
+;;   :config
+;;   (my/leader-keys
+;;     "en"  '(flymake-goto-next-error :which-key "next")
+;;     "ep"  '(flymake-goto-prev-error :which-key "previous")
+;;     "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
+;;     "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
+;;   )
+;; )
+
+;; (use-package flymake-posframe
+;;   :ensure (:host github :repo "Ladicle/flymake-posframe")
+;;   :hook (flymake-mode . flymake-posframe-mode)
+;; )
 
 (use-package lsp-mode
   :init

@@ -180,6 +180,16 @@ That also means that `after-init-hook` is often not the right choice any more, a
 #+end_src
 
 * Utils
+** Packages
+
+#+begin_src emacs-lisp
+
+  ;; Package for displaying content in a nice inline overlay.
+  ;; I use it in the rest of the config in some place(s).
+  (use-package quick-peek)
+
+#+end_src
+
 ** Vars
 
 #+begin_src emacs-lisp
@@ -1630,23 +1640,21 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
   
 * Flycheck
 
-I disabled it all for now since I am currently trying out Flymake.
-
 #+begin_src emacs-lisp
 
-  ;; (use-package flycheck
-  ;;   :init (global-flycheck-mode)
-  ;;   :custom
-  ;;   (flycheck-display-errors-delay 0.2)
-  ;;   :config
-  ;;   (my/leader-keys
-  ;;     "en"  '(flycheck-next-error :which-key "next")
-  ;;     "ep"  '(flycheck-previous-error :which-key "previous")
-  ;;     "el"  '(flycheck-list-errors :which-key "list")
-  ;;   )
-  ;; )
+  (use-package flycheck
+    :init (global-flycheck-mode)
+    :custom
+    (flycheck-display-errors-delay 0.2)
+    :config
+    (my/leader-keys
+      "en"  '(flycheck-next-error :which-key "next")
+      "ep"  '(flycheck-previous-error :which-key "previous")
+      "el"  '(flycheck-list-errors :which-key "list")
+    )
+  )
 
-  ;; TODO: This stopped working with flycheck, I commented it out till I get it working again. I opened issue here: https://github.com/alexmurray/flycheck-posframe/issues/34 .
+  ;; NOTE: Commented out since I am now using flycheck-inline.
   ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
   ;; (use-package flycheck-posframe
   ;;   :after flycheck
@@ -1657,6 +1665,23 @@ I disabled it all for now since I am currently trying out Flymake.
   ;;   (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
   ;;   (flycheck-posframe-configure-pretty-defaults)
   ;; )
+
+  ;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
+  (use-package flycheck-inline
+    :after (quick-peek)
+    :hook (flycheck-mode . flycheck-inline-mode)
+    :config
+    ;; Use quick-peek to show errors in a nicer way (with bars).
+    (setq flycheck-inline-display-function
+      (lambda (msg pos err)
+        (let* ((ov (quick-peek-overlay-ensure-at pos))
+               (contents (quick-peek-overlay-contents ov)))
+          (setf (quick-peek-overlay-contents ov)
+                (concat contents (when contents "\n") msg))
+          (quick-peek-update ov))))
+    (setq flycheck-inline-clear-function
+      'quick-peek-hide)
+  )
 
 #+end_src
 
@@ -1669,33 +1694,35 @@ I should figure out what others do, what is the best way to go about it. There m
 Btw what is confusing to me is that reading the FlyCheck docs, it seems like it should be creating a GUI tooltip upon cursor (mouse). But it doesn't for me. I wonder if that is due to lsp-ui and its docs, some kind of conflict there?
 Maybe I should just look into how flycheck-posframe is implemented and implement it on my own based on it?
 One possibility is also to try Flymake!
-** TODO Try Flymake
-Flymake is emacs native checker, and long time flycheck was much better, but recently they improved flymake, revamped it.
-Reading its docs, it actually makes more sense to me than flycheck. So I think I should give it a try.
-Might also be worthy trying it with eglot!
-
 * Flymake
 
-#+begin_src emacs-lisp
-  (use-package flymake
-    :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
-    :hook (prog-mode . flymake-mode)
-    :custom
-    (flymake-no-changes-timeout 0.2)
-    :config
-    (my/leader-keys
-      "en"  '(flymake-goto-next-error :which-key "next")
-      "ep"  '(flymake-goto-prev-error :which-key "previous")
-      "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
-      "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
-    )
-  )
+I disabled it all for now since I am currently using Flycheck, but I might want to try it out in the future again.
 
-  (use-package flymake-posframe
-    :ensure (:host github :repo "Ladicle/flymake-posframe")
-    :hook (flymake-mode . flymake-posframe-mode)
-  )
+#+begin_src emacs-lisp
+
+  ;; (use-package flymake
+  ;;   :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+  ;;   :hook (prog-mode . flymake-mode)
+  ;;   :custom
+  ;;   (flymake-no-changes-timeout 0.2)
+  ;;   :config
+  ;;   (my/leader-keys
+  ;;     "en"  '(flymake-goto-next-error :which-key "next")
+  ;;     "ep"  '(flymake-goto-prev-error :which-key "previous")
+  ;;     "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
+  ;;     "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
+  ;;   )
+  ;; )
+
+  ;; (use-package flymake-posframe
+  ;;   :ensure (:host github :repo "Ladicle/flymake-posframe")
+  ;;   :hook (flymake-mode . flymake-posframe-mode)
+  ;; )
+
 #+end_src
+
+** TODO Try flymake-inline
+https://github.com/flycheck/flycheck-inline -> what about this one, maybe I would like it better than flymake-posframe?
 
 * Development
 ** LSP
