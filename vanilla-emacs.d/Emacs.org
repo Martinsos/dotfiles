@@ -2,20 +2,26 @@
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes :results none
 #+STARTUP: fold
 
-* Lexical binding
-
-This has to be first line in the file for lexical binding to be enabled!
-
-#+begin_src emacs-lisp
-;;; -*- lexical-binding: t; -*-
-#+end_src
-
-* Preamble
+* README (Intro)
 Whenever this file is saved from my emacs, =init.el= and =early-init.el= are automatically generated based on it. Check [[*Automatically tangle this file (Emacs.org)]] for logic that does this.
 
 Even though =init.el= and =early-init.el= are generated, I still keep them in version control (git), because it helps me avoid the situation where I don't have them on disk (maybe I deleted them, or I did fresh checkout) and can't easily start emacs and evaluate this very org file in order to generate them! By keeping them in version control, I have easy access to them, and I can even more easily see the diffs that were done.
 
 Sometimes manual setup is needed for certain parts of this config to work, for example installing external dependencies or setting up API keys -> settings local to the machine. In such case, you will find instructions how to do it spread through this file, and they will be labeled with =manual_setup= org label.
+
+** NOTE: Splitting (use-package) declarations into multiple org code blocks
+This can be useful in order to nicely group and document the code. In this case, best way to do this is to use =(with-eval-after-load 'packagename <code that would normally go under :config>)=, for code that would go under =:config=, which is usually what we need, this is better then having multiple =(use-package ...)= declarations for the same package, because those can allegedly mess up with each other then.
+
+* Preamble (must go first)
+** Lexical binding
+This has to be first line in the file (in this case init.el) for lexical binding to be enabled!
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
+#+end_src
+
+** Timestamps
+I am actually not sure how useful is this but I found it fun.
 
 #+name: timestamp
 #+begin_src emacs-lisp :tangle no :results value none
@@ -31,9 +37,6 @@ Sometimes manual setup is needed for certain parts of this config to work, for e
   ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
 
 #+end_src
-
-** NOTE: Splitting (use-package) declarations into multiple org code blocks
-This can be useful in order to nicely group and document the code. In this case, best way to do this is to use =(with-eval-after-load 'packagename <code that would normally go under :config>)=, for code that would go under =:config=, which is usually what we need, this is better then having multiple =(use-package ...)= declarations for the same package, because those can allegedly mess up with each other then.
 
 * Package management
 ** Tutorial
@@ -1645,7 +1648,7 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
   (use-package flycheck
     :init (global-flycheck-mode)
     :custom
-    (flycheck-display-errors-delay 0.2)
+    (flycheck-display-errors-delay 0.5)
     :config
     (my/leader-keys
       "en"  '(flycheck-next-error :which-key "next")
@@ -1654,18 +1657,23 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
     )
   )
 
-  ;; NOTE: Commented out since I am now using flycheck-inline.
   ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
   ;; (use-package flycheck-posframe
   ;;   :after flycheck
   ;;   :custom
   ;;   (flycheck-auto-display-errors-after-checking nil) ; Prevents repeated displaying of errors at point.
   ;;   (flycheck-posframe-border-width 10)
+  ;;   (flycheck-posframe-position 'window-top-right-corner)
   ;;   :config
   ;;   (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
   ;;   (flycheck-posframe-configure-pretty-defaults)
   ;; )
 
+  ;; TODO: This can be a bit too aggressive sometimes.
+  ;;       Maybe I should try disabling automatic showing of errors upon cursor and instead
+  ;;       have a keybinding to show them. I could probably achieve this by setting ~flycheck-display-errors-delay~
+  ;;       to a 0 or negative value?, or maybe by setting ~flycheck-auto-display-errors-after-checking~ to ~nil~.
+  ;;       And then binding ~flycheck-display-error-at-point~ to some nice keybinding.
   ;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
   (use-package flycheck-inline
     :after (quick-peek)
@@ -1724,6 +1732,55 @@ I disabled it all for now since I am currently using Flycheck, but I might want 
 ** TODO Try flymake-inline
 https://github.com/flycheck/flycheck-inline -> what about this one, maybe I would like it better than flymake-posframe?
 
+* Terminal (shell)
+
+There are different ways to use terminal / shell in Emacs. There are implementations that are completely done in elisp, there are implementations that support all that normal terminal does, and then there are does that don't support ncurses / TUI or all ansi codes.
+
+I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal in C, which means it is fast, stable, and supports everything that a terminal should. It is also very popular and well supported.
+
+#+begin_src emacs-lisp
+
+  ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
+  ;; emacses have all those ready, so usually you don't have to think about it.
+  (use-package vterm)
+
+  ;; Allows easy toggling of terminal(vterm) window.
+  (use-package vterm-toggle
+    :config
+    (my/leader-keys
+      "'" '(vterm-toggle :which-key "toggle terminal")
+    )
+    ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
+    ;; me to dir of previous buffer! Very useful.
+    (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
+  )
+
+#+end_src
+
+** Shell-side configuration for vterm :manual_setup:
+
+Some of the most useful vterm features require us to do a bit of configuration of the shell on our system. We can do without it, but we will be missing some of the functionality.
+=vterm= brings that config, for our convenience, as one .sh file that we need to load in our .bashrc.
+This can be done with the snippet below, by putting it into =.bashrc= (as per vterm docs).
+It assumes vterm's =etc/= dir is next to where vterm is installed. This was true for me when installing it via Elpaca.
+
+#+begin_src bash :tangle no
+
+  if [[ "$INSIDE_EMACS" = 'vterm' ]] \
+      && [[ -n ${EMACS_VTERM_PATH} ]] \
+      && [[ -f ${EMACS_VTERM_PATH}/etc/emacs-vterm-bash.sh ]]; then
+          source ${EMACS_VTERM_PATH}/etc/emacs-vterm-bash.sh
+  fi
+
+#+end_src
+
+*** TODO Might be cool if I could tangle this code snippet directly into .bashrc, or a separate file that .bashrc will load. Then this would become real part of emacs config instead of a manual step.
+
+
+** Cheatsheet :cheatsheet:
+- After toggling to terminal window, press C-return to cd into parent dir of previous buffer.
+- To execute commands like Ctrl-C or Ctrl-D, prefix them with `C-c`, so e.g. `C-c C-c` or `C-c C-d`.
+
 * Development
 ** LSP
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
@@ -1773,7 +1830,7 @@ Therefore, for optimal experience, we should customize the faces used for semant
     (lsp-headerline-breadcrumb-enable t)
     (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 
-    (lsp-semantic-tokens-enable nil) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
+    (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
   )
 
 #+end_src
@@ -1932,36 +1989,36 @@ For more details, this article is a great tutorial on treesitter support in Emac
   ;; NOTE: Requires ormolu to be installed on the machine.
   (use-package ormolu)
 
-  ;; (use-package haskell-mode
-  ;;   :hook
-  ;;   (haskell-mode . my/haskell-mode-setup)
-  ;;   (haskell-literate-mode . my/haskell-mode-setup)
-  ;;   :custom
-  ;;   (haskell-indentation-layout-offset 4)
-  ;;   (haskell-indentation-starter-offset 4)
-  ;;   (haskell-indentation-left-offset 4)
-  ;;   (haskell-indentation-where-pre-offset 2)
-  ;;   (haskell-indentation-where-post-offset 2)
-  ;; )
-
-  ;; TODO: Some current problems:
-  ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
-  ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
-  ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
-  ;;  - Is too smart while highlighting signature.
-  ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-  ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
-  ;;  - What is with literate mode?
-  (use-package haskell-ts-mode
-    :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
-    :mode (("\\.hs\\'" . haskell-ts-mode))
+  (use-package haskell-mode
     :hook
-    (haskell-ts-mode . my/haskell-mode-setup)
-    ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
-    :config
-    (setq haskell-ts-highlight-signature nil)
-    (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+    (haskell-mode . my/haskell-mode-setup)
+    (haskell-literate-mode . my/haskell-mode-setup)
+    :custom
+    (haskell-indentation-layout-offset 4)
+    (haskell-indentation-starter-offset 4)
+    (haskell-indentation-left-offset 4)
+    (haskell-indentation-where-pre-offset 2)
+    (haskell-indentation-where-post-offset 2)
   )
+
+  ;; ;; TODO: Some current problems:
+  ;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+  ;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+  ;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+  ;; ;;  - Is too smart while highlighting signature.
+  ;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+  ;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+  ;; ;;  - What is with literate mode?
+  ;; (use-package haskell-ts-mode
+  ;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
+  ;;   :mode (("\\.hs\\'" . haskell-ts-mode))
+  ;;   :hook
+  ;;   (haskell-ts-mode . my/haskell-mode-setup)
+  ;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+  ;;   :config
+  ;;   (setq haskell-ts-highlight-signature nil)
+  ;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+  ;; )
 
   ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
   (use-package lsp-haskell

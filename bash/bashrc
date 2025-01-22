@@ -135,6 +135,12 @@ github-frb() {
     $GIT_CO_CMD
 }
 
+# Shell-side configuration for emacs' vterm package (check my Emacs.org file for more info).
+if [[ "$INSIDE_EMACS" = 'vterm' ]] \
+    && [[ -n ${EMACS_VTERM_PATH} ]] \
+    && [[ -f ${EMACS_VTERM_PATH}/etc/emacs-vterm-bash.sh ]]; then
+	source ${EMACS_VTERM_PATH}/etc/emacs-vterm-bash.sh
+fi
 
 # Settings specific to this machine
 [ -f "$HOME/.bashrc_local" ] && source "$HOME/.bashrc_local"

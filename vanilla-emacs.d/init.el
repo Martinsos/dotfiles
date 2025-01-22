@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-21 17:36:52 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-23 00:20:24 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -1245,7 +1245,7 @@ USAGE:
 (use-package flycheck
   :init (global-flycheck-mode)
   :custom
-  (flycheck-display-errors-delay 0.2)
+  (flycheck-display-errors-delay 0.5)
   :config
   (my/leader-keys
     "en"  '(flycheck-next-error :which-key "next")
@@ -1254,18 +1254,23 @@ USAGE:
   )
 )
 
-;; NOTE: Commented out since I am now using flycheck-inline.
 ;; ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
 ;; (use-package flycheck-posframe
 ;;   :after flycheck
 ;;   :custom
 ;;   (flycheck-auto-display-errors-after-checking nil) ; Prevents repeated displaying of errors at point.
 ;;   (flycheck-posframe-border-width 10)
+;;   (flycheck-posframe-position 'window-top-right-corner)
 ;;   :config
 ;;   (add-hook 'flycheck-mode-hook 'flycheck-posframe-mode)
 ;;   (flycheck-posframe-configure-pretty-defaults)
 ;; )
 
+;; TODO: This can be a bit too aggressive sometimes.
+;;       Maybe I should try disabling automatic showing of errors upon cursor and instead
+;;       have a keybinding to show them. I could probably achieve this by setting ~flycheck-display-errors-delay~
+;;       to a 0 or negative value?, or maybe by setting ~flycheck-auto-display-errors-after-checking~ to ~nil~.
+;;       And then binding ~flycheck-display-error-at-point~ to some nice keybinding.
 ;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
 (use-package flycheck-inline
   :after (quick-peek)
@@ -1302,6 +1307,21 @@ USAGE:
 ;;   :hook (flymake-mode . flymake-posframe-mode)
 ;; )
 
+;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
+;; emacses have all those ready, so usually you don't have to think about it.
+(use-package vterm)
+
+;; Allows easy toggling of terminal(vterm) window.
+(use-package vterm-toggle
+  :config
+  (my/leader-keys
+    "'" '(vterm-toggle :which-key "toggle terminal")
+  )
+  ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
+  ;; me to dir of previous buffer! Very useful.
+  (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
+)
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
@@ -1328,7 +1348,7 @@ USAGE:
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 
-  (lsp-semantic-tokens-enable nil) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
+  (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
 )
 
 (use-package lsp-ui
@@ -1436,36 +1456,36 @@ USAGE:
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu)
 
-;; (use-package haskell-mode
-;;   :hook
-;;   (haskell-mode . my/haskell-mode-setup)
-;;   (haskell-literate-mode . my/haskell-mode-setup)
-;;   :custom
-;;   (haskell-indentation-layout-offset 4)
-;;   (haskell-indentation-starter-offset 4)
-;;   (haskell-indentation-left-offset 4)
-;;   (haskell-indentation-where-pre-offset 2)
-;;   (haskell-indentation-where-post-offset 2)
-;; )
-
-;; TODO: Some current problems:
-;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
-;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
-;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
-;;  - Is too smart while highlighting signature.
-;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
-;;  - What is with literate mode?
-(use-package haskell-ts-mode
-  :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
-  :mode (("\\.hs\\'" . haskell-ts-mode))
+(use-package haskell-mode
   :hook
-  (haskell-ts-mode . my/haskell-mode-setup)
-  ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
-  :config
-  (setq haskell-ts-highlight-signature nil)
-  (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+  (haskell-mode . my/haskell-mode-setup)
+  (haskell-literate-mode . my/haskell-mode-setup)
+  :custom
+  (haskell-indentation-layout-offset 4)
+  (haskell-indentation-starter-offset 4)
+  (haskell-indentation-left-offset 4)
+  (haskell-indentation-where-pre-offset 2)
+  (haskell-indentation-where-post-offset 2)
 )
+
+;; ;; TODO: Some current problems:
+;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+;; ;;  - Is too smart while highlighting signature.
+;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+;; ;;  - What is with literate mode?
+;; (use-package haskell-ts-mode
+;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
+;;   :mode (("\\.hs\\'" . haskell-ts-mode))
+;;   :hook
+;;   (haskell-ts-mode . my/haskell-mode-setup)
+;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+;;   :config
+;;   (setq haskell-ts-highlight-signature nil)
+;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+;; )
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
