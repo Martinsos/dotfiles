@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-23 00:20:24 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-26 00:05:34 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -295,112 +295,108 @@ USAGE:
   ;; TODO: Also, should I use :general keyword in use-package? Figure this out, the best way to define keybindings with SPC prefix,
   ;;   should they all be here, or in their respective packages, or what.
   (my/leader-keys
-    "SPC" '(counsel-M-x :which-key "M-x (exec cmd)")
-    "TAB" '(my/alternate-buffer :which-key "previous buffer")
-    "RET" '((lambda () (interactive) (org-agenda nil "w")) :which-key "work diary")
+    "SPC" '("M-x (exec cmd)" . counsel-M-x)
+    "TAB" '("previous buffer" . my/alternate-buffer)
+    "RET" '("work diary" . (lambda () (interactive) (org-agenda nil "w")))
 
-    "0"   '(winum-select-window-0 :which-key "jump to window 0")
-    "1"   '(winum-select-window-1 :which-key "jump to window 1")
-    "2"   '(winum-select-window-2 :which-key "jump to window 2")
-    "3"   '(winum-select-window-3 :which-key "jump to window 3")
-    "4"   '(winum-select-window-4 :which-key "jump to window 4")
+    "0"   '("jump to window 0" . winum-select-window-0)
+    "1"   '("jump to window 1" . winum-select-window-1)
+    "2"   '("jump to window 2" . winum-select-window-2)
+    "3"   '("jump to window 3" . winum-select-window-3)
+    "4"   '("jump to window 4" . winum-select-window-4)
 
     ;; TODO: When inside counsel-projectile-rg, you can do C-c C-o to persist the search results in a special buffer,
     ;;   and then in that buffer you can press enter on any of them and jump to that location.
     ;;   This is awesome, but how will I remember this? Somehow help myself remember this. Another candidate for "hint"/"help" zone?
     ;;   Btw Helm (in Spacemacs) has this bar at the bottom where it shows which command was just run and some hints (C-z for actions, ...).
     ;;   Is this something I can replicate, at least for Ivy?
-    "/"   '(counsel-projectile-rg :which-key "search in project")
-    "*"   '(counsel-projectile-rg-region-or-symbol :which-key "search in project w/input")
+    "/"   '("search in project" . counsel-projectile-rg)
+    "*"   '("search in project w/input" . counsel-projectile-rg-region-or-symbol)
 
-    ;; TODO: Add "'" to open shell.
+    "t"   '("toggles" . (keymap)) ; This is how prefix is defined.
+    "tt"  '("choose theme" . counsel-load-theme)
+    "ts"  '("scale text" . hydra-text-scale/body)
 
-    "t"   '(:ignore t :which-key "toggles") ; This is how prefix is defined.
-    "tt"  '(counsel-load-theme :which-key "choose theme")
-    "ts"  '(hydra-text-scale/body :which-key "scale text")
+    "a"   '("apps" . (keymap))
+    "au"  '("undo tree" . vundo)
 
-    "a"   '(:ignore t :which-key "apps")
-    "au"  '(vundo :which-key "undo tree")
+    "af"  '("fun" . (keymap))
+    "afa" 'animate-birthday-present
+    "afb" 'blackbox
+    "afc" 'butterfly
+    "afd" 'doctor
+    "afe" 'bubbles
+    "aff" 'dunnet
+    "afg" 'gnugo
+    "afh" 'hanoi
+    "afi" 'gomoku
+    "afj" 'solitaire
+    "afl" 'life
+    "afp" 'pong
+    "afs" 'snake
+    "aft" 'tetris
+    "afx" '5x5
+    "afz" 'zone
 
-    "af"   '(:ignore t :which-key "fun")
-    "afa" '(animate-birthday-present :which-key "birthday")
-    "afb" '(blackbox :which-key "blackbox")
-    "afc" '(butterfly :which-key "butterfly")
-    "afd" '(doctor :which-key "doctor")
-    "afe" '(bubbles :which-key "bubbles")
-    "aff" '(dunnet :which-key "dunnet")
-    "afg" '(gnugo :which-key "gnugo")
-    "afh" '(hanoi :which-key "hanoi")
-    "afi" '(gomoku :which-key "gomoku")
-    "afj" '(solitaire :which-key "solitaire")
-    "afl" '(life :which-key "life")
-    "afp" '(pong :which-key "pong")
-    "afs" '(snake :which-key "snake")
-    "aft" '(tetris :which-key "tetris")
-    "afx" '(5x5 :which-key "5x5")
-    "afz" '(zone :which-key "zone")
+    "q"   '("quit" . (keymap))
+    "qq"  '("quit" . save-buffers-kill-terminal)
+    "qr"  '("restart" . restart-emacs)
 
-    "q"   '(:ignore t :which-key "quit")
-    "qq"  '(save-buffers-kill-terminal :which-key "quit")
-    "qr"  '(restart-emacs :which-key "restart")
+    "w"   '("windows" . (keymap))
+    "ww"  '("other window" . ace-window)
+    "wd"  '("delete window" . delete-window)
+    "wx"  '("delete window and buffer" . kill-buffer-and-window)
+    "w/"  '("split vertically" . split-window-right)
+    "w-"  '("split horizontally" . split-window-below)
+    "wr"  '("resize window" . hydra-window-resize/body)
+    "wm"  '("move window" . hydra-window-move/body)
 
-    "w"   '(:ignore t :which-key "windows")
-    "ww"  '(ace-window :which-key "other window")
-    "wd"  '(delete-window :which-key "delete window")
-    "wx"  '(kill-buffer-and-window :which-key "delete window and buffer")
-    "w/"  '(split-window-right :which-key "split vertically")
-    "w-"  '(split-window-below :which-key "split horizontally")
-    "wr"  '(hydra-window-resize/body :which-key "resize window")
-    "wm"  '(hydra-window-move/body :which-key "move window")
+    "b"   '("buffers" . (keymap))
+    "bb"  '("switch buffer" . ivy-switch-buffer)
+    "bd"  '("kill buffer" . kill-this-buffer)
+    "bs"  '("go to scratch" . scratch-buffer)
+    "bm"  '("go to messages" . my/switch-to-messages-buffer)
+    "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
+    "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
+    "br"  '("reload buffer" . revert-buffer)
 
-    "b"   '(:ignore t :which-key "buffers")
-    "bb"  '(ivy-switch-buffer :which-key "switch buffer")
-    "bd"  '(kill-this-buffer :which-key "kill buffer")
-    "bs"  '(scratch-buffer :which-key "go to scratch")
-    "bm"  '(my/switch-to-messages-buffer :which-key "go to messages")
-    "bp"  '(hydra-buffer-next-prev/previous-buffer :which-key "previous buffer")
-    "bn"  '(hydra-buffer-next-prev/next-buffer :which-key "next buffer")
-    "br"  '(revert-buffer :which-key "reload buffer")
+    "e"   '("errors" . (keymap))
 
-    "e"   '(:ignore t :which-key "errors")
+    "f"   '("files" . (keymap))
+    "fj"  '("jump in file" . avy-goto-char-timer)
+    "ff"  '("find file" . counsel-find-file)
+    "fs"  '("save" . save-buffer)
+    "fr"  '("recent files" . counsel-recentf)
 
-    "f"   '(:ignore t :which-key "files")
-    "fj"  '(avy-goto-char-timer :which-key "jump in file")
-    "ff"  '(counsel-find-file :which-key "find file")
-    "fs"  '(save-buffer :which-key "save")
-    "fr"  '(counsel-recentf :which-key "recent files")
+    "fe"  '("emacs" . (keymap))
+    "feo" '("open Emacs.org file" . my/open-emacs-org-file)
+    "fei" '("open init.el file" . my/open-init-file)
 
-    "fe"  '(:ignore t :which-key "emacs")
-    "feo" '(my/open-emacs-org-file :which-key "open Emacs.org file")
-    "fei" '(my/open-init-file :which-key "open init.el file")
+    "i"   '("ai" . (keymap))
+    "ii"  '("interactive menu" . gptel-menu)
+    "ic"  '("chat" . gptel)
+    "is"  '("send (point/selection)" . gptel-send)
+    "ir"  '("rewrite" . gptel-rewrite)
+    "ia"  '("add to context (region/buffer)" . gptel-add)
+    "if"  '("add to context (file)" . gptel-add)
 
-    "i"   '(:ignore t :which-key "ai")
-    "ii"  '(gptel-menu :which-key "interactive menu")
-    "ic"  '(gptel :which-key "chat")
-    "is"  '(gptel-send :which-key "send (point/selection)")
-    "ir"  '(gptel-rewrite :which-key "rewrite")
-    "ia"  '(gptel-add :which-key "add to context (region/buffer)")
-    "if"  '(gptel-add :which-key "add to context (file)")
+    "v"   '("eval (elisp)" . (keymap))
+    "vl"  '("last-sexp" . eval-last-sexp)
+    "vv"  '("top-level form" . eval-defun)
+    "vr"  '("region" . eval-region)
 
-    "v"   '(:ignore t :which-key "eval (elisp)")
-    "vl"  '(eval-last-sexp :which-key "last-sexp")
-    "vv"  '(eval-defun :which-key "top-level form")
-    "vr"  '(eval-region :which-key "region")
+    "o"   '("org" . (keymap))
+    "oa"  '("agenda" . org-agenda)
+    "oc"  '("capture" . org-capture)
+    "ol"  '("store link" . org-store-link)
 
-    "o"   '(:ignore t :which-key "org")
-    "oa"  '(org-agenda :which-key "agenda")
-    "oc"  '(org-capture :which-key "capture")
-    "ol"  '(org-store-link :which-key "store link")
-
-    "p"   '(:ignore t :which-key "projects")
-    "pf"  '(counsel-projectile-find-file :which-key "find file")
-    "pd"  '(projectile-find-dir :which-key "find dir")
-    "pb"  '(projectile-switch-to-buffer :which-key "switch buffer")
-    "pp"  '(counsel-projectile-switch-project :which-key "switch project")
-    "pr"  '(projectile-replace :which-key "find and replace")
-    "p."  '(projectile-command-map :which-key "all commands")
-
-    "g"   '(magit :which-key "magit")
+    "p"   '("projects" . (keymap))
+    "pf"  '("find file" . counsel-projectile-find-file)
+    "pd"  '("find dir" . projectile-find-dir)
+    "pb"  '("switch buffer" . projectile-switch-to-buffer)
+    "pp"  '("switch project" . counsel-projectile-switch-project)
+    "pr"  '("find and replace" . projectile-replace)
+    "p."  '("all commands" . projectile-command-map)
   )
 
   (general-define-key
@@ -1180,6 +1176,10 @@ USAGE:
   (counsel-projectile-mode)
 )
 
+(my/leader-keys
+  "g" '("git (version control)" . (keymap))
+)
+
 ;; NOTE: I installed transient not because I use it directly, but because magit
 ;;   needs a newer version of it than what comes with emacs by default, and this
 ;;   takes care of it. If magit at some point stops needing it, I can remove this.
@@ -1193,6 +1193,19 @@ USAGE:
 (use-package magit
   :after transient
   :defer t
+)
+;; I define this outside of (use-package magit) because later is deferred.
+(my/leader-keys
+  "gg" 'magit
+)
+
+(use-package diff-hl
+  :config
+  (global-diff-hl-mode)
+  (my/leader-keys
+    "gn" '("next change" . diff-hl-next-hunk)
+    "gp" '("previous change" . diff-hl-previous-hunk)
+  )
 )
 
 ;; TODO: Fix highlight and search faces in tooltip/popup, or have theme that makes them nice. Company has faces that we can customize.
@@ -1248,9 +1261,9 @@ USAGE:
   (flycheck-display-errors-delay 0.5)
   :config
   (my/leader-keys
-    "en"  '(flycheck-next-error :which-key "next")
-    "ep"  '(flycheck-previous-error :which-key "previous")
-    "el"  '(flycheck-list-errors :which-key "list")
+    "en"  '("next" . flycheck-next-error)
+    "ep"  '("previous" . flycheck-previous-error)
+    "el"  '("list" . flycheck-list-errors)
   )
 )
 
@@ -1295,10 +1308,10 @@ USAGE:
 ;;   (flymake-no-changes-timeout 0.2)
 ;;   :config
 ;;   (my/leader-keys
-;;     "en"  '(flymake-goto-next-error :which-key "next")
-;;     "ep"  '(flymake-goto-prev-error :which-key "previous")
-;;     "el"  '(flymake-show-buffer-diagnostics :which-key "list (buffer)")
-;;     "eL"  '(flymake-show-project-diagnostics :which-key "list (project)")
+;;     "en"  '("next" . flymake-goto-next-error)
+;;     "ep"  '("previous" . flymake-goto-prev-error)
+;;     "el"  '("list (buffer)" . flymake-show-buffer-diagnostics)
+;;     "eL"  '("list (project)" . flymake-show-project-diagnostics)
 ;;   )
 ;; )
 
@@ -1315,7 +1328,7 @@ USAGE:
 (use-package vterm-toggle
   :config
   (my/leader-keys
-    "'" '(vterm-toggle :which-key "toggle terminal")
+    "'" '("toggle terminal" . vterm-toggle)
   )
   ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
   ;; me to dir of previous buffer! Very useful.
@@ -1456,36 +1469,36 @@ USAGE:
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu)
 
-(use-package haskell-mode
-  :hook
-  (haskell-mode . my/haskell-mode-setup)
-  (haskell-literate-mode . my/haskell-mode-setup)
-  :custom
-  (haskell-indentation-layout-offset 4)
-  (haskell-indentation-starter-offset 4)
-  (haskell-indentation-left-offset 4)
-  (haskell-indentation-where-pre-offset 2)
-  (haskell-indentation-where-post-offset 2)
-)
-
-;; ;; TODO: Some current problems:
-;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
-;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
-;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
-;; ;;  - Is too smart while highlighting signature.
-;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
-;; ;;  - What is with literate mode?
-;; (use-package haskell-ts-mode
-;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
-;;   :mode (("\\.hs\\'" . haskell-ts-mode))
+;; (use-package haskell-mode
 ;;   :hook
-;;   (haskell-ts-mode . my/haskell-mode-setup)
-;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
-;;   :config
-;;   (setq haskell-ts-highlight-signature nil)
-;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+;;   (haskell-mode . my/haskell-mode-setup)
+;;   (haskell-literate-mode . my/haskell-mode-setup)
+;;   :custom
+;;   (haskell-indentation-layout-offset 4)
+;;   (haskell-indentation-starter-offset 4)
+;;   (haskell-indentation-left-offset 4)
+;;   (haskell-indentation-where-pre-offset 2)
+;;   (haskell-indentation-where-post-offset 2)
 ;; )
+
+;; TODO: Some current problems:
+;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+;;  - Is too smart while highlighting signature.
+;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+;;  - What is with literate mode?
+(use-package haskell-ts-mode
+  :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
+  :mode (("\\.hs\\'" . haskell-ts-mode))
+  :hook
+  (haskell-ts-mode . my/haskell-mode-setup)
+  ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+  :config
+  (setq haskell-ts-highlight-signature nil)
+  (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+)
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
