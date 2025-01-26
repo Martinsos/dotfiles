@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-26 02:51:37 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-27 00:20:26 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -44,6 +44,8 @@
 
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+
+(require 'cl-lib) ;; Common utilities and functions, e.g. cl-some, cl-loop, ... .
 
 ;; Package for displaying content in a nice inline overlay.
 ;; I use it in the rest of the config in some place(s).
@@ -1258,7 +1260,7 @@ USAGE:
 (use-package flycheck
   :init (global-flycheck-mode)
   :custom
-  (flycheck-display-errors-delay 0.9) ; Default value is 0.9.
+  (flycheck-display-errors-delay 0.5) ; Default value is 0.9.
   :config
   (my/leader-keys
     "en"  '("next" . flycheck-next-error)
@@ -1279,22 +1281,55 @@ USAGE:
 ;;   (flycheck-posframe-configure-pretty-defaults)
 ;; )
 
-;; TODO: This can be a bit too aggressive sometimes.
-;;       Maybe I should try disabling automatic showing of errors upon cursor and instead
-;;       have a keybinding to show them. I could probably achieve this by setting ~flycheck-display-errors-delay~
-;;       to a 0 or negative value?, or maybe by setting ~flycheck-auto-display-errors-after-checking~ to ~nil~.
-;;       And then binding ~flycheck-display-error-at-point~ to some nice keybinding.
+
 ;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
 (use-package flycheck-inline
   :after (quick-peek)
   :hook (flycheck-mode . flycheck-inline-mode)
   :config
+
+  ;;; Below I configure stuff quite heavily!
+  ;;; We display only first line for each error + define a command for (un)expanding errors under the cursor/point.
+  ;;; We use quick-peek for nice borders around the overlay.
+
+  (defvar my/expanded-flycheck-errors nil
+    "List of flycheck errors that are to be shown with a full message.")
+
+  (defun my/toggle-flycheck-errors-expansion-at-point ()
+    "Adds flycheck errors at point to the list of expanded errors if not already expanded.
+     If already in the list, it removes them from the list."
+    (interactive)
+    (let* ((errs (flycheck-overlay-errors-at (point))))
+      (setq my/expanded-flycheck-errors (if (cl-intersection errs my/expanded-flycheck-errors) nil errs))
+    )
+  )
+  (my/leader-keys
+    "ee" '("(un)expand" . my/toggle-flycheck-errors-expansion-at-point)
+  )
+
+  (defun my/shorten-flycheck-error-message (msg)
+    "Shorten the error message MSG to the first line, adding ellipsis if so."
+    (let ((lines (split-string msg "\n")))
+      (if (> (length lines) 1)
+          (concat (car lines) (propertize " …" 'face 'bold))
+        (car lines)
+      )
+    )
+  )
+
   ;; Use quick-peek to show errors in a nicer way (with bars).
+  ;; If error is in the my/expanded-flycheck-errors list, I show its full message,
+  ;; if not, I show shortened version of it.
   (setq flycheck-inline-display-function (lambda (msg pos err)
 					   (let* ((ov (quick-peek-overlay-ensure-at pos))
-						 (contents (quick-peek-overlay-contents ov)))
+						  (contents (quick-peek-overlay-contents ov))
+                                                  (show-full-msg (member err my/expanded-flycheck-errors))
+						 )
 					     (setf (quick-peek-overlay-contents ov)
-						   (concat contents (when contents "\n") msg))
+						   (concat contents
+							   (when contents "\n")
+							   (if show-full-msg msg (my/shorten-flycheck-error-message msg)))
+					     )
 					     (quick-peek-update ov)
                                            )
 					 )
@@ -1470,36 +1505,36 @@ USAGE:
 ;; NOTE: Requires ormolu to be installed on the machine.
 (use-package ormolu)
 
-;; (use-package haskell-mode
-;;   :hook
-;;   (haskell-mode . my/haskell-mode-setup)
-;;   (haskell-literate-mode . my/haskell-mode-setup)
-;;   :custom
-;;   (haskell-indentation-layout-offset 4)
-;;   (haskell-indentation-starter-offset 4)
-;;   (haskell-indentation-left-offset 4)
-;;   (haskell-indentation-where-pre-offset 2)
-;;   (haskell-indentation-where-post-offset 2)
-;; )
-
-;; TODO: Some current problems:
-;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
-;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
-;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
-;;  - Is too smart while highlighting signature.
-;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
-;;  - What is with literate mode?
-(use-package haskell-ts-mode
-  :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
-  :mode (("\\.hs\\'" . haskell-ts-mode))
+(use-package haskell-mode
   :hook
-  (haskell-ts-mode . my/haskell-mode-setup)
-  ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
-  :config
-  (setq haskell-ts-highlight-signature nil)
-  (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+  (haskell-mode . my/haskell-mode-setup)
+  (haskell-literate-mode . my/haskell-mode-setup)
+  :custom
+  (haskell-indentation-layout-offset 4)
+  (haskell-indentation-starter-offset 4)
+  (haskell-indentation-left-offset 4)
+  (haskell-indentation-where-pre-offset 2)
+  (haskell-indentation-where-post-offset 2)
 )
+
+;; ;; TODO: Some current problems:
+;; ;;  - Doesn't highlight as much stuff as I would like it to (https://codeberg.org/pranshu/haskell-ts-mode/issues/7).
+;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
+;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
+;; ;;  - Is too smart while highlighting signature.
+;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
+;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
+;; ;;  - What is with literate mode?
+;; (use-package haskell-ts-mode
+;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
+;;   :mode (("\\.hs\\'" . haskell-ts-mode))
+;;   :hook
+;;   (haskell-ts-mode . my/haskell-mode-setup)
+;;   ;;(haskell-literate-mode . my/haskell-mode-setup) ; What about literate mode?
+;;   :config
+;;   (setq haskell-ts-highlight-signature nil)
+;;   (setq haskell-ts-font-lock-level 4) ; Maximum syntax highlighting.
+;; )
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
