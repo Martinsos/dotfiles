@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-01-26 00:05:34 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-01-26 02:51:37 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -1258,7 +1258,7 @@ USAGE:
 (use-package flycheck
   :init (global-flycheck-mode)
   :custom
-  (flycheck-display-errors-delay 0.5)
+  (flycheck-display-errors-delay 0.9) ; Default value is 0.9.
   :config
   (my/leader-keys
     "en"  '("next" . flycheck-next-error)
@@ -1290,15 +1290,16 @@ USAGE:
   :hook (flycheck-mode . flycheck-inline-mode)
   :config
   ;; Use quick-peek to show errors in a nicer way (with bars).
-  (setq flycheck-inline-display-function
-    (lambda (msg pos err)
-      (let* ((ov (quick-peek-overlay-ensure-at pos))
-             (contents (quick-peek-overlay-contents ov)))
-        (setf (quick-peek-overlay-contents ov)
-              (concat contents (when contents "\n") msg))
-        (quick-peek-update ov))))
-  (setq flycheck-inline-clear-function
-    'quick-peek-hide)
+  (setq flycheck-inline-display-function (lambda (msg pos err)
+					   (let* ((ov (quick-peek-overlay-ensure-at pos))
+						 (contents (quick-peek-overlay-contents ov)))
+					     (setf (quick-peek-overlay-contents ov)
+						   (concat contents (when contents "\n") msg))
+					     (quick-peek-update ov)
+                                           )
+					 )
+	flycheck-inline-clear-function 'quick-peek-hide
+  )
 )
 
 ;; (use-package flymake

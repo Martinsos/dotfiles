@@ -1672,7 +1672,7 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
   (use-package flycheck
     :init (global-flycheck-mode)
     :custom
-    (flycheck-display-errors-delay 0.5)
+    (flycheck-display-errors-delay 0.9) ; Default value is 0.9.
     :config
     (my/leader-keys
       "en"  '("next" . flycheck-next-error)
@@ -1704,15 +1704,16 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
     :hook (flycheck-mode . flycheck-inline-mode)
     :config
     ;; Use quick-peek to show errors in a nicer way (with bars).
-    (setq flycheck-inline-display-function
-      (lambda (msg pos err)
-        (let* ((ov (quick-peek-overlay-ensure-at pos))
-               (contents (quick-peek-overlay-contents ov)))
-          (setf (quick-peek-overlay-contents ov)
-                (concat contents (when contents "\n") msg))
-          (quick-peek-update ov))))
-    (setq flycheck-inline-clear-function
-      'quick-peek-hide)
+    (setq flycheck-inline-display-function (lambda (msg pos err)
+  					   (let* ((ov (quick-peek-overlay-ensure-at pos))
+  						 (contents (quick-peek-overlay-contents ov)))
+  					     (setf (quick-peek-overlay-contents ov)
+  						   (concat contents (when contents "\n") msg))
+  					     (quick-peek-update ov)
+                                             )
+  					 )
+  	flycheck-inline-clear-function 'quick-peek-hide
+    )
   )
 
 #+end_src
@@ -2329,6 +2330,8 @@ Although I think I have one in the ENV, that is not enough?
 - m <char> -> set mark
 - ` <char> -> go to mark
 - ` ` -> go to last mark
+
+- C-x TAB -> indent-rigidly: allows indenting region one by one space via transient menu
 
 Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
