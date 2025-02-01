@@ -1669,195 +1669,6 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
 ** Cheatsheet :cheatsheet:
 - C-s to search among the candidates. C-M-s to not just highlight but also filter. C-g to quit search mode.
   
-* Flycheck
-
-#+begin_src emacs-lisp
-
-  (use-package flycheck
-    :init (global-flycheck-mode)
-    :custom
-    (flycheck-display-errors-delay 0) ; Default value is 0.9.
-    :config
-    (my/leader-keys
-      "en"  '("next" . flycheck-next-error)
-      "ep"  '("previous" . flycheck-previous-error)
-      "el"  '("list" . flycheck-list-errors)
-    )
-  )
-
-  ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
-  (use-package flycheck-posframe
-    :after flycheck
-    :custom
-    (flycheck-posframe-border-width 10)
-    (flycheck-posframe-prefix nil)
-    ;; Don't show errors automatically on cursor, since below we define a manual way to invoke
-    ;; showing of errors at point. I do it this way because I configured automatic showing of first
-    ;; line of errors in the sideline, so I don't need to also see the whole error all the time,
-    ;; instead I will rather invoke it manually when I want to see the whole of it.
-    (flycheck-display-errors-function nil)
-    :config
-    (set-face-attribute 'flycheck-posframe-warning-face nil :inherit 'warning)
-    (set-face-attribute 'flycheck-posframe-error-face nil :inherit 'error)
-
-    (defun my/show-flycheck-errors-posframe-at-point ()
-      (interactive)
-      (let* ((errs (flycheck-overlay-errors-at (point))))
-        (flycheck-posframe-show-posframe errs)
-      )
-    )
-    (my/leader-keys
-      "ee" '("(un)expand" . my/show-flycheck-errors-posframe-at-point)
-    )
-  )
-
-  ;; ;; Shows flycheck errors/warnings inline, instead of a minibuffer which is default.
-  ;; (use-package flycheck-inline
-  ;;   :after (quick-peek)
-  ;;   :hook (flycheck-mode . flycheck-inline-mode)
-  ;;   :config
-
-  ;;   ;;; Below I configure stuff quite heavily!
-  ;;   ;;; We display only first line for each error + define a command for (un)expanding errors under the cursor/point.
-  ;;   ;;; We use quick-peek for nice borders around the overlay.
-
-  ;;   (defvar my/expanded-flycheck-errors nil
-  ;;     "List of flycheck errors that are to be shown with a full message.")
-
-  ;;   (defun my/toggle-flycheck-errors-expansion-at-point ()
-  ;;     "Adds flycheck errors at point to the list of expanded errors if not already expanded.
-  ;;      If already in the list, it removes them from the list."
-  ;;     (interactive)
-  ;;     (let* ((errs (flycheck-overlay-errors-at (point))))
-  ;;       (setq my/expanded-flycheck-errors (if (cl-intersection errs my/expanded-flycheck-errors) nil errs))
-  ;;     )
-  ;;   )
-  ;;   (my/leader-keys
-  ;;     "ee" '("(un)expand" . my/toggle-flycheck-errors-expansion-at-point)
-  ;;   )
-
-  ;;   (defun my/shorten-flycheck-error-message (msg)
-  ;;     "Shorten the error message MSG to the first line, adding ellipsis if so."
-  ;;     (let ((lines (split-string msg "\n")))
-  ;;       (if (> (length lines) 1)
-  ;;           (concat (car lines) (propertize " …" 'face 'bold))
-  ;;         (car lines)
-  ;;       )
-  ;;     )
-  ;;   )
-
-  ;;   ;; Use quick-peek to show errors in a nicer way (with bars).
-  ;;   ;; If error is in the my/expanded-flycheck-errors list, I show its full message,
-  ;;   ;; if not, I show shortened version of it.
-  ;;   (setq flycheck-inline-display-function (lambda (msg pos err)
-  ;; 					   (let* ((ov (quick-peek-overlay-ensure-at pos))
-  ;; 						  (contents (quick-peek-overlay-contents ov))
-  ;;                                                   (show-full-msg (member err my/expanded-flycheck-errors))
-  ;; 						 )
-  ;; 					     (setf (quick-peek-overlay-contents ov)
-  ;; 						   (concat contents
-  ;; 							   (when contents "\n")
-  ;; 							   (if show-full-msg msg (my/shorten-flycheck-error-message msg)))
-  ;; 					     )
-  ;; 					     (quick-peek-update ov)
-  ;;                                            )
-  ;; 					 )
-  ;; 	flycheck-inline-clear-function 'quick-peek-hide
-  ;;   )
-  ;; )
-
-#+end_src
-
-** TODO Improve how errors/warnings are shown
-By default, flycheck shows errors/warnings in a minibuffer. It doesn't color them however, they are just white, and quite bland looking.
-A way to improve those is to override the value of ~flycheck-display-errors-function~ with a function that will display the errors. They don't give much default options, only displaying them in the minibuffer which is the default.
-I tried flycheck-pos-tip which is official extra package by flycheck taht shows errors in a popup, but it didn't work great / I didn't konw how to customize it.
-Now I am trying out flycheck-posframe, but it is also not perfect, there is some flickering, and it feels a bit sluggish and I can't configure it still as much as I would like.
-I should figure out what others do, what is the best way to go about it. There must be some approach that most people use that is nice.
-Btw what is confusing to me is that reading the FlyCheck docs, it seems like it should be creating a GUI tooltip upon cursor (mouse). But it doesn't for me. I wonder if that is due to lsp-ui and its docs, some kind of conflict there?
-Maybe I should just look into how flycheck-posframe is implemented and implement it on my own based on it?
-One possibility is also to try Flymake!
-* Flymake
-
-I disabled it all for now since I am currently using Flycheck, but I might want to try it out in the future again.
-
-#+begin_src emacs-lisp
-
-  ;; (use-package flymake
-  ;;   :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
-  ;;   :hook (prog-mode . flymake-mode)
-  ;;   :custom
-  ;;   (flymake-no-changes-timeout 0.2)
-  ;;   :config
-  ;;   (my/leader-keys
-  ;;     "en"  '("next" . flymake-goto-next-error)
-  ;;     "ep"  '("previous" . flymake-goto-prev-error)
-  ;;     "el"  '("list (buffer)" . flymake-show-buffer-diagnostics)
-  ;;     "eL"  '("list (project)" . flymake-show-project-diagnostics)
-  ;;   )
-  ;; )
-
-  ;; (use-package flymake-posframe
-  ;;   :ensure (:host github :repo "Ladicle/flymake-posframe")
-  ;;   :hook (flymake-mode . flymake-posframe-mode)
-  ;; )
-
-#+end_src
-
-** TODO Try flymake-inline
-https://github.com/flycheck/flycheck-inline -> what about this one, maybe I would like it better than flymake-posframe?
-
-* Sideline
-
-#+begin_src emacs-lisp
-
-  (use-package sideline
-    :hook ((flycheck-mode lsp-mode) . sideline-mode)
-    :init
-    ;; `up` means it is shown above the line where cursor is,
-    ;; `down` means beneath it.
-    (setq sideline-backends-right '((sideline-flycheck . up)
-  				  (sideline-lsp . down)))
-  )
-  ;; TODO: Somehow define following prefixes ✖ ⓘ ⚠ for errors / warning / success?
-  (use-package sideline-flycheck 
-    :hook (flycheck-mode . sideline-flycheck-setup)
-    :custom
-    (sideline-flycheck-max-lines 1)
-    :config
-    (set-face-attribute 'sideline-flycheck-error nil
-  		      :weight 'light
-  		      :slant 'italic
-  		      :background "black")
-    (set-face-attribute 'sideline-flycheck-warning nil
-  		      :weight 'light
-  		      :slant 'italic
-  		      :background "black")
-    (set-face-attribute 'sideline-flycheck-success nil
-  		      :weight 'light
-  		      :slant 'italic
-  		      :background "black")
-  )
-  (use-package sideline-lsp
-    :after lsp-ui ; To get the config below to override settings in lsp-ui.
-    :custom
-    (sideline-lsp-show-diagnostics nil) ; We are handling lsp diagnostics through flycheck.
-    (sideline-lsp-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
-    (sideline-lsp-show-symbol nil) ; This I didn't find useful.
-    (sideline-lsp-show-code-actions t) ; But I do find it useful to see code actions.
-    (sideline-lsp-code-actions-prefix "✎ ")
-    (sideline-lsp-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
-    :config
-    (set-face-attribute 'sideline-lsp-code-action nil
-                        :weight 'light
-  		      :slant 'italic
-                        :box nil
-                        :foreground "light-grey"
-  		      :background "black")
-  )
-
-#+end_src
-
 * Terminal (shell)
 
 There are different ways to use terminal / shell in Emacs. There are implementations that are completely done in elisp, there are implementations that support all that normal terminal does, and then there are does that don't support ncurses / TUI or all ansi codes.
@@ -1909,6 +1720,219 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 
 
 ** TODO Try "eat" terminal
+* Syntax/error checking
+** Flycheck
+
+Flycheck is the central package for syntax checking, a "frontend" for code-related errors.
+Given backend(s) (e.g. LSP, linter, ...) that supply errors (and warnings, info, ...), it collects errors from them and visualizes and manipulates them in a unified way.
+It marks the affected piece of code visually (squigly lines), gives a way to move through the errors quickly, ... .
+By default, it shows full error message(s) in the minibuffer when cursor is at the place of the error.
+
+I currently configured it in the following way:
+- I configure backends per language, but most often it is LSP.
+- Instead of showing full error(s) in minibuffer when point/cursor is at the place of error, Flycheck shows short error message (1 line) via the sideline.
+- If I want to see the full error message at point/cursor, I have a command (and keybinding) I can invoke to do so.
+
+#+begin_src emacs-lisp
+
+  (use-package flycheck
+    :init (global-flycheck-mode)
+    :custom
+    (flycheck-display-errors-delay 0) ; Default value is 0.9.
+    :config
+    (my/leader-keys
+      "en"  '("next" . flycheck-next-error)
+      "ep"  '("previous" . flycheck-previous-error)
+      "el"  '("list" . flycheck-list-errors)
+    )
+  )
+
+#+end_src
+
+#+begin_src emacs-lisp
+
+  ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
+  ;; I configured it so it doesn't show them on cursor, as is default, but on request.
+  (use-package flycheck-posframe
+    :after flycheck
+    :custom
+    (flycheck-posframe-border-width 10)
+    (flycheck-posframe-prefix nil)
+    ;; Don't show errors automatically on cursor, since below we define a manual way to invoke
+    ;; showing of errors at point. I do it this way because I configured automatic showing of first
+    ;; line of errors in the sideline, so I don't need to also see the whole error all the time,
+    ;; instead I will rather invoke it manually when I want to see the whole of it.
+    (flycheck-display-errors-function nil)
+    :config
+    (set-face-attribute 'flycheck-posframe-warning-face nil :inherit 'warning)
+    (set-face-attribute 'flycheck-posframe-error-face nil :inherit 'error)
+    ;; TODO: Make the posframe(popup) visually nicer.
+
+    (defun my/show-flycheck-errors-posframe-at-point ()
+      (interactive)
+      (let* ((errs (flycheck-overlay-errors-at (point))))
+        (flycheck-posframe-show-posframe errs)
+      )
+    )
+    (my/leader-keys
+      "ee" '("(un)expand" . my/show-flycheck-errors-posframe-at-point)
+    )
+  )
+
+#+end_src
+
+*** Show errors inline                                              :inactive:
+
+While I got this to work quite nicely, I found that code inline can be pretty confusing, as it keeps popping in and out and moving the code you are reading, even when you don't care about the error at that moment.
+Showing just one line by default helped, but I still didn't like it, and ended up going instead for the sideline for 1 line and then posframe for the full error.
+
+#+begin_src emacs-lisp :tangle no
+
+  ;; Shows flycheck errors/warnings inline (in code, below the cursor), instead of a minibuffer which is default.
+  (use-package flycheck-inline
+    :after (quick-peek)
+    :hook (flycheck-mode . flycheck-inline-mode)
+    :config
+
+    ;;; Below I configure stuff quite heavily!
+    ;;; We display only first line for each error + define a command for (un)expanding errors under the cursor/point.
+    ;;; We use quick-peek for nice borders around the overlay.
+
+    (defvar my/expanded-flycheck-errors nil
+      "List of flycheck errors that are to be shown with a full message.")
+
+    (defun my/toggle-flycheck-errors-expansion-at-point ()
+      "Adds flycheck errors at point to the list of expanded errors if not already expanded.
+       If already in the list, it removes them from the list."
+      (interactive)
+      (let* ((errs (flycheck-overlay-errors-at (point))))
+        (setq my/expanded-flycheck-errors (if (cl-intersection errs my/expanded-flycheck-errors) nil errs))
+      )
+    )
+    (my/leader-keys
+      "ee" '("(un)expand" . my/toggle-flycheck-errors-expansion-at-point)
+    )
+
+    (defun my/shorten-flycheck-error-message (msg)
+      "Shorten the error message MSG to the first line, adding ellipsis if so."
+      (let ((lines (split-string msg "\n")))
+        (if (> (length lines) 1)
+            (concat (car lines) (propertize " …" 'face 'bold))
+          (car lines)
+        )
+      )
+    )
+
+    ;; Use quick-peek to show errors in a nicer way (with bars).
+    ;; If error is in the my/expanded-flycheck-errors list, I show its full message,
+    ;; if not, I show shortened version of it.
+    (setq flycheck-inline-display-function (lambda (msg pos err)
+  					   (let* ((ov (quick-peek-overlay-ensure-at pos))
+  						  (contents (quick-peek-overlay-contents ov))
+                                                    (show-full-msg (member err my/expanded-flycheck-errors))
+  						 )
+  					     (setf (quick-peek-overlay-contents ov)
+  						   (concat contents
+  							   (when contents "\n")
+  							   (if show-full-msg msg (my/shorten-flycheck-error-message msg)))
+  					     )
+  					     (quick-peek-update ov)
+                                             )
+  					 )
+  	flycheck-inline-clear-function 'quick-peek-hide
+    )
+  )
+
+#+end_src
+
+** Flymake                                                          :inactive:
+
+Im not using it for now since I managed to set up Flycheck quite well, but I might want to try it out in the future again.
+
+#+begin_src emacs-lisp :tangle no
+
+  (use-package flymake
+    :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+    :hook (prog-mode . flymake-mode)
+    :custom
+    (flymake-no-changes-timeout 0.2)
+    :config
+    (my/leader-keys
+      "en"  '("next" . flymake-goto-next-error)
+      "ep"  '("previous" . flymake-goto-prev-error)
+      "el"  '("list (buffer)" . flymake-show-buffer-diagnostics)
+      "eL"  '("list (project)" . flymake-show-project-diagnostics)
+    )
+  )
+
+  (use-package flymake-posframe
+    :ensure (:host github :repo "Ladicle/flymake-posframe")
+    :hook (flymake-mode . flymake-posframe-mode)
+  )
+
+#+end_src
+
+* Sideline
+
+=sideline= package shows information (e.g. errors) inline with the code, but on the right (or left) edge of the screen.
+It shows that infomation in a smart way, to minimally disrupt the existing code.
+
+You can plug in multiple backends into it, and it will display the information uniformly.
+
+#+begin_src emacs-lisp
+
+  (use-package sideline
+    :hook ((flycheck-mode lsp-mode) . sideline-mode)
+    :init
+    ;; `up` means it is shown above the line where cursor is, `down` means beneath it.
+    (setq sideline-backends-right '((sideline-flycheck . up)
+  				  (sideline-lsp . down)))
+  )
+
+  (use-package sideline-flycheck 
+    :hook (flycheck-mode . sideline-flycheck-setup)
+    :custom
+    ;; I want to show only short version of errors, otherwise it becomes a mess.
+    ;; If I need to see the full error, I have other methods to do that (e.g. flycheck-posframe).
+    (sideline-flycheck-max-lines 1)
+    :config
+    (set-face-attribute 'sideline-flycheck-error nil
+  		      :slant 'italic
+  		      :background "black")
+    (set-face-attribute 'sideline-flycheck-warning nil
+  		      :weight 'light
+  		      :slant 'italic
+  		      :background "black")
+    (set-face-attribute 'sideline-flycheck-success nil
+  		      :weight 'light
+  		      :slant 'italic
+  		      :background "black")
+    ;; TODO: Somehow define following prefixes ✖ ⓘ ⚠ for errors / warning / success?
+  )
+
+  ;; From LSP directly, I show only code actions in the sideline.
+  ;; The rest of the information I show in other way (via flycheck, via minibuffer, popups, ...).
+  ;; Note that flycheck again sends some of that information to sideline though.
+  (use-package sideline-lsp
+    :custom
+    ;; By setting this to nil, lsp diagnostics (errors, warnings) get sent to flycheck, which we prefer since
+    ;; it is a more standard / specific way to do it.
+    (sideline-lsp-show-diagnostics nil)
+    (sideline-lsp-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
+    (sideline-lsp-show-symbol nil) ; This I didn't find useful.
+    (sideline-lsp-show-code-actions t) ; But I do find it useful to see code actions.
+    (sideline-lsp-code-actions-prefix "✎ ")
+    (sideline-lsp-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
+    :config
+    (set-face-attribute 'sideline-lsp-code-action nil
+                        :inherit 'shadow
+                        :weight 'light
+  		      :slant 'italic
+  		      :background "black")
+  )
+
+#+end_src
+
 * Development
 ** LSP
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
@@ -1922,8 +1946,8 @@ Rough summary how my configuration currently displays all this info:
  - Parts of code with diagnostics are marked with **squiggly lines** (by Fly(check/make)).
  - **Short version of hover** info for a symbol is shown on cursor/mouse, in the minibuffer (by ~eldoc~).
  - **Full version of hover** info for a symbol under cursor is displayed in a popup, on demand, which I trigger with "K" or "?" (by ~lsp-ui-doc~).
- - Full info on **diagnostics** for a symbol is shown on cursor/mouse (by ~fly(check/make)~, in a popup).
- - Only "quickfix" **code actions** for a symobl are shown on cursor/mouse, on the right side of the screen next to the code (by ~lsp-ui-sideline~).
+ - Short info / **diagnostics** for thing/error under the cursor is shown on the right side of the screen, next to the code (sideline), including errors (just one line), warnings and **code actions**.
+ - Full info for thing/eror under the cursor is shown by ~fly(check/make)~, in a popup, on request.
 
 One functionality that LSP also defines are =semantic tokens=, where LS returns semantic information about specific tokens, which is then usually used by the editor for very detailed and smart syntax highlighting.
 It is important to notice here that it doesn't return this information for every single token in the code, but only for specific types of tokens, meaning it can't be used to fully highlight the code. Instead, it is intended to be used as an additional, detailed syntax highlighting that is applied on top of some other, more basic syntax highlighting (i.e. usually implemented via regexes, textmate grammar, or recently treesitter). Additionally, LSP semantic token syntax highlighting is usually slower and less robust to syntax errors than other more basic methods, but those are secondary reasons.
@@ -1995,7 +2019,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 
     ;; lsp-ui-sideline shows info that you want (e.g. diagnostics, code actions, ...)  on the right
     ;; side of the window, inline with the code.  We set it to nil here though, because we control
-    ;; it from another package, sideline-lsp.
+    ;; it from another package, sideline + sideline-lsp.
     (lsp-ui-sideline-enable nil)
     :config
     (general-define-key :states '(normal visual)
