@@ -359,7 +359,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+end_src
 
-* Basic emacs config
+* Basic Emacs config
 
 #+begin_src emacs-lisp
 
@@ -580,6 +580,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "w-"  '("split horizontally" . split-window-below)
       "wr"  '("resize window" . hydra-window-resize/body)
       "wm"  '("move window" . hydra-window-move/body)
+      "w."  '("focus window" . delete-other-windows)
+      "w="  '("balance window sizes" . balance-windows)
 
       "b"   '("buffers" . (keymap))
       "bb"  '("switch buffer" . ivy-switch-buffer)
@@ -827,6 +829,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (setq org-log-into-drawer t)
     (setq org-habit-graph-column 60)
 
+    (setq org-ellipsis "…")
+
     (add-to-list 'org-modules
   	'org-habit
     )
@@ -845,10 +849,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :ensure nil ; Comes with org already.
   )
 
-  (use-package org-habit-stats
-    :after (org)
-  )
-
   ; Colors tags in org mode with "random" colors based on their string hash.
   (use-package org-rainbow-tags
     :after (org)
@@ -857,6 +857,23 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (org-rainbow-tags-extra-face-attributes
      ;; Default is '(:weight 'bold)
      '(:inverse-video t :weight 'bold))
+  )
+
+  ;; Display "prettified" pieces of text in their raw shape when point is on them.
+  ;; E.g. links or superscript.
+  (use-package org-appear
+    :hook (org-mode . org-appear-mode)
+    :custom
+    (org-appear-autoemphasis t)
+    (org-appear-autolinks t)
+    (org-appear-autosubmarkers t)
+    (org-appear-autoentities t)
+    (org-appear-autokeywords t)
+    (org-appear-inside-latex t)
+    (org-appear-trigger 'always)
+    ;; Make bold and italic and similar nice, since we now have org-appear
+    ;; to show them as raw when needed.
+    (org-hide-emphasis-markers t)
   )
 
 #+end_src
@@ -1373,7 +1390,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
 
 #+end_src
 
-* Ivy, counsel and swiper
+* Ivy, Counsel and Swiper
 ** ivy
 
 #+begin_src emacs-lisp
@@ -1720,6 +1737,38 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 
 
 ** TODO Try "eat" terminal
+* Spell checking
+Flyspell is a builtin spell-checking frontend for Emacs, but there are also popular community packages, one of the lately most popular being Jinx, which I use here.
+
+Main concept with all spell-checking frontends is that you have to install an actual spell-checker, that is not emacs-specific, on your system, and they use it as a backend. Most popular are Aspell and Hunspell, while Enchant is a wrapper on top of all these that does some extra smart stuff. Jinx uses Enchant.
+
+** Jinx
+
+Jinx uses Enchant program on your machine, which uses spelling backends like hunspell and/or aspell, which use their dictionaries for specific languages.
+
+#+begin_src emacs-lisp
+
+  (use-package jinx
+    :config
+    (setq jinx-languages "en_us")
+    (my/leader-keys
+      "tc"  '("spell checking" . jinx-mode)
+    )
+  )
+
+#+end_src
+
+*** Manual setup                                             :manual_setup:
+
+On Arch, install ~enchant~ and ~pkgconf~.
+Enchant needs to use some spelling backend, so also install e.g. ~hunspell~ (and make sure it is using it when I expect, file =/usr/share/enchant-2/enchant.ordering= on Arch defines that).
+Finally, that backend needs dictionaries for the languages I want to spell-check, so e.g. if I want english, I should install ~hunspell-en_us~.
+I can check backend and dictionaries that Enchant is picking up by running ~enchant-lsmod-2 -list-dicts~.
+
+*** Cheatsheet :cheatsheet:
+
+Run ~jinx-correct~ to correct the word at point.
+
 * Syntax/error checking
 ** Flycheck
 
@@ -2309,10 +2358,14 @@ Although I think I have one in the ENV, that is not enough?
 
     (add-hook 'gptel-post-response-hook #'gptel--color-response t)
   #+end_src
+- I am struggling with using "rewrite" functionality, I should figure out how to use that.
+- Here is a bit more on effectively using gptel: https://www.reddit.com/r/emacs/s/O7Kh4Z9uNV .
+- I should ask on github for help if I get stuck. Or maybe on reddit. Also it might be worth actually trying out something like Elysium hm.
+*** TODO Lean how to use Aider
+- A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
+- There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
 *** TODO Set up copilot.el
 *** TODO Set up and try copilot-chat.el. See how I like it vs gpt.el
-*** TODO Set up and try chatgpt-shell
-
 * Misc
 
 #+begin_src emacs-lisp

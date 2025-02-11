@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-02-01 13:05:15 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-02-11 23:30:15 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -354,6 +354,8 @@ USAGE:
     "w-"  '("split horizontally" . split-window-below)
     "wr"  '("resize window" . hydra-window-resize/body)
     "wm"  '("move window" . hydra-window-move/body)
+    "w."  '("focus window" . delete-other-windows)
+    "w="  '("balance window sizes" . balance-windows)
 
     "b"   '("buffers" . (keymap))
     "bb"  '("switch buffer" . ivy-switch-buffer)
@@ -563,6 +565,8 @@ USAGE:
   (setq org-log-into-drawer t)
   (setq org-habit-graph-column 60)
 
+  (setq org-ellipsis "…")
+
   (add-to-list 'org-modules
 	'org-habit
   )
@@ -581,10 +585,6 @@ USAGE:
   :ensure nil ; Comes with org already.
 )
 
-(use-package org-habit-stats
-  :after (org)
-)
-
 ; Colors tags in org mode with "random" colors based on their string hash.
 (use-package org-rainbow-tags
   :after (org)
@@ -593,6 +593,23 @@ USAGE:
   (org-rainbow-tags-extra-face-attributes
    ;; Default is '(:weight 'bold)
    '(:inverse-video t :weight 'bold))
+)
+
+;; Display "prettified" pieces of text in their raw shape when point is on them.
+;; E.g. links or superscript.
+(use-package org-appear
+  :hook (org-mode . org-appear-mode)
+  :custom
+  (org-appear-autoemphasis t)
+  (org-appear-autolinks t)
+  (org-appear-autosubmarkers t)
+  (org-appear-autoentities t)
+  (org-appear-autokeywords t)
+  (org-appear-inside-latex t)
+  (org-appear-trigger 'always)
+  ;; Make bold and italic and similar nice, since we now have org-appear
+  ;; to show them as raw when needed.
+  (org-hide-emphasis-markers t)
 )
 
 (use-package evil-org
@@ -1272,6 +1289,14 @@ USAGE:
   ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
   ;; me to dir of previous buffer! Very useful.
   (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
+)
+
+(use-package jinx
+  :config
+  (setq jinx-languages "en_us")
+  (my/leader-keys
+    "tc"  '("spell checking" . jinx-mode)
+  )
 )
 
 (use-package flycheck
