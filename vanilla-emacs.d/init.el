@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-02-11 23:30:15 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-02-21 00:06:12 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -637,6 +637,28 @@ USAGE:
   (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluation a block.
 )
 
+(use-package org-gcal
+  :init
+  ;; Get calendar credentials from .authinfo file and use them.
+  (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret))))
+         
+	)
+    (setq org-gcal-client-id (plist-get gcal-auth-info :user)
+          org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
+    )
+  )
+  ;; First elements of the pairs here are ids of google calendars.
+  (setq my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
+  (setq my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
+  (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
+				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
+				    ))
+  :config
+  (setq org-gcal-recurring-events-mode 'nested)
+  ;; So that it doesn't constantly ask me for the password. TODO: I wonder if I should make this a general setting, not org-gcal specific?
+  (setq plstore-cache-passphrase-for-symmetric-encryption t)
+)
+
 (with-eval-after-load 'org
   (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
   (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
@@ -760,7 +782,9 @@ USAGE:
   )
 )
 
-(with-eval-after-load 'org
+;; I wait for org-gcal because in :init or org-gcal I define vars that hold paths to files with calendar events,
+;; and I need to know those paths so I can show events in the agenda.
+(with-eval-after-load 'org (with-eval-after-load 'org-gcal
   (defun make-work-diary-command (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
@@ -826,7 +850,7 @@ USAGE:
 		 )
 	)
        )
-       ((org-agenda-files '("~/Dropbox/work-diary.org"))
+       ((org-agenda-files `("~/Dropbox/work-diary.org" ,my/calendar-events-wasp-org-file ,my/calendar-events-private-org-file))
 
 	(org-agenda-start-day ,cmd-start-day)
 
@@ -903,7 +927,7 @@ USAGE:
                      )
 	    )
 	   )
-	   ((org-agenda-files '("~/Dropbox/private-diary.org"))
+	   ((org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
 
 	    (org-agenda-start-with-log-mode '(closed clock))
             (org-agenda-skip-scheduled-if-done t)
@@ -915,7 +939,7 @@ USAGE:
 	  )
 	 )
   )
-)
+))
 
 (use-package org-tidy)
 

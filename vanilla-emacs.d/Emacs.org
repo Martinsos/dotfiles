@@ -914,6 +914,54 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+end_src
 
+** Calendar sync
+
+Two most popular emacs packages for pulling in calendar events into org file are https://github.com/dengste/org-caldav and https://github.com/kidd/org-gcal.el . I decided to go with the later one, but for no strong reason except for it being specific for gcal.
+
+#+begin_src emacs-lisp
+
+  (use-package org-gcal
+    :init
+    ;; Get calendar credentials from .authinfo file and use them.
+    (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret))))
+           
+  	)
+      (setq org-gcal-client-id (plist-get gcal-auth-info :user)
+            org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
+      )
+    )
+    ;; First elements of the pairs here are ids of google calendars.
+    (setq my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
+    (setq my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
+    (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
+  				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
+  				    ))
+    :config
+    (setq org-gcal-recurring-events-mode 'nested)
+    ;; So that it doesn't constantly ask me for the password. TODO: I wonder if I should make this a general setting, not org-gcal specific?
+    (setq plstore-cache-passphrase-for-symmetric-encryption t)
+  )
+
+#+end_src
+
+NOTE: It saves some stuff (secrets/passwords) locally with ~plist~. I followed intructions in README of org-gcal regarding it, to create an empty file if I get some issues, and also to add that one line in the config that tells it not to constantly ask for the password.
+
+*** TODO Make fetching of events automatic (check org-gcal [[https://github.com/kidd/org-gcal.el?tab=readme-ov-file#sync-automatically-at-regular-times][README]])
+*** Providing credentials                                    :manual_setup:
+We need to create an OAuth 2.0 client id on our Google Developer Console for a project that gives access to the calendar, and then provide the client id and secret to org-gcal in order for it to be able to work with the calendar.
+
+Detailed instructions on how to do this the Google side are provided in the org-gcal README.
+
+As for storing client secret (and id) in safe manner, I decided to keep them in the ~/.authinfo file.
+This is the manual setup part here: I need to make sure there is a line in that file of this format:
+~machine gcal login <client-id> password <client-secret>~
+
+In the config above I then fetch those credentials from .authinfo and provide them to org-gcal.
+
+*** Cheatsheet                                                 :cheatsheet:
+- ~org-gcal-fetch~ updates the events in all files in the alist, by pulling the info from the gcalendar.
+  This is the command I will most often want to run.
+- ~org-gcal-sync-tokens-clear~ clears the sync tokens (which is gcalendar concept). If they are not cleared, ~org-gcal-fetch~ will be fetching only changes after the time of the last fetch! This is ok if we kept all the events stored, but if we maybe deleted files with events and want to fetch them again, there want to do full sync -> we should run this command first.
 ** org-agenda
 *** General setup
 #+begin_src emacs-lisp
@@ -1062,7 +1110,9 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
 #+begin_src emacs-lisp
 
-  (with-eval-after-load 'org
+  ;; I wait for org-gcal because in :init or org-gcal I define vars that hold paths to files with calendar events,
+  ;; and I need to know those paths so I can show events in the agenda.
+  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
     (defun make-work-diary-command (cmd-key cmd-name cmd-start-day)
       `(,cmd-key ,cmd-name
          (;; The main view: a list of tasks for today.
@@ -1128,7 +1178,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   		 )
   	)
          )
-         ((org-agenda-files '("~/Dropbox/work-diary.org"))
+         ((org-agenda-files `("~/Dropbox/work-diary.org" ,my/calendar-events-wasp-org-file ,my/calendar-events-private-org-file))
 
   	(org-agenda-start-day ,cmd-start-day)
 
@@ -1205,7 +1255,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                        )
   	    )
   	   )
-  	   ((org-agenda-files '("~/Dropbox/private-diary.org"))
+  	   ((org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
 
   	    (org-agenda-start-with-log-mode '(closed clock))
               (org-agenda-skip-scheduled-if-done t)
@@ -1217,7 +1267,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   	  )
   	 )
     )
-  )
+  ))
 
 #+end_src
 

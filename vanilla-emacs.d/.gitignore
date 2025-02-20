@@ -12,3 +12,9 @@
 /.lsp-session-v*
 /tree-sitter/
 /tramp
+/oauth2-auto.plist
+/persist/
+/.org-generic-id-locations
+/.org-id-locations
+/request/
+
