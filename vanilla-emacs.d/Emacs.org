@@ -805,74 +805,79 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
-    (use-package org
-      :defer t
-      :hook
-      (org-mode . (lambda ()
-        (org-indent-mode) ; Enforces correct indentation under each heading.
-        (visual-line-mode 1)
-        (setq evil-auto-indent nil)
-      ))
-      :config
-      ;; Set headers to have different sizes.
-      (dolist (face '((org-level-1 . 1.5)
-                      (org-level-2 . 1.3)
-                      (org-level-3 . 1.2)
-                      (org-level-4 . 1.1)
-                      (org-level-5 . 1.1)
-                      (org-level-6 . 1.1)
-                      (org-level-7 . 1.1)
-                      (org-level-8 . 1.1)))
-        (set-face-attribute (car face) nil :height (cdr face))
-      )
-
-      (setq org-log-into-drawer t)
-      (setq org-habit-graph-column 60)
-
-      (setq org-ellipsis "…")
-
-      (add-to-list 'org-modules
-    	'org-habit
-      )
+  (use-package org
+    :defer t
+    :hook
+    (org-mode . (lambda ()
+      (org-indent-mode) ; Enforces correct indentation under each heading.
+      (visual-line-mode 1)
+      (setq evil-auto-indent nil)
+    ))
+    :config
+    ;; Set headers to have different sizes.
+    (dolist (face '((org-level-1 . 1.5)
+                    (org-level-2 . 1.3)
+                    (org-level-3 . 1.2)
+                    (org-level-4 . 1.1)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :height (cdr face))
     )
 
-    ;; Replace stars (*) with nice bullets.
-    (use-package org-bullets
-      :after (org)
-      :defer t
-      :hook (org-mode . org-bullets-mode)
+    (setq org-log-into-drawer t)
+    (setq org-habit-graph-column 60)
+
+    (setq org-ellipsis "…")
+
+    (add-to-list 'org-modules
+  	'org-habit
     )
 
-    ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
-    (use-package org-tempo
-      :after (org)
-      :ensure nil ; Comes with org already.
-    )
+    (setq org-priority-faces '((?A . (:foreground "red" :weight normal))
+                               (?B . (:foreground "orange" :weight light))
+                               (?C . (:foreground "yellow" :weight light))))
+  )
 
-    ; Colors tags in org mode with "random" colors based on their string hash.
-    (use-package org-rainbow-tags
-      :after (org)
-      :hook ((org-mode org-agenda-finalize) . org-rainbow-tags-mode)
-      :custom
-      (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'light))
-    )
+  ;; Replace stars (*) with nice bullets.
+  (use-package org-bullets
+    :after (org)
+    :defer t
+    :hook (org-mode . org-bullets-mode)
+  )
 
-    ;; Display "prettified" pieces of text in their raw shape when point is on them.
-    ;; E.g. links or superscript.
-    (use-package org-appear
-      :hook (org-mode . org-appear-mode)
-      :custom
-      (org-appear-autoemphasis t)
-      (org-appear-autolinks t)
-      (org-appear-autosubmarkers t)
-      (org-appear-autoentities t)
-      (org-appear-autokeywords t)
-      (org-appear-inside-latex t)
-      (org-appear-trigger 'always)
-      ;; Make bold and italic and similar nice, since we now have org-appear
-      ;; to show them as raw when needed.
-      (org-hide-emphasis-markers t)
-    )
+  ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
+  (use-package org-tempo
+    :after (org)
+    :ensure nil ; Comes with org already.
+  )
+
+  ; Colors tags in org mode with "random" colors based on their string hash.
+  (use-package org-rainbow-tags
+    :after (org)
+    :hook ((org-mode org-agenda-finalize) . org-rainbow-tags-mode)
+    :custom
+    (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'normal))
+    (org-rainbow-tags-adjust-color-percent 100) ; Make colors as light as possible, so they work well with dark bg.
+  )
+
+  ;; Display "prettified" pieces of text in their raw shape when point is on them.
+  ;; E.g. links or superscript.
+  (use-package org-appear
+    :hook (org-mode . org-appear-mode)
+    :custom
+    (org-appear-autoemphasis t)
+    (org-appear-autolinks t)
+    (org-appear-autosubmarkers t)
+    (org-appear-autoentities t)
+    (org-appear-autokeywords t)
+    (org-appear-inside-latex t)
+    (org-appear-trigger 'always)
+    ;; Make bold and italic and similar nice, since we now have org-appear
+    ;; to show them as raw when needed.
+    (org-hide-emphasis-markers t)
+  )
 
 #+end_src
 

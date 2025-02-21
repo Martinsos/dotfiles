@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-02-21 15:04:18 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-02-21 23:43:15 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -570,6 +570,10 @@ USAGE:
   (add-to-list 'org-modules
 	'org-habit
   )
+
+  (setq org-priority-faces '((?A . (:foreground "red" :weight normal))
+                             (?B . (:foreground "orange" :weight light))
+                             (?C . (:foreground "yellow" :weight light))))
 )
 
 ;; Replace stars (*) with nice bullets.
@@ -590,7 +594,8 @@ USAGE:
   :after (org)
   :hook ((org-mode org-agenda-finalize) . org-rainbow-tags-mode)
   :custom
-  (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'light))
+  (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'normal))
+  (org-rainbow-tags-adjust-color-percent 100) ; Make colors as light as possible, so they work well with dark bg.
 )
 
 ;; Display "prettified" pieces of text in their raw shape when point is on them.
