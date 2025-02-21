@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-02-21 00:06:12 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-02-21 15:04:18 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -588,11 +588,9 @@ USAGE:
 ; Colors tags in org mode with "random" colors based on their string hash.
 (use-package org-rainbow-tags
   :after (org)
-  :hook (org-mode . org-rainbow-tags-mode)
+  :hook ((org-mode org-agenda-finalize) . org-rainbow-tags-mode)
   :custom
-  (org-rainbow-tags-extra-face-attributes
-   ;; Default is '(:weight 'bold)
-   '(:inverse-video t :weight 'bold))
+  (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'light))
 )
 
 ;; Display "prettified" pieces of text in their raw shape when point is on them.
