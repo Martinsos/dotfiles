@@ -835,7 +835,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   	'org-habit
     )
 
-    (setq org-priority-faces '((?A . (:foreground "red" :weight normal))
+    (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                                (?B . (:foreground "orange" :weight light))
                                (?C . (:foreground "yellow" :weight light))))
   )
@@ -926,9 +926,7 @@ Two most popular emacs packages for pulling in calendar events into org file are
   (use-package org-gcal
     :init
     ;; Get calendar credentials from .authinfo file and use them.
-    (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret))))
-           
-  	)
+    (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
       (setq org-gcal-client-id (plist-get gcal-auth-info :user)
             org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
       )
@@ -949,7 +947,6 @@ Two most popular emacs packages for pulling in calendar events into org file are
 
 NOTE: It saves some stuff (secrets/passwords) locally with ~plist~. I followed intructions in README of org-gcal regarding it, to create an empty file if I get some issues, and also to add that one line in the config that tells it not to constantly ask for the password.
 
-*** TODO Make fetching of events automatic (check org-gcal [[https://github.com/kidd/org-gcal.el?tab=readme-ov-file#sync-automatically-at-regular-times][README]])
 *** Providing credentials                                    :manual_setup:
 We need to create an OAuth 2.0 client id on our Google Developer Console for a project that gives access to the calendar, and then provide the client id and secret to org-gcal in order for it to be able to work with the calendar.
 
@@ -961,6 +958,10 @@ This is the manual setup part here: I need to make sure there is a line in that 
 
 In the config above I then fetch those credentials from .authinfo and provide them to org-gcal.
 
+*** TODO Make fetching of events automatic (check org-gcal [[https://github.com/kidd/org-gcal.el?tab=readme-ov-file#sync-automatically-at-regular-times][README]])
+*** TODO Fix how password storing works (plist)
+Currently it still keeps asking me about it often when I go to fetch. Also, I see that fetching keeps running some plist command and it is slow, I wonder if it is struggling with that plist somehow.
+I should check if I can do something better about saving that password, not being asked for it, and also having gcal working faster. There are some instructions in the README.
 *** Cheatsheet                                                 :cheatsheet:
 - ~org-gcal-fetch~ updates the events in all files in the alist, by pulling the info from the gcalendar.
   This is the command I will most often want to run.
@@ -1680,6 +1681,9 @@ It adds indicator to the left margin/side of the window.
   )
 
 #+end_src
+
+*** Cheatsheet :cheatsheet:
+- ~diff-hl-set-reference-rev~ allows you to define against what are differences shown. E.g. you can set it to =master= to see what changes feature branch branching from =master= introduced.
 * Company
 
 #+begin_src emacs-lisp
@@ -2292,14 +2296,9 @@ NOTE: I chose ts-ls as a language server, when asked.
   ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
   ;; It defines typescript-ts-mode and tsx-ts-mode.
   (use-package typescript-ts-mode
-    :ensure nil ; This is built-in package, so we don't want elpaca to try to install it.
-    :mode (("\\.js\\'"  . typescript-ts-mode)
-  	 ("\\.ts\\'"  . typescript-ts-mode)
-  	 ("\\.mjs\\'" . typescript-ts-mode)
-  	 ("\\.mts\\'" . typescript-ts-mode)
-  	 ("\\.cjs\\'" . typescript-ts-mode)
-           ("\\.tsx\\'" . tsx-ts-mode)
-  	 ("\\.jsx\\'" . tsx-ts-mode)
+    :ensure nil ; Built-in, so don't install it via package manager.
+    :mode (("\\.[mc]?[jt]s\\'" . typescript-ts-mode)
+           ("\\.[jt]sx\\'" . tsx-ts-mode)
           )
     :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
   )
@@ -2311,6 +2310,19 @@ NOTE: I chose ts-ls as a language server, when asked.
 - https://www.ovistoica.com/blog/2024-7-05-modern-emacs-typescript-web-tsx-config
 - I already did the most from it, but there is a bit more I think? I should check it.
   
+** YAML
+
+#+begin_src emacs-lisp
+
+  ;; Built-in YAML major mode with treesitter highlighting.
+  (use-package yaml-ts-mode
+    :ensure nil ; Built-in, so don't install it via package manager.
+    :mode ("\\.ya?ml\\'" . yaml-ts-mode)
+    :hook (yaml-ts-mode . lsp-deferred)
+  )
+
+#+end_src
+
 ** TODO Web (HTML, CSS, ...)
   - Check what they do in Spacemacs/Doomemacs.
 - web-mode.el -> I probably want to use this for HTML / CSS.
@@ -2414,9 +2426,11 @@ Although I think I have one in the ENV, that is not enough?
 - I am struggling with using "rewrite" functionality, I should figure out how to use that.
 - Here is a bit more on effectively using gptel: https://www.reddit.com/r/emacs/s/O7Kh4Z9uNV .
 - I should ask on github for help if I get stuck. Or maybe on reddit. Also it might be worth actually trying out something like Elysium hm.
+- About tool use + translation RAG in emacs using gptel and a super crappy LLM: https://www.reddit.com/r/emacs/s/IbQJijOHHZ .
 *** TODO Lean how to use Aider
 - A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 - There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
+- Aidermacs: another package for using aider in emacs, allegedly it is cool: https://www.reddit.com/r/emacs/s/ej9qMsblZq .
 *** TODO Set up copilot.el
 *** TODO Set up and try copilot-chat.el. See how I like it vs gpt.el
 * Misc

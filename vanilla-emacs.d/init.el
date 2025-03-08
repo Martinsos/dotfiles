@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-02-21 23:43:15 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-08 14:31:23 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -571,7 +571,7 @@ USAGE:
 	'org-habit
   )
 
-  (setq org-priority-faces '((?A . (:foreground "red" :weight normal))
+  (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                              (?B . (:foreground "orange" :weight light))
                              (?C . (:foreground "yellow" :weight light))))
 )
@@ -643,9 +643,7 @@ USAGE:
 (use-package org-gcal
   :init
   ;; Get calendar credentials from .authinfo file and use them.
-  (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret))))
-         
-	)
+  (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
     (setq org-gcal-client-id (plist-get gcal-auth-info :user)
           org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
     )
@@ -1582,16 +1580,18 @@ USAGE:
 ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
 ;; It defines typescript-ts-mode and tsx-ts-mode.
 (use-package typescript-ts-mode
-  :ensure nil ; This is built-in package, so we don't want elpaca to try to install it.
-  :mode (("\\.js\\'"  . typescript-ts-mode)
-	 ("\\.ts\\'"  . typescript-ts-mode)
-	 ("\\.mjs\\'" . typescript-ts-mode)
-	 ("\\.mts\\'" . typescript-ts-mode)
-	 ("\\.cjs\\'" . typescript-ts-mode)
-         ("\\.tsx\\'" . tsx-ts-mode)
-	 ("\\.jsx\\'" . tsx-ts-mode)
+  :ensure nil ; Built-in, so don't install it via package manager.
+  :mode (("\\.[mc]?[jt]s\\'" . typescript-ts-mode)
+         ("\\.[jt]sx\\'" . tsx-ts-mode)
         )
   :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
+)
+
+;; Built-in YAML major mode with treesitter highlighting.
+(use-package yaml-ts-mode
+  :ensure nil ; Built-in, so don't install it via package manager.
+  :mode ("\\.ya?ml\\'" . yaml-ts-mode)
+  :hook (yaml-ts-mode . lsp-deferred)
 )
 
 (use-package gptel
