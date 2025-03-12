@@ -2437,6 +2437,18 @@ Although I think I have one in the ENV, that is not enough?
 
 #+begin_src emacs-lisp
 
+  (use-package recentf
+    :ensure nil  ;; built-in
+    :custom
+    (recentf-max-saved-items 50)
+    :config
+    (recentf-mode 1)
+  )
+
+#+end_src
+
+#+begin_src emacs-lisp
+
   ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
   ;; visual-fill-column, when used with visual-line-mode, modifies the wrapping to happen at the fixed (by default fill-column) width,
   ;; instead of at the window end.
@@ -2551,6 +2563,18 @@ Although I think I have one in the ENV, that is not enough?
 
   ;; Brings functions for converting buffer text and decorations to html.
   (use-package htmlize)
+
+#+end_src
+
+#+begin_src emacs-lisp
+
+  ;; This introduces redundancy, because we exactly replicate the content of dir local vars that we want to allow automatically,
+  ;; but on the other hand it is the recommended/official way to be sure that we are ok with execution of that code, and not have
+  ;; emacs keep asking us if we want to execute them.
+  (setq safe-local-variable-values
+    '((eval with-eval-after-load 'lsp-mode
+  	  (add-to-list 'lsp-file-watch-ignored-directories "/e2e-test/test-outputs\\'")))
+  )
 
 #+end_src
 

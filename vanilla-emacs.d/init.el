@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-08 14:31:23 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-12 23:26:00 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -1606,6 +1606,14 @@ USAGE:
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
 )
 
+(use-package recentf
+  :ensure nil  ;; built-in
+  :custom
+  (recentf-max-saved-items 50)
+  :config
+  (recentf-mode 1)
+)
+
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
 ;; visual-fill-column, when used with visual-line-mode, modifies the wrapping to happen at the fixed (by default fill-column) width,
 ;; instead of at the window end.
@@ -1676,3 +1684,11 @@ USAGE:
 
 ;; Brings functions for converting buffer text and decorations to html.
 (use-package htmlize)
+
+;; This introduces redundancy, because we exactly replicate the content of dir local vars that we want to allow automatically,
+;; but on the other hand it is the recommended/official way to be sure that we are ok with execution of that code, and not have
+;; emacs keep asking us if we want to execute them.
+(setq safe-local-variable-values
+  '((eval with-eval-after-load 'lsp-mode
+	  (add-to-list 'lsp-file-watch-ignored-directories "/e2e-test/test-outputs\\'")))
+)
