@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-12 23:26:00 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-15 14:20:47 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -379,12 +379,6 @@ USAGE:
     "fei" '("open init.el file" . my/open-init-file)
 
     "i"   '("ai" . (keymap))
-    "ii"  '("interactive menu" . gptel-menu)
-    "ic"  '("chat" . gptel)
-    "is"  '("send (point/selection)" . gptel-send)
-    "ir"  '("rewrite" . gptel-rewrite)
-    "ia"  '("add to context (region/buffer)" . gptel-add)
-    "if"  '("add to context (file)" . gptel-add)
 
     "v"   '("eval (elisp)" . (keymap))
     "vl"  '("last-sexp" . eval-last-sexp)
@@ -869,6 +863,8 @@ USAGE:
 
         (org-todo-keyword-faces
          '(("EPIC" . (:foreground "orchid" :weight bold))
+           ("INPR" . (:foreground "dark orange" :weight bold))
+           ("BLCK" . (:foreground "dark orange" :weight bold :strike-through t))
            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
@@ -1604,6 +1600,28 @@ USAGE:
                                       (text-mode . "## AI:\n")))
   (setq gptel-default-mode 'org-mode)
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
+  (my/leader-keys
+    "ii"  '("[gptel] menu" . gptel-menu)
+    "ic"  '("[gptel] chat" . gptel)
+    "is"  '("[gptel] send to chat" . gptel-send)
+    "ir"  '("[gptel] rewrite" . gptel-rewrite)
+    "ix"  '("[gptel] +/- ctxt" . gptel-add)
+  )
+)
+
+(use-package copilot
+  :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :config
+  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+  (my/leader-keys
+    "i TAB" '("toggle copilot" . copilot-mode)
+  )
+)
+
+(use-package copilot-chat
+  :config
+  (my/leader-keys
+    "i I" '("copilot chat" . copilot-chat-transient))
 )
 
 (use-package recentf

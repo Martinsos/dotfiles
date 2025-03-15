@@ -605,12 +605,6 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "fei" '("open init.el file" . my/open-init-file)
 
       "i"   '("ai" . (keymap))
-      "ii"  '("interactive menu" . gptel-menu)
-      "ic"  '("chat" . gptel)
-      "is"  '("send (point/selection)" . gptel-send)
-      "ir"  '("rewrite" . gptel-rewrite)
-      "ia"  '("add to context (region/buffer)" . gptel-add)
-      "if"  '("add to context (file)" . gptel-add)
 
       "v"   '("eval (elisp)" . (keymap))
       "vl"  '("last-sexp" . eval-last-sexp)
@@ -1200,6 +1194,8 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
           (org-todo-keyword-faces
            '(("EPIC" . (:foreground "orchid" :weight bold))
+             ("INPR" . (:foreground "dark orange" :weight bold))
+             ("BLCK" . (:foreground "dark orange" :weight bold :strike-through t))
              ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
              ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
              ("CHKL" . (:foreground "grey" :weight bold))
@@ -2381,6 +2377,8 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 
 ** GPTel
 
+GPTel is quite versatile, but sometimes it does feel a bit clunky / too low level.
+
 #+begin_src emacs-lisp
 
   (use-package gptel
@@ -2393,6 +2391,13 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
                                         (text-mode . "## AI:\n")))
     (setq gptel-default-mode 'org-mode)
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
+    (my/leader-keys
+      "ii"  '("[gptel] menu" . gptel-menu)
+      "ic"  '("[gptel] chat" . gptel)
+      "is"  '("[gptel] send to chat" . gptel-send)
+      "ir"  '("[gptel] rewrite" . gptel-rewrite)
+      "ix"  '("[gptel] +/- ctxt" . gptel-add)
+    )
   )
 
 #+end_src
@@ -2400,39 +2405,61 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 *** Setting up the OpenAI API key :manual_setup:
 By default, it pulls in the API key for OpenAI from the ~/.authinfo file (check the gptel docs for details), so that is what I use to provide the OpenAI API key.
 *** Cheatsheet :cheatsheet:
-- =C-c ENT= is for sending the query to AI when in the Gptel buffer.
-*** TODO Set up and try
-Doesn't work at the moment, I haven't set up OpenAI API key it seems.
-Although I think I have one in the ENV, that is not enough?
-**** TODO Install markdown-mode, it is useful?
+- =C-c RET= is for sending the query to AI when in the Gptel buffer.
+- When using ~gpt-rewrite~, result will be shown in an overlay that is not normal text. I then need to move cursor to its start and hit =RET=, and then I can choose if I want to accept that piece of code, rewrite it again, diff it, ... . Most often I will want to accept it or rewrite it.
+** Copilot
+
+*** copilot.el
+
+I have it off by default because I find it intrusive. I however defined a keybinding for toggling copilot-mode easily.
+
+#+begin_src emacs-lisp
+
+  (use-package copilot
+    :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+    :config
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (my/leader-keys
+      "i TAB" '("toggle copilot" . copilot-mode)
+    )
+  )
+
+#+end_src
+
+**** Manual setup                                           :manual_setup:
+- install the copilot server: ~M-x copilot-install-server~
+- login to copilot with ~M-x copilot-login~
+
+
+*** copilot-chat.el
+
+Has big overlap with gptel but I have both for now, to see which I like better, or maybe I can mix and match.
+
+Besides basic chat in which you can add/remove buffers into context, it also has some convenience commands for reviewing/fixing/optimizing code, writing tests and similar.
+
+Most straightforward way to use it is to run ~copilot-chat-transient~ since that shows all the possible things one can do. All the reviewing/fixing/testing code commands are under =code= option.
+
+#+begin_src emacs-lisp
+
+  (use-package copilot-chat
+    :config
+    (my/leader-keys
+      "i I" '("copilot chat" . copilot-chat-transient))
+  )
+
+#+end_src
+
+**** TODO When in buffer list, its special keybindings (RET, g, ...) don't work, I believe because of evil, fix that.
+
 ** TODOs
 *** TODO Learn/configure gptel
-- Ok, so I get that I can do a lot of on-the-fly configuring via its transient menu, including where input comes from and where it goes, but the whole things feels a bit overly clunky / manual.
-  I should try to learn more about it to see if I can use it better, and also spend some time trying it out, but maybe it is just too low level for me, and I should instead use something higher level.
-  Or just use copilot-chat. Hm.
-- There might be a nice way to color the responses, this is what I found suggested by the author of the package, give it a try:
-  #+begin_src emacs-lisp :tangle no
-    (defun gptel--color-response ()
-      (let ((prop))
-        (save-excursion
-          (setq prop (text-property-search-forward 'gptel 'response t))
-          (put-text-property (prop-match-beginning prop)
-                            (prop-match-end prop)
-                            'font-lock-face
-                            'warning))))
-
-    (add-hook 'gptel-post-response-hook #'gptel--color-response t)
-  #+end_src
-- I am struggling with using "rewrite" functionality, I should figure out how to use that.
 - Here is a bit more on effectively using gptel: https://www.reddit.com/r/emacs/s/O7Kh4Z9uNV .
-- I should ask on github for help if I get stuck. Or maybe on reddit. Also it might be worth actually trying out something like Elysium hm.
 - About tool use + translation RAG in emacs using gptel and a super crappy LLM: https://www.reddit.com/r/emacs/s/IbQJijOHHZ .
 *** TODO Lean how to use Aider
+- There is Aidermacs, try it.
 - A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 - There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
 - Aidermacs: another package for using aider in emacs, allegedly it is cool: https://www.reddit.com/r/emacs/s/ej9qMsblZq .
-*** TODO Set up copilot.el
-*** TODO Set up and try copilot-chat.el. See how I like it vs gpt.el
 * Misc
 
 #+begin_src emacs-lisp
