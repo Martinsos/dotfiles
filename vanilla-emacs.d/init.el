@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-15 14:20:47 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-17 00:52:41 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -1299,7 +1299,12 @@ USAGE:
 
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
-(use-package vterm)
+(use-package vterm
+  ;; hl-line highlight flickers in vterm, so we turn it off.
+  ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
+  :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+  :hook (vterm-copy-mode . (lambda () (call-interactively 'hl-line-mode)))
+)
 
 ;; Allows easy toggling of terminal(vterm) window.
 (use-package vterm-toggle
