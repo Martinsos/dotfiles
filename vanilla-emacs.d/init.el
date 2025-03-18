@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-17 00:52:41 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-18 12:11:38 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -1247,6 +1247,8 @@ USAGE:
   (my/leader-keys
     "gn" '("next change" . diff-hl-next-hunk)
     "gp" '("previous change" . diff-hl-previous-hunk)
+    "gr" '("set ref rev (global)" . diff-hl-set-reference-rev) ;; NOTE: It sets this globally, so in other projects it will cause weird behaviour!
+    "gR" '("reset ref rev (global)" . diff-hl-reset-reference-rev)
   )
 )
 
@@ -1303,11 +1305,19 @@ USAGE:
   ;; hl-line highlight flickers in vterm, so we turn it off.
   ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
   :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
-  :hook (vterm-copy-mode . (lambda () (call-interactively 'hl-line-mode)))
+  :config
+  (defun my/vterm-new ()
+    (interactive)
+    (vterm t)
+  )
+  (my/leader-keys
+    "\"" '("new terminal" . my/vterm-new)
+  )
 )
 
 ;; Allows easy toggling of terminal(vterm) window.
 (use-package vterm-toggle
+  :after (vterm)
   :config
   (my/leader-keys
     "'" '("toggle terminal" . vterm-toggle)

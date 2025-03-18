@@ -1673,6 +1673,8 @@ It adds indicator to the left margin/side of the window.
     (my/leader-keys
       "gn" '("next change" . diff-hl-next-hunk)
       "gp" '("previous change" . diff-hl-previous-hunk)
+      "gr" '("set ref rev (global)" . diff-hl-set-reference-rev) ;; NOTE: It sets this globally, so in other projects it will cause weird behaviour!
+      "gR" '("reset ref rev (global)" . diff-hl-reset-reference-rev)
     )
   )
 
@@ -1753,11 +1755,19 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
     :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
-    :hook (vterm-copy-mode . (lambda () (call-interactively 'hl-line-mode)))
+    :config
+    (defun my/vterm-new ()
+      (interactive)
+      (vterm t)
+    )
+    (my/leader-keys
+      "\"" '("new terminal" . my/vterm-new)
+    )
   )
 
   ;; Allows easy toggling of terminal(vterm) window.
   (use-package vterm-toggle
+    :after (vterm)
     :config
     (my/leader-keys
       "'" '("toggle terminal" . vterm-toggle)
@@ -1795,6 +1805,8 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 
 
 ** TODO Try "eat" terminal
+** TODO Explore multi-vterm package.
+
 * Spell checking
 Flyspell is a builtin spell-checking frontend for Emacs, but there are also popular community packages, one of the lately most popular being Jinx, which I use here.
 
