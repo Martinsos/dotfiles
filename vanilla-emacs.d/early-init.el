@@ -1,5 +1,5 @@
-;; NOTE: This file was generated from Emacs.org on 2025-03-22 14:10:18 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-22 16:12:16 CET, don't edit it manually.
 
 (setq package-enable-at-startup nil) ; Elpaca requires this.
 
-(setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization.
+(setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization. Also neccessary for lsp-booster below to work.
