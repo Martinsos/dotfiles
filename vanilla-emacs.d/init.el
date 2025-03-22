@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-22 16:26:38 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-22 22:48:26 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -201,6 +201,7 @@ USAGE:
   (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
   (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
+  (delete-selection-mode t) ; Delete the selection with a keypress.
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -209,6 +210,16 @@ USAGE:
   (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes) "\n\n"))
 
   (global-subword-mode) ; Makes vim motions treat subwords in camelCase as individual words.
+
+  ;; Emacs by default creates different kinds of additional files on the disk while editing.
+  ;; While they can be useful in theory, I found that I don't have much need for any of them,
+  ;; while on the other hand they litter the disk and are a potential security issue if they contain
+  ;; sensitive information copied from the files that were being edited.
+  (setq make-backup-files nil) ; I either have files version controlled or I will manually create backup.
+  (setq auto-save-default nil) ; I save so often myself that I don't have a need for this.
+  (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
+
+  (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
 )
 
 ;; doom-themes have nice, high quality themes.

@@ -380,6 +380,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
     (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
     (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
     (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
+    (delete-selection-mode t) ; Delete the selection with a keypress.
 
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -388,6 +389,16 @@ That also means that `after-init-hook` is often not the right choice any more, a
     (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes) "\n\n"))
 
     (global-subword-mode) ; Makes vim motions treat subwords in camelCase as individual words.
+
+    ;; Emacs by default creates different kinds of additional files on the disk while editing.
+    ;; While they can be useful in theory, I found that I don't have much need for any of them,
+    ;; while on the other hand they litter the disk and are a potential security issue if they contain
+    ;; sensitive information copied from the files that were being edited.
+    (setq make-backup-files nil) ; I either have files version controlled or I will manually create backup.
+    (setq auto-save-default nil) ; I save so often myself that I don't have a need for this.
+    (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
+
+    (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
   )
 
 #+end_src
@@ -2798,7 +2809,6 @@ Troubleshooting:
 
 * TODOs
 ** A must
-*** TODO Take care of the temporary files being created by emacs and undo.
 *** TODO Pin down package versions (lockfile / freezing).
 Elpaca now has some support for it, look into that:
  - I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
@@ -2819,7 +2829,6 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 
 *** TODO Go through my spacemacs config and copy stuff I liked from there.
 *** TODO Take care of TODOs in org-present config.
-*** TODO Stop that custom block from appearing at the end of this file.
 *** TODO Smooth scrolling
 - Enable that new smooth/pixel scroll setting in emacs?
 - https://github.com/jdtsmith/ultra-scroll -> external package
