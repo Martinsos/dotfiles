@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-18 12:11:38 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-22 02:14:38 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -303,6 +303,8 @@ USAGE:
     "TAB" '("previous buffer" . my/alternate-buffer)
     "RET" '("work diary" . (lambda () (interactive) (org-agenda nil "w")))
 
+    "^"   '("top-level keybindings" . which-key-show-top-level)
+
     "0"   '("jump to window 0" . winum-select-window-0)
     "1"   '("jump to window 1" . winum-select-window-1)
     "2"   '("jump to window 2" . winum-select-window-2)
@@ -316,6 +318,8 @@ USAGE:
     ;;   Is this something I can replicate, at least for Ivy?
     "/"   '("search in project" . counsel-projectile-rg)
     "*"   '("search in project w/input" . counsel-projectile-rg-region-or-symbol)
+
+    "`"   '("mark ring" . counsel-mark-ring)
 
     "t"   '("toggles" . (keymap)) ; This is how prefix is defined.
     "tt"  '("choose theme" . counsel-load-theme)
@@ -517,6 +521,7 @@ USAGE:
   :config
   (evil-mode 1)
   (define-key evil-motion-state-map (kbd "SPC") nil) ; To avoid conflict with me using SPC as leader key (defined via general.el).
+  (define-key evil-motion-state-map (kbd ",") nil) ; I prefer using "," for mode-specific keymap (e.g. for lsp).
 )
 
 (use-package evil-escape
@@ -1427,7 +1432,7 @@ USAGE:
 
 (use-package lsp-mode
   :init
-  (setq lsp-keymap-prefix "C-c l") ;; TODO: Set it to ",". I tried but it didn't work, I guess evil overrides it.
+  (setq lsp-keymap-prefix ",")
   (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
   :hook (lsp-mode . lsp-enable-which-key-integration)
   :commands (lsp lsp-deferred)
@@ -1452,6 +1457,11 @@ USAGE:
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 
   (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
+  :config
+  (general-define-key :states '(normal)
+                      :keymaps 'lsp-mode-map
+                      "," lsp-command-map
+  )
 )
 
 (use-package lsp-ui
@@ -1500,6 +1510,7 @@ USAGE:
              ;; Note the version numbers. These are the versions that with Emacs 29.
              ;; I picked those up from https://github.com/mickeynp/combobulate .
              '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
+               (bash "https://github.com/tree-sitter/tree-sitter-bash")
                (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.20.0"))
                (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
                (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
@@ -1512,6 +1523,10 @@ USAGE:
                (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
                (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
                (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
+               (prisma "https://github.com/victorhqc/tree-sitter-prisma")
+	       (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+	       (c "https://github.com/tree-sitter/tree-sitter-c")
+               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
 	     ))
       (add-to-list 'treesit-language-source-alist grammar)
       ;; Only install `grammar' if we don't already have it installed.
@@ -1583,6 +1598,7 @@ USAGE:
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
+  :after lsp-mode 
   :custom
   ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
   (lsp-haskell-plugin-semantic-tokens-global-on t)
@@ -1596,6 +1612,11 @@ USAGE:
          ("\\.[jt]sx\\'" . tsx-ts-mode)
         )
   :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
+)
+
+(use-package lsp-eslint
+  :ensure nil ;; Don't install since it comes built-in with lsp-mode.
+  :after lsp-mode
 )
 
 ;; Built-in YAML major mode with treesitter highlighting.
