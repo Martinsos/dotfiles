@@ -2798,17 +2798,19 @@ Troubleshooting:
 
 * TODOs
 ** A must
-** Should do
 *** TODO Take care of the temporary files being created by emacs and undo.
-*** TODO Figure out how to pin down package versions (lockfile / freezing).
+*** TODO Pin down package versions (lockfile / freezing).
+Elpaca now has some support for it, look into that:
+ - I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
+ - Use the rudimentary support for lock files that was freshly added: https://github.com/progfolio/elpaca/issues/151#issuecomment-2629560507 .
+I might even want to use both hm! Gotta figure it out.
 
-Search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
-
-Elpaca now has some support for it, look into that.
-
+** Should do
 *** TODO Add a nice splash screen
 
 With recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
+
+Maybe not, I am starting to kind of like my scratch buffer!
 
 *** TODO Look into workgroups
 *** TODO I will want some way to easily restore where I stopped working.
