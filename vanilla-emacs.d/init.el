@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-22 02:14:38 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-22 14:10:18 CET, don't edit it manually.
 
 ;; Install and set up Elpaca. 
 (defvar elpaca-installer-version 0.9)
@@ -200,6 +200,7 @@ USAGE:
   (global-hl-line-mode 1) ; Highlights the line in which cursor is.
   (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
   (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
+  (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -1318,6 +1319,8 @@ USAGE:
   (my/leader-keys
     "\"" '("new terminal" . my/vterm-new)
   )
+  (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
+  (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
 )
 
 ;; Allows easy toggling of terminal(vterm) window.
@@ -1658,6 +1661,52 @@ USAGE:
   :config
   (my/leader-keys
     "i I" '("copilot chat" . copilot-chat-transient))
+)
+
+(use-package whitespace
+  :ensure nil ; Don't install as it is built-in with emacs.
+  :config
+  ; Don't highlight too-long lines, because it is too noisy and we use another package for that anyway.
+  (setq whitespace-style (delq 'lines whitespace-style))
+
+  ; Default faces are not visible enough (grey), so I set all the faces to something more visible.
+  (dolist (face '(whitespace-big-indent
+                  whitespace-empty
+                  whitespace-hspace
+                  whitespace-indentation
+                  whitespace-line
+                  whitespace-missing-newline-at-eof
+                  whitespace-newline
+                  whitespace-space
+                  whitespace-space-after-tab
+                  whitespace-space-before-tab
+                  whitespace-tab
+                  whitespace-trailing))
+    (set-face-attribute face nil :foreground "dark red")
+  )
+
+  (my/leader-keys
+    "t w" '("whitespaces" . whitespace-mode)
+  )
+)
+
+(use-package ethan-wspace
+  :init
+  (setq mode-require-final-newline nil)
+  :config
+  (global-ethan-wspace-mode 1)
+  ;; There is ethan-wspace-face if I want to configure what it looks like.
+)
+
+(use-package column-enforce-mode
+  :hook (prog-mode . column-enforce-mode)
+  :config
+  (setq column-enforce-column fill-column)
+  (set-face-attribute 'column-enforce-face nil
+                      :inherit nil
+                      :background "black"
+                      :underline '(:style wave :color "purple")
+  )
 )
 
 (use-package recentf

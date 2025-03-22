@@ -379,6 +379,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
     (global-hl-line-mode 1) ; Highlights the line in which cursor is.
     (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
     (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
+    (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
 
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -1768,6 +1769,8 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     (my/leader-keys
       "\"" '("new terminal" . my/vterm-new)
     )
+    (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
+    (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   )
 
   ;; Allows easy toggling of terminal(vterm) window.
@@ -2499,6 +2502,90 @@ Most straightforward way to use it is to run ~copilot-chat-transient~ since that
 - A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 - There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
 - Aidermacs: another package for using aider in emacs, allegedly it is cool: https://www.reddit.com/r/emacs/s/ej9qMsblZq .
+* Formatting
+** Whitespaces
+
+=whitespace-mode= is a built-in emacs package whose main purpose is to *visualize all whitespaces*.
+
+#+begin_src emacs-lisp
+
+  (use-package whitespace
+    :ensure nil ; Don't install as it is built-in with emacs.
+    :config
+    ; Don't highlight too-long lines, because it is too noisy and we use another package for that anyway.
+    (setq whitespace-style (delq 'lines whitespace-style))
+
+    ; Default faces are not visible enough (grey), so I set all the faces to something more visible.
+    (dolist (face '(whitespace-big-indent
+                    whitespace-empty
+                    whitespace-hspace
+                    whitespace-indentation
+                    whitespace-line
+                    whitespace-missing-newline-at-eof
+                    whitespace-newline
+                    whitespace-space
+                    whitespace-space-after-tab
+                    whitespace-space-before-tab
+                    whitespace-tab
+                    whitespace-trailing))
+      (set-face-attribute face nil :foreground "dark red")
+    )
+
+    (my/leader-keys
+      "t w" '("whitespaces" . whitespace-mode)
+    )
+  )
+
+#+end_src
+
+=ethan-wspace-mode= takes care of *redundant/trailing* whitespaces (removal, highlighting).
+It operates on the principle of clean/dirty files:
+ - If file is clean (has no redundant whitespaces) then it removes any new redundant whitespace on save.
+ - If file is dirty then it only highlights any redundant whitespace.
+Therefore, once file becomes clean, you can't add any redundant whitespaces.
+If that is an issue and you do want to make add a redundant whitespace (e.g. in markdown file), then you
+can turn off =ethan-mode= for a bit to add them. That will make the file dirty and stop removing whitespaces, only highlight them.
+
+#+begin_src emacs-lisp
+
+  (use-package ethan-wspace
+    :init
+    (setq mode-require-final-newline nil)
+    :config
+    (global-ethan-wspace-mode 1)
+    ;; There is ethan-wspace-face if I want to configure what it looks like.
+  )
+
+#+end_src
+
+*** Cheatsheet :cheatsheet:
+- ~M-x ethan-wspace-clean-all~ to remove all redundant whitespace and therefore turn the file into a clean one.
+
+
+** Long lines
+
+=column-enforce-mode= highlights lines that are too long (the part that goes over the max column).
+
+Common advice these days is to use =whitespace-mode= for this, as it can be configured that it shows only highlights too long parts of lines when mode is on.
+However, I don't like that approach as it means I can't easily use whitespace for its main purpose, which is toggling it on and off to inspect all the whitespaces.
+Instead, it would have to be on all the time and I would need to configure what it highlights when I want to see more, which feels hacky.
+That is why I instead I use this dedicated mode that does just this: highlights too longs parts of lines.
+
+#+begin_src emacs-lisp
+
+  (use-package column-enforce-mode
+    :hook (prog-mode . column-enforce-mode)
+    :config
+    (setq column-enforce-column fill-column)
+    (set-face-attribute 'column-enforce-face nil
+                        :inherit nil
+                        :background "black"
+                        :underline '(:style wave :color "purple")
+    )
+  )
+
+#+end_src
+
 * Misc
 
 #+begin_src emacs-lisp
@@ -2667,16 +2754,14 @@ Troubleshooting:
 *** TODO Use emacs-lsp-booster with lsp-mode, to speed it up / avoid freezes.
 *** TODO Write down following next to lsp-mode
 I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alternative to lsp-mode. Claims to have better code and be faster, but lsp-mode seems to be bigger and more featureful, so it is really not clear at all which is better. I think I will be sticking to lsp-mode for now, people seemed to report more issues with eglot, and lsp-mode I know works well. I can try eglot at some point.
-
-*** TODO Set up TypeScript (TS) support
-*** TODO Set up Haskell support
 ** Should do
 *** TODO Try org roam, what is it about?
 *** TODO Take care of the temporary files being created by emacs and undo.
-*** TODO Add whitespace mode (or smth like that)
 *** TODO Figure out how to pin down package versions (lockfile / freezing).
 
 Search a bit how others do package version pinning down. There is :pin for use-package, but I am nto sure if that is what I need.
+
+Elpaca now has some support for it, look into that.
 
 *** TODO Add a nice splash screen
 
@@ -2688,39 +2773,11 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 
 *** TODO Go through my spacemacs config and copy stuff I liked from there.
 *** TODO Take care of TODOs in org-present config.
-*** TODO Set up shell, below is my spacemacs setup:
-
-;; Make it so that in shell (vterm) C-p acts as "up" and C-n acts as "down", same like in external terminals.
-;; NOTE: For insert mode it already works like this, but I also wanted it to work the same way for the normal mode.
-(with-eval-after-load 'vterm
-  (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
-  (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
-)
-(shell :variables
-    shell-default-shell 'vterm ;; Fastest and best terminal emulator currently avaiable for emacs.
-    shell-default-width 50
-    shell-default-position 'right
-    spacemacs-vterm-history-file-location "~/.bash_history"
-    )
-
 *** TODO Stop that custom block from appearing at the end of this file.
 *** TODO Look into workgroups
-*** TODO Smooth scrolling package
-https://github.com/jdtsmith/ultra-scroll
-*** DONE Implement transient yanking
-So I can go through the kill ring, like in spacemacs. counsel-yank-pop might be useful? Or should I implement my own hydra?
-There is counsel-yank-pop, to nicely choose from the kill ring.
-So what I want is once yank is done, to be offered something like hydra, so transient keys, that allow to easily rotate to through kill ring.
-In spacemacs, it activates Pasting Transient State, where [C-j/C-k] cycles through yanked text, [p/P] pastes the same text above or below, [C-v] creates a visual selection from last paste and exits. Anything else exits.
-I really need only cycling.
-Maybe I can just offer a hydra that has one key, maybe "/", that opens counsel-yank-pop. That way, "p/" becomes "advanced" yank. It could also offer C-j and C-k next to it.
-Actually, this already works hm! C-p gives previous (evil-paste-pop), C-n gives next (evil-paste-pop-next), that is evil thing. But it is not hydra. So maybe just make a hydra that mentions these + a way to start counsel-yank-pop.
-*** DONE Use native installation of emacs.
-*** DONE Organize general.el, which-key, hydra, evil under Keybindings header.
-*** DONE How to split use-package into multiple blocks, in Org babel blocks?
- - SO: including snippets: https://emacs.stackexchange.com/questions/78624/splitting-use-package-declarations-in-literate-config
- - System Crafters: they use =(with-eval-after-load 'some-package ...)= to do extra config stuff. This is most reasonable solution probably.
-
+*** TODO Smooth scrolling
+- Enable that new smooth/pixel scroll setting in emacs?
+- https://github.com/jdtsmith/ultra-scroll -> external package
 ** Going beyond
 *** TODO Set up RSS feeds following in emacs ([[https://www.reddit.com/r/emacs/s/bOnWC7cv44][reddit]])
 *** TODO Read [[https://www.reddit.com/r/emacs/s/mnpkOjzbOT][Article with nice explanation of IDE packages (lsp, dap, ...)]]
@@ -2733,7 +2790,6 @@ I am not sure if I will like this or not, but I think it is worth trying it out.
 - emacs-miniframe -> for anything happening in the minibuffer
 *** TODO Try Nano theme.
 - Some additional work by Rougier that is interesting: https://www.reddit.com/r/emacs/comments/1hoehaa/boxes_everywhere/?share_id=H0m8UzpeWYzXfvp6dOXXu&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
-*** TODO Enable that new smooth/pixel scroll setting in emacs?
 *** TODO Use smartparens or electric-pair-mode?
 *** TODO Take a look at dogears.el -> sounds potentially useful, not sure though.
 *** TODO symbol-overlay, multiple-cursors, and their [[https://lmno.lol/alvaro/its-all-up-for-grabs-and-it-compounds][combo]].
@@ -2797,4 +2853,4 @@ works best with the rest of the stuff above, so it kind of pulls one another hm,
 - [ ] Check out Zuzic's emacs config: https://mail.google.com/mail/u/0/#all/KtbxLwHDghsHQDzKGkxWCWmFZsNSCGcHQq
 
 *** TODO Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
-*** TODO Read more about other [[https://www.reddit.com/r/emacs/comments/1gux2bi/org_search_vs_organization/?share_id=f51nt5J93w5gxGj6rjjqm&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10][people's org workflows]]: 
+*** TODO Read more about other [[https://www.reddit.com/r/emacs/comments/1gux2bi/org_search_vs_organization/?share_id=f51nt5J93w5gxGj6rjjqm&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10][people's org workflows]]:
