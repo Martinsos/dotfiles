@@ -131,7 +131,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+begin_src emacs-lisp
 
-  ;; Install and set up Elpaca. 
+  ;; Install and set up Elpaca.
   (defvar elpaca-installer-version 0.9)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -172,7 +172,25 @@ That also means that `after-init-hook` is often not the right choice any more, a
   (elpaca `(,@elpaca-order))
 
 #+end_src
-  
+
+*** Set up elpaca lock file
+
+When installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references.
+To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=.
+
+#+begin_src emacs-lisp
+
+  (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+
+  (defun my/elpaca-write-lock-file ()
+    (interactive)
+    (elpaca-write-lock-file elpaca-lock-file)
+  )
+
+#+end_src
+
+**** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
+
 *** Install and set up use-package (with Elpaca as backend)
 
 #+begin_src emacs-lisp
@@ -2807,7 +2825,7 @@ That is why I instead I use this dedicated mode that does just this: highlights 
 Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 
-* TODOs
+* TODO
 ** A must
 *** TODO Pin down package versions (lockfile / freezing).
 Elpaca now has some support for it, look into that:

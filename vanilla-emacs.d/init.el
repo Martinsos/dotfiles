@@ -1,8 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-22 22:48:26 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-03-22 23:12:52 CET, don't edit it manually.
 
-;; Install and set up Elpaca. 
+;; Install and set up Elpaca.
 (defvar elpaca-installer-version 0.9)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -41,6 +41,13 @@
     (load "./elpaca-autoloads")))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
+
+(setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+
+(defun my/elpaca-write-lock-file ()
+  (interactive)
+  (elpaca-write-lock-file elpaca-lock-file)
+)
 
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
