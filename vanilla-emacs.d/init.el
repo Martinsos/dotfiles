@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-03-25 00:00:16 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-01 11:14:07 CEST, don't edit it manually.
 
 ;; Install and set up Elpaca.
 (defvar elpaca-installer-version 0.9)
@@ -241,8 +241,10 @@ USAGE:
 
 ;; TODO: Configure better or use some other modeline.
 (use-package doom-modeline
+  :custom
+  (doom-modeline-height 40)
+  (doom-modeline-buffer-encoding nil)
   :config
-  (setq doom-modeline-height 40)
   (doom-modeline-mode 1)
 )
 
@@ -407,6 +409,7 @@ USAGE:
     "vl"  '("last-sexp" . eval-last-sexp)
     "vv"  '("top-level form" . eval-defun)
     "vr"  '("region" . eval-region)
+    "v:"  '("expression" . eval-expression)
 
     "o"   '("org" . (keymap))
     "oa"  '("agenda" . org-agenda)
@@ -1172,6 +1175,7 @@ USAGE:
   (("C-s" . swiper)
     :map evil-normal-state-map
       ("/" . swiper)
+      ("*" . swiper-thing-at-point)
   )
 )
 
@@ -1676,6 +1680,19 @@ USAGE:
   :ensure nil ; Built-in, so don't install it via package manager.
   :mode ("\\.ya?ml\\'" . yaml-ts-mode)
   :hook (yaml-ts-mode . lsp-deferred)
+)
+
+(use-package markdown-mode
+  :config
+  ;; Set headers to have different sizes.
+  (dolist (face '((markdown-header-face-1 . 1.5)
+                  (markdown-header-face-2 . 1.3)
+                  (markdown-header-face-3 . 1.2)
+                  (markdown-header-face-4 . 1.1)
+                  (markdown-header-face-5 . 1.1)
+                  (markdown-header-face-6 . 1.1)))
+    (set-face-attribute (car face) nil :height (cdr face))
+  )
 )
 
 (use-package gptel

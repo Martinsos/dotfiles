@@ -465,8 +465,10 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
 
   ;; TODO: Configure better or use some other modeline.
   (use-package doom-modeline
+    :custom
+    (doom-modeline-height 40)
+    (doom-modeline-buffer-encoding nil)
     :config
-    (setq doom-modeline-height 40)
     (doom-modeline-mode 1)
   )
 
@@ -666,6 +668,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "vl"  '("last-sexp" . eval-last-sexp)
       "vv"  '("top-level form" . eval-defun)
       "vr"  '("region" . eval-region)
+      "v:"  '("expression" . eval-expression)
 
       "o"   '("org" . (keymap))
       "oa"  '("agenda" . org-agenda)
@@ -1450,7 +1453,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
 - structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet. e.g. "<el". Be faster than completion or reject it first with C-g.
 - org-babel is org package (comes with org) that allows execution of code blocks, sharing data between code blocks (polyglot), tangling (exporting code into file / literal programming), ... .
 - When in code block, to get full support for that language (proper completion, ...), open it in separate buffer with "C-c '" and do the editing there.
-
+  
 * My buffer/file functions
 
 #+begin_src emacs-lisp
@@ -1596,6 +1599,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
     (("C-s" . swiper)
       :map evil-normal-state-map
         ("/" . swiper)
+        ("*" . swiper-thing-at-point)
     )
   )
 
@@ -2470,6 +2474,25 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 
 #+end_src
 
+** Markdown
+
+#+begin_src emacs-lisp
+
+  (use-package markdown-mode
+    :config
+    ;; Set headers to have different sizes.
+    (dolist (face '((markdown-header-face-1 . 1.5)
+                    (markdown-header-face-2 . 1.3)
+                    (markdown-header-face-3 . 1.2)
+                    (markdown-header-face-4 . 1.1)
+                    (markdown-header-face-5 . 1.1)
+                    (markdown-header-face-6 . 1.1)))
+      (set-face-attribute (car face) nil :height (cdr face))
+    )
+  )
+
+#+end_src
+
 * AI
 ** Overview of popular packages
 Last updated: <2024-12-23 Mon> 
@@ -2856,12 +2879,9 @@ Elpaca now has some support for it, look into that:
 I might even want to use both hm! Gotta figure it out.
 
 ** Should do
-*** TODO Add a nice splash screen
-
-With recent projects and recent files and maybe an inspirational quote? Check out emacs-dashboard.
-
-Maybe not, I am starting to kind of like my scratch buffer!
-
+*** TODO Add code folding support
+- Popular one: https://github.com/gregsexton/origami.el . But I don't think it uses treesitter so language support is limited
+- I might want to go with this one instead: https://github.com/emacs-tree-sitter/treesit-fold - an official folding library for built-in treesitter.
 *** TODO Look into workgroups
 *** TODO I will want some way to easily restore where I stopped working.
 
