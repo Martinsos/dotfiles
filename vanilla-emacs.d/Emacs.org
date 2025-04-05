@@ -131,8 +131,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+begin_src emacs-lisp
 
-  ;; Install and set up Elpaca.
-  (defvar elpaca-installer-version 0.9)
+  (defvar elpaca-installer-version 0.10)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
   (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -141,13 +140,13 @@ That also means that `after-init-hook` is often not the right choice any more, a
                                 :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                                 :build (:not elpaca--activate-package)))
   (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-         (build (expand-file-name "elpaca/" elpaca-builds-directory))
-         (order (cdr elpaca-order))
-         (default-directory repo))
+        (build (expand-file-name "elpaca/" elpaca-builds-directory))
+        (order (cdr elpaca-order))
+        (default-directory repo))
     (add-to-list 'load-path (if (file-exists-p build) build repo))
     (unless (file-exists-p repo)
       (make-directory repo t)
-      (when (< emacs-major-version 28) (require 'subr-x))
+      (when (<= emacs-major-version 28) (require 'subr-x))
       (condition-case-unless-debug err
           (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
                     ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
@@ -399,6 +398,9 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
     (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
     (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
     (delete-selection-mode t) ; Delete the selection with a keypress.
+
+    ; Sets default font. Adobe Source Code Pro is a widely recommended font, and I set it to size 10 here.
+    (add-to-list 'default-frame-alist '(font . "Source Code Pro-10"))
 
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
