@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-05 14:48:26 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-05 17:14:12 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -209,8 +209,11 @@ USAGE:
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
 
-  ; Sets default font. Adobe Source Code Pro is a widely recommended font, and I set it to size 10 here.
-  (add-to-list 'default-frame-alist '(font . "Source Code Pro-10"))
+  ;; Sets default font.
+  ;; I love RobotoMono, and I use Nerd variant because it brings extra glyphs and symbols.
+  ;; I set it to size 10 here.
+  ;; Some other nice fonts: "Source Code Pro", "Noto Sans Mono".
+  (add-to-list 'default-frame-alist '(font . "RobotoMono Nerd Font-10"))
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.

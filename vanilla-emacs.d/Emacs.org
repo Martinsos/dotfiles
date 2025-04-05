@@ -399,8 +399,11 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
     (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
     (delete-selection-mode t) ; Delete the selection with a keypress.
 
-    ; Sets default font. Adobe Source Code Pro is a widely recommended font, and I set it to size 10 here.
-    (add-to-list 'default-frame-alist '(font . "Source Code Pro-10"))
+    ;; Sets default font.
+    ;; I love RobotoMono, and I use Nerd variant because it brings extra glyphs and symbols.
+    ;; I set it to size 10 here.
+    ;; Some other nice fonts: "Source Code Pro", "Noto Sans Mono".
+    (add-to-list 'default-frame-alist '(font . "RobotoMono Nerd Font-10"))
 
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -444,6 +447,10 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
   (add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
 
 #+end_src
+
+*** Install font :manual_setup:
+For Emacs to be able to use RoboMono font, it needs to be installed on your machine.
+To install it on Archlinux, run: ~sudo pacman -S ttf-roboto-mono-nerd~
 
 * Theme
 
