@@ -1063,13 +1063,13 @@ I should check if I can do something better about saving that password, not bein
 
   (require 'cl-lib)
 
-  (defun my/org-agenda-calculate-total-scheduled-effort (point-limit)
-    "Sum the org agenda scheduled entries efforts from the current point till the POINT-LIMIT.
+  (defun my/org-agenda-calculate-total-effort-today (point-limit)
+    "Sum the org agenda entries efforts for today from the current point till the POINT-LIMIT.
   Return minutes (number)."
     (let (efforts)
       (save-excursion
         (while (< (point) point-limit)
-          (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled"))
+          (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled" "deadline" "timestamp"))
             (push (org-entry-get (org-get-at-bol 'org-hd-marker) "Effort") efforts)
           )
           (forward-line)
@@ -1090,7 +1090,7 @@ I should check if I can do something better about saving that password, not bein
           (goto-char curr-date-header-pos)
           (end-of-line)
           (let* ((next-date-header-pos (text-property-any (point) (point-max) 'org-agenda-date-header t))
-                 (total-effort (my/org-agenda-calculate-total-scheduled-effort
+                 (total-effort (my/org-agenda-calculate-total-effort-today
                                 (or next-date-header-pos (point-max))))
                 )
             (insert-and-inherit (concat " (∑🕒 = " (org-duration-from-minutes total-effort) ")"))
@@ -1267,7 +1267,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                       (:name "Todo (today)"
   		            :and (:time-grid t :not (:log t))
   		    )
-  		    (:name "                   ----"
+  		    (:name "        No specific time:"
   			    :and (:category "task"
   				  :scheduled t
   				  :not (:log t))
@@ -1346,8 +1346,8 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
              ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
              ("CHKL" . (:foreground "grey" :weight bold))
              ("NOTE" . (:foreground "white" :weight bold))
-             ;; I obtained #445a73 by adding a bit of green to the color of org-agenda-done face.
-             ("DONE" . (:foreground "#445a73" :weight bold))
+             ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+             ("DONE" . (:foreground "#446a73" :weight bold))
   	  )
           )
          )

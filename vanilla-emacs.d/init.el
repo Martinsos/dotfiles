@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-07 11:36:55 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-07 15:26:16 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -709,13 +709,13 @@ USAGE:
 
 (require 'cl-lib)
 
-(defun my/org-agenda-calculate-total-scheduled-effort (point-limit)
-  "Sum the org agenda scheduled entries efforts from the current point till the POINT-LIMIT.
+(defun my/org-agenda-calculate-total-effort-today (point-limit)
+  "Sum the org agenda entries efforts for today from the current point till the POINT-LIMIT.
 Return minutes (number)."
   (let (efforts)
     (save-excursion
       (while (< (point) point-limit)
-        (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled"))
+        (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled" "deadline" "timestamp"))
           (push (org-entry-get (org-get-at-bol 'org-hd-marker) "Effort") efforts)
         )
         (forward-line)
@@ -736,7 +736,7 @@ Return minutes (number)."
         (goto-char curr-date-header-pos)
         (end-of-line)
         (let* ((next-date-header-pos (text-property-any (point) (point-max) 'org-agenda-date-header t))
-               (total-effort (my/org-agenda-calculate-total-scheduled-effort
+               (total-effort (my/org-agenda-calculate-total-effort-today
                               (or next-date-header-pos (point-max))))
               )
           (insert-and-inherit (concat " (∑🕒 = " (org-duration-from-minutes total-effort) ")"))
@@ -892,7 +892,7 @@ Return minutes (number)."
                     (:name "Todo (today)"
 		            :and (:time-grid t :not (:log t))
 		    )
-		    (:name "                   ----"
+		    (:name "        No specific time:"
 			    :and (:category "task"
 				  :scheduled t
 				  :not (:log t))
@@ -971,8 +971,8 @@ Return minutes (number)."
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
            ("NOTE" . (:foreground "white" :weight bold))
-           ;; I obtained #445a73 by adding a bit of green to the color of org-agenda-done face.
-           ("DONE" . (:foreground "#445a73" :weight bold))
+           ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+           ("DONE" . (:foreground "#446a73" :weight bold))
 	  )
         )
        )
