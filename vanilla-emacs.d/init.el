@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-05 21:15:07 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-07 11:36:55 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -194,6 +194,7 @@ USAGE:
   :ensure nil
   :config
   (setq inhibit-startup-message t)
+  (defun display-startup-echo-area-message () (message nil))
   (scroll-bar-mode -1)
   (tool-bar-mode -1)
   (tooltip-mode -1)
@@ -218,7 +219,7 @@ USAGE:
   ;;   when there is space due to the neighbouring letters, but Emacs doesn't (yet, there is a todo))
   ;;   support OTF's "contextual alternate" feature that is needed for this.
   ;;   If it does support it one day, I should enable it to reap all the benefits of Monaspace font.
-  (set-face-attribute 'default nil :family "Monaspace Neon" :weight 'light :height 100)
+  (set-face-attribute 'default nil :family "Monaspace Neon" :height 100)
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -705,6 +706,48 @@ USAGE:
   (set-face-attribute 'org-agenda-calendar-event nil
                       :foreground (face-attribute 'org-time-grid :foreground))
 )
+
+(require 'cl-lib)
+
+(defun my/org-agenda-calculate-total-scheduled-effort (point-limit)
+  "Sum the org agenda scheduled entries efforts from the current point till the POINT-LIMIT.
+Return minutes (number)."
+  (let (efforts)
+    (save-excursion
+      (while (< (point) point-limit)
+        (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled"))
+          (push (org-entry-get (org-get-at-bol 'org-hd-marker) "Effort") efforts)
+        )
+        (forward-line)
+      )
+    )
+    (cl-reduce #'+
+               (mapcar #'org-duration-to-minutes (cl-remove-if-not 'identity efforts))
+               :initial-value 0
+    )
+  )
+)
+
+(defun my/org-agenda-insert-total-daily-scheduled-efforts ()
+  "Insert the total scheduled effort for each day inside the agenda buffer."
+  (save-excursion
+    (let (curr-date-header-pos)
+      (while (setq curr-date-header-pos (text-property-any (point) (point-max) 'org-agenda-date-header t))
+        (goto-char curr-date-header-pos)
+        (end-of-line)
+        (let* ((next-date-header-pos (text-property-any (point) (point-max) 'org-agenda-date-header t))
+               (total-effort (my/org-agenda-calculate-total-scheduled-effort
+                              (or next-date-header-pos (point-max))))
+              )
+          (insert-and-inherit (concat " (∑🕒 = " (org-duration-from-minutes total-effort) ")"))
+        )
+        (forward-line)
+      )
+    )
+  )
+)
+
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-scheduled-efforts)
 
 (use-package org-super-agenda
   :after org
@@ -1659,12 +1702,6 @@ USAGE:
   :hook
   (haskell-mode . my/haskell-mode-setup)
   (haskell-literate-mode . my/haskell-mode-setup)
-  :custom
-  (haskell-indentation-layout-offset 4)
-  (haskell-indentation-starter-offset 4)
-  (haskell-indentation-left-offset 4)
-  (haskell-indentation-where-pre-offset 2)
-  (haskell-indentation-where-post-offset 2)
 )
 
 ;; ;; TODO: Some current problems:
