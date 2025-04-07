@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-07 15:26:16 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-07 23:38:34 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -715,8 +715,32 @@ Return minutes (number)."
   (let (efforts)
     (save-excursion
       (while (< (point) point-limit)
-        (when (member (org-get-at-bol 'type) '("scheduled" "past-scheduled" "deadline" "timestamp"))
-          (push (org-entry-get (org-get-at-bol 'org-hd-marker) "Effort") efforts)
+        (let* ((entry-type (org-get-at-bol 'type))
+               ;; org-hd-marker returns position of header in the original org buffer.
+               (entry-marker (org-get-at-bol 'org-hd-marker))
+               (entry-scheduled-time-str (when entry-marker (org-entry-get entry-marker "SCHEDULED")))
+               (entry-deadline-time-str (when entry-marker (org-entry-get entry-marker "DEADLINE")))
+               (entry-actively-scheduled-before-deadline
+                (and entry-scheduled-time-str
+                     entry-deadline-time-str
+                     (>= (org-time-string-to-absolute entry-scheduled-time-str) (org-today))
+                     (< (org-time-string-to-absolute entry-scheduled-time-str)
+                        (org-time-string-to-absolute entry-deadline-time-str)
+                     )
+                )
+               )
+              )
+          (when (or (member entry-type '("scheduled" "past-scheduled" "timestamp"))
+                    ;; Here I count deadline entries only if there is on scheduled entry earlier,
+                    ;; and I also assume that there won't be a scheduled entry on same day (if there
+                    ;; is one, they will both be counted currently).
+                    ;; If I decide in the future this implementation is not robust enough,
+                    ;; I should probably look into completely skipping deadline entries that are
+                    ;; scheduled with `org-agenda-skip-function`.
+                    (and (string= entry-type "deadline") (not entry-actively-scheduled-before-deadline))
+                )
+            (push (org-entry-get entry-marker "Effort") efforts)
+          )
         )
         (forward-line)
       )
