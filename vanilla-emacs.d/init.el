@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:09:47 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:52:01 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -707,10 +707,54 @@ USAGE:
                       :foreground (face-attribute 'org-time-grid :foreground))
 )
 
+(defvar my/after-org-agenda-mark-deadlines-with-active-schedule-hook nil
+  "Hook called after the marking of the deadlines with active schedule")
+
+(defun my/org-agenda-mark-deadlines-with-active-schedule ()
+  "Mark all deadline entries in agenda that have earlier schedule that can still be fulfilled.
+It will both mark them with a text property and also style them to be less emphasized."
+  (save-excursion
+    (while (< (point) (point-max))
+      (let* ((entry-type (org-get-at-bol 'type))
+             (entry-is-deadline (string= entry-type "deadline"))
+             ;; org-hd-marker returns position of header in the original org buffer.
+             (entry-marker (org-get-at-bol 'org-hd-marker))
+             (entry-scheduled-time-str (when entry-marker (org-entry-get entry-marker "SCHEDULED")))
+             (entry-deadline-time-str (when entry-marker (org-entry-get entry-marker "DEADLINE")))
+             (entry-todo-state (org-get-at-bol 'todo-state))
+             (entry-is-done (when entry-todo-state
+                             (member entry-todo-state org-done-keywords-for-agenda)))
+             (entry-is-todo (when entry-todo-state (not entry-is-done)))
+             (entry-actively-scheduled-before-deadline
+              (and entry-scheduled-time-str
+                    entry-deadline-time-str
+                    (>= (org-time-string-to-absolute entry-scheduled-time-str) (org-today))
+                    (< (org-time-string-to-absolute entry-scheduled-time-str)
+                      (org-time-string-to-absolute entry-deadline-time-str)
+                    )
+              )
+             )
+            )
+        (when (and entry-is-deadline entry-is-todo entry-actively-scheduled-before-deadline)
+          (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
+            (overlay-put ov 'face '(:weight extra-light :slant italic))
+            (overlay-put ov 'category 'my-agenda-deadline-with-active-schedule)
+            (put-text-property (line-beginning-position) (line-end-position) 'is-deadline-with-active-schedule t)
+          )
+        )
+      )
+      (forward-line)
+    )
+  )
+  (run-hooks 'my/after-org-agenda-mark-deadlines-with-active-schedule-hook)
+)
+
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-mark-deadlines-with-active-schedule)
+
 (require 'cl-lib)
 
 (defun my/org-agenda-calculate-total-leftover-effort-today (point-limit)
-  "Sum the org agenda entries efforts for today from the current point till the POINT-LIMIT.
+  "Sum the leftover org agenda entries efforts for today from the current point till the POINT-LIMIT.
 Return minutes (number)."
   (let (efforts)
     (save-excursion
@@ -724,41 +768,13 @@ Return minutes (number)."
                (entry-is-done (when entry-todo-state
                                 (member entry-todo-state org-done-keywords-for-agenda)))
                (entry-is-todo (when entry-todo-state (not entry-is-done)))
-               (entry-actively-scheduled-before-deadline
-                (and entry-scheduled-time-str
-                     entry-deadline-time-str
-                     (>= (org-time-string-to-absolute entry-scheduled-time-str) (org-today))
-                     (< (org-time-string-to-absolute entry-scheduled-time-str)
-                        (org-time-string-to-absolute entry-deadline-time-str)
-                     )
+               (entry-is-deadline-with-active-schedule (org-get-at-bol 'is-deadline-with-active-schedule))
+              )
+          (when (and entry-is-todo
+                     (member entry-type '("scheduled" "past-scheduled" "timestamp" "deadline"))
+                     (not entry-is-deadline-with-active-schedule)
                 )
-               )
-              )
-          (if (and entry-is-todo
-                   (or (member entry-type '("scheduled" "past-scheduled" "timestamp"))
-                       ;; Here I count deadline entries only if there is on scheduled entry earlier,
-                       ;; and I also assume that there won't be a scheduled entry on same day (if there
-                       ;; is one, they will both be counted currently).
-                       ;; This is important to get correct calculation in weekly agenda for future days.
-                       ;; If I decide in the future this implementation is not robust enough,
-                       ;; I should probably look into completely skipping deadline entries that are
-                       ;; scheduled with `org-agenda-skip-function`.
-                       (and (string= entry-type "deadline")
-                           (not entry-actively-scheduled-before-deadline))
-                   )
-              )
-              (push (org-entry-get entry-marker "Effort") efforts)
-            (when (and entry-is-todo (and (string= entry-type "deadline")))
-              ;; Then it must be a deadline that has active schedule.
-              ;; In that case we want to indicate those visually.
-              ;; TODO: This is now unexpected side-effect. Extract this into separate
-              ;;   function that will style and mark such deadlines, and then this
-              ;;   effort calculating function will use that.
-              (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
-                (overlay-put ov 'face '(:weight extra-light :slant italic))
-                (overlay-put ov 'category 'my-agenda-deadline-with-active-schedule)
-              )
-            )
+            (push (org-entry-get entry-marker "Effort") efforts)
           )
         )
         (forward-line)
@@ -790,7 +806,9 @@ Return minutes (number)."
   )
 )
 
-(add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
+;; Because we check the `is-deadline-with-active-schedule' property of the entries.
+(add-hook 'my/after-org-agenda-mark-deadlines-with-active-schedule-hook
+          'my/org-agenda-insert-total-daily-leftover-efforts)
 
 (use-package org-super-agenda
   :after org
