@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-07 23:38:34 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:04:34 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -709,7 +709,7 @@ USAGE:
 
 (require 'cl-lib)
 
-(defun my/org-agenda-calculate-total-effort-today (point-limit)
+(defun my/org-agenda-calculate-total-leftover-effort-today (point-limit)
   "Sum the org agenda entries efforts for today from the current point till the POINT-LIMIT.
 Return minutes (number)."
   (let (efforts)
@@ -720,6 +720,10 @@ Return minutes (number)."
                (entry-marker (org-get-at-bol 'org-hd-marker))
                (entry-scheduled-time-str (when entry-marker (org-entry-get entry-marker "SCHEDULED")))
                (entry-deadline-time-str (when entry-marker (org-entry-get entry-marker "DEADLINE")))
+               (entry-todo-state (org-get-at-bol 'todo-state))
+               (entry-is-done (when entry-todo-state
+                                (member entry-todo-state org-done-keywords-for-agenda)))
+               (entry-is-todo (when entry-todo-state (not entry-is-done)))
                (entry-actively-scheduled-before-deadline
                 (and entry-scheduled-time-str
                      entry-deadline-time-str
@@ -730,16 +734,31 @@ Return minutes (number)."
                 )
                )
               )
-          (when (or (member entry-type '("scheduled" "past-scheduled" "timestamp"))
-                    ;; Here I count deadline entries only if there is on scheduled entry earlier,
-                    ;; and I also assume that there won't be a scheduled entry on same day (if there
-                    ;; is one, they will both be counted currently).
-                    ;; If I decide in the future this implementation is not robust enough,
-                    ;; I should probably look into completely skipping deadline entries that are
-                    ;; scheduled with `org-agenda-skip-function`.
-                    (and (string= entry-type "deadline") (not entry-actively-scheduled-before-deadline))
-                )
-            (push (org-entry-get entry-marker "Effort") efforts)
+          (if (and entry-is-todo
+                   (or (member entry-type '("scheduled" "past-scheduled" "timestamp"))
+                       ;; Here I count deadline entries only if there is on scheduled entry earlier,
+                       ;; and I also assume that there won't be a scheduled entry on same day (if there
+                       ;; is one, they will both be counted currently).
+                       ;; This is important to get correct calculation in weekly agenda for future days.
+                       ;; If I decide in the future this implementation is not robust enough,
+                       ;; I should probably look into completely skipping deadline entries that are
+                       ;; scheduled with `org-agenda-skip-function`.
+                       (and (string= entry-type "deadline")
+                           (not entry-actively-scheduled-before-deadline))
+                   )
+              )
+              (push (org-entry-get entry-marker "Effort") efforts)
+            (when entry-is-todo
+              ;; Then it must be a deadline that has active schedule.
+              ;; In that case we want to indicate those visually.
+              ;; TODO: This is now unexpected side-effect. Extract this into separate
+              ;;   function that will style and mark such deadlines, and then this
+              ;;   effort calculating function will use that.
+              (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
+                (overlay-put ov 'face '(:weight extra-light :slant italic))
+                (overlay-put ov 'category 'my-agenda-deadline-with-active-schedule)
+              )
+            )
           )
         )
         (forward-line)
@@ -752,7 +771,7 @@ Return minutes (number)."
   )
 )
 
-(defun my/org-agenda-insert-total-daily-scheduled-efforts ()
+(defun my/org-agenda-insert-total-daily-leftover-efforts ()
   "Insert the total scheduled effort for each day inside the agenda buffer."
   (save-excursion
     (let (curr-date-header-pos)
@@ -760,7 +779,7 @@ Return minutes (number)."
         (goto-char curr-date-header-pos)
         (end-of-line)
         (let* ((next-date-header-pos (text-property-any (point) (point-max) 'org-agenda-date-header t))
-               (total-effort (my/org-agenda-calculate-total-effort-today
+               (total-effort (my/org-agenda-calculate-total-leftover-effort-today
                               (or next-date-header-pos (point-max))))
               )
           (insert-and-inherit (concat " (∑🕒 = " (org-duration-from-minutes total-effort) ")"))
@@ -771,7 +790,7 @@ Return minutes (number)."
   )
 )
 
-(add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-scheduled-efforts)
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
 
 (use-package org-super-agenda
   :after org
