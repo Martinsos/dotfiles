@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:04:34 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:09:47 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -748,7 +748,7 @@ Return minutes (number)."
                    )
               )
               (push (org-entry-get entry-marker "Effort") efforts)
-            (when entry-is-todo
+            (when (and entry-is-todo (and (string= entry-type "deadline")))
               ;; Then it must be a deadline that has active schedule.
               ;; In that case we want to indicate those visually.
               ;; TODO: This is now unexpected side-effect. Extract this into separate
