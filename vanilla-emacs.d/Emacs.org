@@ -667,6 +667,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
       "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
       "br"  '("reload buffer" . revert-buffer)
+      "bv"  '("select whole buffer" . mark-whole-buffer)
 
       "e"   '("errors" . (keymap))
 
@@ -1978,12 +1979,43 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
 #+begin_src emacs-lisp
 
+  (defun my/vterm-show-cwd-in-header-line ()
+    "Display the current working directory in the vterm header line."
+    (setq header-line-format
+          '(
+            (:propertize
+             (:eval
+              (let* ((git-string (let ((vc-display-status 'no-backend))
+                                   (vc-git-mode-line-string default-directory))))
+                ;; NOTE: This `git-string' actually has a face set based on state of the repo.
+                ;;   e.g. it might have vc-edited-state, or some other.
+                ;;   I noticed however that some of them don't have much/anything defined regarding
+                ;;   colors, so I might want to play with that.
+                (if git-string (concat "[" git-string "] ") "")
+              )
+             )
+            )
+            (:propertize
+             (:eval (abbreviate-file-name default-directory))
+             face font-lock-comment-face
+            )
+           )
+    )
+    ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
+    ;; to add some padding to the header line.
+    (face-remap-add-relative 'header-line
+                              `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+  )
+
   ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
   ;; emacses have all those ready, so usually you don't have to think about it.
   (use-package vterm
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-    :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+    :hook (vterm-mode . (lambda ()
+                          (setq-local global-hl-line-mode nil)
+                          (my/vterm-show-cwd-in-header-line)
+                        ))
     :config
     (defun my/vterm-new ()
       (interactive)
@@ -2027,8 +2059,17 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 
 #+end_src
 
-*** TODO Might be cool if I could tangle this code snippet directly into .bashrc, or a separate file that .bashrc will load. Then this would become real part of emacs config instead of a manual step.
+To override the default prompt to be much simpler (since we show info from it in the header line), add the following snippet into =.bashrc=, somewhere after the prompt (~PS1~) definition:
 
+#+begin_src bash :tangle no
+
+  if [ "$INSIDE_EMACS" = 'vterm' ]; then
+    export PS1="$Bold$Purple"'Ɛ ∷'"$Color_Off"' ' # Modify this as you like of course.
+  fi
+
+#+end_src
+
+*** TODO Might be cool if I could tangle these code snippets directly into .bashrc, or a separate file that .bashrc will load. Then this would become real part of emacs config instead of a manual step.
 
 ** Cheatsheet :cheatsheet:
 - After toggling to terminal window, press C-return to cd into parent dir of previous buffer.

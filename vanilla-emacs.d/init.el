@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-09 16:40:12 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:26:46 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -403,6 +403,7 @@ USAGE:
     "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
     "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
     "br"  '("reload buffer" . revert-buffer)
+    "bv"  '("select whole buffer" . mark-whole-buffer)
 
     "e"   '("errors" . (keymap))
 
@@ -1474,12 +1475,43 @@ Return minutes (number)."
   (global-company-mode 1)
 )
 
+(defun my/vterm-show-cwd-in-header-line ()
+  "Display the current working directory in the vterm header line."
+  (setq header-line-format
+        '(
+          (:propertize
+           (:eval
+            (let* ((git-string (let ((vc-display-status 'no-backend))
+                                 (vc-git-mode-line-string default-directory))))
+              ;; NOTE: This `git-string' actually has a face set based on state of the repo.
+              ;;   e.g. it might have vc-edited-state, or some other.
+              ;;   I noticed however that some of them don't have much/anything defined regarding
+              ;;   colors, so I might want to play with that.
+              (if git-string (concat "[" git-string "] ") "")
+            )
+           )
+          )
+          (:propertize
+           (:eval (abbreviate-file-name default-directory))
+           face font-lock-comment-face
+          )
+         )
+  )
+  ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
+  ;; to add some padding to the header line.
+  (face-remap-add-relative 'header-line
+                            `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+)
+
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
 (use-package vterm
   ;; hl-line highlight flickers in vterm, so we turn it off.
   ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-  :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+  :hook (vterm-mode . (lambda ()
+                        (setq-local global-hl-line-mode nil)
+                        (my/vterm-show-cwd-in-header-line)
+                      ))
   :config
   (defun my/vterm-new ()
     (interactive)

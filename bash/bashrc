@@ -50,10 +50,12 @@ if [ -f /usr/share/fzf/completion.bash ]; then . /usr/share/fzf/completion.bash;
 if [ -f /usr/share/fzf/key-bindings.bash ]; then . /usr/share/fzf/key-bindings.bash; fi
 
 ############################# PROMPT #################################
-Color_Off="\[\033[0m\]"       # Text Reset
-Green="\[\033[0;32m\]"        # Green
-Yellow="\[\033[0;33m\]"       # Yellow
-IRed="\[\033[0;91m\]"         # Intense red
+Color_Off="\[\033[0m\]"
+Green="\[\033[0;32m\]"
+Yellow="\[\033[0;33m\]"
+Purple="\[\033[0;35m\]"
+Bold="\[\033[1m\]"
+IRed="\[\033[0;91m\]" # Intense red
 PathShort="\w"
 
 # show git information in prompt
@@ -86,6 +88,11 @@ fi
 
 # Show only the last 3 directory names: this keeps prompt from becoming too long.
 PROMPT_DIRTRIM=3
+
+if [ "$INSIDE_EMACS" = 'vterm' ]; then
+  export PS1="$Bold$Purple"'Ɛ ∷'"$Color_Off"' '
+fi
+
 ######################################################################
 
 
