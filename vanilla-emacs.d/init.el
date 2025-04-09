@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-09 12:23:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-09 16:40:12 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -617,7 +617,11 @@ USAGE:
   :defer t
   :hook (org-mode . org-superstar-mode)
   :custom
-  (org-superstar-remove-leading-stars t)
+  ;; I use `org-superstar-leading-bullets' to hide leading stars of the heading by setting them to space.
+  ;; I use two spaces because that is how they have shown it should be done in the docs and it works well.
+  ;; Why don't I use `org-superstar-remove-leading-stars', which should hide them for real?
+  ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
+  (org-superstar-leading-bullet "  ")
   (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
 
 )
@@ -885,6 +889,7 @@ Return minutes (number)."
     "A" 'org-agenda-append-agenda
     "C" 'org-agenda-capture
     "e" 'org-agenda-tree-to-indirect-buffer
+    "o" 'org-agenda-goto
 
     ;; mark
     "m" 'org-agenda-bulk-toggle
