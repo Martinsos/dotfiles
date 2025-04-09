@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:26:46 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:31:14 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1487,6 +1487,7 @@ Return minutes (number)."
               ;;   e.g. it might have vc-edited-state, or some other.
               ;;   I noticed however that some of them don't have much/anything defined regarding
               ;;   colors, so I might want to play with that.
+              (message "Face: %S" (get-text-property 0 'face git-string))
               (if git-string (concat "[" git-string "] ") "")
             )
            )

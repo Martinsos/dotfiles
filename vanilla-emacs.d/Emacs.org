@@ -1991,6 +1991,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
                 ;;   e.g. it might have vc-edited-state, or some other.
                 ;;   I noticed however that some of them don't have much/anything defined regarding
                 ;;   colors, so I might want to play with that.
+                (message "Face: %S" (get-text-property 0 'face git-string))
                 (if git-string (concat "[" git-string "] ") "")
               )
              )
