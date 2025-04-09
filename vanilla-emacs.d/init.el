@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-09 01:52:01 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-09 12:23:57 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -611,11 +611,15 @@ USAGE:
                              (?C . (:foreground "yellow" :weight light))))
 )
 
-;; Replace stars (*) with nice bullets.
-(use-package org-bullets
+;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
+(use-package org-superstar
   :after (org)
   :defer t
-  :hook (org-mode . org-bullets-mode)
+  :hook (org-mode . org-superstar-mode)
+  :custom
+  (org-superstar-remove-leading-stars t)
+  (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
+
 )
 
 ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
