@@ -1987,11 +1987,14 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
              (:eval
               (let* ((git-string (let ((vc-display-status 'no-backend))
                                    (vc-git-mode-line-string default-directory))))
+                ;; TODO: This `(vc-git-mode-line-string default-directory)' line is
+                ;;   not working as it should, because I am giving it a dir and it is expecting a file.
+                ;;   I should find another way to obtain the information about the status of the repo.
                 ;; NOTE: This `git-string' actually has a face set based on state of the repo.
                 ;;   e.g. it might have vc-edited-state, or some other.
                 ;;   I noticed however that some of them don't have much/anything defined regarding
                 ;;   colors, so I might want to play with that.
-                (message "Face: %S" (get-text-property 0 'face git-string))
+                ;;   (message "Face: %S" (get-text-property 0 'face git-string))
                 (if git-string (concat "[" git-string "] ") "")
               )
              )

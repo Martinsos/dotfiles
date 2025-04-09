@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:31:14 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:38:43 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1483,11 +1483,14 @@ Return minutes (number)."
            (:eval
             (let* ((git-string (let ((vc-display-status 'no-backend))
                                  (vc-git-mode-line-string default-directory))))
+              ;; TODO: This `(vc-git-mode-line-string default-directory)' line is
+              ;;   not working as it should, because I am giving it a dir and it is expecting a file.
+              ;;   I should find another way to obtain the information about the status of the repo.
               ;; NOTE: This `git-string' actually has a face set based on state of the repo.
               ;;   e.g. it might have vc-edited-state, or some other.
               ;;   I noticed however that some of them don't have much/anything defined regarding
               ;;   colors, so I might want to play with that.
-              (message "Face: %S" (get-text-property 0 'face git-string))
+              ;;   (message "Face: %S" (get-text-property 0 'face git-string))
               (if git-string (concat "[" git-string "] ") "")
             )
            )
