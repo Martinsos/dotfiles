@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-10 00:38:43 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-10 22:46:42 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1037,7 +1037,8 @@ Return minutes (number)."
         (org-todo-keyword-faces
          '(("EPIC" . (:foreground "orchid" :weight bold))
            ("INPR" . (:foreground "dark orange" :weight bold))
-           ("BLCK" . (:foreground "dark orange" :weight bold :strike-through t))
+           ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
+           ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
@@ -1475,22 +1476,27 @@ Return minutes (number)."
   (global-company-mode 1)
 )
 
+;; TODO: How to go about this using gitstatusd:
+;; I should simplify `(setq header-line-format ...)' to not do heavy calculation here but to just eval variables `my/vterm-git-status' and `my/vterm-cwd' (or maybe this one doesn't need a var).
+;; And then, I would also have a separate function, called `my/obtain-vterm-git-status', that would
+;; asynchronously call `gitstatusd' and put the result in the `my/vterm-git-status'. This function would
+;; have to trigger on the finish of every vterm command, so that is how I should hook her.
+;; And header-line would hopefully refresh often enough (I should investigate how often it refreshes
+;; by default, if not often enough, probably I can trigger it.
+;; Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
+;; But I shouldn't have to use it, I read that header/mode-line refreshes on any buffer change.
+;; I could even go as far as to set anew the `header-line-format' from the `my/obtain-vterm-git-status'
+;; every time we call the latter, but that sounds a bit extreme.
+;; Btw, I installed `gitstatusd' by downloading correct binary from Github Releases and putting it in
+;; ~/.local/bin, that was it.
+
 (defun my/vterm-show-cwd-in-header-line ()
   "Display the current working directory in the vterm header line."
   (setq header-line-format
         '(
           (:propertize
            (:eval
-            (let* ((git-string (let ((vc-display-status 'no-backend))
-                                 (vc-git-mode-line-string default-directory))))
-              ;; TODO: This `(vc-git-mode-line-string default-directory)' line is
-              ;;   not working as it should, because I am giving it a dir and it is expecting a file.
-              ;;   I should find another way to obtain the information about the status of the repo.
-              ;; NOTE: This `git-string' actually has a face set based on state of the repo.
-              ;;   e.g. it might have vc-edited-state, or some other.
-              ;;   I noticed however that some of them don't have much/anything defined regarding
-              ;;   colors, so I might want to play with that.
-              ;;   (message "Face: %S" (get-text-property 0 'face git-string))
+            (let* ((git-string nil)) ;; TODO: Implement getting git status string. Check TODO above.
               (if git-string (concat "[" git-string "] ") "")
             )
            )
