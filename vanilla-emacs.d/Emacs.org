@@ -1867,6 +1867,21 @@ Turns any org document into a presentation! Each top-level header is one slide.
 
 #+end_src
 
+** gitstatus.el
+
+=gitstatus.el= gives us an easy way to generate a nice git status message for specific directory.
+It is basically a wrapper that calls =gitstatusd= program in the background.
+
+#+begin_src emacs-lisp
+
+  (use-package gitstatus)
+
+#+end_src
+
+*** Installing =gitstatusd= on your machine :manual_setup:
+Ensure =gitstatus= (which provides =gitstatusd= binary) is installed on your machine and in PATH.
+If it isn't already, you can download the latest binary from the [[https://github.com/romkatv/gitstatus][Github releases]] and e.g. put it into =~/.local/bin/= dir.
+
 ** Magit
 
 #+begin_src emacs-lisp
@@ -1980,52 +1995,12 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
 #+begin_src emacs-lisp
 
-  ;; TODO: How to go about this using gitstatusd:
-  ;; I should simplify `(setq header-line-format ...)' to not do heavy calculation here but to just eval variables `my/vterm-git-status' and `my/vterm-cwd' (or maybe this one doesn't need a var).
-  ;; And then, I would also have a separate function, called `my/obtain-vterm-git-status', that would
-  ;; asynchronously call `gitstatusd' and put the result in the `my/vterm-git-status'. This function would
-  ;; have to trigger on the finish of every vterm command, so that is how I should hook her.
-  ;; And header-line would hopefully refresh often enough (I should investigate how often it refreshes
-  ;; by default, if not often enough, probably I can trigger it.
-  ;; Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
-  ;; But I shouldn't have to use it, I read that header/mode-line refreshes on any buffer change.
-  ;; I could even go as far as to set anew the `header-line-format' from the `my/obtain-vterm-git-status'
-  ;; every time we call the latter, but that sounds a bit extreme.
-  ;; Btw, I installed `gitstatusd' by downloading correct binary from Github Releases and putting it in
-  ;; ~/.local/bin, that was it.
-
-  (defun my/vterm-show-cwd-in-header-line ()
-    "Display the current working directory in the vterm header line."
-    (setq header-line-format
-          '(
-            (:propertize
-             (:eval
-              (let* ((git-string nil)) ;; TODO: Implement getting git status string. Check TODO above.
-                (if git-string (concat "[" git-string "] ") "")
-              )
-             )
-            )
-            (:propertize
-             (:eval (abbreviate-file-name default-directory))
-             face font-lock-comment-face
-            )
-           )
-    )
-    ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
-    ;; to add some padding to the header line.
-    (face-remap-add-relative 'header-line
-                              `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
-  )
-
   ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
   ;; emacses have all those ready, so usually you don't have to think about it.
   (use-package vterm
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-    :hook (vterm-mode . (lambda ()
-                          (setq-local global-hl-line-mode nil)
-                          (my/vterm-show-cwd-in-header-line)
-                        ))
+    :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
     :config
     (defun my/vterm-new ()
       (interactive)
@@ -2052,6 +2027,72 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
 #+end_src
 
+Header line that shows git status and cwd path:
+
+#+begin_src emacs-lisp
+
+  ;; TODO Clean up this code block, finalize TODOs.
+
+  (with-eval-after-load 'vterm
+    ;;; prompt hook
+
+    (defvar my/vterm-prompt-hook nil)
+
+    (defun my/run-vterm-prompt-hook ()
+      "TODO."
+      (run-hooks 'my/vterm-prompt-hook)
+    )
+
+    (with-eval-after-load 'vterm
+      (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hook))
+    )
+
+    ;;; header line
+
+    (defvar-local my/vterm-git-status-string nil)
+
+    (defun my/vterm-set-header-line ()
+      "Display the header line with cwd and git info."
+      (setq header-line-format
+            '(
+              (:eval (concat my/vterm-git-status-string " "))
+              (:propertize
+               (:eval (abbreviate-file-name default-directory))
+               face font-lock-comment-face
+              )
+            )
+      )
+      ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
+      ;; to add some padding to the header line.
+      (face-remap-add-relative 'header-line
+                               `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+    )
+
+    (add-hook 'vterm-mode-hook 'my/vterm-set-header-line)
+
+    ;;; gitstatusd
+
+    (with-eval-after-load 'gitstatus
+      (defun my/obtain-vterm-git-status-string ()
+        "TODO"
+           (setq my/vterm-git-status-string (format "[test-%d]" (random)))
+           ;; TODO: Use gitstatusd
+        ;; (gitstatusd-get-status
+        ;;  default-directory
+        ;;  (lambda (res)
+        ;;    (setq my/vterm-git-status-string (gitstatus-build-str res))
+        ;;    ;; TODO: I could check if new git status string is different than the old one, and in that case, force frefresh of header/mode lines.
+        ;;    ;;   Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
+        ;;  )
+        ;; )
+      )
+
+      (add-hook 'my/vterm-prompt-hook 'my/obtain-vterm-git-status-string)
+    )
+  )
+
+#+end_src
+
 ** Shell-side configuration for vterm :manual_setup:
 
 Some of the most useful vterm features require us to do a bit of configuration of the shell on our system. We can do without it, but we will be missing some of the functionality.
@@ -2070,17 +2111,17 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 #+end_src
 
 To override the default prompt to be much simpler (since we show info from it in the header line), add the following snippet into =.bashrc=, somewhere after the prompt (~PS1~) definition:
+NOTE: This ~\[\e]51;Eprompt\a\]~ at the end is OSC sequence I added to detect the prompt and to be able then to run functions based on its appearance (check ~vterm-eval-cmds~, and ~my/vterm-prompt-hook~).
 
 #+begin_src bash :tangle no
 
   if [ "$INSIDE_EMACS" = 'vterm' ]; then
-    export PS1="$Bold$Purple"'Ɛ ∷'"$Color_Off"' ' # Modify this as you like of course.
+    export PS1="${Bold}${Purple}Ɛ ∷ ${Color_Off}\[\e]51;Eprompt\a\]"
   fi
 
 #+end_src
 
 *** TODO Might be cool if I could tangle these code snippets directly into .bashrc, or a separate file that .bashrc will load. Then this would become real part of emacs config instead of a manual step.
-
 ** Cheatsheet :cheatsheet:
 - After toggling to terminal window, press C-return to cd into parent dir of previous buffer.
 - To execute commands like Ctrl-C or Ctrl-D, prefix them with `C-c`, so e.g. `C-c C-c` or `C-c C-d`.

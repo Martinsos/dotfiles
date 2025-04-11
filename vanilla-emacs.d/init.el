@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-10 22:46:42 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-12 01:10:22 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1399,6 +1399,8 @@ Return minutes (number)."
   "g" '("git (version control)" . (keymap))
 )
 
+(use-package gitstatus)
+
 ;; NOTE: I installed transient not because I use it directly, but because magit
 ;;   needs a newer version of it than what comes with emacs by default, and this
 ;;   takes care of it. If magit at some point stops needing it, I can remove this.
@@ -1476,52 +1478,12 @@ Return minutes (number)."
   (global-company-mode 1)
 )
 
-;; TODO: How to go about this using gitstatusd:
-;; I should simplify `(setq header-line-format ...)' to not do heavy calculation here but to just eval variables `my/vterm-git-status' and `my/vterm-cwd' (or maybe this one doesn't need a var).
-;; And then, I would also have a separate function, called `my/obtain-vterm-git-status', that would
-;; asynchronously call `gitstatusd' and put the result in the `my/vterm-git-status'. This function would
-;; have to trigger on the finish of every vterm command, so that is how I should hook her.
-;; And header-line would hopefully refresh often enough (I should investigate how often it refreshes
-;; by default, if not often enough, probably I can trigger it.
-;; Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
-;; But I shouldn't have to use it, I read that header/mode-line refreshes on any buffer change.
-;; I could even go as far as to set anew the `header-line-format' from the `my/obtain-vterm-git-status'
-;; every time we call the latter, but that sounds a bit extreme.
-;; Btw, I installed `gitstatusd' by downloading correct binary from Github Releases and putting it in
-;; ~/.local/bin, that was it.
-
-(defun my/vterm-show-cwd-in-header-line ()
-  "Display the current working directory in the vterm header line."
-  (setq header-line-format
-        '(
-          (:propertize
-           (:eval
-            (let* ((git-string nil)) ;; TODO: Implement getting git status string. Check TODO above.
-              (if git-string (concat "[" git-string "] ") "")
-            )
-           )
-          )
-          (:propertize
-           (:eval (abbreviate-file-name default-directory))
-           face font-lock-comment-face
-          )
-         )
-  )
-  ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
-  ;; to add some padding to the header line.
-  (face-remap-add-relative 'header-line
-                            `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
-)
-
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
 (use-package vterm
   ;; hl-line highlight flickers in vterm, so we turn it off.
   ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-  :hook (vterm-mode . (lambda ()
-                        (setq-local global-hl-line-mode nil)
-                        (my/vterm-show-cwd-in-header-line)
-                      ))
+  :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
   :config
   (defun my/vterm-new ()
     (interactive)
@@ -1544,6 +1506,66 @@ Return minutes (number)."
   ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
   ;; me to dir of previous buffer! Very useful.
   (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
+)
+
+;; TODO Clean up this code block, finalize TODOs.
+
+(with-eval-after-load 'vterm
+  ;;; prompt hook
+
+  (defvar my/vterm-prompt-hook nil)
+
+  (defun my/run-vterm-prompt-hook ()
+    "TODO."
+    (run-hooks 'my/vterm-prompt-hook)
+  )
+
+  (with-eval-after-load 'vterm
+    (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hook))
+  )
+
+  ;;; header line
+
+  (defvar-local my/vterm-git-status-string nil)
+
+  (defun my/vterm-set-header-line ()
+    "Display the header line with cwd and git info."
+    (setq header-line-format
+          '(
+            (:eval (concat my/vterm-git-status-string " "))
+            (:propertize
+             (:eval (abbreviate-file-name default-directory))
+             face font-lock-comment-face
+            )
+          )
+    )
+    ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
+    ;; to add some padding to the header line.
+    (face-remap-add-relative 'header-line
+                             `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+  )
+
+  (add-hook 'vterm-mode-hook 'my/vterm-set-header-line)
+
+  ;;; gitstatusd
+
+  (with-eval-after-load 'gitstatus
+    (defun my/obtain-vterm-git-status-string ()
+      "TODO"
+         (setq my/vterm-git-status-string (format "[test-%d]" (random)))
+         ;; TODO: Use gitstatusd
+      ;; (gitstatusd-get-status
+      ;;  default-directory
+      ;;  (lambda (res)
+      ;;    (setq my/vterm-git-status-string (gitstatus-build-str res))
+      ;;    ;; TODO: I could check if new git status string is different than the old one, and in that case, force frefresh of header/mode lines.
+      ;;    ;;   Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
+      ;;  )
+      ;; )
+    )
+
+    (add-hook 'my/vterm-prompt-hook 'my/obtain-vterm-git-status-string)
+  )
 )
 
 (use-package jinx

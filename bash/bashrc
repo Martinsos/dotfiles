@@ -90,7 +90,7 @@ fi
 PROMPT_DIRTRIM=3
 
 if [ "$INSIDE_EMACS" = 'vterm' ]; then
-  export PS1="$Bold$Purple"'Ɛ ∷'"$Color_Off"' '
+  export PS1="${Bold}${Purple}Ɛ ∷ ${Color_Off}\[\e]51;Eprompt\a\]"
 fi
 
 ######################################################################
