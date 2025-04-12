@@ -2033,65 +2033,78 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
 #+end_src
 
-Header line that shows git status and cwd path:
+** My custom hook that triggers on prompt in vterm
 
 #+begin_src emacs-lisp
 
-  ;; TODO Clean up this code block, finalize TODOs.
-
   (with-eval-after-load 'vterm
-    ;;; prompt hook
+    (defvar my/vterm-prompt-hook nil "A hook that runs each time the prompt is printed in vterm.")
 
-    (defvar my/vterm-prompt-hook nil)
-
-    (defun my/run-vterm-prompt-hook ()
-      "TODO."
+    (defun my/run-vterm-prompt-hooks ()
+      "Runs my/vterm-prompt-hook hooks."
       (run-hooks 'my/vterm-prompt-hook)
     )
 
     (with-eval-after-load 'vterm
-      (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hook))
+      ;; If OSC sequence "prompt" is printed in the terminal, `my/run-vterm-prompt-hook'
+      ;; will be run.
+      (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hooks))
     )
+  )
 
-    ;;; header line
+#+end_src
 
-    (defvar-local my/vterm-git-status-string nil)
+*** Adding special OSC sequence to the prompt :manual_setup:
+In order for us to be able to detect the prompt and run the hooks based on it, terminal prompt needs to contain the OSC sequence ~\[\e]51;Eprompt\a\]~.
+Check [[*Shell-side configuration for vterm]] below for exact details.
 
-    ;; TODO: Currently, header-line doesn't make buffer smaller but it seems to overlap the top line.
-    ;; As a result, vterm on enter hides the top line under it. It's weird. Maybe vterm issue?
-    ;; But try to figure it out.
-    ;; TODO: There is "on" string at start of git status string that is weirdly styled, figure out
-    ;; what is the issue there.
+** My custom header line in vterm (git status, path)
+
+On vterm mode (so effectively for any new vterm buffer), I set a header line for that buffer that shows current working directory and its git status.
+In Emacs, header line refreshes on every buffer change, and its ~:eval~ forms are evaluated every time.
+Since calculation of git status is both somewhat expensive and done asynchronously (by =gitstatusd=), I don't do it directly in the ~:eval~ form.
+Instead, I use an intermediary variable that is evaled/read in header line via ~:eval~, and is separately updated by the git status calculation, which is run only on every new prompt in the terminal.
+
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'vterm
+    (defvar-local my/vterm-git-status-string nil
+      "A pretty string that shows git status of the current working directory in vterm.")
+
+    ;; TODO: Sometimes, vterm hides top line under the header-line. But not always. It starts in right
+    ;; place, and commands like "go to first line" work correctly, but I press enter and new line in
+    ;; vterm appears, whole buffer shifts for one line up and the first line becomes hidden. Figure
+    ;; out how to fix this.
     (defun my/vterm-set-header-line ()
-      "Display the header line with cwd and git info."
+      "Display the header line that shows vterm's current dir and git status.
+  It gets git status string from `my/vterm-git-status-string' variable each time it renders."
       (setq header-line-format
-            '(
-              (:eval (when my/vterm-git-status-string (concat " " my/vterm-git-status-string " ❯ ")))
+            '((:eval (when my/vterm-git-status-string (concat " " my/vterm-git-status-string " ❯ ")))
               (:propertize
                (:eval (abbreviate-file-name default-directory))
                face font-lock-comment-face
               )
-            )
+             )
       )
       ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
       ;; to add some padding to the header line.
-      (face-remap-add-relative 'header-line
-                               `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+      (face-remap-add-relative
+       'header-line
+       `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t)))
+      )
     )
-
     (add-hook 'vterm-mode-hook 'my/vterm-set-header-line)
-
-    ;;; gitstatusd
 
     (with-eval-after-load 'gitstatus
       (defun my/obtain-vterm-git-status-string ()
-        "TODO"
+        "Obtains the git status for the current directory of the vterm buffer.
+  It builds a pretty string based showing it and stores it in `my/vterm-git-status-string' var.
+  It uses external `gitstatusd' program to calculate the actual git status."
         (gitstatusd-get-status
          default-directory
          (lambda (res)
            (let ((status-string (gitstatus-build-str res)))
              (when (not (equal my/vterm-git-status-string status-string))
-               (print status-string)
                (setq my/vterm-git-status-string (gitstatus-build-str res))
                (force-mode-line-update)
              )
@@ -2099,7 +2112,6 @@ Header line that shows git status and cwd path:
          )
         )
       )
-
       (add-hook 'my/vterm-prompt-hook 'my/obtain-vterm-git-status-string)
     )
   )
@@ -2123,8 +2135,8 @@ It assumes vterm's =etc/= dir is next to where vterm is installed. This was true
 
 #+end_src
 
-To override the default prompt to be much simpler (since we show info from it in the header line), add the following snippet into =.bashrc=, somewhere after the prompt (~PS1~) definition:
-NOTE: This ~\[\e]51;Eprompt\a\]~ at the end is OSC sequence I added to detect the prompt and to be able then to run functions based on its appearance (check ~vterm-eval-cmds~, and ~my/vterm-prompt-hook~).
+To override the default prompt to be much simpler (since I show info from it in the header line, check [[*My custom header line in vterm (git status, path)]]), add the following snippet into =.bashrc=, somewhere after the prompt (~PS1~) definition:
+*NOTE*: This ~\[\e]51;Eprompt\a\]~ at the end is OSC sequence I added to detect the prompt and to be able then to run functions based on its appearance (check ~vterm-eval-cmds~, and ~my/vterm-prompt-hook~). For more details check [[*My custom hook that triggers on prompt in vterm]] .
 
 #+begin_src bash :tangle no
 

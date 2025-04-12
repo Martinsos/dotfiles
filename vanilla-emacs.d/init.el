@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-12 02:02:52 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-12 13:37:22 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1512,61 +1512,59 @@ Return minutes (number)."
   (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
 )
 
-;; TODO Clean up this code block, finalize TODOs.
-
 (with-eval-after-load 'vterm
-  ;;; prompt hook
+  (defvar my/vterm-prompt-hook nil "A hook that runs each time the prompt is printed in vterm.")
 
-  (defvar my/vterm-prompt-hook nil)
-
-  (defun my/run-vterm-prompt-hook ()
-    "TODO."
+  (defun my/run-vterm-prompt-hooks ()
+    "Runs my/vterm-prompt-hook hooks."
     (run-hooks 'my/vterm-prompt-hook)
   )
 
   (with-eval-after-load 'vterm
-    (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hook))
+    ;; If OSC sequence "prompt" is printed in the terminal, `my/run-vterm-prompt-hook'
+    ;; will be run.
+    (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hooks))
   )
+)
 
-  ;;; header line
+(with-eval-after-load 'vterm
+  (defvar-local my/vterm-git-status-string nil
+    "A pretty string that shows git status of the current working directory in vterm.")
 
-  (defvar-local my/vterm-git-status-string nil)
-
-  ;; TODO: Currently, header-line doesn't make buffer smaller but it seems to overlap the top line.
-  ;; As a result, vterm on enter hides the top line under it. It's weird. Maybe vterm issue?
-  ;; But try to figure it out.
-  ;; TODO: There is "on" string at start of git status string that is weirdly styled, figure out
-  ;; what is the issue there.
+  ;; TODO: Sometimes, vterm hides top line under the header-line. But not always. It starts in right
+  ;; place, and commands like "go to first line" work correctly, but I press enter and new line in
+  ;; vterm appears, whole buffer shifts for one line up and the first line becomes hidden. Figure
+  ;; out how to fix this.
   (defun my/vterm-set-header-line ()
-    "Display the header line with cwd and git info."
+    "Display the header line that shows vterm's current dir and git status.
+It gets git status string from `my/vterm-git-status-string' variable each time it renders."
     (setq header-line-format
-          '(
-            (:eval (when my/vterm-git-status-string (concat " " my/vterm-git-status-string " ❯ ")))
+          '((:eval (when my/vterm-git-status-string (concat " " my/vterm-git-status-string " ❯ ")))
             (:propertize
              (:eval (abbreviate-file-name default-directory))
              face font-lock-comment-face
             )
-          )
+           )
     )
     ;; Setting :box of header line to have an "invisible" line (same color as background) is the trick
     ;; to add some padding to the header line.
-    (face-remap-add-relative 'header-line
-                             `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t))))
+    (face-remap-add-relative
+     'header-line
+     `(:box (:line-width 6 :color ,(face-attribute 'header-line :background nil t)))
+    )
   )
-
   (add-hook 'vterm-mode-hook 'my/vterm-set-header-line)
-
-  ;;; gitstatusd
 
   (with-eval-after-load 'gitstatus
     (defun my/obtain-vterm-git-status-string ()
-      "TODO"
+      "Obtains the git status for the current directory of the vterm buffer.
+It builds a pretty string based showing it and stores it in `my/vterm-git-status-string' var.
+It uses external `gitstatusd' program to calculate the actual git status."
       (gitstatusd-get-status
        default-directory
        (lambda (res)
          (let ((status-string (gitstatus-build-str res)))
            (when (not (equal my/vterm-git-status-string status-string))
-             (print status-string)
              (setq my/vterm-git-status-string (gitstatus-build-str res))
              (force-mode-line-update)
            )
@@ -1574,7 +1572,6 @@ Return minutes (number)."
        )
       )
     )
-
     (add-hook 'my/vterm-prompt-hook 'my/obtain-vterm-git-status-string)
   )
 )
