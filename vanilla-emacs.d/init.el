@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-12 01:10:22 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-12 02:02:52 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1399,7 +1399,11 @@ Return minutes (number)."
   "g" '("git (version control)" . (keymap))
 )
 
-(use-package gitstatus)
+(use-package gitstatus
+  :custom
+  (gitstatusd-exe "~/.local/bin/gitstatusd")
+  (gitstatus-prefix nil)
+)
 
 ;; NOTE: I installed transient not because I use it directly, but because magit
 ;;   needs a newer version of it than what comes with emacs by default, and this
@@ -1528,11 +1532,16 @@ Return minutes (number)."
 
   (defvar-local my/vterm-git-status-string nil)
 
+  ;; TODO: Currently, header-line doesn't make buffer smaller but it seems to overlap the top line.
+  ;; As a result, vterm on enter hides the top line under it. It's weird. Maybe vterm issue?
+  ;; But try to figure it out.
+  ;; TODO: There is "on" string at start of git status string that is weirdly styled, figure out
+  ;; what is the issue there.
   (defun my/vterm-set-header-line ()
     "Display the header line with cwd and git info."
     (setq header-line-format
           '(
-            (:eval (concat my/vterm-git-status-string " "))
+            (:eval (when my/vterm-git-status-string (concat " " my/vterm-git-status-string " ❯ ")))
             (:propertize
              (:eval (abbreviate-file-name default-directory))
              face font-lock-comment-face
@@ -1552,16 +1561,18 @@ Return minutes (number)."
   (with-eval-after-load 'gitstatus
     (defun my/obtain-vterm-git-status-string ()
       "TODO"
-         (setq my/vterm-git-status-string (format "[test-%d]" (random)))
-         ;; TODO: Use gitstatusd
-      ;; (gitstatusd-get-status
-      ;;  default-directory
-      ;;  (lambda (res)
-      ;;    (setq my/vterm-git-status-string (gitstatus-build-str res))
-      ;;    ;; TODO: I could check if new git status string is different than the old one, and in that case, force frefresh of header/mode lines.
-      ;;    ;;   Yeah, there is `force-mode-line-update' that updates mode line, header line and tab line, all of them.
-      ;;  )
-      ;; )
+      (gitstatusd-get-status
+       default-directory
+       (lambda (res)
+         (let ((status-string (gitstatus-build-str res)))
+           (when (not (equal my/vterm-git-status-string status-string))
+             (print status-string)
+             (setq my/vterm-git-status-string (gitstatus-build-str res))
+             (force-mode-line-update)
+           )
+         )
+       )
+      )
     )
 
     (add-hook 'my/vterm-prompt-hook 'my/obtain-vterm-git-status-string)
