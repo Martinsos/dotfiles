@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-12 13:37:22 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-14 19:03:53 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -244,10 +244,16 @@ USAGE:
 (use-package doom-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
   :config
-  ;; I went with dracula for now. palenight is also nice.
+  ;; I went with moonlight for now. palenight is also nice.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
   ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
   (load-theme 'doom-moonlight t)
+)
+
+;; Nice themes by Prot.
+;; `ef-dream' is nice, also `ef-night'.
+(use-package ef-themes
+  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
 )
 
 ;; TODO: Configure better or use some other modeline.
@@ -716,11 +722,11 @@ USAGE:
                       :foreground (face-attribute 'org-time-grid :foreground))
 )
 
-(defvar my/after-org-agenda-mark-deadlines-with-active-schedule-hook nil
-  "Hook called after the marking of the deadlines with active schedule")
+(defvar my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook nil
+  "Hook called after the marking of the todo deadlines with the earlier schedule")
 
-(defun my/org-agenda-mark-deadlines-with-active-schedule ()
-  "Mark all deadline entries in agenda that have earlier schedule that can still be fulfilled.
+(defun my/org-agenda-mark-todo-deadlines-with-earlier-schedule ()
+  "Mark all todo deadline entries in agenda that have earlier schedule.
 It will both mark them with a text property and also style them to be less emphasized."
   (save-excursion
     (while (< (point) (point-max))
@@ -734,31 +740,30 @@ It will both mark them with a text property and also style them to be less empha
              (entry-is-done (when entry-todo-state
                              (member entry-todo-state org-done-keywords-for-agenda)))
              (entry-is-todo (when entry-todo-state (not entry-is-done)))
-             (entry-actively-scheduled-before-deadline
+             (entry-scheduled-before-deadline
               (and entry-scheduled-time-str
                     entry-deadline-time-str
-                    (>= (org-time-string-to-absolute entry-scheduled-time-str) (org-today))
                     (< (org-time-string-to-absolute entry-scheduled-time-str)
                       (org-time-string-to-absolute entry-deadline-time-str)
                     )
               )
              )
             )
-        (when (and entry-is-deadline entry-is-todo entry-actively-scheduled-before-deadline)
+        (when (and entry-is-deadline entry-is-todo entry-scheduled-before-deadline)
           (let ((ov (make-overlay (line-beginning-position) (line-end-position))))
             (overlay-put ov 'face '(:weight extra-light :slant italic))
-            (overlay-put ov 'category 'my-agenda-deadline-with-active-schedule)
-            (put-text-property (line-beginning-position) (line-end-position) 'is-deadline-with-active-schedule t)
+            (overlay-put ov 'category 'my-agenda-todo-deadline-with-earlier-schedule)
+            (put-text-property (line-beginning-position) (line-end-position) 'is-todo-deadline-with-earlier-schedule t)
           )
         )
       )
       (forward-line)
     )
   )
-  (run-hooks 'my/after-org-agenda-mark-deadlines-with-active-schedule-hook)
+  (run-hooks 'my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook)
 )
 
-(add-hook 'org-agenda-finalize-hook 'my/org-agenda-mark-deadlines-with-active-schedule)
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-mark-todo-deadlines-with-earlier-schedule)
 
 (require 'cl-lib)
 
@@ -777,11 +782,11 @@ Return minutes (number)."
                (entry-is-done (when entry-todo-state
                                 (member entry-todo-state org-done-keywords-for-agenda)))
                (entry-is-todo (when entry-todo-state (not entry-is-done)))
-               (entry-is-deadline-with-active-schedule (org-get-at-bol 'is-deadline-with-active-schedule))
+               (entry-is-todo-deadline-with-earlier-schedule (org-get-at-bol 'is-todo-deadline-with-earlier-schedule))
               )
           (when (and entry-is-todo
                      (member entry-type '("scheduled" "past-scheduled" "timestamp" "deadline"))
-                     (not entry-is-deadline-with-active-schedule)
+                     (not entry-is-todo-deadline-with-earlier-schedule)
                 )
             (push (org-entry-get entry-marker "Effort") efforts)
           )
@@ -807,7 +812,7 @@ Return minutes (number)."
                (total-effort (my/org-agenda-calculate-total-leftover-effort-today
                               (or next-date-header-pos (point-max))))
               )
-          (insert-and-inherit (concat " (∑🕒 = " (org-duration-from-minutes total-effort) ")"))
+          (insert-and-inherit (concat " (∑⏳ = " (org-duration-from-minutes total-effort) ")"))
         )
         (forward-line)
       )
@@ -815,8 +820,8 @@ Return minutes (number)."
   )
 )
 
-;; Because we check the `is-deadline-with-active-schedule' property of the entries.
-(add-hook 'my/after-org-agenda-mark-deadlines-with-active-schedule-hook
+;; Because we check the `is-todo-deadline-with-earlier-schedule' property of the entries.
+(add-hook 'my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook
           'my/org-agenda-insert-total-daily-leftover-efforts)
 
 (use-package org-super-agenda
