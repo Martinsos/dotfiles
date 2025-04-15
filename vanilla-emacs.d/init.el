@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-14 19:03:53 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-15 11:12:53 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -782,11 +782,21 @@ Return minutes (number)."
                (entry-is-done (when entry-todo-state
                                 (member entry-todo-state org-done-keywords-for-agenda)))
                (entry-is-todo (when entry-todo-state (not entry-is-done)))
-               (entry-is-todo-deadline-with-earlier-schedule (org-get-at-bol 'is-todo-deadline-with-earlier-schedule))
               )
           (when (and entry-is-todo
-                     (member entry-type '("scheduled" "past-scheduled" "timestamp" "deadline"))
-                     (not entry-is-todo-deadline-with-earlier-schedule)
+                     ;; We intentionally didn't include the "upcoming deadline" entries.
+                     (or (member entry-type '("scheduled" "past-scheduled" "timestamp"))
+                         ;; We count only deadlines that also have a scheduled time on that same day.
+                         ;; This is specific to how my agenda is set up: Such deadline entries will
+                         ;; appear under the list of tasks for today, so we want to count them.
+                         (and (string= entry-type "deadline")
+                              entry-scheduled-time-str
+                              entry-deadline-time-str
+                              (= (org-time-string-to-absolute entry-scheduled-time-str)
+                                 (org-time-string-to-absolute entry-deadline-time-str)
+                              )
+                         )
+                     )
                 )
             (push (org-entry-get entry-marker "Effort") efforts)
           )
@@ -820,9 +830,7 @@ Return minutes (number)."
   )
 )
 
-;; Because we check the `is-todo-deadline-with-earlier-schedule' property of the entries.
-(add-hook 'my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook
-          'my/org-agenda-insert-total-daily-leftover-efforts)
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
 
 (use-package org-super-agenda
   :after org
