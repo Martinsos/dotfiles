@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-04-15 11:12:53 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-04-30 00:21:28 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -238,6 +238,22 @@ USAGE:
   (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
 
   (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
+)
+
+(use-package epg-config
+  :ensure nil ; emacs built-in
+  :config
+  ; Makes emacs query the passphrase via minibuffer, instead of external program.
+  (setq epg-pinentry-mode 'loopback)
+)
+
+(use-package plstore
+  :ensure nil ; emacs built-in
+  :config
+  ; Stops plstore from asking for passphrase many times, instead it caches it and reuses it.
+  ; NOTE: If this stops working, alternative is to set it to use GPG key for encryption.
+  ;       Check plstore code for instructions on this if it will ever be needed.
+  (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -630,7 +646,8 @@ USAGE:
   ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
   (org-superstar-leading-bullet "  ")
   (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
-
+  :config
+  (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
 )
 
 ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
@@ -695,7 +712,8 @@ USAGE:
   ;; Get calendar credentials from .authinfo file and use them.
   (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
     (setq org-gcal-client-id (plist-get gcal-auth-info :user)
-          org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
+          org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x))
+                                  (plist-get gcal-auth-info :secret))
     )
   )
   ;; First elements of the pairs here are ids of google calendars.
@@ -704,10 +722,6 @@ USAGE:
   (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
 				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
 				    ))
-  :config
-  (setq org-gcal-recurring-events-mode 'nested)
-  ;; So that it doesn't constantly ask me for the password. TODO: I wonder if I should make this a general setting, not org-gcal specific?
-  (setq plstore-cache-passphrase-for-symmetric-encryption t)
 )
 
 (with-eval-after-load 'org

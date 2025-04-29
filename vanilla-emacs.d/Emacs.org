@@ -377,6 +377,7 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
 #+end_src
 
 * Basic Emacs config
+** General
 
 #+begin_src emacs-lisp
 
@@ -432,6 +433,13 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
 
 #+end_src
 
+*** Install the fonts                                        :manual_setup:
+For Emacs to be able to use any font, it needs to be installed on your machine.
+To install on Archlinux:
+ - Monaspace: ~sudo pacman -S otf-monaspace~ -> This "otf" version comes with all the goodies (ligatures, ...) baked in (a "frozen" variant).
+
+** Pretty startup
+
 #+begin_src emacs-lisp :tangle ./early-init.el
 
   ;; I had emacs window appearing at the very start, for a short time (~0.5-1s), as a small window with white background,
@@ -454,10 +462,36 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
 
 #+end_src
 
-*** Install font :manual_setup:
-For Emacs to be able to use any font, it needs to be installed on your machine.
-To install on Archlinux:
- - Monaspace: ~sudo pacman -S otf-monaspace~ -> This "otf" version comes with all the goodies (ligatures, ...) baked in (a "frozen" variant).
+** GPG
+
+#+begin_src emacs-lisp
+
+  (use-package epg-config
+    :ensure nil ; emacs built-in
+    :config
+    ; Makes emacs query the passphrase via minibuffer, instead of external program.
+    (setq epg-pinentry-mode 'loopback)
+  )
+
+#+end_src
+
+** plstore
+
+=plstore= is a library for storing elisp plists on disk, in a file. It also encrypts them.
+Some emacs packages use it.
+
+#+begin_src emacs-lisp
+
+    (use-package plstore
+      :ensure nil ; emacs built-in
+      :config
+      ; Stops plstore from asking for passphrase many times, instead it caches it and reuses it.
+      ; NOTE: If this stops working, alternative is to set it to use GPG key for encryption.
+      ;       Check plstore code for instructions on this if it will ever be needed.
+      (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
+    )
+
+#+end_src
 
 * Theme
 
@@ -932,7 +966,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
     (org-superstar-leading-bullet "  ")
     (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
-
+    :config
+    (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
   )
 
   ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
@@ -1016,7 +1051,8 @@ Two most popular emacs packages for pulling in calendar events into org file are
     ;; Get calendar credentials from .authinfo file and use them.
     (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
       (setq org-gcal-client-id (plist-get gcal-auth-info :user)
-            org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x)) (plist-get gcal-auth-info :secret))
+            org-gcal-client-secret ((lambda (x) (if (functionp x) (funcall x) x))
+                                    (plist-get gcal-auth-info :secret))
       )
     )
     ;; First elements of the pairs here are ids of google calendars.
@@ -1025,17 +1061,13 @@ Two most popular emacs packages for pulling in calendar events into org file are
     (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
   				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
   				    ))
-    :config
-    (setq org-gcal-recurring-events-mode 'nested)
-    ;; So that it doesn't constantly ask me for the password. TODO: I wonder if I should make this a general setting, not org-gcal specific?
-    (setq plstore-cache-passphrase-for-symmetric-encryption t)
   )
 
 #+end_src
 
-NOTE: It saves some stuff (secrets/passwords) locally with ~plist~. I followed intructions in README of org-gcal regarding it, to create an empty file if I get some issues, and also to add that one line in the config that tells it not to constantly ask for the password.
+*NOTE*: It saves Google Oauth secrets locally with =plstore=. I followed intructions in the README of =org-gcal= regarding it, to create an empty file if I get some issues. Also, it is important that we have =plstore= configured correctly in general, otherwise it asks for password too many times and makes =org-gcal= slow.
 
-*** Providing credentials                                    :manual_setup:
+*** Obtaining Google OAuth credentials                       :manual_setup:
 We need to create an OAuth 2.0 client id on our Google Developer Console for a project that gives access to the calendar, and then provide the client id and secret to org-gcal in order for it to be able to work with the calendar.
 
 Detailed instructions on how to do this the Google side are provided in the org-gcal README.
@@ -1047,9 +1079,6 @@ This is the manual setup part here: I need to make sure there is a line in that 
 In the config above I then fetch those credentials from .authinfo and provide them to org-gcal.
 
 *** TODO Make fetching of events automatic (check org-gcal [[https://github.com/kidd/org-gcal.el?tab=readme-ov-file#sync-automatically-at-regular-times][README]])
-*** TODO Fix how password storing works (plist)
-Currently it still keeps asking me about it often when I go to fetch. Also, I see that fetching keeps running some plist command and it is slow, I wonder if it is struggling with that plist somehow.
-I should check if I can do something better about saving that password, not being asked for it, and also having gcal working faster. There are some instructions in the README.
 *** Cheatsheet                                                 :cheatsheet:
 - ~org-gcal-fetch~ updates the events in all files in the alist, by pulling the info from the gcalendar.
   This is the command I will most often want to run.
