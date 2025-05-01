@@ -174,8 +174,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 *** Set up elpaca lock file
 
-When installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references.
-To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=.
+Here we set the elpaca lock file, so that, when installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references. Meaning that exact versions of packages as in the lock file are installed each time, ensuring consistency.
 
 #+begin_src emacs-lisp
 
@@ -190,6 +189,8 @@ To create/update a lock file, I need to manually run =my/elpaca-write-lock-file=
 
 **** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
 
+**** Cheatsheet                                               :cheatsheet:
+- To create/update a lock file, run ~my/elpaca-write-lock-file~.
 *** Install and set up use-package (with Elpaca as backend)
 
 #+begin_src emacs-lisp
