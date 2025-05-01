@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-01 12:15:03 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-01 23:58:42 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -968,6 +968,7 @@ Return minutes (number)."
 ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
 ;; calendar events, and I need to know those paths so I can show events in the agenda.
 (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+
   (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
     "Base settings for the agenda block in my work-diary custom agenda commands."
     `((org-agenda-prefix-format " %12s %5e %?-12t")
@@ -976,11 +977,6 @@ Return minutes (number)."
                                      priority-down
                                      scheduled-up
                                      urgency-down)
-      )
-      (org-agenda-time-grid '((daily today remove-match)
-                              (800 1000 1200 1400 1600 1800 2000)
-                              " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
-                             )
       )
       (org-super-agenda-groups
        '(
@@ -1021,21 +1017,21 @@ Return minutes (number)."
                         :anything t
                  )
                 )
-             '()
+             '(
+               (:discard (:anything t))
+              )
            )
        )
       )
      )
   )
 
-  (defun my/make-work-diary-cmd-base-settings (cmd-start-day)
+  (defun my/make-work-diary-cmd-base-settings ()
     "Base settings for my work-diary custom agenda commands."
     `((org-agenda-files `("~/Dropbox/work-diary.org"
                           ,my/calendar-events-wasp-org-file
                           ,my/calendar-events-private-org-file
                          ))
-
-      (org-agenda-start-day ,cmd-start-day)
 
       ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
       ;; in this logs about closing an entry and logs about clocking an entry. I could also have
@@ -1081,6 +1077,11 @@ Return minutes (number)."
 		(,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
                  (org-agenda-span 'day)
 		 (org-habit-show-all-today t)
+                 (org-agenda-time-grid '((daily remove-match)
+                                         (800 1000 1200 1400 1600 1800 2000)
+                                         " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+                                        )
+                 )
 		)
 	)
 	(alltodo ""
@@ -1100,9 +1101,18 @@ Return minutes (number)."
 		 )
 	)
        )
-       (,@(my/make-work-diary-cmd-base-settings cmd-start-day)
+       (,@(my/make-work-diary-cmd-base-settings)
+        (org-agenda-start-day ,cmd-start-day)
        )
     )
+  )
+
+  (defun my/org-has-scheduled-prefix ()
+    (if (org-get-scheduled-time (point)) "🗓️" "  ")
+  )
+
+  (defun my/org-has-deadline-prefix ()
+    (if (org-get-deadline-time (point)) "⏰" "  ")
   )
 
   (setq org-agenda-custom-commands
@@ -1110,21 +1120,41 @@ Return minutes (number)."
 	 (my/make-work-diary-day-cmd "d" "Work Diary (today)"      nil)
 	 (my/make-work-diary-day-cmd "D" "Work Diary (tomorrow)" "+1d")
 
-         `("w" "Work Diary (week)"
-           ((agenda ""
-                    (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
-                     (org-agenda-span 'fortnight)
-                    )
+         (let ((sprint-length-in-weeks 2)
+               (sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
+              )
+           `("w" "Work Diary (sprint)"
+             ((agenda ""
+                      (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
+                       (org-agenda-span ,(* 7 sprint-length-in-weeks))
+                       (org-agenda-time-grid '((require-timed remove-match)
+                                               ()
+                                               " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+                                              )
+                       )
+                      )
+              )
+             )
+             (,@(my/make-work-diary-cmd-base-settings)
+              ;; NOTE: `org-agenda-start-on-weekday' works only if sprint length is 7 or 14 days.
+              (org-agenda-start-on-weekday ,sprint-start-weekday)
+             )
             )
-           )
-           (,@(my/make-work-diary-cmd-base-settings nil)
-           )
-          )
+         )
 
          `("A" "Work Diary (all tasks)"
-           ((alltodo "")
-           )
-           (,@(my/make-work-diary-cmd-base-settings nil)
+           ((alltodo ""
+                     ((org-agenda-overriding-header "")
+                      (org-agenda-prefix-format
+                       " %(my/org-has-scheduled-prefix) %(my/org-has-deadline-prefix) %5e ")
+                      (org-super-agenda-groups
+                       '((:name "All tasks" :category "task")
+                         (:discard (:anything t))
+                        )
+                      )
+                     )
+           ))
+           (,@(my/make-work-diary-cmd-base-settings)
            )
           )
 
