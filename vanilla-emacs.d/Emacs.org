@@ -1365,56 +1365,122 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 *** Agenda custom commands
 
 #+begin_src emacs-lisp
-
-  ;; I wait for org-gcal because in :init or org-gcal I define vars that hold paths to files with calendar events,
-  ;; and I need to know those paths so I can show events in the agenda.
+  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
+  ;; calendar events, and I need to know those paths so I can show events in the agenda.
   (with-eval-after-load 'org (with-eval-after-load 'org-gcal
-    (defun make-work-diary-command (cmd-key cmd-name cmd-start-day)
+    (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
+      "Base settings for the agenda block in my work-diary custom agenda commands."
+      `((org-agenda-prefix-format " %12s %5e %?-12t")
+        (org-agenda-sorting-strategy '(time-up
+                                       todo-state-down
+                                       priority-down
+                                       scheduled-up
+                                       urgency-down)
+        )
+        (org-agenda-time-grid '((daily today remove-match)
+                                (800 1000 1200 1400 1600 1800 2000)
+                                " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+                               )
+        )
+        (org-super-agenda-groups
+         '(
+           ,@(if show-daily-checklist
+                 '(;; Repeating tasks to be done every day, including today.
+                   (:name "Daily Checklist"
+                          :and (:category "dc"
+                                :not (:log t))
+                   )
+                  )
+               '()
+             )
+           (:name "Todo (today)"
+                  :and (:time-grid t :not (:log t))
+           )
+           (:name "        No specific time:"
+                  :and (:category "task"
+                        :scheduled t
+                        :not (:log t))
+           )
+           ;; Discard "closed" logs for items scheduled for today because they will be shown
+           ;; as done already above, so we don't want to repeat it.
+           ;; NOTE: Due to this bug in super-agenda https://github.com/alphapapa/org-super-agenda/issues/42,
+           ;;   `:scheduled today` works as you would expect only when agenda is actually focused on today,
+           ;;   because today means the actual day today, not the day that agenda daily view is focusing on.
+           ;;   Therefore if I look at yesterday, this discarding doesn't work and I get double done entries.
+           (:discard (:and (:scheduled today :log closed)))
+           (:name none
+                   :and (:category "task"
+                         :log closed)
+           )
+           (:name "Clock log"
+                  :log clocked
+           )
+           ,@(if show-other-tasks
+                 '(
+                   (:name "Other (e.g. deadline w/o scheduled)"
+                          :anything t
+                   )
+                  )
+               '()
+             )
+         )
+        )
+       )
+    )
+
+    (defun my/make-work-diary-cmd-base-settings (cmd-start-day)
+      "Base settings for my work-diary custom agenda commands."
+      `((org-agenda-files `("~/Dropbox/work-diary.org"
+                            ,my/calendar-events-wasp-org-file
+                            ,my/calendar-events-private-org-file
+                           ))
+
+        (org-agenda-start-day ,cmd-start-day)
+
+        ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
+        ;; in this logs about closing an entry and logs about clocking an entry. I could also have
+        ;; added 'state' if needed. I track "closed" logs in order to ensure that entries that are
+        ;; DONE but have been scheduled in the past are shown in agenda (normally they are
+        ;; not). What is not great is that they are not normal but special log entries which are a
+        ;; bit different, so a bit harder to organize.
+        (org-agenda-start-with-log-mode '(closed clock))
+
+        ;; Org agenda shows both scheduled and deadline entries for an item, when available.
+        ;; I don't want that: having duplicate entries for the same item is confusing.
+        ;; With settings below, I have the following behaviour when item is both scheduled and has
+        ;; deadline:
+        ;;  - If it is not deadline yet, then only scheduled entry is shown (be it late or not).
+        ;;  - If the deadline is today or has passed, only deadline entry is shown.
+        ;; NOTE: (org-agenda-skip-deadline-prewarning-if-scheduled t) will still show both scheduled
+        ;;   and deadline entry if the deadline is today. That is why we also need
+        ;;   (org-agenda-skip-scheduled-if-deadline-is-shown t), to solve that case.
+        (org-agenda-skip-deadline-prewarning-if-scheduled t)
+        (org-agenda-skip-scheduled-repeats-after-deadline t)
+        (org-agenda-skip-scheduled-if-deadline-is-shown t)
+
+        (org-todo-keyword-faces
+         '(("EPIC" . (:foreground "orchid" :weight bold))
+           ("INPR" . (:foreground "dark orange" :weight bold))
+           ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
+           ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
+           ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+           ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
+           ("CHKL" . (:foreground "grey" :weight bold))
+           ("NOTE" . (:foreground "white" :weight bold))
+           ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+           ("DONE" . (:foreground "#446a73" :weight bold))
+          )
+        )
+       )
+    )
+
+    (defun my/make-work-diary-cmd (cmd-key cmd-name cmd-start-day)
       `(,cmd-key ,cmd-name
          (;; The main view: a list of tasks for today.
   	(agenda ""
-  		((org-agenda-span 'day)
-  		 (org-agenda-prefix-format " %12s %5e %?-12t")
-  		 (org-agenda-sorting-strategy '(time-up todo-state-down priority-down scheduled-up urgency-down))
-                   (org-agenda-time-grid '((daily today remove-match)
-  					 (800 1000 1200 1400 1600 1800 2000)
-                                           " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
-  			                )
-                   )
+  		(,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
+                   (org-agenda-span 'day)
   		 (org-habit-show-all-today t)
-  		 (org-super-agenda-groups
-  		  '(;; Repeating tasks to be done every day, including today.
-  		    (:name "Daily Checklist"
-  			    :and (:category "dc"
-  				  :not (:log t))
-  		    )
-                      (:name "Todo (today)"
-  		            :and (:time-grid t :not (:log t))
-  		    )
-  		    (:name "        No specific time:"
-  			    :and (:category "task"
-  				  :scheduled t
-  				  :not (:log t))
-  		    )
-                      ;; Discard "closed" logs for items scheduled for today because they will be shown
-  		    ;; as done already above, so we don't want to repeat it.
-  		    ;; NOTE: Due to this bug in super-agenda https://github.com/alphapapa/org-super-agenda/issues/42,
-  		    ;;   `:scheduled today` works as you would expect only when agenda is actually focused on today,
-  		    ;;   because today means the actual day today, not the day that agenda daily view is focusing on.
-                      ;;   Therefore if I look at yesterday, this discarding doesn't work and I get double done entries.
-                      (:discard (:and (:scheduled today :log closed)))
-  		    (:name none
-  			    :and (:category "task"
-  				  :log closed)
-  		    )
-  		    (:name "Clock log"
-  	                   :log clocked
-  		    )
-                      (:name "Other (e.g. deadline w/o scheduled)"
-                             :anything t
-                      )
-  		   )
-  		 )
   		)
   	)
   	(alltodo ""
@@ -1434,56 +1500,16 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   		 )
   	)
          )
-         ((org-agenda-files `("~/Dropbox/work-diary.org"
-                              ,my/calendar-events-wasp-org-file
-                              ,my/calendar-events-private-org-file
-                             ))
-
-  	(org-agenda-start-day ,cmd-start-day)
-
-  	;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
-  	;; in this logs about closing an entry and logs about clocking an entry. I could also have
-  	;; added 'state' if needed. I track "closed" logs in order to ensure that entries that are
-  	;; DONE but have been scheduled in the past are shown in agenda (normally they are
-  	;; not). What is not great is that they are not normal but special log entries which are a
-  	;; bit different, so a bit harder to organize.
-  	(org-agenda-start-with-log-mode '(closed clock))
-
-  	;; Org agenda shows both scheduled and deadline entries for an item, when available.
-  	;; I don't want that: having duplicate entries for the same item is confusing.
-          ;; With settings below, I have the following behaviour when item is both scheduled and has
-          ;; deadline:
-          ;;  - If it is not deadline yet, then only scheduled entry is shown (be it late or not).
-          ;;  - If the deadline is today or has passed, only deadline entry is shown.
-          ;; NOTE: (org-agenda-skip-deadline-prewarning-if-scheduled t) will still show both scheduled
-          ;;   and deadline entry if the deadline is today. That is why we also need
-          ;;   (org-agenda-skip-scheduled-if-deadline-is-shown t), to solve that case.
-  	(org-agenda-skip-deadline-prewarning-if-scheduled t)
-  	(org-agenda-skip-scheduled-repeats-after-deadline t)
-          (org-agenda-skip-scheduled-if-deadline-is-shown t)
-
-          (org-todo-keyword-faces
-           '(("EPIC" . (:foreground "orchid" :weight bold))
-             ("INPR" . (:foreground "dark orange" :weight bold))
-             ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-             ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
-             ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-             ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
-             ("CHKL" . (:foreground "grey" :weight bold))
-             ("NOTE" . (:foreground "white" :weight bold))
-             ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
-             ("DONE" . (:foreground "#446a73" :weight bold))
-  	  )
-          )
+         (,@(my/make-work-diary-cmd-base-settings cmd-start-day)
          )
       )
     )
 
     (setq org-agenda-custom-commands
   	(list
-  	 (make-work-diary-command "W" "Work Diary (tomorrow)" "+1d")
+  	 (my/make-work-diary-cmd "W" "Work Diary (tomorrow)" "+1d")
 
-  	 (make-work-diary-command "w" "Work Diary"            nil)
+  	 (my/make-work-diary-cmd "w" "Work Diary"            nil)
 
            '("p" "Private Diary"
   	   (;; The main view: a list of tasks for today.
