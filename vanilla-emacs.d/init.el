@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-01 11:23:13 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-01 12:09:39 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -355,7 +355,7 @@ USAGE:
   (my/leader-keys
     "SPC" '("M-x (exec cmd)" . counsel-M-x)
     "TAB" '("previous buffer" . my/alternate-buffer)
-    "RET" '("work diary" . (lambda () (interactive) (org-agenda nil "w")))
+    "RET" '("work diary" . (lambda () (interactive) (org-agenda nil "d")))
 
     "^"   '("top-level keybindings" . which-key-show-top-level)
 
@@ -1074,7 +1074,7 @@ Return minutes (number)."
      )
   )
 
-  (defun my/make-work-diary-cmd (cmd-key cmd-name cmd-start-day)
+  (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
 	(agenda ""
@@ -1091,7 +1091,7 @@ Return minutes (number)."
   			    :category "note"
   		     )
 		     (:discard (:scheduled t :deadline t :time-grid t))
-		     (:name "All tasks with no schedule / deadline"
+                     (:name "All tasks with no schedule / deadline"
 			    :category "task"
 		     )
 		     (:discard (:anything t))
@@ -1107,9 +1107,26 @@ Return minutes (number)."
 
   (setq org-agenda-custom-commands
 	(list
-	 (my/make-work-diary-cmd "W" "Work Diary (tomorrow)" "+1d")
+	 (my/make-work-diary-day-cmd "d" "Work Diary (today)"      nil)
+	 (my/make-work-diary-day-cmd "D" "Work Diary (tomorrow)" "+1d")
 
-	 (my/make-work-diary-cmd "w" "Work Diary"            nil)
+         `("w" "Work Diary (week)"
+           ((agenda ""
+                    (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
+                     (org-agenda-span 'fortnight)
+                    )
+            )
+           )
+           (,@(my/make-work-diary-cmd-base-settings nil)
+           )
+          )
+
+         `("A" "Work Diary (all tasks)"
+           ((alltodo "")
+           )
+           (,@(my/make-work-diary-cmd-base-settings nil)
+           )
+          )
 
          '("p" "Private Diary"
 	   (;; The main view: a list of tasks for today.
@@ -1164,7 +1181,7 @@ Return minutes (number)."
             (org-agenda-skip-scheduled-repeats-after-deadline t)
 	   )
 	  )
-	 )
+	)
   )
 ))
 
