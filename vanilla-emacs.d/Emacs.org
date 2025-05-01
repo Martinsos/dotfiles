@@ -2469,6 +2469,25 @@ You can plug in multiple backends into it, and it will display the information u
 
 #+end_src
 
+* Folding
+
+#+begin_src emacs-lisp
+
+  (use-package hideshow
+    :ensure nil ; emacs built-in
+    :hook (prog-mode . hs-minor-mode)
+  )
+
+#+end_src
+
+** Cheatsheet                                                   :cheatsheet:
+- =hideshow= works by default with evil keybindings for folding:
+  - ~z a~ to (un)fold at point
+  - ~z r~ to unfold all
+  - ~z m~ to fold all
+  - ~z 0~ to unfold recursively
+  - ...
+** TODO Try some richer package for folding, e.g. origami or treesit-fold
 * Development
 ** LSP
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
@@ -3220,23 +3239,19 @@ Troubleshooting:
 
 * TODO
 ** A must
-*** TODO Pin down package versions (lockfile / freezing).
+*** TODO Pin down package versions (lockfile / freezing) [1/2]
 Elpaca now has some support for it, look into that:
- - I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
- - Use the rudimentary support for lock files that was freshly added: https://github.com/progfolio/elpaca/issues/151#issuecomment-2629560507 .
+ - [ ] I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
+ - [X] Use the rudimentary support for lock files that was freshly added: https://github.com/progfolio/elpaca/issues/151#issuecomment-2629560507 .
 I might even want to use both hm! Gotta figure it out.
 
 ** Should do
-*** TODO Add code folding support
-- Popular one: https://github.com/gregsexton/origami.el . But I don't think it uses treesitter so language support is limited
-- I might want to go with this one instead: https://github.com/emacs-tree-sitter/treesit-fold - an official folding library for built-in treesitter.
 *** TODO Look into workgroups
 *** TODO I will want some way to easily restore where I stopped working.
 
 Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
 
 *** TODO Go through my spacemacs config and copy stuff I liked from there.
-*** TODO Take care of TODOs in org-present config.
 *** TODO Smooth scrolling
 - Enable that new smooth/pixel scroll setting in emacs?
 - https://github.com/jdtsmith/ultra-scroll -> external package
