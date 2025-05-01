@@ -2005,6 +2005,12 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
 
 #+end_src
 
+*** Cheatsheet                                                 :cheatsheet:
+Some key combos I often use in magit:
+- ~S~ -> stage all changes.
+- ~c c~ -> commit all staged changes. ~C-c C-c~ to save commit message while editing it.
+- ~h P u~ -> push to origin.
+
 ** Highlight lines
 =diff-hl= package highlights lines that were modified (compared to versioned state of the file).
 It adds indicator to the left margin/side of the window.
