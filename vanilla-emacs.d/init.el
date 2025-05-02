@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-02 23:05:56 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-02 23:23:20 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1168,9 +1168,16 @@ Return minutes (number)."
                          " %(my/org-has-scheduled-prefix) %(my/org-has-deadline-prefix) %5e ")
                         (org-super-agenda-groups
                          '((:name ,(concat "Current sprint (" work-diary-sprint-current-tag ") tasks" )
-                                  :and (:category "task"
-                                        :tag ,work-diary-sprint-current-tag))
-                           (:name "Other tasks"
+                                  :order 0
+                                  :and (:category "task" :tag ,work-diary-sprint-current-tag))
+                           (:name "Epics"
+                                  :order 1
+                                  :and (:category "task" :todo "EPIC"))
+                           (:name "To read"
+                                  :order 3
+                                  :and (:category "task" :tag "read"))
+                           (:name "Tasks"
+                                  :order 2
                                   :category "task")
                            (:discard (:anything t))
                           )

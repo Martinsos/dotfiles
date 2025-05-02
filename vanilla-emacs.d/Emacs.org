@@ -1568,9 +1568,16 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                            " %(my/org-has-scheduled-prefix) %(my/org-has-deadline-prefix) %5e ")
                           (org-super-agenda-groups
                            '((:name ,(concat "Current sprint (" work-diary-sprint-current-tag ") tasks" )
-                                    :and (:category "task"
-                                          :tag ,work-diary-sprint-current-tag))
-                             (:name "Other tasks"
+                                    :order 0
+                                    :and (:category "task" :tag ,work-diary-sprint-current-tag))
+                             (:name "Epics"
+                                    :order 1
+                                    :and (:category "task" :todo "EPIC"))
+                             (:name "To read"
+                                    :order 3
+                                    :and (:category "task" :tag "read"))
+                             (:name "Tasks"
+                                    :order 2
                                     :category "task")
                              (:discard (:anything t))
                             )
