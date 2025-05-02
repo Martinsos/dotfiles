@@ -928,6 +928,19 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       (setq evil-auto-indent nil)
     ))
     :config
+    (general-define-key
+     :keymaps 'org-mode-map
+     :prefix ","
+     "cs" 'org-schedule
+     "cd" 'org-deadline
+     "ct" 'org-set-tags-command
+     "ce" 'org-set-effort
+
+     "J" 'org-priority-down
+     "K" 'org-priority-up
+     "t" 'org-todo
+    )
+
     ;; Set headers to have different sizes.
     (dolist (face '((org-level-1 . 1.5)
                     (org-level-2 . 1.3)
@@ -1317,9 +1330,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
       ;; mark
       "m" 'org-agenda-bulk-toggle
       "~" 'org-agenda-bulk-toggle-all
-      "*" 'org-agenda-bulk-mark-all
       "%" 'org-agenda-bulk-mark-regexp
-      "M" 'org-agenda-bulk-unmark-all
       "x" 'org-agenda-bulk-action
 
       ;; refresh
@@ -1896,12 +1907,14 @@ Turns any org document into a presentation! Each top-level header is one slide.
   ;; Swiper is a package that is part of Ivy ecosystem.
   ;; Better isearch (incremental search), powered by Ivy.
   (use-package swiper
-    :bind
-    (("C-s" . swiper)
-      :map evil-normal-state-map
-        ("/" . swiper)
-        ("*" . swiper-thing-at-point)
-    )
+    :bind (("C-s" . swiper)
+           :map evil-normal-state-map
+           ("/" . swiper)
+           ("*" . swiper-thing-at-point)
+           :map evil-motion-state-map
+           ("/" . swiper)
+           ("*" . swiper-thing-at-point)
+          )
   )
 
 #+end_src

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-02 08:11:16 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-02 23:05:56 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -607,6 +607,19 @@ USAGE:
     (setq evil-auto-indent nil)
   ))
   :config
+  (general-define-key
+   :keymaps 'org-mode-map
+   :prefix ","
+   "cs" 'org-schedule
+   "cd" 'org-deadline
+   "ct" 'org-set-tags-command
+   "ce" 'org-set-effort
+
+   "J" 'org-priority-down
+   "K" 'org-priority-up
+   "t" 'org-todo
+  )
+
   ;; Set headers to have different sizes.
   (dolist (face '((org-level-1 . 1.5)
                   (org-level-2 . 1.3)
@@ -922,9 +935,7 @@ Return minutes (number)."
     ;; mark
     "m" 'org-agenda-bulk-toggle
     "~" 'org-agenda-bulk-toggle-all
-    "*" 'org-agenda-bulk-mark-all
     "%" 'org-agenda-bulk-mark-regexp
-    "M" 'org-agenda-bulk-unmark-all
     "x" 'org-agenda-bulk-action
 
     ;; refresh
@@ -1434,12 +1445,14 @@ Return minutes (number)."
 ;; Swiper is a package that is part of Ivy ecosystem.
 ;; Better isearch (incremental search), powered by Ivy.
 (use-package swiper
-  :bind
-  (("C-s" . swiper)
-    :map evil-normal-state-map
-      ("/" . swiper)
-      ("*" . swiper-thing-at-point)
-  )
+  :bind (("C-s" . swiper)
+         :map evil-normal-state-map
+         ("/" . swiper)
+         ("*" . swiper-thing-at-point)
+         :map evil-motion-state-map
+         ("/" . swiper)
+         ("*" . swiper-thing-at-point)
+        )
 )
 
 ;; Show more info for some usages of Ivy. Also allows easier customization of Ivy output.
