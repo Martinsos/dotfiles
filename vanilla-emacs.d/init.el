@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-02 23:23:20 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-04 00:47:48 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -608,12 +608,14 @@ USAGE:
   ))
   :config
   (general-define-key
+   :states '(normal)
    :keymaps 'org-mode-map
    :prefix ","
    "cs" 'org-schedule
    "cd" 'org-deadline
    "ct" 'org-set-tags-command
    "ce" 'org-set-effort
+   "cb" 'org-toggle-checkbox
 
    "J" 'org-priority-down
    "K" 'org-priority-up
@@ -1134,16 +1136,16 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s38")
+        (work-diary-sprint-current-tag "s39")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
     (setq org-agenda-custom-commands
           (list
-           (my/make-work-diary-day-cmd "d" "Work Diary (today)"      nil)
-           (my/make-work-diary-day-cmd "D" "Work Diary (tomorrow)" "+1d")
+           (my/make-work-diary-day-cmd "d" "Work Diary: today"      nil)
+           (my/make-work-diary-day-cmd "D" "Work Diary: tomorrow" "+1d")
 
-           `("w" "Work Diary (sprint)"
+           `("w" "Work Diary: sprint calendar"
              ((agenda ""
                       (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
                        (org-agenda-span ,(* 7 work-diary-sprint-length-in-weeks))
@@ -1161,7 +1163,7 @@ Return minutes (number)."
              )
             )
 
-           `("A" "Work Diary (all tasks)"
+           `("A" "Work Diary: all tasks"
              ((alltodo ""
                        ((org-agenda-overriding-header "")
                         (org-agenda-prefix-format
@@ -1245,6 +1247,18 @@ Return minutes (number)."
     )
   )
 ))
+
+(defun my/work-diary-open-sprint-planning-windows ()
+  "Open windows for sprint planning."
+  (interactive)
+  (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+  (org-agenda nil "w")
+  (delete-other-windows)
+  (org-agenda nil "A")
+)
+(my/leader-keys
+  "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
+)
 
 (use-package org-tidy)
 

@@ -929,12 +929,14 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     ))
     :config
     (general-define-key
+     :states '(normal)
      :keymaps 'org-mode-map
      :prefix ","
      "cs" 'org-schedule
      "cd" 'org-deadline
      "ct" 'org-set-tags-command
      "ce" 'org-set-effort
+     "cb" 'org-toggle-checkbox
 
      "J" 'org-priority-down
      "K" 'org-priority-up
@@ -1534,16 +1536,16 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s38")
+          (work-diary-sprint-current-tag "s39")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
       (setq org-agenda-custom-commands
             (list
-             (my/make-work-diary-day-cmd "d" "Work Diary (today)"      nil)
-             (my/make-work-diary-day-cmd "D" "Work Diary (tomorrow)" "+1d")
+             (my/make-work-diary-day-cmd "d" "Work Diary: today"      nil)
+             (my/make-work-diary-day-cmd "D" "Work Diary: tomorrow" "+1d")
 
-             `("w" "Work Diary (sprint)"
+             `("w" "Work Diary: sprint calendar"
                ((agenda ""
                         (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
                          (org-agenda-span ,(* 7 work-diary-sprint-length-in-weeks))
@@ -1561,7 +1563,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
                )
               )
 
-             `("A" "Work Diary (all tasks)"
+             `("A" "Work Diary: all tasks"
                ((alltodo ""
                          ((org-agenda-overriding-header "")
                           (org-agenda-prefix-format
@@ -1646,8 +1648,23 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
     )
   ))
 
+  (defun my/work-diary-open-sprint-planning-windows ()
+    "Open windows for sprint planning."
+    (interactive)
+    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+    (org-agenda nil "w")
+    (delete-other-windows)
+    (org-agenda nil "A")
+  )
+  (my/leader-keys
+    "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
+  )
+
 #+end_src
 
+*** TODO Add manual sorting of agenda entries
+If I define ~org-agenda-cmp-user-defined~ then I can in ~org-agenda-sorting-strategy~ say that I use ~user-defined-up~ (or ~down~). I could define it to take a look at some custom ~order~ org property that I will define commands and keybindings to easily change in org agenda and that way I get manual sorting of entries in agenda.
+I will probably want to put right after sorting by timestamp or maybe even first.
 *** TODO Explore org-ql
 It gives a lot of control over what I want to show in agenda. I could use it to build some very custom agenda views, for example all tasks from the sprint, or something like that. Not sure yet but I think it is worth exploring it for creating additional custom agenda commands.
 ** org-tidy
