@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-05 21:48:25 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-06 00:58:35 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -722,6 +722,97 @@ USAGE:
   (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluation a block.
 )
 
+(with-eval-after-load 'org
+  (defun my/org-babel-tangle-no-confirm ()
+    (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
+  )
+  (defun my/when-emacs-org-file-tangle-on-save ()
+    (when (and buffer-file-name (file-equal-p buffer-file-name (my/emacs-org-file-path)))
+      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil 'local)
+    )
+  )
+  (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
+)
+
+(use-package org-tidy)
+
+(use-package org-present
+  :after (org visual-fill-column org-tidy)
+  :bind (
+    :map org-present-mode-keymap
+           ("q" . org-present-quit)
+  )
+  :config
+
+  ;; TODO: I should make it work with evil-mode.
+  ;;   Then I could not probably even need to go read-only.
+
+  (defun my/on-presentation-start ()
+    (let ((restore-local-vars
+	      (my/save-local-vars-state
+	        '(visual-fill-column-width
+		  visual-fill-column-center-text
+		  org-tidy-properties-style
+		  org-tidy-general-drawer-flag
+		  org-tidy-general-drawer-name-whitelist)))
+          (restore-modes
+              (my/save-modes-state
+                '(evil-local-mode
+		  visual-line-fill-column-mode
+                  org-tidy-mode)))
+	 )
+
+      (when (featurep 'evil)
+        (evil-local-mode -1) ; Otherwise evil messes up org-present.
+      )
+
+      (org-present-big)
+      (org-display-inline-images)
+      (org-present-hide-cursor)
+      (org-present-read-only)
+
+      ;; Soft wraps the text at fixed width while also centering it.
+      ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
+      ;;   is used above, while I would normally expect 80 to do it.
+      ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
+      ;;   uses somehow mess things up? This is because it is after inline-images!
+      ;; TODO: There also seems to be some weird interaction between this mode and (org-display-inline-images).
+      ;;   If this happens before inlining images, then ATTR_ORG :width behaves weird.
+      (setq-local visual-fill-column-width 20
+                  visual-fill-column-center-text t)
+      (visual-line-fill-column-mode 1)
+
+      ;; Hide org drawers (:PROPERTY: and :NOTES:).
+      (setq-local org-tidy-properties-style 'invisible
+		  org-tidy-general-drawer-flag t
+		  org-tidy-general-drawer-name-whitelist '("NOTES"))
+      (org-tidy-mode 1)
+
+      (defun my/on-presentation-quit ()
+	(org-present-small)
+	(org-remove-inline-images)
+	(org-present-show-cursor)
+	(org-present-read-write)
+
+	(funcall restore-local-vars)
+	(funcall restore-modes)
+
+	(remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+      )
+      (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+    )
+  )
+  (add-hook 'org-present-mode-hook 'my/on-presentation-start)
+
+  (defun my/org-present-eval-print-last-sexp ()
+    "Evaluate and print (in buffer) the last sexp while in presentation mode."
+    (interactive)
+    (org-present-read-write)
+    (eval-print-last-sexp)
+    (org-present-read-only)
+  )
+)
+
 (use-package org-gcal
   :init
   ;; Get calendar credentials from .authinfo file and use them.
@@ -749,6 +840,123 @@ USAGE:
   ;; Make events in the time grid that are not scheduled tasks not stand out.
   (set-face-attribute 'org-agenda-calendar-event nil
                       :foreground (face-attribute 'org-time-grid :foreground))
+)
+
+(with-eval-after-load 'evil
+  ;; TODO: I am basing these keybindings on the evil-org-agenda-set-keys function from
+  ;;   evil-org-agenda.el (from evil-org package), but I copied them directly here so I can easily modify
+  ;;   them as I wish.
+
+  (evil-set-initial-state 'org-agenda-mode 'motion)
+
+  (evil-define-key 'motion org-agenda-mode-map
+    ;; Opening org file.
+    (kbd "<tab>") 'org-agenda-goto
+    (kbd "RET") 'org-agenda-switch-to
+    (kbd "M-RET") 'org-agenda-recenter
+
+    ;; Motion.
+    "j" 'org-agenda-next-line
+    "k" 'org-agenda-previous-line
+    "gH" 'evil-window-top
+    "gM" 'evil-window-middle
+    "gL" 'evil-window-bottom
+    (kbd "C-j") 'org-agenda-next-item
+    (kbd "C-k") 'org-agenda-previous-item
+    (kbd "[[") 'org-agenda-earlier
+    (kbd "]]") 'org-agenda-later
+
+    ;; manipulation
+    ;; We follow standard org-mode bindings (not org-agenda bindings):
+    ;; <HJKL> change todo items and priorities.
+    ;; M-<jk> drag lines.
+    ;; M-<hl> cannot demote/promote, we use it for "do-date".
+    "J" 'org-agenda-priority-down
+    "K" 'org-agenda-priority-up
+    "H" 'org-agenda-do-date-earlier
+    "L" 'org-agenda-do-date-later
+    "t" 'org-agenda-todo
+    (kbd "M-j") 'org-agenda-drag-line-forward
+    (kbd "M-k") 'org-agenda-drag-line-backward
+    (kbd "C-S-h") 'org-agenda-todo-previousset ; Original binding "C-S-<left>"
+    (kbd "C-S-l") 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
+
+    ;; undo
+    "u" 'org-agenda-undo
+
+    ;; actions
+    "dd" 'org-agenda-kill
+    "dA" 'org-agenda-archive
+    "da" 'org-agenda-archive-default-with-confirmation
+    "ct" 'org-agenda-set-tags
+    "ce" 'org-agenda-set-effort
+    "cs" 'org-agenda-schedule
+    "cd" 'org-agenda-deadline
+    "cT" 'org-timer-set-timer
+    "i" 'org-agenda-diary-entry
+    "a" 'org-agenda-add-note
+    "A" 'org-agenda-append-agenda
+    "C" 'org-agenda-capture
+    "e" 'org-agenda-tree-to-indirect-buffer
+    "o" 'org-agenda-goto
+
+    ;; mark
+    "m" 'org-agenda-bulk-toggle
+    "~" 'org-agenda-bulk-toggle-all
+    "%" 'org-agenda-bulk-mark-regexp
+    "x" 'org-agenda-bulk-action
+
+    ;; refresh
+    "gr" 'org-agenda-redo
+    "gR" 'org-agenda-redo-all
+
+    ;; quit
+    "ZQ" 'org-agenda-exit
+    "ZZ" 'org-agenda-quit
+
+    ;; display
+    "gD" 'org-agenda-view-mode-dispatch
+    "ZD" 'org-agenda-dim-blocked-tasks
+
+    ;; clock
+    "I" 'org-agenda-clock-in ; Original binding
+    "O" 'org-agenda-clock-out ; Original binding
+    "cg" 'org-agenda-clock-goto
+    "cc" 'org-agenda-clock-cancel
+    "cr" 'org-agenda-clockreport-mode
+
+    ;; go and show
+    "." 'org-agenda-goto-today
+    "gc" 'org-agenda-goto-calendar
+    "gC" 'org-agenda-convert-date
+    "gd" 'org-agenda-goto-date
+    "gh" 'org-habit-stats-view-habit-at-point-agenda
+    "gm" 'org-agenda-phases-of-moon
+    "gs" 'org-agenda-sunrise-sunset
+    "gt" 'org-agenda-show-tags
+    "ge" 'org-agenda-entry-text-mode
+
+    "p" 'org-agenda-date-prompt
+    "P" 'org-agenda-show-the-flagging-note
+
+    "+" 'org-agenda-manipulate-query-add
+    "-" 'org-agenda-manipulate-query-subtract
+  )
+)
+
+(use-package org-super-agenda
+  :after org
+  :init 
+  ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
+  ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
+  ;; org-super-agenda-header-map sticking to the old keybindings and having super agenda headers behave
+  ;; in default, non-evil way (e.g. "j" when on them doesn't move down but opens calendar).
+  ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
+  ;; it completely, and that works great.
+  (setq org-super-agenda-header-map nil)
+  (setq org-super-agenda-keep-order t) ; Can degrade performance, which is why it isn't enabled by default.
+  :config
+  (org-super-agenda-mode)
 )
 
 (defvar my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook nil
@@ -860,123 +1068,6 @@ Return minutes (number)."
 )
 
 (add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
-
-(use-package org-super-agenda
-  :after org
-  :init 
-  ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
-  ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
-  ;; org-super-agenda-header-map sticking to the old keybindings and having super agenda headers behave
-  ;; in default, non-evil way (e.g. "j" when on them doesn't move down but opens calendar).
-  ;; I haven't managed to figure out how to update it to behave in an evil fashion, so I ended up just disabling
-  ;; it completely, and that works great.
-  (setq org-super-agenda-header-map nil)
-  (setq org-super-agenda-keep-order t) ; Can degrade performance, which is why it isn't enabled by default.
-  :config
-  (org-super-agenda-mode)
-)
-
-(with-eval-after-load 'evil
-  ;; TODO: I am basing these keybindings on the evil-org-agenda-set-keys function from
-  ;;   evil-org-agenda.el (from evil-org package), but I copied them directly here so I can easily modify
-  ;;   them as I wish.
-
-  (evil-set-initial-state 'org-agenda-mode 'motion)
-
-  (evil-define-key 'motion org-agenda-mode-map
-    ;; Opening org file.
-    (kbd "<tab>") 'org-agenda-goto
-    (kbd "RET") 'org-agenda-switch-to
-    (kbd "M-RET") 'org-agenda-recenter
-
-    ;; Motion.
-    "j" 'org-agenda-next-line
-    "k" 'org-agenda-previous-line
-    "gH" 'evil-window-top
-    "gM" 'evil-window-middle
-    "gL" 'evil-window-bottom
-    (kbd "C-j") 'org-agenda-next-item
-    (kbd "C-k") 'org-agenda-previous-item
-    (kbd "[[") 'org-agenda-earlier
-    (kbd "]]") 'org-agenda-later
-
-    ;; manipulation
-    ;; We follow standard org-mode bindings (not org-agenda bindings):
-    ;; <HJKL> change todo items and priorities.
-    ;; M-<jk> drag lines.
-    ;; M-<hl> cannot demote/promote, we use it for "do-date".
-    "J" 'org-agenda-priority-down
-    "K" 'org-agenda-priority-up
-    "H" 'org-agenda-do-date-earlier
-    "L" 'org-agenda-do-date-later
-    "t" 'org-agenda-todo
-    (kbd "M-j") 'org-agenda-drag-line-forward
-    (kbd "M-k") 'org-agenda-drag-line-backward
-    (kbd "C-S-h") 'org-agenda-todo-previousset ; Original binding "C-S-<left>"
-    (kbd "C-S-l") 'org-agenda-todo-nextset ; Original binding "C-S-<right>"
-
-    ;; undo
-    "u" 'org-agenda-undo
-
-    ;; actions
-    "dd" 'org-agenda-kill
-    "dA" 'org-agenda-archive
-    "da" 'org-agenda-archive-default-with-confirmation
-    "ct" 'org-agenda-set-tags
-    "ce" 'org-agenda-set-effort
-    "cs" 'org-agenda-schedule
-    "cd" 'org-agenda-deadline
-    "cT" 'org-timer-set-timer
-    "i" 'org-agenda-diary-entry
-    "a" 'org-agenda-add-note
-    "A" 'org-agenda-append-agenda
-    "C" 'org-agenda-capture
-    "e" 'org-agenda-tree-to-indirect-buffer
-    "o" 'org-agenda-goto
-
-    ;; mark
-    "m" 'org-agenda-bulk-toggle
-    "~" 'org-agenda-bulk-toggle-all
-    "%" 'org-agenda-bulk-mark-regexp
-    "x" 'org-agenda-bulk-action
-
-    ;; refresh
-    "gr" 'org-agenda-redo
-    "gR" 'org-agenda-redo-all
-
-    ;; quit
-    "ZQ" 'org-agenda-exit
-    "ZZ" 'org-agenda-quit
-
-    ;; display
-    "gD" 'org-agenda-view-mode-dispatch
-    "ZD" 'org-agenda-dim-blocked-tasks
-
-    ;; clock
-    "I" 'org-agenda-clock-in ; Original binding
-    "O" 'org-agenda-clock-out ; Original binding
-    "cg" 'org-agenda-clock-goto
-    "cc" 'org-agenda-clock-cancel
-    "cr" 'org-agenda-clockreport-mode
-
-    ;; go and show
-    "." 'org-agenda-goto-today
-    "gc" 'org-agenda-goto-calendar
-    "gC" 'org-agenda-convert-date
-    "gd" 'org-agenda-goto-date
-    "gh" 'org-habit-stats-view-habit-at-point-agenda
-    "gm" 'org-agenda-phases-of-moon
-    "gs" 'org-agenda-sunrise-sunset
-    "gt" 'org-agenda-show-tags
-    "ge" 'org-agenda-entry-text-mode
-
-    "p" 'org-agenda-date-prompt
-    "P" 'org-agenda-show-the-flagging-note
-
-    "+" 'org-agenda-manipulate-query-add
-    "-" 'org-agenda-manipulate-query-subtract
-  )
-)
 
 ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
 ;; calendar events, and I need to know those paths so I can show events in the agenda.
@@ -1258,97 +1349,6 @@ Return minutes (number)."
 )
 (my/leader-keys
   "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
-)
-
-(use-package org-tidy)
-
-(use-package org-present
-  :after (org visual-fill-column org-tidy)
-  :bind (
-    :map org-present-mode-keymap
-           ("q" . org-present-quit)
-  )
-  :config
-
-  ;; TODO: I should make it work with evil-mode.
-  ;;   Then I could not probably even need to go read-only.
-
-  (defun my/on-presentation-start ()
-    (let ((restore-local-vars
-	      (my/save-local-vars-state
-	        '(visual-fill-column-width
-		  visual-fill-column-center-text
-		  org-tidy-properties-style
-		  org-tidy-general-drawer-flag
-		  org-tidy-general-drawer-name-whitelist)))
-          (restore-modes
-              (my/save-modes-state
-                '(evil-local-mode
-		  visual-line-fill-column-mode
-                  org-tidy-mode)))
-	 )
-
-      (when (featurep 'evil)
-        (evil-local-mode -1) ; Otherwise evil messes up org-present.
-      )
-
-      (org-present-big)
-      (org-display-inline-images)
-      (org-present-hide-cursor)
-      (org-present-read-only)
-
-      ;; Soft wraps the text at fixed width while also centering it.
-      ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
-      ;;   is used above, while I would normally expect 80 to do it.
-      ;;   Figure out why is that so -> does usage of `(text-scale-increase)` in `(org-present-big)`
-      ;;   uses somehow mess things up? This is because it is after inline-images!
-      ;; TODO: There also seems to be some weird interaction between this mode and (org-display-inline-images).
-      ;;   If this happens before inlining images, then ATTR_ORG :width behaves weird.
-      (setq-local visual-fill-column-width 20
-                  visual-fill-column-center-text t)
-      (visual-line-fill-column-mode 1)
-
-      ;; Hide org drawers (:PROPERTY: and :NOTES:).
-      (setq-local org-tidy-properties-style 'invisible
-		  org-tidy-general-drawer-flag t
-		  org-tidy-general-drawer-name-whitelist '("NOTES"))
-      (org-tidy-mode 1)
-
-      (defun my/on-presentation-quit ()
-	(org-present-small)
-	(org-remove-inline-images)
-	(org-present-show-cursor)
-	(org-present-read-write)
-
-	(funcall restore-local-vars)
-	(funcall restore-modes)
-
-	(remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
-      )
-      (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
-    )
-  )
-  (add-hook 'org-present-mode-hook 'my/on-presentation-start)
-
-  (defun my/org-present-eval-print-last-sexp ()
-    "Evaluate and print (in buffer) the last sexp while in presentation mode."
-    (interactive)
-    (org-present-read-write)
-    (eval-print-last-sexp)
-    (org-present-read-only)
-  )
-)
-
-(with-eval-after-load 'org
-  (defun my/org-babel-tangle-no-confirm ()
-    (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
-  )
-  (defun my/when-emacs-org-file-tangle-on-save ()
-    (when (and buffer-file-name (file-equal-p buffer-file-name (my/emacs-org-file-path)))
-      (add-hook 'after-save-hook 'my/org-babel-tangle-no-confirm nil 'local)
-    )
-  )
-  (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
 (use-package emacs
