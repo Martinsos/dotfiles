@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-04 00:47:48 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-05 21:48:25 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2026,6 +2026,53 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (lsp-haskell-plugin-semantic-tokens-global-on t)
 )
 
+(defun my/add-jsdoc-in-typescript-ts-mode ()
+  "Add jsdoc treesitter rules to typescript as a host language."
+  ;; I copied this code from js.el (js-ts-mode), with minimal modifications.
+  (when (treesit-ready-p 'typescript)
+    (when (treesit-ready-p 'jsdoc t)
+      (setq-local treesit-range-settings
+                  (treesit-range-rules
+                    :embed 'jsdoc
+                    :host 'typescript
+                    :local t
+                    `(((comment) @capture (:match ,(rx bos "/**") @capture)))))
+      (setq c-ts-common--comment-regexp (rx (or "comment" "line_comment" "block_comment" "description")))
+
+      (defvar my/treesit-font-lock-settings-jsdoc
+        (treesit-font-lock-rules
+        :language 'jsdoc
+        :override t
+        :feature 'document
+        '((document) @font-lock-doc-face)
+
+        :language 'jsdoc
+        :override t
+        :feature 'keyword
+        '((tag_name) @font-lock-constant-face)
+
+        :language 'jsdoc
+        :override t
+        :feature 'bracket
+        '((["{" "}"]) @font-lock-bracket-face)
+
+        :language 'jsdoc
+        :override t
+        :feature 'property
+        '((type) @font-lock-type-face)
+
+        :language 'jsdoc
+        :override t
+        :feature 'definition
+        '((identifier) @font-lock-variable-face)
+        )
+      )
+      (setq-local treesit-font-lock-settings
+                  (append treesit-font-lock-settings my/treesit-font-lock-settings-jsdoc))
+    )
+  )
+)
+
 ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
 ;; It defines typescript-ts-mode and tsx-ts-mode.
 (use-package typescript-ts-mode
@@ -2034,6 +2081,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
          ("\\.[jt]sx\\'" . tsx-ts-mode)
         )
   :hook (((typescript-ts-mode tsx-ts-mode) . lsp-deferred))
+  :hook (((typescript-ts-mode tsx-ts-mode) . #'my/add-jsdoc-in-typescript-ts-mode))
 )
 
 (use-package lsp-eslint
