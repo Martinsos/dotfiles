@@ -1351,7 +1351,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
   (use-package org-super-agenda
     :after org
-    :init 
+    :init
     ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
     ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
     ;; org-super-agenda-header-map sticking to the old keybindings and having super agenda headers behave
@@ -1367,12 +1367,18 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 #+end_src
 
 *** Inbox
-[[discord://channels/686873244791210014/835130205928030279/1368865744753791006][TEST]]
+
+Inbox here is the same concept as is in GTD: a place where I can quickly drop raw ideas / tasks that are to be refined later (soon).
+
+At the center of it is =inbox.org= file which serves as a "database", which we can then easily plug into org agenda.
 
 #+name: my/inbox-org-path
 #+begin_src emacs-lisp :tangle no :results value none
   "~/Dropbox/inbox.org"
 #+end_src
+
+I also define a bash script that can be used outside of emacs to easily add entries to it (should be bound to some easily accessible OS-wide keybinding).
+This bash script picks up whatever is in the clipboard, and if it is URI, it will automatically add it to the entry. Therefore, usual workflow is to copy the URI if there is one (e.g. Discord message link) and then call the script via the keybinding.
 
 #+begin_src bash :tangle ./inbox-add.bash :noweb yes
 
@@ -1385,15 +1391,15 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   SEPARATOR=";"
   input=$(yad --title="Inbox" --form --separator="${SEPARATOR}" \
               --field="Title" "" \
-              --field="Description" "" \
               --field="Uri" "${uri}" \
+              --field="Description" "" \
               --button=Add:0) || exit 1
 
   title=$(echo "${input}" | cut -d"${SEPARATOR}" -f1)
   description=$(echo "${input}" | cut -d"${SEPARATOR}" -f2)
   uri=$(echo "${input}" | cut -d"${SEPARATOR}" -f3)
 
-  org_heading="** ${title}"
+  org_heading="** INBOX ${title}"
   if [ -n "$uri" ]; then
     org_heading="$org_heading ([[${uri}][URI]])"
   fi
@@ -1404,6 +1410,10 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
   echo -e "${org_heading}" >> "${INBOX_ORG_PATH}"
 
 #+end_src
+
+**** System requirements and defining an OS keybinding      :manual_setup:
+- For the bash script to work, make sure that ~yad~ and ~wl-clipboard~ are installed system wide.
+- Also set up a keybinding at the OS level that will allow to easily run the script. A good one is =Win + I=.
 
 *** Marking todo deadlines with earlier schedule
 
@@ -1533,7 +1543,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 
 *** Agenda custom commands
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :noweb yes
   ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
   ;; calendar events, and I need to know those paths so I can show events in the agenda.
   (with-eval-after-load 'org (with-eval-after-load 'org-gcal
@@ -1549,6 +1559,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
         )
         (org-super-agenda-groups
          '(
+           (:discard (:category "inbox"))
            ,@(if show-daily-checklist
                  '(;; Repeating tasks to be done every day, including today.
                    (:name "Daily Checklist"
@@ -1598,6 +1609,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
     (defun my/make-work-diary-cmd-base-settings ()
       "Base settings for my work-diary custom agenda commands."
       `((org-agenda-files `("~/Dropbox/work-diary.org"
+                            "<<my/inbox-org-path()>>"
                             ,my/calendar-events-wasp-org-file
                             ,my/calendar-events-private-org-file
                            ))
@@ -1632,6 +1644,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
            ("NOTE" . (:foreground "white" :weight bold))
+           ("INBOX" . (:foreground "white" :weight bold))
            ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
            ("DONE" . (:foreground "#446a73" :weight bold))
           )
@@ -1657,13 +1670,11 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
   		 ((org-agenda-overriding-header "")
   		  (org-agenda-prefix-format " %5e ")
   		  (org-super-agenda-groups
-  		   '((:name "Notes"
-    			    :category "note"
-    		     )
+  		   '((:name "Notes" :category "note")
+                       (:name "Inbox" :category "inbox")
   		     (:discard (:scheduled t :deadline t :time-grid t))
                        (:name "All tasks with no schedule / deadline"
-  			    :category "task"
-  		     )
+  			    :category "task")
   		     (:discard (:anything t))
   		    )
   		  )
