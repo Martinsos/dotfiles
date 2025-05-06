@@ -1399,6 +1399,8 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
   description=$(echo "${input}" | cut -d"${SEPARATOR}" -f2)
   uri=$(echo "${input}" | cut -d"${SEPARATOR}" -f3)
 
+  if [ -z "${title}" ]; then exit 1; fi
+
   org_heading="** INBOX ${title}"
   if [ -n "$uri" ]; then
     org_heading="$org_heading ([[${uri}][URI]])"
