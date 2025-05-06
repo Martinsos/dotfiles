@@ -1396,8 +1396,8 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
               --button=Add:0) || exit 1
 
   title=$(echo "${input}" | cut -d"${SEPARATOR}" -f1)
-  description=$(echo "${input}" | cut -d"${SEPARATOR}" -f2)
-  uri=$(echo "${input}" | cut -d"${SEPARATOR}" -f3)
+  uri=$(echo "${input}" | cut -d"${SEPARATOR}" -f2)
+  description=$(echo "${input}" | cut -d"${SEPARATOR}" -f3)
 
   if [ -z "${title}" ]; then exit 1; fi
 
