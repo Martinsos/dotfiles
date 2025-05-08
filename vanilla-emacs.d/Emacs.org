@@ -1366,23 +1366,27 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
 #+end_src
 
-*** Inbox
+*** Work Diary
 
-Inbox here is the same concept as is in GTD: a place where I can quickly drop raw ideas / tasks that are to be refined later (soon).
-
-At the center of it is =inbox.org= file which serves as a "database", which we can then easily plug into org agenda.
-
-#+name: my/inbox-org-path
+#+name: my/work-diary-org-path
 #+begin_src emacs-lisp :tangle no :results value none
-  "~/Dropbox/inbox.org"
+  "~/Dropbox/work-diary.org"
 #+end_src
 
-I also define a bash script that can be used outside of emacs to easily add entries to it (should be bound to some easily accessible OS-wide keybinding).
+**** Inbox
+Inbox here is the same concept as is in GTD: a place where I can quickly drop raw ideas / tasks that are to be refined later (soon).
+We drop these in Work Diary org file, with the right todo keyword (INBOX), at the place of special org target in the org file.
+
+I define a bash script that can be used outside of emacs to easily add entries to inbox (should be bound to some easily accessible OS-wide keybinding).
 This bash script picks up whatever is in the clipboard, and if it is URI, it will automatically add it to the entry. Therefore, usual workflow is to copy the URI if there is one (e.g. Discord message link) and then call the script via the keybinding.
 
 #+begin_src bash :tangle ./inbox-add.bash :noweb yes
 
-  INBOX_ORG_PATH="$(eval echo "<<my/inbox-org-path()>>")"
+  WORK_DIARY_ORG_PATH="$(eval echo "<<my/work-diary-org-path()>>")"
+  # I redundantly escape < and > here to not trigger the noweb interpolation.
+  WORK_DIARY_ORG_INBOX_TARGET="\<\<Insert INBOX tasks here\>\>"
+
+  # Obtain URI from the clipboard, if there is one.
   uri=$(wl-paste)
   if [[ ! "$uri" =~ ^[a-zA-Z][a-zA-Z0-9+.-]*:// ]]; then
     uri=""
@@ -1394,7 +1398,6 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
               --field="Uri" "${uri}" \
               --field="Description" "" \
               --button=Add:0) || exit 1
-
   title=$(echo "${input}" | cut -d"${SEPARATOR}" -f1)
   uri=$(echo "${input}" | cut -d"${SEPARATOR}" -f2)
   description=$(echo "${input}" | cut -d"${SEPARATOR}" -f3)
@@ -1406,14 +1409,14 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
     org_heading="$org_heading ([[${uri}][URI]])"
   fi
   if [ -n "$description" ]; then
-    org_heading="$org_heading\n  ${description}"
+    org_heading="$org_heading"$'\n'"  ${description}"
   fi
 
-  echo -e "${org_heading}" >> "${INBOX_ORG_PATH}"
+  sed -i "/${WORK_DIARY_ORG_INBOX_TARGET}/r /dev/stdin" "${WORK_DIARY_ORG_PATH}" <<< "${org_heading}"
 
 #+end_src
 
-**** System requirements and defining an OS keybinding      :manual_setup:
+***** System requirements and defining an OS keybinding    :manual_setup:
 - For the bash script to work, make sure that ~yad~ and ~wl-clipboard~ are installed system wide.
 - Also set up a keybinding at the OS level that will allow to easily run the script. A good one is =Win + I=.
 
@@ -1561,7 +1564,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
         )
         (org-super-agenda-groups
          '(
-           (:discard (:category "inbox"))
+           (:discard (:todo "INBOX"))
            ,@(if show-daily-checklist
                  '(;; Repeating tasks to be done every day, including today.
                    (:name "Daily Checklist"
@@ -1610,8 +1613,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 
     (defun my/make-work-diary-cmd-base-settings ()
       "Base settings for my work-diary custom agenda commands."
-      `((org-agenda-files `("~/Dropbox/work-diary.org"
-                            "<<my/inbox-org-path()>>"
+      `((org-agenda-files `("<<my/work-diary-org-path()>>"
                             ,my/calendar-events-wasp-org-file
                             ,my/calendar-events-private-org-file
                            ))
@@ -1646,7 +1648,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
            ("CHKL" . (:foreground "grey" :weight bold))
            ("NOTE" . (:foreground "white" :weight bold))
-           ("INBOX" . (:foreground "white" :weight bold))
+           ("INBOX" . (:foreground "yellow" :weight bold))
            ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
            ("DONE" . (:foreground "#446a73" :weight bold))
           )
@@ -1673,7 +1675,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
   		  (org-agenda-prefix-format " %5e ")
   		  (org-super-agenda-groups
   		   '((:name "Notes" :category "note")
-                       (:name "Inbox" :category "inbox")
+                       (:name "Inbox" :todo "INBOX")
   		     (:discard (:scheduled t :deadline t :time-grid t))
                        (:name "All tasks with no schedule / deadline"
   			    :category "task")

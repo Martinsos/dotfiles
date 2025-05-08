@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-06 14:12:31 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-08 11:04:44 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1084,7 +1084,7 @@ Return minutes (number)."
       )
       (org-super-agenda-groups
        '(
-         (:discard (:category "inbox"))
+         (:discard (:todo "INBOX"))
          ,@(if show-daily-checklist
                '(;; Repeating tasks to be done every day, including today.
                  (:name "Daily Checklist"
@@ -1134,7 +1134,6 @@ Return minutes (number)."
   (defun my/make-work-diary-cmd-base-settings ()
     "Base settings for my work-diary custom agenda commands."
     `((org-agenda-files `("~/Dropbox/work-diary.org"
-                          "~/Dropbox/inbox.org"
                           ,my/calendar-events-wasp-org-file
                           ,my/calendar-events-private-org-file
                          ))
@@ -1169,7 +1168,7 @@ Return minutes (number)."
          ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
          ("CHKL" . (:foreground "grey" :weight bold))
          ("NOTE" . (:foreground "white" :weight bold))
-         ("INBOX" . (:foreground "white" :weight bold))
+         ("INBOX" . (:foreground "yellow" :weight bold))
          ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
          ("DONE" . (:foreground "#446a73" :weight bold))
         )
@@ -1196,7 +1195,7 @@ Return minutes (number)."
 		  (org-agenda-prefix-format " %5e ")
 		  (org-super-agenda-groups
 		   '((:name "Notes" :category "note")
-                     (:name "Inbox" :category "inbox")
+                     (:name "Inbox" :todo "INBOX")
 		     (:discard (:scheduled t :deadline t :time-grid t))
                      (:name "All tasks with no schedule / deadline"
 			    :category "task")
