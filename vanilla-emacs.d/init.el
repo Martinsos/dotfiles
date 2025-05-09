@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-08 11:04:44 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-10 00:29:58 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1349,6 +1349,24 @@ Return minutes (number)."
 )
 (my/leader-keys
   "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
+)
+
+(let* ((wd-path "~/Dropbox/work-diary.org")
+       (wd-tasks `(file+headline ,wd-path "Tasks"))
+      )
+  (setq org-capture-templates
+        `(("t" "Task" entry ,wd-tasks
+           "** TODO %?")
+          ("T" "Task (today)" entry ,wd-tasks
+           "** TODO %?\nSCHEDULED: %t")
+          ("n" "Task (now)" entry ,wd-tasks
+           "** TODO %?\nSCHEDULED: %t" :clock-in t :clock-keep t)
+          ("i" "Task (inbox)" entry ,wd-tasks
+           "** INBOX %?" :prepend t)
+          ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
+           "%?" :unnarrowed t)
+         )
+  )
 )
 
 (use-package emacs

@@ -1838,6 +1838,32 @@ If I define ~org-agenda-cmp-user-defined~ then I can in ~org-agenda-sorting-stra
 I will probably want to put right after sorting by timestamp or maybe even first.
 *** TODO Explore org-ql
 It gives a lot of control over what I want to show in agenda. I could use it to build some very custom agenda views, for example all tasks from the sprint, or something like that. Not sure yet but I think it is worth exploring it for creating additional custom agenda commands.
+** Capture templates
+
+#+begin_src emacs-lisp :noweb yes
+
+  (let* ((wd-path "<<my/work-diary-org-path()>>")
+         (wd-tasks `(file+headline ,wd-path "Tasks"))
+        )
+    (setq org-capture-templates
+          `(("t" "Task" entry ,wd-tasks
+             "** TODO %?")
+            ("T" "Task (today)" entry ,wd-tasks
+             "** TODO %?\nSCHEDULED: %t")
+            ("n" "Task (now)" entry ,wd-tasks
+             "** TODO %?\nSCHEDULED: %t" :clock-in t :clock-keep t)
+            ("i" "Task (inbox)" entry ,wd-tasks
+             "** INBOX %?" :prepend t)
+            ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
+             "%?" :unnarrowed t)
+           )
+    )
+  )
+
+#+end_src
+
+*** TODO Read more about it [0/1]
+- [ ] https://www.reddit.com/r/emacs/comments/7zqc7b/share_your_org_capture_templates/
 ** Cheatsheet :cheatsheet:
 - Shift-Tab -> cycles through expanding headers. Can be used to fold all but the current item -> Shift-Tab to fold all, then Tab to unfold current item.
 - structure templates (snippets) -> type "<snippetstringTAB" to expand it to snippet. e.g. "<el". Be faster than completion or reject it first with C-g.
