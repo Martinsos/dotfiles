@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-10 00:29:58 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-16 00:24:21 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1211,12 +1211,31 @@ Return minutes (number)."
     )
   )
 
-  (defun my/org-has-scheduled-prefix ()
-    (if (org-get-scheduled-time (point)) "🗓️" "  ")
+
+  (defun my/org-time-prefix-format (time)
+    (if time
+        (let* ((day3 (format-time-string "%a" time))
+               (day2 (cond ((string= day3 "Mon") "Mo")
+                           ((string= day3 "Tue") "Tu")
+                           ((string= day3 "Wed") "We")
+                           ((string= day3 "Thu") "Th")
+                           ((string= day3 "Fri") "Fr")
+                           ((string= day3 "Sat") "Sa")
+                           ((string= day3 "Sun") "Su")))
+               (dayNum (format-time-string "%d" time))
+              )
+            (format "%s%s" day2 dayNum)
+        )
+      "    "
+    )
   )
 
-  (defun my/org-has-deadline-prefix ()
-    (if (org-get-deadline-time (point)) "⏰" "  ")
+  (defun my/org-scheduled-time-prefix ()
+    (my/org-time-prefix-format (org-get-scheduled-time (point)))
+  )
+
+  (defun my/org-deadline-time-prefix ()
+    (my/org-time-prefix-format (org-get-deadline-time (point)))
   )
 
   (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
@@ -1227,7 +1246,7 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s39")
+        (work-diary-sprint-current-tag "s40")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -1258,7 +1277,13 @@ Return minutes (number)."
              ((alltodo ""
                        ((org-agenda-overriding-header "")
                         (org-agenda-prefix-format
-                         " %(my/org-has-scheduled-prefix) %(my/org-has-deadline-prefix) %5e ")
+                         " %(my/org-scheduled-time-prefix) %(my/org-deadline-time-prefix) %5e ")
+                        (org-agenda-sorting-strategy '(scheduled-up
+                                                       deadline-up
+                                                       priority-down
+                                                       todo-state-down
+                                                       urgency-down)
+                        )
                         (org-super-agenda-groups
                          '((:name ,(concat "Current sprint (" work-diary-sprint-current-tag ") tasks" )
                                   :order 0
@@ -1266,11 +1291,14 @@ Return minutes (number)."
                            (:name "Epics"
                                   :order 1
                                   :and (:category "task" :todo "EPIC"))
+                           (:name "Inbox"
+                                  :order 2
+                                  :and (:category "task" :todo "INBOX"))
                            (:name "To read"
-                                  :order 3
+                                  :order 4
                                   :and (:category "task" :tag "read"))
                            (:name "Tasks"
-                                  :order 2
+                                  :order 3
                                   :category "task")
                            (:discard (:anything t))
                           )
@@ -1973,6 +2001,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 	       (elisp "https://github.com/Wilfred/tree-sitter-elisp")
 	       (c "https://github.com/tree-sitter/tree-sitter-c")
                (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
+               (cmake . ("https://github.com/uyha/tree-sitter-cmake" "v0.5.0" "src"))
 	     ))
       (add-to-list 'treesit-language-source-alist grammar)
       ;; Only install `grammar' if we don't already have it installed.
