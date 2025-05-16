@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-16 00:24:21 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-17 00:53:22 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -640,9 +640,8 @@ USAGE:
   (setq org-ellipsis " ▼")
   (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
 
-  (add-to-list 'org-modules
-	'org-habit
-  )
+  (add-to-list 'org-modules 'org-habit)
+  (add-to-list 'org-modules 'org-inlinetask)
 
   (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                              (?B . (:foreground "orange" :weight light))
@@ -695,6 +694,11 @@ USAGE:
   ;; Make bold and italic and similar nice, since we now have org-appear
   ;; to show them as raw when needed.
   (org-hide-emphasis-markers t)
+)
+
+;; Powerful org-mode search functions / commands / agenda views (with its DSL).
+(use-package org-ql
+  :after (org)
 )
 
 (use-package evil-org
@@ -1176,6 +1180,28 @@ Return minutes (number)."
      )
   )
 
+  ;; TODO: Ok, now I have this as first step, but the next step is actually creating a
+  ;; custom custom agenda block in which I will manually display the text I want.
+  ;; From what I read, this means that I need to write a lambda that writes that
+  ;; text to buffer. I will also want to add text properties that are typical for org agenda,
+  ;; for example marker for place in org file from which the text originated,
+  ;; so I can easily jump there. I can use text-describe to see how they do it and copy it.
+  ;; So I will probably want to jump to "Journal" top level heading in the file,
+  ;; then go down the date tree to the correct date, and show its content, or if none,
+  ;; show "no entry yet" that jumps to the right place in the org file.
+  ;; This function below might change in this process, but is a nice starting point.
+  (defun my/org-entry-in-todays-datetree-p ()
+    "Return t if the current Org entry is under today's datetree path."
+    (let ((dt-heading-today-regex (format-time-string "\\b%Y-%m-%d\\b"))
+          (current-org-entry-outline-path (org-get-outline-path t)))
+      (not (null
+            (cl-some
+             (lambda (heading) (string-match dt-heading-today-regex heading))
+             current-org-entry-outline-path)
+      ))
+    )
+  )
+
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
@@ -1211,7 +1237,6 @@ Return minutes (number)."
     )
   )
 
-
   (defun my/org-time-prefix-format (time)
     (if time
         (let* ((day3 (format-time-string "%a" time))
@@ -1229,6 +1254,7 @@ Return minutes (number)."
       "    "
     )
   )
+
 
   (defun my/org-scheduled-time-prefix ()
     (my/org-time-prefix-format (org-get-scheduled-time (point)))
