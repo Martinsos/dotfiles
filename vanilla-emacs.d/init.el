@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-17 00:53:22 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-17 22:16:51 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -696,11 +696,6 @@ USAGE:
   (org-hide-emphasis-markers t)
 )
 
-;; Powerful org-mode search functions / commands / agenda views (with its DSL).
-(use-package org-ql
-  :after (org)
-)
-
 (use-package evil-org
   :after org
   :hook (org-mode . (lambda () evil-org-mode))
@@ -1190,6 +1185,8 @@ Return minutes (number)."
   ;; then go down the date tree to the correct date, and show its content, or if none,
   ;; show "no entry yet" that jumps to the right place in the org file.
   ;; This function below might change in this process, but is a nice starting point.
+  ;; TODO: Implement this based on the implementation of org-ql-block . Check function
+  ;; below where I started.
   (defun my/org-entry-in-todays-datetree-p ()
     "Return t if the current Org entry is under today's datetree path."
     (let ((dt-heading-today-regex (format-time-string "\\b%Y-%m-%d\\b"))
@@ -1200,6 +1197,22 @@ Return minutes (number)."
              current-org-entry-outline-path)
       ))
     )
+  )
+
+  ;; TODO: Implement this based on the implementation of org-ql-block .
+  ;; I just implemented something very dummy for now, it renders some text,
+  ;; but at the start of the agenda buffer.
+  (defun my/journal-agenda-block (arg1)
+    "TODO"
+    (org-agenda-prepare) ; Sets up the agenda buffer for us to write in it.
+    (insert (org-add-props " Journal (today)" nil 'face 'org-agenda-structure) "\n")
+    (insert " - This is some dummy entry\n - And this is another one")
+    ;; TODO: Open the file with the journal (get it from arg1 or hardcode it?),
+    ;; jump to the "Journal" heading, get to the right day heading, show its content/entries.
+    ;; I might even want to create the datetree day heading (and its parents) if it doesn't exist.
+    ;; Propertize the entries with correct org props so that one can easily jump into journal.
+    ;;(insert (org-agenda-finalize-entries entries))  ; not needed?
+    (insert "\n")
   )
 
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
@@ -1216,6 +1229,7 @@ Return minutes (number)."
                  )
 		)
 	)
+        (my/journal-agenda-block)
 	(alltodo ""
 		 ((org-agenda-overriding-header "")
 		  (org-agenda-prefix-format " %5e ")
