@@ -525,6 +525,7 @@ Some emacs packages use it.
     :custom
     (doom-modeline-height 40)
     (doom-modeline-buffer-encoding nil)
+    (doom-modeline-minor-modes nil)
     :config
     (doom-modeline-mode 1)
   )
@@ -696,6 +697,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "w/"  '("split vertically" . split-window-right)
       "w-"  '("split horizontally" . split-window-below)
       "wr"  '("resize window" . hydra-window-resize/body)
+      "wR"  '("reset: just scratch" . (lambda () (interactive) (delete-other-windows) (scratch-buffer)))
       "wm"  '("move window" . hydra-window-move/body)
       "w."  '("focus window" . delete-other-windows)
       "w="  '("balance window sizes" . balance-windows)
@@ -959,7 +961,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (setq org-habit-graph-column 60)
 
     (setq org-ellipsis " ▼")
-    (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
+    (set-face-attribute 'org-ellipsis nil
+                        :foreground (face-attribute 'shadow :foreground))
 
     (add-to-list 'org-modules 'org-habit)
     (add-to-list 'org-modules 'org-inlinetask)
@@ -967,6 +970,13 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                                (?B . (:foreground "orange" :weight light))
                                (?C . (:foreground "yellow" :weight light))))
+
+    (set-face-attribute 'org-mode-line-clock nil
+                        :inherit 'highlight
+                        :weight 'bold)
+    (set-face-attribute 'org-mode-line-clock-overrun nil
+                        :inherit 'org-mode-line-clock
+                        :background (face-attribute 'error :foreground))
   )
 
   ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.

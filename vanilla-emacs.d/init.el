@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-17 22:16:51 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-19 21:45:57 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -277,6 +277,7 @@ USAGE:
   :custom
   (doom-modeline-height 40)
   (doom-modeline-buffer-encoding nil)
+  (doom-modeline-minor-modes nil)
   :config
   (doom-modeline-mode 1)
 )
@@ -413,6 +414,7 @@ USAGE:
     "w/"  '("split vertically" . split-window-right)
     "w-"  '("split horizontally" . split-window-below)
     "wr"  '("resize window" . hydra-window-resize/body)
+    "wR"  '("reset: just scratch" . (lambda () (interactive) (delete-other-windows) (scratch-buffer)))
     "wm"  '("move window" . hydra-window-move/body)
     "w."  '("focus window" . delete-other-windows)
     "w="  '("balance window sizes" . balance-windows)
@@ -638,7 +640,8 @@ USAGE:
   (setq org-habit-graph-column 60)
 
   (setq org-ellipsis " ▼")
-  (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
+  (set-face-attribute 'org-ellipsis nil
+                      :foreground (face-attribute 'shadow :foreground))
 
   (add-to-list 'org-modules 'org-habit)
   (add-to-list 'org-modules 'org-inlinetask)
@@ -646,6 +649,13 @@ USAGE:
   (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                              (?B . (:foreground "orange" :weight light))
                              (?C . (:foreground "yellow" :weight light))))
+
+  (set-face-attribute 'org-mode-line-clock nil
+                      :inherit 'highlight
+                      :weight 'bold)
+  (set-face-attribute 'org-mode-line-clock-overrun nil
+                      :inherit 'org-mode-line-clock
+                      :background (face-attribute 'error :foreground))
 )
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
