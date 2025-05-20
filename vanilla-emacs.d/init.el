@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-19 21:45:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-20 22:35:35 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -617,7 +617,7 @@ USAGE:
    "cd" 'org-deadline
    "ct" 'org-set-tags-command
    "ce" 'org-set-effort
-   "cb" 'org-toggle-checkbox
+   "x" 'org-toggle-checkbox
 
    "J" 'org-priority-down
    "K" 'org-priority-up
@@ -656,6 +656,21 @@ USAGE:
   (set-face-attribute 'org-mode-line-clock-overrun nil
                       :inherit 'org-mode-line-clock
                       :background (face-attribute 'error :foreground))
+
+  (setq org-todo-keyword-faces
+        '(("INBOX" . (:foreground "yellow" :weight bold))
+          ("INPR" . (:foreground "dark orange" :weight bold))
+          ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+          ("DONE" . (:foreground "#446a73" :weight bold))
+          ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
+          ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
+          ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+          ("EPIC" . (:foreground "orchid" :weight bold))
+          ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
+          ("CHKL" . (:foreground "grey" :weight bold))
+          ("NOTE" . (:foreground "white" :weight bold))
+         )
+  )
 )
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
@@ -695,7 +710,7 @@ USAGE:
   :hook (org-mode . org-appear-mode)
   :custom
   (org-appear-autoemphasis t)
-  (org-appear-autolinks t)
+  (org-appear-autolinks nil) ; `t` is too intrusive, instead I should just use `org-insert-link`.
   (org-appear-autosubmarkers t)
   (org-appear-autoentities t)
   (org-appear-autokeywords t)
@@ -1167,21 +1182,6 @@ Return minutes (number)."
       (org-agenda-skip-deadline-prewarning-if-scheduled t)
       (org-agenda-skip-scheduled-repeats-after-deadline t)
       (org-agenda-skip-scheduled-if-deadline-is-shown t)
-
-      (org-todo-keyword-faces
-       '(("EPIC" . (:foreground "orchid" :weight bold))
-         ("INPR" . (:foreground "dark orange" :weight bold))
-         ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-         ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
-         ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-         ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
-         ("CHKL" . (:foreground "grey" :weight bold))
-         ("NOTE" . (:foreground "white" :weight bold))
-         ("INBOX" . (:foreground "yellow" :weight bold))
-         ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
-         ("DONE" . (:foreground "#446a73" :weight bold))
-        )
-      )
      )
   )
 
