@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-20 22:35:35 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-23 09:29:20 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -260,7 +260,7 @@ USAGE:
 (use-package doom-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
   :config
-  ;; I went with moonlight for now. palenight is also nice.
+  ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
   ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
   (load-theme 'doom-moonlight t)
@@ -852,6 +852,13 @@ USAGE:
   (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
 				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
 				    ))
+
+  (my/leader-keys
+    "o C" '("calendar" . (keymap))
+    "o C f" '("fetch newest calendar data" . org-gcal-fetch)
+    "o C C" '("clear sync tokens" . org-gcal-sync-tokens-clear)
+    "o C F" '("refetch calendar data" . (lambda () (interactive) (org-gcal-sync-tokens-clear) (org-gcal-fetch)))
+  )
 )
 
 (with-eval-after-load 'org
@@ -1949,7 +1956,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
 
-  (lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
+  ;; Turned off for now, I found it to bee too much of a "rainbow soup".
+  ;;(lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
   :config
   (general-define-key :states '(normal)
                       :keymaps 'lsp-mode-map
@@ -2061,7 +2069,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
         (treesit-install-language-grammar (car grammar))))
   )
   :config
-  (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details when doing syntax highlihting.
+  (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details (4/4) when doing syntax highlighting.
   (my/setup-install-grammars)
 )
 
