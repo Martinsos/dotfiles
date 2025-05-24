@@ -513,7 +513,7 @@
                        "docs/*.texi" "docs/*.texinfo"
                        (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
                                  "LICENSE" "README*" "*-pkg.el"))
-                      :source "MELPA" :protocol https :inherit t :depth treeless :ref
+                      :source #2# :protocol https :inherit t :depth treeless :ref
                       "c3e30341d0add9728010e566b9eb031c76414b47"))
  (counsel-projectile :source #1# :recipe
                      (:package "counsel-projectile" :fetcher github :repo
@@ -557,24 +557,6 @@
                            (:exclude "swiper.el" "counsel.el" "ivy-hydra.el" "ivy-avy.el"))
                 :source #2# :protocol https :inherit t :depth treeless :ref
                 "abb9e1e5649bcd078a2a75bcb27abb42311b4f86"))
- (org-present :source #1# :recipe
-              (:package "org-present" :fetcher github :repo "rlister/org-present" :files
-                        ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir" "doc/*.info"
-                         "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir" "docs/*.info"
-                         "docs/*.texi" "docs/*.texinfo"
-                         (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
-                                   "LICENSE" "README*" "*-pkg.el"))
-                        :source #2# :protocol https :inherit t :depth treeless :ref
-                        "4ec04e1b77dea76d7c30066ccf3200d2e0b7bee9"))
- (org-tidy :source #1# :recipe
-           (:package "org-tidy" :fetcher github :repo "jxq0/org-tidy" :files
-                     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir" "doc/*.info"
-                      "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir" "docs/*.info"
-                      "docs/*.texi" "docs/*.texinfo"
-                      (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
-                                "LICENSE" "README*" "*-pkg.el"))
-                     :source #2# :protocol https :inherit t :depth treeless :ref
-                     "0bea3a2ceaa999e0ad195ba525c5c1dcf5fba43b"))
  (org-super-agenda :source #1# :recipe
                    (:package "org-super-agenda" :fetcher github :repo "alphapapa/org-super-agenda"
                              :files
@@ -594,6 +576,24 @@
                                 "LICENSE" "README*" "*-pkg.el"))
                      :source #2# :protocol https :inherit t :depth treeless :ref
                      "9f9d93e4f0d5863b1318e9e702e1ee6e841c2649"))
+ (org-present :source #1# :recipe
+              (:package "org-present" :fetcher github :repo "rlister/org-present" :files
+                        ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir" "doc/*.info"
+                         "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir" "docs/*.info"
+                         "docs/*.texi" "docs/*.texinfo"
+                         (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
+                                   "LICENSE" "README*" "*-pkg.el"))
+                        :source #2# :protocol https :inherit t :depth treeless :ref
+                        "4ec04e1b77dea76d7c30066ccf3200d2e0b7bee9"))
+ (org-tidy :source #1# :recipe
+           (:package "org-tidy" :fetcher github :repo "jxq0/org-tidy" :files
+                     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir" "doc/*.info"
+                      "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir" "docs/*.info"
+                      "docs/*.texi" "docs/*.texinfo"
+                      (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
+                                "LICENSE" "README*" "*-pkg.el"))
+                     :source #2# :protocol https :inherit t :depth treeless :ref
+                     "0bea3a2ceaa999e0ad195ba525c5c1dcf5fba43b"))
  (evil-org :source #1# :recipe
            (:package "evil-org" :fetcher github :repo "Somelauw/evil-org-mode" :files
                      ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir" "doc/*.info"
@@ -630,7 +630,7 @@
                            "docs/*.info" "docs/*.texi" "docs/*.texinfo"
                            (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el" "*-tests.el"
                                      "LICENSE" "README*" "*-pkg.el"))
-                          :source "MELPA" :protocol https :inherit t :depth treeless :ref
+                          :source #2# :protocol https :inherit t :depth treeless :ref
                           "54c81c27dde2a6dc461bb064e79a8b2089093a2e"))
  (org :source #1# :recipe
       (:package "org" :repo ("https://git.savannah.gnu.org/git/emacs/org-mode.git" . "org")
@@ -739,7 +739,7 @@
             (:package "ef-themes" :repo ("https://github.com/protesilaos/ef-themes" . "ef-themes")
                       :files
                       ("*" (:exclude ".git" "COPYING" "doclicense.texi" "contrast-ratios.org"))
-                      :source "GNU ELPA" :protocol https :inherit t :depth treeless :wait t :ref
+                      :source #2# :protocol https :inherit t :depth treeless :wait t :ref
                       "5f81c603157b8584740c1af2b744d2b9780affc8"))
  (doom-themes :source #1# :recipe
               (:package "doom-themes" :fetcher github :repo "doomemacs/themes" :files

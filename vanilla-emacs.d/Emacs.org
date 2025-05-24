@@ -939,10 +939,10 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
      "ct" 'org-set-tags-command
      "ce" 'org-set-effort
      "x" 'org-toggle-checkbox
-
      "J" 'org-priority-down
      "K" 'org-priority-up
      "t" 'org-todo
+     "/" 'org-sparse-tree
     )
 
     ;; Set headers to have different sizes.

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-23 09:29:20 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-24 19:02:52 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -618,10 +618,10 @@ USAGE:
    "ct" 'org-set-tags-command
    "ce" 'org-set-effort
    "x" 'org-toggle-checkbox
-
    "J" 'org-priority-down
    "K" 'org-priority-up
    "t" 'org-todo
+   "/" 'org-sparse-tree
   )
 
   ;; Set headers to have different sizes.
