@@ -200,6 +200,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+end_src
 
+** Cheatsheet :cheatsheet:
+- ~elpaca-manager~ to run the main elpaca UI.
+- ~elpaca-update-all~ to fetch package updates and apply them.
 * Utils
 ** Packages
 
@@ -3239,7 +3242,10 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
                                         (org-mode . "** AI:\n")
                                         (text-mode . "## AI:\n")))
     (setq gptel-default-mode 'org-mode)
-    (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
+    (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
+    ;; On response, move cursor to the next prompt.
+    (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
       "ic"  '("[gptel] chat" . gptel)
@@ -3247,15 +3253,77 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
       "ir"  '("[gptel] rewrite" . gptel-rewrite)
       "ix"  '("[gptel] +/- ctxt" . gptel-add)
     )
-  )
+
+    ;;; Backends
+    ;; OpenAI (with ChatGPT) is the default backend.
+    ;; Register Claude as one of the backends.
+    (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)
+
+    ;;; Tools
+    (gptel-make-tool
+     :name "read_buffer"
+     :function (lambda (buffer)
+                 (unless (buffer-live-p (get-buffer buffer))
+                   (error "error: buffer %s is not live." buffer))
+                 (with-current-buffer buffer
+                   (buffer-substring-no-properties (point-min) (point-max))))
+     :description "Return the contents of an emacs buffer."
+     :args (list '(:name "buffer"
+                   :type string
+                   :description "the name of the buffer whose contents are to be retrieved"))
+     :category "emacs")
+
+    ;; TODO: I haven't tested this at all, if it works (modify_buffer).
+    (gptel-make-tool
+     :name "modify_buffer"
+     :function (lambda (buffer new-content)
+                 (unless (buffer-live-p (get-buffer buffer))
+                   (error "error: buffer %s is not live." buffer))
+                 (with-current-buffer buffer
+                   (erase-buffer)
+                   (insert new-content)))
+     :description "Replace the contents of an existing buffer with new content."
+     :confirm t
+     :args (list '(:name "buffer"
+                   :type string
+                   :description "the name of the buffer to modify")
+                 '(:name "new-content"
+                   :type string
+                   :description "the new content of the buffer"))
+     :category "emacs")
+
+    ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
+    ;; (gptel-make-preset 'coding
+    ;;   :description "A preset optimized for coding tasks"
+    ;;   :backend "Claude"
+    ;;   :model 'claude-3-7-sonnet-20250219
+    ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+    ;;   :tools '("read_buffer" "modify_buffer"))
+   )
 
 #+end_src
 
-*** Setting up the OpenAI API key :manual_setup:
-By default, it pulls in the API key for OpenAI from the ~/.authinfo file (check the gptel docs for details), so that is what I use to provide the OpenAI API key.
+*** Setting up the API keys                                  :manual_setup:
+- Set the API keys for the LLM providers (OpenAI, Anthropic, ...) in the =~/.authinfo= file (check the gptel docs for details).
 *** Cheatsheet :cheatsheet:
-- =C-c RET= is for sending the query to AI when in the Gptel buffer.
+- Use ~gptel-send~ to send text to LLM.
+- ~gptel-menu~ also sends but offers options and is the main way to configure =gptel=.
+- =C-c RET= is for sending the query to AI when in the Gptel chat buffer.
+- Gptel chat buffer is nothing super special, more of a convenience thing.
+  The main concept is not the chat buffer, but sending text to the point / in region.
 - When using ~gpt-rewrite~, result will be shown in an overlay that is not normal text. I then need to move cursor to its start and hit =RET=, and then I can choose if I want to accept that piece of code, rewrite it again, diff it, ... . Most often I will want to accept it or rewrite it.
+- To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
+- Run ~gptel-tools~ to select the tools to use (from the ones we defined).
+*** TODO Check out gptel tools that others made and pick those that are useful to me.
+- Here is an issue with urls to places where popular tools are listed!
+  https://github.com/karthink/gptel/issues/857
+*** TODO Set up tool usage via MCP (check gptel's docs)
+*** TODO Can I make it so that when I send region to gptel, info about line numbers/file is included?
+Unless I can somehow do this via existing hooks, I will probably need to implement it with ~gptel-request~.
+*** TODO Add https://github.com/karthink/gptel-quick .
+*** TODO Add tool that can look up elisp documentation. This will be super useful for working on the emacs config, will make AI smarter.
+- There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .
+*** TODO gptel-org-branching-context sounds super interesting, try it out.
 ** Copilot
 
 *** copilot.el

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-24 19:02:52 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-05-25 00:49:08 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2223,7 +2223,10 @@ It uses external `gitstatusd' program to calculate the actual git status."
                                       (org-mode . "** AI:\n")
                                       (text-mode . "## AI:\n")))
   (setq gptel-default-mode 'org-mode)
-  (add-hook 'gptel-post-response-functions 'gptel-end-of-response) ; On response, move cursor to the next prompt.
+  (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
+  ;; On response, move cursor to the next prompt.
+  (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
+
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
     "ic"  '("[gptel] chat" . gptel)
@@ -2231,7 +2234,53 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "ir"  '("[gptel] rewrite" . gptel-rewrite)
     "ix"  '("[gptel] +/- ctxt" . gptel-add)
   )
-)
+
+  ;;; Backends
+  ;; OpenAI (with ChatGPT) is the default backend.
+  ;; Register Claude as one of the backends.
+  (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)
+
+  ;;; Tools
+  (gptel-make-tool
+   :name "read_buffer"
+   :function (lambda (buffer)
+               (unless (buffer-live-p (get-buffer buffer))
+                 (error "error: buffer %s is not live." buffer))
+               (with-current-buffer buffer
+                 (buffer-substring-no-properties (point-min) (point-max))))
+   :description "Return the contents of an emacs buffer."
+   :args (list '(:name "buffer"
+                 :type string
+                 :description "the name of the buffer whose contents are to be retrieved"))
+   :category "emacs")
+
+  ;; TODO: I haven't tested this at all, if it works (modify_buffer).
+  (gptel-make-tool
+   :name "modify_buffer"
+   :function (lambda (buffer new-content)
+               (unless (buffer-live-p (get-buffer buffer))
+                 (error "error: buffer %s is not live." buffer))
+               (with-current-buffer buffer
+                 (erase-buffer)
+                 (insert new-content)))
+   :description "Replace the contents of an existing buffer with new content."
+   :confirm t
+   :args (list '(:name "buffer"
+                 :type string
+                 :description "the name of the buffer to modify")
+               '(:name "new-content"
+                 :type string
+                 :description "the new content of the buffer"))
+   :category "emacs")
+
+  ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
+  ;; (gptel-make-preset 'coding
+  ;;   :description "A preset optimized for coding tasks"
+  ;;   :backend "Claude"
+  ;;   :model 'claude-3-7-sonnet-20250219
+  ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+  ;;   :tools '("read_buffer" "modify_buffer"))
+ )
 
 (use-package copilot
   :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
