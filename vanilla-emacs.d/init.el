@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-05-25 00:49:08 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-13 00:11:05 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -188,6 +188,13 @@ USAGE:
     "\"Dwell on the beauty of life. Watch the stars, and see yourself running with them.\" – Marcus Aurelius"
     "\"Nulla dies sine linea.\" - Pliny the Elder"
     )
+)
+
+(defun my/is-face-at-point (face)
+  "Returns non-nil if given FACE is applied at text at the current point."
+  (let ((face-at-point (get-text-property (point) 'face)))
+    (or (eq face-at-point face) (and (listp face-at-point) (memq face face-at-point)))
+  )
 )
 
 (use-package emacs
@@ -716,9 +723,24 @@ USAGE:
   (org-appear-autokeywords t)
   (org-appear-inside-latex t)
   (org-appear-trigger 'always)
-  ;; Make bold and italic and similar nice, since we now have org-appear
+
+  ;; Make bold and italic and similar nice by default, since we now have org-appear
   ;; to show them as raw when needed.
   (org-hide-emphasis-markers t)
+)
+
+(with-eval-after-load 'org
+  (defun my/org-display-link-info-at-point ()
+    "Display the link info in the echo area when the cursor is on an Org mode link."
+    (when-let* ((my/is-face-at-point 'org-link)
+                (link-info (get-text-property (point) 'help-echo)))
+      ;; This will show the link in the echo area without it being logged in the Messages buffer.
+      (let ((message-log-max nil)) (message "%s" link-info))
+    )
+  )
+  (dolist (h '(org-mode-hook org-agenda-mode-hook))
+    (add-hook h (lambda () (add-hook 'post-command-hook #'my/org-display-link-info-at-point nil 'local)))
+  )
 )
 
 (use-package evil-org
@@ -1251,10 +1273,15 @@ Return minutes (number)."
 		 ((org-agenda-overriding-header "")
 		  (org-agenda-prefix-format " %5e ")
 		  (org-super-agenda-groups
-		   '((:name "Notes" :category "note")
-                     (:name "Inbox" :todo "INBOX")
+		   '((:name "Notes" :order 1 :category "note")
+                     (:name "Inbox" :order 2 :todo "INBOX")
+                     (:name "Epics" :order 3 :todo "EPIC")
+                     (:name "To read"
+                            :order 5
+                            :and (:category "task" :tag "read"))
 		     (:discard (:scheduled t :deadline t :time-grid t))
                      (:name "All tasks with no schedule / deadline"
+                            :order 4
 			    :category "task")
 		     (:discard (:anything t))
 		    )
@@ -1303,7 +1330,7 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s40")
+        (work-diary-sprint-current-tag "s42")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -1433,7 +1460,7 @@ Return minutes (number)."
   (org-agenda nil "A")
 )
 (my/leader-keys
-  "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
+  "op"  '("planning" . my/work-diary-open-sprint-planning-windows)
 )
 
 (let* ((wd-path "~/Dropbox/work-diary.org")

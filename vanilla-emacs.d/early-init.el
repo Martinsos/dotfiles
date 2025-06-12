@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2025-05-25 00:49:08 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-13 00:11:05 CEST, don't edit it manually.
 
 (setq package-enable-at-startup nil) ; Elpaca requires this.
 

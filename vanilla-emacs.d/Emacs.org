@@ -380,6 +380,19 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+end_src
 
+** Other
+
+#+begin_src emacs-lisp
+
+  (defun my/is-face-at-point (face)
+    "Returns non-nil if given FACE is applied at text at the current point."
+    (let ((face-at-point (get-text-property (point) 'face)))
+      (or (eq face-at-point face) (and (listp face-at-point) (memq face face-at-point)))
+    )
+  )
+
+#+end_src
+
 * Basic Emacs config
 ** General
 
@@ -1040,13 +1053,37 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (org-appear-autokeywords t)
     (org-appear-inside-latex t)
     (org-appear-trigger 'always)
-    ;; Make bold and italic and similar nice, since we now have org-appear
+
+    ;; Make bold and italic and similar nice by default, since we now have org-appear
     ;; to show them as raw when needed.
     (org-hide-emphasis-markers t)
   )
 
 #+end_src
 
+** Show org links in echo area
+
+Org and org-agenda mode show links in echo area when you go over them with mouse, but they don't show them if you move to them with cursor.
+Therefore, here we replicate that same behaviour when you move over them with cursor.
+Since information displayed in echo area upon mouse is ~help-echo~ information, we take that same info and display it when cursor comes at the link.
+
+#+begin_src emacs-lisp
+
+  (with-eval-after-load 'org
+    (defun my/org-display-link-info-at-point ()
+      "Display the link info in the echo area when the cursor is on an Org mode link."
+      (when-let* ((my/is-face-at-point 'org-link)
+                  (link-info (get-text-property (point) 'help-echo)))
+        ;; This will show the link in the echo area without it being logged in the Messages buffer.
+        (let ((message-log-max nil)) (message "%s" link-info))
+      )
+    )
+    (dolist (h '(org-mode-hook org-agenda-mode-hook))
+      (add-hook h (lambda () (add-hook 'post-command-hook #'my/org-display-link-info-at-point nil 'local)))
+    )
+  )
+
+#+end_src
 ** evil-org
 #+begin_src emacs-lisp
 
@@ -1734,10 +1771,15 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
   		 ((org-agenda-overriding-header "")
   		  (org-agenda-prefix-format " %5e ")
   		  (org-super-agenda-groups
-  		   '((:name "Notes" :category "note")
-                       (:name "Inbox" :todo "INBOX")
+  		   '((:name "Notes" :order 1 :category "note")
+                       (:name "Inbox" :order 2 :todo "INBOX")
+                       (:name "Epics" :order 3 :todo "EPIC")
+                       (:name "To read"
+                              :order 5
+                              :and (:category "task" :tag "read"))
   		     (:discard (:scheduled t :deadline t :time-grid t))
                        (:name "All tasks with no schedule / deadline"
+                              :order 4
   			    :category "task")
   		     (:discard (:anything t))
   		    )
@@ -1786,7 +1828,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s40")
+          (work-diary-sprint-current-tag "s42")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -1916,7 +1958,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
     (org-agenda nil "A")
   )
   (my/leader-keys
-    "os"  '("sprint planning" . my/work-diary-open-sprint-planning-windows)
+    "op"  '("planning" . my/work-diary-open-sprint-planning-windows)
   )
 
 #+end_src
@@ -3314,6 +3356,7 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
 - When using ~gpt-rewrite~, result will be shown in an overlay that is not normal text. I then need to move cursor to its start and hit =RET=, and then I can choose if I want to accept that piece of code, rewrite it again, diff it, ... . Most often I will want to accept it or rewrite it.
 - To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
 - Run ~gptel-tools~ to select the tools to use (from the ones we defined).
+*** TODO Give gptel a tool that asks for access to other tools? Does that makes any sense?
 *** TODO Check out gptel tools that others made and pick those that are useful to me.
 - Here is an issue with urls to places where popular tools are listed!
   https://github.com/karthink/gptel/issues/857
@@ -3324,6 +3367,7 @@ Unless I can somehow do this via existing hooks, I will probably need to impleme
 *** TODO Add tool that can look up elisp documentation. This will be super useful for working on the emacs config, will make AI smarter.
 - There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .
 *** TODO gptel-org-branching-context sounds super interesting, try it out.
+*** TODO Gptel - can I ask about part of file, or do something at point, while having LLM aware of the location in the file of that thing? Detail the use cases and then ask on github
 ** Copilot
 
 *** copilot.el
@@ -3377,6 +3421,7 @@ Most straightforward way to use it is to run ~copilot-chat-transient~ since that
 - A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
 - There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
 - Aidermacs: another package for using aider in emacs, allegedly it is cool: https://www.reddit.com/r/emacs/s/ej9qMsblZq .
+*** TODO Try other stuff (Elysium? Evedel? Others?)
 * Formatting
 ** Whitespaces
 
