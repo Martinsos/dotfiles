@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-13 00:11:05 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-14 00:39:39 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -629,6 +629,8 @@ USAGE:
    "K" 'org-priority-up
    "t" 'org-todo
    "/" 'org-sparse-tree
+   "ln" 'org-next-link
+   "lp" 'org-previous-link
   )
 
   ;; Set headers to have different sizes.
@@ -2270,27 +2272,23 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;;; Tools
   (gptel-make-tool
    :name "read_buffer"
+   :description "Return the contents of an emacs buffer."
+   :category "emacs"
+   :args (list '(:name "buffer"
+                 :type string
+                 :description "the name of the buffer whose contents are to be retrieved"))
    :function (lambda (buffer)
                (unless (buffer-live-p (get-buffer buffer))
                  (error "error: buffer %s is not live." buffer))
                (with-current-buffer buffer
                  (buffer-substring-no-properties (point-min) (point-max))))
-   :description "Return the contents of an emacs buffer."
-   :args (list '(:name "buffer"
-                 :type string
-                 :description "the name of the buffer whose contents are to be retrieved"))
-   :category "emacs")
+  )
 
   ;; TODO: I haven't tested this at all, if it works (modify_buffer).
   (gptel-make-tool
    :name "modify_buffer"
-   :function (lambda (buffer new-content)
-               (unless (buffer-live-p (get-buffer buffer))
-                 (error "error: buffer %s is not live." buffer))
-               (with-current-buffer buffer
-                 (erase-buffer)
-                 (insert new-content)))
    :description "Replace the contents of an existing buffer with new content."
+   :category "emacs"
    :confirm t
    :args (list '(:name "buffer"
                  :type string
@@ -2298,7 +2296,95 @@ It uses external `gitstatusd' program to calculate the actual git status."
                '(:name "new-content"
                  :type string
                  :description "the new content of the buffer"))
-   :category "emacs")
+   :function (lambda (buffer new-content)
+               (unless (buffer-live-p (get-buffer buffer))
+                 (error "error: buffer %s is not live." buffer))
+               (with-current-buffer buffer
+                 (erase-buffer)
+                 (insert new-content)))
+  )
+
+  (gptel-make-tool
+   :name "read_url"
+   :description "Fetch and read the contents of a URL"
+   :category "web"
+   :args (list '(:name "url"
+                 :type "string"
+                 :description "The URL to read"))
+   :function (lambda (url)
+               (with-current-buffer (url-retrieve-synchronously url)
+                 (goto-char (point-min)) (forward-paragraph)
+                 (let ((dom (libxml-parse-html-region (point) (point-max))))
+                   (run-at-time 0 nil #'kill-buffer (current-buffer))
+                   (with-temp-buffer
+                     (shr-insert-document dom)
+                     (buffer-substring-no-properties (point-min) (point-max))))))
+  )
+
+  (gptel-make-tool
+   :name "emacs_eval"
+   :description "Evaluate an elisp expression"
+   :category "emacs"
+   :confirm t
+   :args (list '(:name "expr-string"
+                 :type string
+                 :description "elisp expression to evaluate"))
+   :function
+   (lambda (expr-string)
+     (let ((result (eval (read expr-string))))
+       (if (stringp result) result (prin1-to-string result))
+     )
+   )
+  )
+
+  (gptel-make-tool
+   :name "emacs_docs"
+   :description "Fetch all available documentation for an Emacs symbol"
+   :category "emacs"
+   :include t
+   :args (list '(:name "symbol-name"
+                 :type string
+                 :description "the name of the Emacs symbol to document"))
+   :function
+   (lambda (symbol-name)
+     (let ((symbol (intern-soft symbol-name)))
+
+       (unless symbol (error "Symbol '%s' not found" symbol-name))
+
+       (let ((function-doc
+              (if (fboundp symbol)
+                  (let ((doc (documentation symbol))
+                        (args (help-function-arglist symbol t)))
+                    (concat "<FUNCTION>\n"
+                            "Arglist: " (prin1-to-string args) "\n"
+                            (or doc "") "\n</FUNCTION>\n\n"))
+                ""))
+
+             (variable-doc
+              (if (boundp symbol)
+                  (let ((doc (documentation-property symbol 'variable-documentation))
+                        (val (symbol-value symbol)))
+                    (concat "<VARIABLE>\n"
+                            "Value: " (prin1-to-string val) "\n"
+                            (or doc "") "\n</VARIABLE>\n\n"))
+                ""))
+
+             (face-doc
+              (if (facep symbol)
+                  (let ((doc (documentation-property symbol 'face-documentation)))
+                    (concat "<FACE>\n"
+                            (or doc "") "\n</FACE>\n\n"))
+                ""))
+            )
+
+         (let ((all-docs (string-trim (concat function-doc variable-doc face-doc))))
+           (concat "Documentation for: " symbol-name "\n\n"
+                   (replace-regexp-in-string "^" "  " all-docs))
+         )
+       )
+     )
+   )
+  )
 
   ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
   ;; (gptel-make-preset 'coding
@@ -2307,7 +2393,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;;   :model 'claude-3-7-sonnet-20250219
   ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
   ;;   :tools '("read_buffer" "modify_buffer"))
- )
+)
 
 (use-package copilot
   :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))

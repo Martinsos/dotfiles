@@ -959,6 +959,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
      "K" 'org-priority-up
      "t" 'org-todo
      "/" 'org-sparse-tree
+     "ln" 'org-next-link
+     "lp" 'org-previous-link
     )
 
     ;; Set headers to have different sizes.
@@ -3304,27 +3306,23 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
     ;;; Tools
     (gptel-make-tool
      :name "read_buffer"
+     :description "Return the contents of an emacs buffer."
+     :category "emacs"
+     :args (list '(:name "buffer"
+                   :type string
+                   :description "the name of the buffer whose contents are to be retrieved"))
      :function (lambda (buffer)
                  (unless (buffer-live-p (get-buffer buffer))
                    (error "error: buffer %s is not live." buffer))
                  (with-current-buffer buffer
                    (buffer-substring-no-properties (point-min) (point-max))))
-     :description "Return the contents of an emacs buffer."
-     :args (list '(:name "buffer"
-                   :type string
-                   :description "the name of the buffer whose contents are to be retrieved"))
-     :category "emacs")
+    )
 
     ;; TODO: I haven't tested this at all, if it works (modify_buffer).
     (gptel-make-tool
      :name "modify_buffer"
-     :function (lambda (buffer new-content)
-                 (unless (buffer-live-p (get-buffer buffer))
-                   (error "error: buffer %s is not live." buffer))
-                 (with-current-buffer buffer
-                   (erase-buffer)
-                   (insert new-content)))
      :description "Replace the contents of an existing buffer with new content."
+     :category "emacs"
      :confirm t
      :args (list '(:name "buffer"
                    :type string
@@ -3332,7 +3330,95 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
                  '(:name "new-content"
                    :type string
                    :description "the new content of the buffer"))
-     :category "emacs")
+     :function (lambda (buffer new-content)
+                 (unless (buffer-live-p (get-buffer buffer))
+                   (error "error: buffer %s is not live." buffer))
+                 (with-current-buffer buffer
+                   (erase-buffer)
+                   (insert new-content)))
+    )
+
+    (gptel-make-tool
+     :name "read_url"
+     :description "Fetch and read the contents of a URL"
+     :category "web"
+     :args (list '(:name "url"
+                   :type "string"
+                   :description "The URL to read"))
+     :function (lambda (url)
+                 (with-current-buffer (url-retrieve-synchronously url)
+                   (goto-char (point-min)) (forward-paragraph)
+                   (let ((dom (libxml-parse-html-region (point) (point-max))))
+                     (run-at-time 0 nil #'kill-buffer (current-buffer))
+                     (with-temp-buffer
+                       (shr-insert-document dom)
+                       (buffer-substring-no-properties (point-min) (point-max))))))
+    )
+
+    (gptel-make-tool
+     :name "emacs_eval"
+     :description "Evaluate an elisp expression"
+     :category "emacs"
+     :confirm t
+     :args (list '(:name "expr-string"
+                   :type string
+                   :description "elisp expression to evaluate"))
+     :function
+     (lambda (expr-string)
+       (let ((result (eval (read expr-string))))
+         (if (stringp result) result (prin1-to-string result))
+       )
+     )
+    )
+
+    (gptel-make-tool
+     :name "emacs_docs"
+     :description "Fetch all available documentation for an Emacs symbol"
+     :category "emacs"
+     :include t
+     :args (list '(:name "symbol-name"
+                   :type string
+                   :description "the name of the Emacs symbol to document"))
+     :function
+     (lambda (symbol-name)
+       (let ((symbol (intern-soft symbol-name)))
+
+         (unless symbol (error "Symbol '%s' not found" symbol-name))
+
+         (let ((function-doc
+                (if (fboundp symbol)
+                    (let ((doc (documentation symbol))
+                          (args (help-function-arglist symbol t)))
+                      (concat "<FUNCTION>\n"
+                              "Arglist: " (prin1-to-string args) "\n"
+                              (or doc "") "\n</FUNCTION>\n\n"))
+                  ""))
+
+               (variable-doc
+                (if (boundp symbol)
+                    (let ((doc (documentation-property symbol 'variable-documentation))
+                          (val (symbol-value symbol)))
+                      (concat "<VARIABLE>\n"
+                              "Value: " (prin1-to-string val) "\n"
+                              (or doc "") "\n</VARIABLE>\n\n"))
+                  ""))
+
+               (face-doc
+                (if (facep symbol)
+                    (let ((doc (documentation-property symbol 'face-documentation)))
+                      (concat "<FACE>\n"
+                              (or doc "") "\n</FACE>\n\n"))
+                  ""))
+              )
+
+           (let ((all-docs (string-trim (concat function-doc variable-doc face-doc))))
+             (concat "Documentation for: " symbol-name "\n\n"
+                     (replace-regexp-in-string "^" "  " all-docs))
+           )
+         )
+       )
+     )
+    )
 
     ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
     ;; (gptel-make-preset 'coding
@@ -3341,12 +3427,12 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
     ;;   :model 'claude-3-7-sonnet-20250219
     ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
     ;;   :tools '("read_buffer" "modify_buffer"))
-   )
+  )
 
 #+end_src
 
 *** Setting up the API keys                                  :manual_setup:
-- Set the API keys for the LLM providers (OpenAI, Anthropic, ...) in the =~/.authinfo= file (check the gptel docs for details).
+- Set the API keys for the LLM providers (OpenAI, Anthropic, ...) in the =~/.authinfo= file (check the gptel docs for detail
 *** Cheatsheet :cheatsheet:
 - Use ~gptel-send~ to send text to LLM.
 - ~gptel-menu~ also sends but offers options and is the main way to configure =gptel=.
@@ -3356,6 +3442,7 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
 - When using ~gpt-rewrite~, result will be shown in an overlay that is not normal text. I then need to move cursor to its start and hit =RET=, and then I can choose if I want to accept that piece of code, rewrite it again, diff it, ... . Most often I will want to accept it or rewrite it.
 - To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
 - Run ~gptel-tools~ to select the tools to use (from the ones we defined).
+- *Sending media*: If I add link as a "standalone" thing (alone on the line, blank lines above and below), and I enable "Sending media", then it will be sent as part of chat. It needs to be proper Org link (so in [] brackets) and should point to a file (image, text file, ...) on the disk (so start with ~file:/~).
 *** TODO Give gptel a tool that asks for access to other tools? Does that makes any sense?
 *** TODO Check out gptel tools that others made and pick those that are useful to me.
 - Here is an issue with urls to places where popular tools are listed!
@@ -3368,6 +3455,7 @@ Unless I can somehow do this via existing hooks, I will probably need to impleme
 - There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .
 *** TODO gptel-org-branching-context sounds super interesting, try it out.
 *** TODO Gptel - can I ask about part of file, or do something at point, while having LLM aware of the location in the file of that thing? Detail the use cases and then ask on github
+Yeah I think I can, I need to write manual function that then uses gptels functions, but I asked Claude 4 and it wasn't long, the solution.
 ** Copilot
 
 *** copilot.el
