@@ -188,9 +188,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 **** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
-
-**** Cheatsheet                                               :cheatsheet:
-- To create/update a lock file, run ~my/elpaca-write-lock-file~.
 *** Install and set up use-package (with Elpaca as backend)
 
 #+begin_src emacs-lisp
@@ -203,6 +200,8 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 ** Cheatsheet :cheatsheet:
 - ~elpaca-manager~ to run the main elpaca UI.
 - ~elpaca-update-all~ to fetch package updates and apply them.
+- To create/update a lock file, run ~my/elpaca-write-lock-file~.
+- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update the package, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package.
 * Utils
 ** Packages
 
@@ -3290,6 +3289,8 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
     ;; On response, move cursor to the next prompt.
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
+    ;;(setq gptel-expert-commands t) ; Enable experimental advanced cmds in menu.
+
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
       "ic"  '("[gptel] chat" . gptel)
@@ -3420,13 +3421,12 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
      )
     )
 
-    ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
-    ;; (gptel-make-preset 'coding
-    ;;   :description "A preset optimized for coding tasks"
-    ;;   :backend "Claude"
-    ;;   :model 'claude-3-7-sonnet-20250219
-    ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
-    ;;   :tools '("read_buffer" "modify_buffer"))
+    (gptel-make-preset 'coding
+      :description "A preset optimized for coding tasks"
+      :backend "Claude"
+      :model 'claude-3-7-sonnet-20250219
+      :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+      :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
   )
 
 #+end_src
@@ -3450,6 +3450,7 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
 *** TODO Set up tool usage via MCP (check gptel's docs)
 *** TODO Can I make it so that when I send region to gptel, info about line numbers/file is included?
 Unless I can somehow do this via existing hooks, I will probably need to implement it with ~gptel-request~.
+*** TODO What about adding a specific chat to the context of a gptel request that is not done from chat (but is e.g. rewrite or my custom function using gptel-request).
 *** TODO Add https://github.com/karthink/gptel-quick .
 *** TODO Add tool that can look up elisp documentation. This will be super useful for working on the emacs config, will make AI smarter.
 - There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .

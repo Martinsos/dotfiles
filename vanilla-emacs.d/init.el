@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-14 00:39:39 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-15 00:11:51 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2256,6 +2256,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; On response, move cursor to the next prompt.
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
+  ;;(setq gptel-expert-commands t) ; Enable experimental advanced cmds in menu.
+
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
     "ic"  '("[gptel] chat" . gptel)
@@ -2386,13 +2388,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
    )
   )
 
-  ;;; Presets TODO: This is new thing, on master branch, it ain't yet in the latest release.
-  ;; (gptel-make-preset 'coding
-  ;;   :description "A preset optimized for coding tasks"
-  ;;   :backend "Claude"
-  ;;   :model 'claude-3-7-sonnet-20250219
-  ;;   :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
-  ;;   :tools '("read_buffer" "modify_buffer"))
+  (gptel-make-preset 'coding
+    :description "A preset optimized for coding tasks"
+    :backend "Claude"
+    :model 'claude-3-7-sonnet-20250219
+    :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+    :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
 )
 
 (use-package copilot
