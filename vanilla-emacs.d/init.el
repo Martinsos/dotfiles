@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-15 00:11:51 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-16 01:17:26 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1677,7 +1677,12 @@ Return minutes (number)."
 
 (my/leader-keys
   "g" '("git (version control)" . (keymap))
+  "gc" '("resolve conflicts (simple)" . smerge-mode)
+  "gC" '("resolve conflicts (advanced)" . smerge-ediff)
 )
+
+'(ediff-split-window-function (quote split-window-horizontally))
+'(ediff-window-setup-function (quote ediff-setup-windows-plain))
 
 (use-package gitstatus
   :custom

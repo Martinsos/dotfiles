@@ -2241,9 +2241,35 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
 
   (my/leader-keys
     "g" '("git (version control)" . (keymap))
+    "gc" '("resolve conflicts (simple)" . smerge-mode)
+    "gC" '("resolve conflicts (advanced)" . smerge-ediff)
   )
 
 #+end_src
+
+- On diffing and conflict resolution:
+  - =diff= and =ediff= are two ways to look at the difference between buffers/files.
+  - =smerge-mode= and =smerge-ediff= are two popular ways to resolve merge conflicts (~<<<<<~, ~>>>>>~, ...), so you don't have to edit the file with conflicts manually.
+    =smerge-mode= is much simpler and works quite well, while =smerge-ediff= is more powerful but also more complex (you have use these special keybindings in this special window).
+    There is also =vdiff= as a third-party alternative.
+
+** TODO Add a hydra for smerge-mode, to make it easy to run smerge commands in it. Search online for it.
+- https://www.reddit.com/r/emacs/comments/a5dmbm/the_fastest_mergeconflict_resolver_in_emacsland/
+  - https://github.com/alphapapa/unpackaged.el?tab=readme-ov-file#hydra
+- https://github.com/kaushalmodi/.emacs.d/blob/master/setup-files/setup-diff.el#L181
+
+** TODO Configure ediff to work nicer
+- found this on reddit:
+  #+begin_src emacs-lisp
+    '(ediff-split-window-function (quote split-window-horizontally))
+    '(ediff-window-setup-function (quote ediff-setup-windows-plain))
+  #+end_src
+- search for more
+
+** TODO Consider setting up vdiff (as an alternative to ediff)
+- https://github.com/justbur/emacs-vdiff
+- Allegedly it makes more sense, you can more normally edit the buffers and DX is more intuitive.
+  If you also add a hydra, you get the best DX.
 
 ** gitstatus.el
 
