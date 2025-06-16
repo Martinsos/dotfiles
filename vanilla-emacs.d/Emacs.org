@@ -2247,11 +2247,16 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
 
 #+end_src
 
-- On diffing and conflict resolution:
-  - =diff= and =ediff= are two ways to look at the difference between buffers/files.
-  - =smerge-mode= and =smerge-ediff= are two popular ways to resolve merge conflicts (~<<<<<~, ~>>>>>~, ...), so you don't have to edit the file with conflicts manually.
-    =smerge-mode= is much simpler and works quite well, while =smerge-ediff= is more powerful but also more complex (you have use these special keybindings in this special window).
-    There is also =vdiff= as a third-party alternative.
+- On diffing and merge conflict resolution in emacs ::
+  - *General diffing* ::
+    =diff= and =ediff= are two common ways in emacs to look at the general difference between buffers/files, =diff= being a simpler option, and =ediff= being a complex one. E.g. there is ~diff~ to check diff between two files, ~diff-buffer-with-file~ to check buffer against file, ... .
+  - *Merge conflict resolution* ::
+    - =smerge-mode= and =smerge-ediff= are two popular, emacs built-in, ways to resolve merge conflicts, so you don't have to edit the file with conflicts completely manually.
+      - =smerge-mode= is simple to use and enough for most of the use cases. It highlights the diffs in the file and offers useful commands for resolving them easily, while letting you manually edit them as normally. So it is not invasive, more like extra capabilities added on top of completely manual workflow, it doesn't introduce its own "view".
+      - =smerge-ediff= is more powerful but also quite more complex. It takes you into its own "view" where is visually shows the diff via two buffers + introduces its own keybindings for resolving the conflicts that you then have to use to work with it. I am not sure if you can do manual edits from =ediff='s view or you have to go out of it. People say it is really powerful, but also often overkill and hard to figure out.
+    - There is also =vdiff= as a third-party alternative, which also takes over with its own view, similar like =ediff=, but in that view it let's you normally edit the buffers + does more detailed highlighting of changes (allegedly) + is more intuitive to use / has nicer DX. It sounds like a compelling alternative to =ediff=.
+    - In =magit=, in its status buffer, if there is a file with merge conflict, pressing ENT will take us to file and open it with =smerge-mode=, while pressing =e= on it will take us to =smerge-ediff= mode. It adds a bit of etra niceties to these in that workflow.
+    - Here is also a nice link to magit docs, where they explain /resolving conflicts/ at a high level + show how to do it in =magit=: https://magit.vc/manual/magit/Resolving-Conflicts.html .
 
 ** TODO Add a hydra for smerge-mode, to make it easy to run smerge commands in it. Search online for it.
 - https://www.reddit.com/r/emacs/comments/a5dmbm/the_fastest_mergeconflict_resolver_in_emacsland/
