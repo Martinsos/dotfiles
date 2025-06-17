@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-16 11:25:43 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-17 12:54:39 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2291,7 +2291,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
                  (buffer-substring-no-properties (point-min) (point-max))))
   )
 
-  ;; TODO: I haven't tested this at all, if it works (modify_buffer).
   (gptel-make-tool
    :name "modify_buffer"
    :description "Replace the contents of an existing buffer with new content."

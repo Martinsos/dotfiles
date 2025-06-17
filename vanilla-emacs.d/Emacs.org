@@ -3350,7 +3350,6 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
                    (buffer-substring-no-properties (point-min) (point-max))))
     )
 
-    ;; TODO: I haven't tested this at all, if it works (modify_buffer).
     (gptel-make-tool
      :name "modify_buffer"
      :description "Replace the contents of an existing buffer with new content."
@@ -3474,6 +3473,43 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
 - To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
 - Run ~gptel-tools~ to select the tools to use (from the ones we defined).
 - *Sending media*: If I add link as a "standalone" thing (alone on the line, blank lines above and below), and I enable "Sending media", then it will be sent as part of chat. It needs to be proper Org link (so in [] brackets) and should point to a file (image, text file, ...) on the disk (so start with ~file:/~).
+*** TODO Figure out how to do "rewrite" and "ask" operations
+I think having one "rewrite" and one "ask" function would be useful.
+
+Both would work on selected region or whole buffer is nothing is selected.
+
+Info about selected region (location) would also be sent.
+
+If I want to include chat, I can easily do that by adding it's buffer to context.
+
+I could also use a specific preset(s) for these.
+
+Both could pay special attention to comments starting with AI:, rewrite removing them, ask not.
+
+And do I even need custom functions for this? Can't I just do it normal gptel? Hm it felt like I can't. Locations not for sure. Maybe :transform? Hm maybe info about selection is already added to gptel normally and I am not aware?
+
+One thing that I haven't figured out is how to iterate. I ask one question, and I want to continue with another - but I don't have the info on previous one. Or previous iteration of rewrite. Maybe better workflow is chat centered? Uff but no idea how to do that.
+
+What about rewrite bring renamed to "do"? But then I can just send it to chat instead hm, for such purposes. Or normal gptel. Yeah.
+
+Maybe rewrite in gptel is already sending info about location? Check that.
+EDIT: I tried it, it doesn't know the location. I might be able to add it via gptel-directives, since they are dynamic!
+
+*SOLUTION IS MOST LIKELY CUSTOM DIRECTIVES*: check out one of the TODOs below for more details.
+ - it seems I can do it via custom directives
+*** TODO How can I use evil kbs in gptel minibuffer?
+Is the problem in the fact that I disabled evil-collection in the minibuffer?
+*** TODO Open an issue about confusing DX with the rewrite result overlay
+How can one know he needs to press enter on it? It is quite non-intuitive. It should come with some instructions on top I think, e.g. "press Enter". Also cursor jumps around it a bit weirdly, but maybe that is ok.
+*** TODO Look into gptel-directives
+They are dynamic allegedly, how can I use that? Maybe I can add location of selection that way to Rewrite, so I don't have to write my own?
+Yes, it seems that is the best solution, here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains this example: https://paste.karthinks.com/67b98a11-gptel-rewrite-with-context.htmlA .
+
+*** TODO Give some thought to having persistent chats for some stuff. Projects. How can I easily facilitate that, so I can easily use it when I want?
+Maybe I can have a chat per projectile project. Or maybe I can just make it easy to save and load chats. Or maybe I can have it per org task. Maybe using that org branching gptel feature would be interesting.
+*** TODO Write a function that summarizes the current chat.
+I could maybe combine this with that "org branching gptel" feature, so that the whole history of the convo is still kept, but it also gets branched with context or something. Ok I probably don't need that though hah.
+Btw I should look online for "summarizing" prompt, I am sure people have figured out some good prompts.
 *** TODO Give gptel a tool that asks for access to other tools? Does that makes any sense?
 *** TODO Check out gptel tools that others made and pick those that are useful to me.
 - Here is an issue with urls to places where popular tools are listed!
@@ -3485,6 +3521,9 @@ Unless I can somehow do this via existing hooks, I will probably need to impleme
 *** TODO Add https://github.com/karthink/gptel-quick .
 *** TODO Add tool that can look up elisp documentation. This will be super useful for working on the emacs config, will make AI smarter.
 - There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .
+*** TODO Look up into using gptel for completion at point, there is a package for it
+- https://www.reddit.com/r/emacs/s/eRJhgE0NxT
+- It is cool because it already has the context I was building up.
 *** TODO gptel-org-branching-context sounds super interesting, try it out.
 *** TODO Gptel - can I ask about part of file, or do something at point, while having LLM aware of the location in the file of that thing? Detail the use cases and then ask on github
 Yeah I think I can, I need to write manual function that then uses gptels functions, but I asked Claude 4 and it wasn't long, the solution.
