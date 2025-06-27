@@ -1959,7 +1959,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
     (org-agenda nil "A")
   )
   (my/leader-keys
-    "op"  '("planning" . my/work-diary-open-sprint-planning-windows)
+    "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
   )
 
 #+end_src
@@ -3258,7 +3258,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 
 * AI
 ** Overview of popular packages
-Last updated: <2024-12-23 Mon> 
+Last updated: <2024-12-23 Mon>
 
 Quick summary:
 For now I will go with gpt.el (for general usage), copilot.el (for completion) and copilot-chat.el (for general usage). gpt.el and copilot-chat.el are overlapping in what they can do, so I have to figure out which I like better. gpt.el however can use any model, while copilot-chat has to use copilot, but is free for me.
@@ -3302,11 +3302,10 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 - [[https://github.com/ahyatt/llm][llm]]
 
 ** GPTel
+=gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
-GPTel is quite versatile, but sometimes it does feel a bit clunky / too low level.
-
+*** General config
 #+begin_src emacs-lisp
-
   (use-package gptel
     :config
     (setq gptel-prompt-prefix-alist '((markdown-mode . "## You:\n")
@@ -3320,7 +3319,7 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
     ;; On response, move cursor to the next prompt.
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
-    ;;(setq gptel-expert-commands t) ; Enable experimental advanced cmds in menu.
+    (setq gptel-expert-commands t)
 
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
@@ -3330,12 +3329,83 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
       "ix"  '("[gptel] +/- ctxt" . gptel-add)
     )
 
-    ;;; Backends
     ;; OpenAI (with ChatGPT) is the default backend.
-    ;; Register Claude as one of the backends.
-    (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)
 
-    ;;; Tools
+    ;; Register Claude as one of the backends.
+    (setq my/gptel-claude-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key))
+
+    ;; Use Claude Sonnet 4 as a default model.
+    (setq gptel-model 'claude-sonnet-4-20250514 gptel-backend my/gptel-claude-backend)
+  )
+#+end_src
+
+*** My command for chat summarization
+#+begin_src emacs-lisp
+  (with-eval-after-load 'gptel
+    (defun my/gptel-chat-summarize-and-replace ()
+      "Summarize the current gptel chat and replace it with the summary."
+      (interactive)
+      (if (not gptel-mode)
+          (message "Can't summarize gptel chat: not in a gptel buffer.")
+        (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
+               (major-mode-name (symbol-name major-mode))
+               (system-prompt
+                (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\" and two newlines after it (\"\\n\\n\"). Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
+                        major-mode-name
+                        (cdr (assoc major-mode gptel-response-prefix-alist))
+                        (cdr (assoc major-mode gptel-prompt-prefix-alist))
+                )
+               )
+               (prompt (format "EVERYTHING BELOW THIS LINE IS OLD CONVERSATION FOR YOU TO SUMMARIZE:\n\n%s" chat-content))
+               (gptel-use-tools nil)
+              )
+          (message "Summarizing gptel chat %s ..." (buffer-name (current-buffer)))
+          (erase-buffer)
+          (gptel-request prompt
+            :stream t
+            :system system-prompt
+            :callback
+            (lambda (response info)
+              (cond
+               ((stringp response)
+                (with-current-buffer (plist-get info :buffer)
+                  (insert response)
+                )
+               )
+               ((eq response t)
+                (message "Gptel chat summarized!")
+               )
+               (t
+                (message
+                 "Gptel chat summarization failed with unexpected response. Response: %s. Status: %s."
+                 response
+                 (plist-get info :status)
+                )
+               )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+#+end_src
+
+*** Presets
+#+begin_src emacs-lisp
+  (with-eval-after-load 'gptel
+    (gptel-make-preset 'coding
+      :description "A preset optimized for coding tasks"
+      :backend "Claude"
+      :model 'claude-3-7-sonnet-20250219
+      :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+      :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
+  )
+#+end_src
+
+*** Tools
+#+begin_src emacs-lisp
+  (with-eval-after-load 'gptel
     (gptel-make-tool
      :name "read_buffer"
      :description "Return the contents of an emacs buffer."
@@ -3450,15 +3520,7 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
        )
      )
     )
-
-    (gptel-make-preset 'coding
-      :description "A preset optimized for coding tasks"
-      :backend "Claude"
-      :model 'claude-3-7-sonnet-20250219
-      :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
-      :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
   )
-
 #+end_src
 
 *** Setting up the API keys                                  :manual_setup:
@@ -3471,62 +3533,34 @@ GPTel is quite versatile, but sometimes it does feel a bit clunky / too low leve
   The main concept is not the chat buffer, but sending text to the point / in region.
 - When using ~gpt-rewrite~, result will be shown in an overlay that is not normal text. I then need to move cursor to its start and hit =RET=, and then I can choose if I want to accept that piece of code, rewrite it again, diff it, ... . Most often I will want to accept it or rewrite it.
 - To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
-- Run ~gptel-tools~ to select the tools to use (from the ones we defined).
+- Run ~gptel-tools~ to select the tools to use (from the ones we defined). Or do it via gptel transient menu.
 - *Sending media*: If I add link as a "standalone" thing (alone on the line, blank lines above and below), and I enable "Sending media", then it will be sent as part of chat. It needs to be proper Org link (so in [] brackets) and should point to a file (image, text file, ...) on the disk (so start with ~file:/~).
-*** TODO Figure out how to do "rewrite" and "ask" operations
-I think having one "rewrite" and one "ask" function would be useful.
-
-Both would work on selected region or whole buffer is nothing is selected.
-
-Info about selected region (location) would also be sent.
-
-If I want to include chat, I can easily do that by adding it's buffer to context.
-
-I could also use a specific preset(s) for these.
-
-Both could pay special attention to comments starting with AI:, rewrite removing them, ask not.
-
-And do I even need custom functions for this? Can't I just do it normal gptel? Hm it felt like I can't. Locations not for sure. Maybe :transform? Hm maybe info about selection is already added to gptel normally and I am not aware?
-
-One thing that I haven't figured out is how to iterate. I ask one question, and I want to continue with another - but I don't have the info on previous one. Or previous iteration of rewrite. Maybe better workflow is chat centered? Uff but no idea how to do that.
-
-What about rewrite bring renamed to "do"? But then I can just send it to chat instead hm, for such purposes. Or normal gptel. Yeah.
-
-Maybe rewrite in gptel is already sending info about location? Check that.
-EDIT: I tried it, it doesn't know the location. I might be able to add it via gptel-directives, since they are dynamic!
-
-*SOLUTION IS MOST LIKELY CUSTOM DIRECTIVES*: check out one of the TODOs below for more details.
- - it seems I can do it via custom directives
+- I can use ~gptel-request~ function to write my custom functions that use =gptel=.
+- I can override ~gptel-directives~ with my custom directives, changing how certain =gptel= commands requests are composed (e.g. "rewrite").
+- ~gptel-org-branching-context~ makes it so that only current headings branch in org are supplied as context/chat. Allowing for branching chats.
 *** TODO How can I use evil kbs in gptel minibuffer?
 Is the problem in the fact that I disabled evil-collection in the minibuffer?
 *** TODO Open an issue about confusing DX with the rewrite result overlay
 How can one know he needs to press enter on it? It is quite non-intuitive. It should come with some instructions on top I think, e.g. "press Enter". Also cursor jumps around it a bit weirdly, but maybe that is ok.
-*** TODO Look into gptel-directives
-They are dynamic allegedly, how can I use that? Maybe I can add location of selection that way to Rewrite, so I don't have to write my own?
-Yes, it seems that is the best solution, here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains this example: https://paste.karthinks.com/67b98a11-gptel-rewrite-with-context.htmlA .
-
-*** TODO Give some thought to having persistent chats for some stuff. Projects. How can I easily facilitate that, so I can easily use it when I want?
-Maybe I can have a chat per projectile project. Or maybe I can just make it easy to save and load chats. Or maybe I can have it per org task. Maybe using that org branching gptel feature would be interesting.
-*** TODO Write a function that summarizes the current chat.
+*** TODO Look into gptel-directives (enrich "rewrite")
+I can write my own gptel-directives, therefore controlling how e.g. rewrite is done.
+They are dynamic -> functions -> so I can enrich the request any way I want. E.g. I could fetch the location of current region for the "rewrite" and pass that, if I implement my own "rewrite" directive.
+Here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains this example: https://paste.karthinks.com/67b98a11-gptel-rewrite-with-context.html .
+He basically takes default value of "rewrite" directive (its a fuction) and creates his own based on it.
+- I could also look into collecting the errors/warnings in the buffer and sending that to the LLM. That shouldn't be hard. Maybe as a part of rewrite, but also as a part of just chatting with the LLM? Meaning even as "ask" or just sending to chat hm. I can just collect errors as reported by flymake/check probably? That would be cool.
+*** TODO Look into defining custom gptel commands
+- https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
+- Useful if I want to write my own rewrite and ask commands with gptel-request?
+*** DONE Write a function that summarizes the current chat.
 I could maybe combine this with that "org branching gptel" feature, so that the whole history of the convo is still kept, but it also gets branched with context or something. Ok I probably don't need that though hah.
 Btw I should look online for "summarizing" prompt, I am sure people have figured out some good prompts.
-*** TODO Give gptel a tool that asks for access to other tools? Does that makes any sense?
-*** TODO Check out gptel tools that others made and pick those that are useful to me.
-- Here is an issue with urls to places where popular tools are listed!
-  https://github.com/karthink/gptel/issues/857
 *** TODO Set up tool usage via MCP (check gptel's docs)
-*** TODO Can I make it so that when I send region to gptel, info about line numbers/file is included?
-Unless I can somehow do this via existing hooks, I will probably need to implement it with ~gptel-request~.
-*** TODO What about adding a specific chat to the context of a gptel request that is not done from chat (but is e.g. rewrite or my custom function using gptel-request).
-*** TODO Add https://github.com/karthink/gptel-quick .
-*** TODO Add tool that can look up elisp documentation. This will be super useful for working on the emacs config, will make AI smarter.
-- There is a similar tool(s) here https://git.bajsicki.com/phil/gptel-org-tools .
+*** TODO Add https://github.com/karthink/gptel-quick ?
 *** TODO Look up into using gptel for completion at point, there is a package for it
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
-*** TODO gptel-org-branching-context sounds super interesting, try it out.
-*** TODO Gptel - can I ask about part of file, or do something at point, while having LLM aware of the location in the file of that thing? Detail the use cases and then ask on github
-Yeah I think I can, I need to write manual function that then uses gptels functions, but I asked Claude 4 and it wasn't long, the solution.
+*** TODO Look into gptel-prompts
+https://www.reddit.com/r/emacs/comments/1lcc1hy/fun_with_gptel_gptelprompts/
 ** Copilot
 
 *** copilot.el

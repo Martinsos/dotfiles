@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-17 12:54:39 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-28 01:04:47 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1462,7 +1462,7 @@ Return minutes (number)."
   (org-agenda nil "A")
 )
 (my/leader-keys
-  "op"  '("planning" . my/work-diary-open-sprint-planning-windows)
+  "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
 )
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
@@ -2261,7 +2261,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; On response, move cursor to the next prompt.
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
-  ;;(setq gptel-expert-commands t) ; Enable experimental advanced cmds in menu.
+  (setq gptel-expert-commands t)
 
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
@@ -2271,12 +2271,74 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "ix"  '("[gptel] +/- ctxt" . gptel-add)
   )
 
-  ;;; Backends
   ;; OpenAI (with ChatGPT) is the default backend.
-  ;; Register Claude as one of the backends.
-  (gptel-make-anthropic "Claude" :stream t :key gptel-api-key)
 
-  ;;; Tools
+  ;; Register Claude as one of the backends.
+  (setq my/gptel-claude-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key))
+
+  ;; Use Claude Sonnet 4 as a default model.
+  (setq gptel-model 'claude-sonnet-4-20250514 gptel-backend my/gptel-claude-backend)
+)
+
+(with-eval-after-load 'gptel
+  (defun my/gptel-chat-summarize-and-replace ()
+    "Summarize the current gptel chat and replace it with the summary."
+    (interactive)
+    (if (not gptel-mode)
+        (message "Can't summarize gptel chat: not in a gptel buffer.")
+      (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
+             (major-mode-name (symbol-name major-mode))
+             (system-prompt
+              (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\" and two newlines after it (\"\\n\\n\"). Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
+                      major-mode-name
+                      (cdr (assoc major-mode gptel-response-prefix-alist))
+                      (cdr (assoc major-mode gptel-prompt-prefix-alist))
+              )
+             )
+             (prompt (format "EVERYTHING BELOW THIS LINE IS OLD CONVERSATION FOR YOU TO SUMMARIZE:\n\n%s" chat-content))
+             (gptel-use-tools nil)
+            )
+        (message "Summarizing gptel chat %s ..." (buffer-name (current-buffer)))
+        (erase-buffer)
+        (gptel-request prompt
+          :stream t
+          :system system-prompt
+          :callback
+          (lambda (response info)
+            (cond
+             ((stringp response)
+              (with-current-buffer (plist-get info :buffer)
+                (insert response)
+              )
+             )
+             ((eq response t)
+              (message "Gptel chat summarized!")
+             )
+             (t
+              (message
+               "Gptel chat summarization failed with unexpected response. Response: %s. Status: %s."
+               response
+               (plist-get info :status)
+              )
+             )
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+(with-eval-after-load 'gptel
+  (gptel-make-preset 'coding
+    :description "A preset optimized for coding tasks"
+    :backend "Claude"
+    :model 'claude-3-7-sonnet-20250219
+    :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
+    :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
+)
+
+(with-eval-after-load 'gptel
   (gptel-make-tool
    :name "read_buffer"
    :description "Return the contents of an emacs buffer."
@@ -2391,13 +2453,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
      )
    )
   )
-
-  (gptel-make-preset 'coding
-    :description "A preset optimized for coding tasks"
-    :backend "Claude"
-    :model 'claude-3-7-sonnet-20250219
-    :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
-    :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
 )
 
 (use-package copilot
