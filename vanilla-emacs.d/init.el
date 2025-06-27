@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-28 01:04:47 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-28 01:19:54 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2269,6 +2269,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "is"  '("[gptel] send to chat" . gptel-send)
     "ir"  '("[gptel] rewrite" . gptel-rewrite)
     "ix"  '("[gptel] +/- ctxt" . gptel-add)
+    "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
   )
 
   ;; OpenAI (with ChatGPT) is the default backend.
@@ -2289,7 +2290,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
       (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
              (major-mode-name (symbol-name major-mode))
              (system-prompt
-              (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\" and two newlines after it (\"\\n\\n\"). Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
+              (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\". Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
                       major-mode-name
                       (cdr (assoc major-mode gptel-response-prefix-alist))
                       (cdr (assoc major-mode gptel-prompt-prefix-alist))
