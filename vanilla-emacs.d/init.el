@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-29 19:45:20 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-30 00:56:27 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2250,12 +2250,66 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package gptel
   :config
-  (setq gptel-prompt-prefix-alist `((markdown-mode . "# You:\n\n")
-                                    (org-mode . "* You:\n\n")
-                                    (text-mode . "# You:\n\n")))
-  (setq gptel-response-prefix-alist `((markdown-mode . "# AI:\n\n")
-                                      (org-mode . "* AI:\n\n")
-                                      (text-mode . "# AI:\n\n")))
+
+  ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
+  ;; that I style separately.
+  ;; I did that for the main reason of us not being able to control what level of headings will
+  ;; LLM return -> it doesn't listen even if explicitly told and it might include any heading level
+  ;; in its response. This is a problem because if it returns the heading of the same or higher level
+  ;; as what I use for prefixes, then the structure of the docs gets messed up. The only solution for that
+  ;; is to tell LLM not to use headings + rewrite any that it adds by accident.
+  ;; But if LLM can't return headings, than me using headings for prefixes also doesn't do much,
+  ;; since I don't need the doc to be structured in that fashion, I would rather then use headings
+  ;; to structure it per conversation topics or something like that.
+  ;; Therefore, I do non-heading prefixes + ensure LLM can't return headings. Author of gptel,
+  ;; karthink, is doing the same, I got the idea from him.
+  (let ((my/gptel-prompt-prefix "@You:\n\n")
+        (my/gptel-response-prefix "@AI:\n\n")
+       )
+    (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
+                                      (org-mode . ,my/gptel-prompt-prefix)
+                                      (text-mode . ,my/gptel-prompt-prefix)))
+    (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
+                                        (org-mode . ,my/gptel-response-prefix)
+                                        (text-mode . ,my/gptel-response-prefix)))
+    (defface my/gptel-prompt-response-prefix-face
+      `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
+            :weight bold
+            :height 1.2
+            :inverse-video t
+      )))
+      "Gptel prompt/response prefix face"
+    )
+    (defun my/gptel-setup-font-lock ()
+      "Setup font-lock for gptel."
+      (font-lock-add-keywords
+       nil
+       `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
+          . 'my/gptel-prompt-response-prefix-face)
+         (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
+          . 'my/gptel-prompt-response-prefix-face)
+       )
+      )
+    )
+    (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
+  )
+  (defun my/gptel-transform-headings (beg end)
+    ;; Turn any org heading into just bold text.
+    (when (derived-mode-p 'org-mode)
+      (save-excursion
+        (goto-char beg)
+        (while (re-search-forward org-heading-regexp end t)
+          (forward-line 0)
+          (delete-char (1+ (length (match-string 1))))
+          (insert-and-inherit "*")
+          (end-of-line)
+          (skip-chars-backward " \t\r")
+          (insert-and-inherit "*"))
+      )
+    )
+  )
+  (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
+  ;; ---------------
 
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
@@ -2268,19 +2322,18 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; TODO: This currently isn't used till I pick it manually as a system message!
   ;;   I guess I set it here too late, it already read info from gptel-directives and doesn't
   ;;   care about what I did here. Figure out how to make this default directive.
-  (setf (alist-get 'default gptel-directives)
-        (lambda ()
-          (concat
-           "You are a large language model living in Emacs and a helpful assistant. Respond concisely."
-           ;; When in chat (gptel-mode), make sure LLM understands a bit about its environment.
-           ;; This helps it better format the response (e.g. to not use heading lvls higher than "AI:" heading).
-           (when gptel-mode (format " Take into account that we are currently in the %s major mode and that your response will be prefixed in the chat with '%s'."
-                                    (symbol-name major-mode)
-                                    (cdr (assoc major-mode gptel-response-prefix-alist))
-           ))
-          )
-        )
+  (defun my/gptel-default-directive ()
+    (concat
+      ;; The original default directive.
+      "You are a large language model living in Emacs and a helpful assistant. Respond concisely."
+      (when gptel-mode
+        (format " Take into account that we are currently in the %s major mode. DO NOT use headings (e.g. #, ##, ### in md or *, **, *** in org) in your response, or you will mess up the doc structure."
+                (symbol-name major-mode)
+      ))
+    )
   )
+  (setf (alist-get 'default gptel-directives) #'my/gptel-default-directive)
+
 
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
@@ -2296,8 +2349,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; Register Claude as one of the backends.
   (setq my/gptel-claude-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key))
 
-  ;; Use Claude Sonnet 4 as a default model.
+  ;; Set default model.
   (setq gptel-model 'claude-sonnet-4-20250514 gptel-backend my/gptel-claude-backend)
+  ;(setq gptel-model 'gpt-4.1)
 )
 
 (with-eval-after-load 'gptel
@@ -2308,7 +2362,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
     (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
            (major-mode-name (symbol-name major-mode))
            (system-prompt
-            (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\". Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
+            (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far. Use bullet points non-sparingly, but DO NOT use headings as they mess up the doc structure. Start with a line \"%s\", then follow up with the actual summary underneath that line, and finish with the line \"%s\". Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
                     major-mode-name
                     (cdr (assoc major-mode gptel-response-prefix-alist))
                     (cdr (assoc major-mode gptel-prompt-prefix-alist))
