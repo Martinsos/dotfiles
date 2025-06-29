@@ -3308,12 +3308,35 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+begin_src emacs-lisp
   (use-package gptel
     :config
-    (setq gptel-prompt-prefix-alist '((markdown-mode . "## You:\n")
-                                      (org-mode . "** You:\n")
-                                      (text-mode . "## You:\n")))
-    (setq gptel-response-prefix-alist '((markdown-mode . "## AI:\n")
-                                        (org-mode . "** AI:\n")
-                                        (text-mode . "## AI:\n")))
+    (let ((my/gptel-prompt-prefix "@You:\n\n")
+          (my/gptel-response-prefix "@AI:\n\n")
+         )
+      (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
+                                        (org-mode . ,my/gptel-prompt-prefix)
+                                        (text-mode . ,my/gptel-prompt-prefix)))
+      (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
+                                          (org-mode . ,my/gptel-response-prefix)
+                                          (text-mode . ,my/gptel-response-prefix)))
+      (defface my/gptel-prompt-response-prefix-face
+        `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
+              :weight bold
+              :height 1.2
+              :inverse-video t
+        )))
+        "Gptel prompt/response prefix face"
+      )
+      (defun my/gptel-setup-font-lock ()
+        "Setup font-lock for gptel."
+        (font-lock-add-keywords
+         nil
+         `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$") . 'my/gptel-prompt-response-prefix-face)
+           (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$") . 'my/gptel-prompt-response-prefix-face)
+         )
+        )
+      )
+      (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
+    )
+
     (setq gptel-default-mode 'org-mode)
     (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
     ;; On response, move cursor to the next prompt.
@@ -3346,44 +3369,42 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
     (defun my/gptel-chat-summarize-and-replace ()
       "Summarize the current gptel chat and replace it with the summary."
       (interactive)
-      (if (not gptel-mode)
-          (message "Can't summarize gptel chat: not in a gptel buffer.")
-        (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
-               (major-mode-name (symbol-name major-mode))
-               (system-prompt
-                (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\". Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
-                        major-mode-name
-                        (cdr (assoc major-mode gptel-response-prefix-alist))
-                        (cdr (assoc major-mode gptel-prompt-prefix-alist))
-                )
-               )
-               (prompt (format "EVERYTHING BELOW THIS LINE IS OLD CONVERSATION FOR YOU TO SUMMARIZE:\n\n%s" chat-content))
-               (gptel-use-tools nil)
+      (unless gptel-mode (user-error "Can't summarize gptel chat: not in a gptel buffer."))
+      (let* ((chat-content (buffer-substring-no-properties (point-min) (point-max)))
+             (major-mode-name (symbol-name major-mode))
+             (system-prompt
+              (format "You are a chat summarizer. Please provide a concise summary of the conversation so far in %s format (IMPORTANT: don't use md if in org, and vice versa), preserving key technical details and context, and general conversation formatting style so far (header levels, code formatting, ...). Use bullet points, headers and other formatting non-sparingly. Start with a header \"%s\", then follow up with the actual summary underneath that header (and in it use only headers of lower level than it), and finish with the header \"%s\". Instead of \"the user\", say \"you\". Start summary by mentioning that this is the summary of the conversation so far."
+                      major-mode-name
+                      (cdr (assoc major-mode gptel-response-prefix-alist))
+                      (cdr (assoc major-mode gptel-prompt-prefix-alist))
               )
-          (message "Summarizing gptel chat %s ..." (buffer-name (current-buffer)))
-          (erase-buffer)
-          (gptel-request prompt
-            :stream t
-            :system system-prompt
-            :callback
-            (lambda (response info)
-              (cond
-               ((stringp response)
-                (with-current-buffer (plist-get info :buffer)
-                  (insert response)
-                )
-               )
-               ((eq response t)
-                (message "Gptel chat summarized!")
-               )
-               (t
-                (message
-                 "Gptel chat summarization failed with unexpected response. Response: %s. Status: %s."
-                 response
-                 (plist-get info :status)
-                )
-               )
+             )
+             (prompt (format "EVERYTHING BELOW THIS LINE IS OLD CONVERSATION FOR YOU TO SUMMARIZE:\n\n%s" chat-content))
+             (gptel-use-tools nil)
+            )
+        (message "Summarizing gptel chat %s ..." (buffer-name (current-buffer)))
+        (erase-buffer)
+        (gptel-request prompt
+          :stream t
+          :system system-prompt
+          :callback
+          (lambda (response info)
+            (cond
+             ((stringp response)
+              (with-current-buffer (plist-get info :buffer)
+                (insert response)
               )
+             )
+             ((eq response t)
+              (message "Gptel chat summarized!")
+             )
+             (t
+              (message
+               "Gptel chat summarization failed with unexpected response. Response: %s. Status: %s."
+               response
+               (plist-get info :status)
+              )
+             )
             )
           )
         )
