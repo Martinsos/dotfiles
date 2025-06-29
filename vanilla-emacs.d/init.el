@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-29 15:42:46 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-29 15:54:27 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2250,34 +2250,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package gptel
   :config
-  (let ((my/gptel-prompt-prefix "@You:\n\n")
-        (my/gptel-response-prefix "@AI:\n\n")
-       )
-    (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
-                                      (org-mode . ,my/gptel-prompt-prefix)
-                                      (text-mode . ,my/gptel-prompt-prefix)))
-    (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
-                                        (org-mode . ,my/gptel-response-prefix)
-                                        (text-mode . ,my/gptel-response-prefix)))
-    (defface my/gptel-prompt-response-prefix-face
-      `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
-            :weight bold
-            :height 1.2
-            :inverse-video t
-      )))
-      "Gptel prompt/response prefix face"
-    )
-    (defun my/gptel-setup-font-lock ()
-      "Setup font-lock for gptel."
-      (font-lock-add-keywords
-       nil
-       `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$") . 'my/gptel-prompt-response-prefix-face)
-         (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$") . 'my/gptel-prompt-response-prefix-face)
-       )
-      )
-    )
-    (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
-  )
+  (setq gptel-prompt-prefix-alist `((markdown-mode . "## You:\n\n")
+                                    (org-mode . "** You:\n\n")
+                                    (text-mode . "## You:\n\n")))
+  (setq gptel-response-prefix-alist `((markdown-mode . "## AI:\n\n")
+                                      (org-mode . "** AI:\n\n")
+                                      (text-mode . "## AI:\n\n")))
 
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
