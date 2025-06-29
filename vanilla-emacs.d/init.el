@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-29 15:54:27 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-29 19:45:20 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2250,12 +2250,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package gptel
   :config
-  (setq gptel-prompt-prefix-alist `((markdown-mode . "## You:\n\n")
-                                    (org-mode . "** You:\n\n")
-                                    (text-mode . "## You:\n\n")))
-  (setq gptel-response-prefix-alist `((markdown-mode . "## AI:\n\n")
-                                      (org-mode . "** AI:\n\n")
-                                      (text-mode . "## AI:\n\n")))
+  (setq gptel-prompt-prefix-alist `((markdown-mode . "# You:\n\n")
+                                    (org-mode . "* You:\n\n")
+                                    (text-mode . "# You:\n\n")))
+  (setq gptel-response-prefix-alist `((markdown-mode . "# AI:\n\n")
+                                      (org-mode . "* AI:\n\n")
+                                      (text-mode . "# AI:\n\n")))
 
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
@@ -2263,6 +2263,24 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
   (setq gptel-expert-commands t)
+
+  ;; Customize default directive used to provide extra context in certain situations.
+  ;; TODO: This currently isn't used till I pick it manually as a system message!
+  ;;   I guess I set it here too late, it already read info from gptel-directives and doesn't
+  ;;   care about what I did here. Figure out how to make this default directive.
+  (setf (alist-get 'default gptel-directives)
+        (lambda ()
+          (concat
+           "You are a large language model living in Emacs and a helpful assistant. Respond concisely."
+           ;; When in chat (gptel-mode), make sure LLM understands a bit about its environment.
+           ;; This helps it better format the response (e.g. to not use heading lvls higher than "AI:" heading).
+           (when gptel-mode (format " Take into account that we are currently in the %s major mode and that your response will be prefixed in the chat with '%s'."
+                                    (symbol-name major-mode)
+                                    (cdr (assoc major-mode gptel-response-prefix-alist))
+           ))
+          )
+        )
+  )
 
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)

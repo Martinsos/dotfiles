@@ -3308,12 +3308,12 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+begin_src emacs-lisp
   (use-package gptel
     :config
-    (setq gptel-prompt-prefix-alist `((markdown-mode . "## You:\n\n")
-                                      (org-mode . "** You:\n\n")
-                                      (text-mode . "## You:\n\n")))
-    (setq gptel-response-prefix-alist `((markdown-mode . "## AI:\n\n")
-                                        (org-mode . "** AI:\n\n")
-                                        (text-mode . "## AI:\n\n")))
+    (setq gptel-prompt-prefix-alist `((markdown-mode . "# You:\n\n")
+                                      (org-mode . "* You:\n\n")
+                                      (text-mode . "# You:\n\n")))
+    (setq gptel-response-prefix-alist `((markdown-mode . "# AI:\n\n")
+                                        (org-mode . "* AI:\n\n")
+                                        (text-mode . "# AI:\n\n")))
 
     (setq gptel-default-mode 'org-mode)
     (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
@@ -3321,6 +3321,24 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
     (add-hook 'gptel-post-response-functions 'gptel-end-of-response)
 
     (setq gptel-expert-commands t)
+
+    ;; Customize default directive used to provide extra context in certain situations.
+    ;; TODO: This currently isn't used till I pick it manually as a system message!
+    ;;   I guess I set it here too late, it already read info from gptel-directives and doesn't
+    ;;   care about what I did here. Figure out how to make this default directive.
+    (setf (alist-get 'default gptel-directives)
+          (lambda ()
+            (concat
+             "You are a large language model living in Emacs and a helpful assistant. Respond concisely."
+             ;; When in chat (gptel-mode), make sure LLM understands a bit about its environment.
+             ;; This helps it better format the response (e.g. to not use heading lvls higher than "AI:" heading).
+             (when gptel-mode (format " Take into account that we are currently in the %s major mode and that your response will be prefixed in the chat with '%s'."
+                                      (symbol-name major-mode)
+                                      (cdr (assoc major-mode gptel-response-prefix-alist))
+             ))
+            )
+          )
+    )
 
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
@@ -3548,6 +3566,7 @@ They are dynamic -> functions -> so I can enrich the request any way I want. E.g
 Here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains this example: https://paste.karthinks.com/67b98a11-gptel-rewrite-with-context.html .
 He basically takes default value of "rewrite" directive (its a fuction) and creates his own based on it.
 - I could also look into collecting the errors/warnings in the buffer and sending that to the LLM. That shouldn't be hard. Maybe as a part of rewrite, but also as a part of just chatting with the LLM? Meaning even as "ask" or just sending to chat hm. I can just collect errors as reported by flymake/check probably? That would be cool.
+*** TODO Look into gptel-context-wrap-function
 *** TODO Look into defining custom gptel commands
 - https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
 - Useful if I want to write my own rewrite and ask commands with gptel-request?
