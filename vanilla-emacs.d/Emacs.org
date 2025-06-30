@@ -886,7 +886,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 ** Evil
 
 #+begin_src emacs-lisp
-  
+
   ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
   (use-package evil
     :init
@@ -1837,7 +1837,7 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s42")
+          (work-diary-sprint-current-tag "s43")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -3410,6 +3410,20 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
     )
 
+    ;;; gptel context buffer
+    ;; Evil mode messes up the keybindings in the gptel-context buffer, so I turn evil off.
+    (with-eval-after-load 'evil
+      (add-to-list 'evil-emacs-state-modes 'gptel-context-buffer-mode)
+    )
+    ;; I also add j/k though, to make movement easier.
+    (general-define-key
+      :keymaps 'gptel-context-buffer-mode-map
+      "j" #'next-line
+      "k" #'previous-line
+    )
+    ;; I also disable hl-line because it makes it hard to see what is marked for deletion.
+    (add-hook 'gptel-context-buffer-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
+
     ;; OpenAI (with ChatGPT) is the default backend.
 
     ;; Register Claude as one of the backends.
@@ -3661,8 +3675,6 @@ Btw I should look online for "summarizing" prompt, I am sure people have figured
 *** TODO Look up into using gptel for completion at point, there is a package for it
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
-*** TODO Look into gptel-prompts
-https://www.reddit.com/r/emacs/comments/1lcc1hy/fun_with_gptel_gptelprompts/
 *** TODO Dynamically choose preset depending on major mode
 https://github.com/karthink/gptel/issues/916
 ** Copilot

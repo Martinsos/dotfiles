@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-30 15:05:25 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-30 23:40:41 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1340,7 +1340,7 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s42")
+        (work-diary-sprint-current-tag "s43")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -2351,6 +2351,20 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "ix"  '("[gptel] +/- ctxt" . gptel-add)
     "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
   )
+
+  ;;; gptel context buffer
+  ;; Evil mode messes up the keybindings in the gptel-context buffer, so I turn evil off.
+  (with-eval-after-load 'evil
+    (add-to-list 'evil-emacs-state-modes 'gptel-context-buffer-mode)
+  )
+  ;; I also add j/k though, to make movement easier.
+  (general-define-key
+    :keymaps 'gptel-context-buffer-mode-map
+    "j" #'next-line
+    "k" #'previous-line
+  )
+  ;; I also disable hl-line because it makes it hard to see what is marked for deletion.
+  (add-hook 'gptel-context-buffer-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
 
   ;; OpenAI (with ChatGPT) is the default backend.
 
