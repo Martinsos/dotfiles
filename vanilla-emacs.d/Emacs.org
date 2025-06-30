@@ -1009,6 +1009,14 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
             ("NOTE" . (:foreground "white" :weight bold))
            )
     )
+
+    ;; Show org calendar at the bottom of current buffer, instead of taking half the screen.
+    (add-to-list 'display-buffer-alist
+                 '("\\*Calendar\\*"
+                   (display-buffer-in-direction)
+                   (direction . below)
+                  )
+    )
   )
 
   ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
@@ -3414,6 +3422,7 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+end_src
 
 *** My command for chat summarization
+
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
     (defun my/gptel-chat-summarize-and-replace ()
@@ -3462,6 +3471,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
     )
   )
 #+end_src
+
+**** TODO Summarize could ask for extra instructions in minibuffer.
+**** TODO Summarize could optionally not replace text (on C-u?)
 
 *** Presets
 #+begin_src emacs-lisp
@@ -3515,6 +3527,7 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
      :name "read_url"
      :description "Fetch and read the contents of a URL"
      :category "web"
+     :include t
      :args (list '(:name "url"
                    :type "string"
                    :description "The URL to read"))
@@ -3533,6 +3546,7 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
      :description "Evaluate an elisp expression"
      :category "emacs"
      :confirm t
+     :include t
      :args (list '(:name "expr-string"
                    :type string
                    :description "elisp expression to evaluate"))
@@ -3621,6 +3635,20 @@ Here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains
 He basically takes default value of "rewrite" directive (its a fuction) and creates his own based on it.
 - I could also look into collecting the errors/warnings in the buffer and sending that to the LLM. That shouldn't be hard. Maybe as a part of rewrite, but also as a part of just chatting with the LLM? Meaning even as "ask" or just sending to chat hm. I can just collect errors as reported by flymake/check probably? That would be cool.
 - When adding errors/warnings, I can add them with org drawers so they are collapsed but there.
+*** TODO Have a way to ask stuff
+I should compose "ask" of following:
+- the question itself
+- "context":
+  - selection if exists (content, location), otherwise current line.
+  - point location
+  - current buffer name
+  - Some extra lines around the point/selection. +-5?
+  - any warnings / errors in current selection / line. Maybe further around it?
+  - usual context should be added of course.
+And then I send this to gtpel-send or something? It makes sense that I can have this in chat if I want.
+I should implement a function that pick all this stuff up and then I can use it in my custom directives / commands.
+*** TODO Have a way to send piece of code to chat for a question (+ errors, ...)
+What I want is to be able to select a piece of text in the code and ask LLM something about it, but in the context of the current chat, so it is added to the chat, my question + that code. Otherwise I have to describe manually which code I am talking about -> hey what do you think about that functoin X in that part? I think I also want information like errors and stuff added, not sure if it should always be added though hm. If yes, it should be added in somewhat non-intrusive way, probably some kind of org drawer or something I am not sure.
 *** TODO Look into gptel-context-wrap-function
 *** TODO Look into defining custom gptel commands
 - https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
@@ -3635,6 +3663,8 @@ Btw I should look online for "summarizing" prompt, I am sure people have figured
 - It is cool because it already has the context I was building up.
 *** TODO Look into gptel-prompts
 https://www.reddit.com/r/emacs/comments/1lcc1hy/fun_with_gptel_gptelprompts/
+*** TODO Dynamically choose preset depending on major mode
+https://github.com/karthink/gptel/issues/916
 ** Copilot
 
 *** copilot.el

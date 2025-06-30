@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-30 12:11:45 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-30 15:05:25 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -679,6 +679,14 @@ USAGE:
           ("CHKL" . (:foreground "grey" :weight bold))
           ("NOTE" . (:foreground "white" :weight bold))
          )
+  )
+
+  ;; Show org calendar at the bottom of current buffer, instead of taking half the screen.
+  (add-to-list 'display-buffer-alist
+               '("\\*Calendar\\*"
+                 (display-buffer-in-direction)
+                 (direction . below)
+                )
   )
 )
 
@@ -2448,6 +2456,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
    :name "read_url"
    :description "Fetch and read the contents of a URL"
    :category "web"
+   :include t
    :args (list '(:name "url"
                  :type "string"
                  :description "The URL to read"))
@@ -2466,6 +2475,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
    :description "Evaluate an elisp expression"
    :category "emacs"
    :confirm t
+   :include t
    :args (list '(:name "expr-string"
                  :type string
                  :description "elisp expression to evaluate"))
