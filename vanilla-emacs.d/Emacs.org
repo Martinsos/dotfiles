@@ -3352,14 +3352,14 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
     )
     (defun my/gptel-transform-headings (beg end)
-      ;; Turn any org heading into just bold text.
+      "Turn any org heading in the current buffer between BEG and END into just text."
       (when (derived-mode-p 'org-mode)
         (save-excursion
           (goto-char beg)
           (while (re-search-forward org-heading-regexp end t)
             (forward-line 0)
             (delete-char (1+ (length (match-string 1))))
-            (insert-and-inherit "*")
+            (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
             (end-of-line)
             (skip-chars-backward " \t\r")
             (insert-and-inherit "*"))

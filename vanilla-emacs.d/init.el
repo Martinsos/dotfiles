@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-30 00:56:27 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-06-30 12:11:45 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2294,14 +2294,14 @@ It uses external `gitstatusd' program to calculate the actual git status."
     (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
   )
   (defun my/gptel-transform-headings (beg end)
-    ;; Turn any org heading into just bold text.
+    "Turn any org heading in the current buffer between BEG and END into just text."
     (when (derived-mode-p 'org-mode)
       (save-excursion
         (goto-char beg)
         (while (re-search-forward org-heading-regexp end t)
           (forward-line 0)
           (delete-char (1+ (length (match-string 1))))
-          (insert-and-inherit "*")
+          (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
           (end-of-line)
           (skip-chars-backward " \t\r")
           (insert-and-inherit "*"))
