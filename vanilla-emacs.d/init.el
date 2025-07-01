@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-06-30 23:40:41 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-01 23:22:33 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1925,7 +1925,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 				  (sideline-lsp . down)))
 )
 
-(use-package sideline-flycheck 
+(use-package sideline-flycheck
   :hook (flycheck-mode . sideline-flycheck-setup)
   :custom
   ;; I want to show only short version of errors, otherwise it becomes a mess.

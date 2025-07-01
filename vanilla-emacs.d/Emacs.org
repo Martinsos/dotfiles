@@ -2779,7 +2779,7 @@ You can plug in multiple backends into it, and it will display the information u
   				  (sideline-lsp . down)))
   )
 
-  (use-package sideline-flycheck 
+  (use-package sideline-flycheck
     :hook (flycheck-mode . sideline-flycheck-setup)
     :custom
     ;; I want to show only short version of errors, otherwise it becomes a mess.
@@ -3621,6 +3621,80 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
      )
     )
   )
+#+end_src
+
+*** TODO Collecting editor context
+#+begin_src emacs-lisp :tangle no
+
+  (defun collect-editor-context ()
+    "Collect useful contextual information for the current region and/or cursor position.
+  Returns a structured list of information that can be sent to an LLM."
+    (interactive)
+    (let ((context-info '())
+          ;; TODO: Should I add -5 and +5 to these to expand the context?
+          (context-start-line (line-number-at-pos (if (use-region-p) (region-beginning) (point))))
+          (context-end-line (line-number-at-pos (if (use-region-p) (region-end) (point))))
+         )
+
+      ;; Basic buffer information.
+      (push `(buffer-name . ,(buffer-name)) context-info)
+      (push `(major-mode . ,major-mode) context-info)
+
+      ;; Position information.
+      ;; TODO: Currently positions are returned as relative offset in buffer.
+      ;;       Should I instead return line and col? Or is this maybe even better?
+      (push `(cursor-position . ,(point)) context-info)
+      (when (use-region-p)
+        (progn
+          (push `(selection-start . ,(region-beginning)) context-info)
+          (push `(selection-end . ,(region-end)) context-info)
+        )
+      )
+
+      ;; TODO: Maybe this is redundant?
+      ;; Region (selected) text.
+      (when (use-region-p)
+        (let ((region-text (buffer-substring-no-properties (region-beginning) (region-end))))
+          (push `(selection-text . ,region-text) context-info)
+        )
+      )
+
+      ;; Flycheck errors/warnings in the region (or at cursor if no region).
+      ;; TODO: Didn't work when I tested (nothing is added).
+      (when-let* ((bound-and-true-p flycheck-mode)
+                  (errors (flycheck-overlay-errors-in
+                           (line-beginning-position context-start-line)
+                           (line-end-position context-end-line)))
+                 )
+        (message "%s" errors) ; TODO: Remove when done with testing.
+        (push `(flycheck-errors
+                . ,(mapcar
+                    (lambda (err)
+                      `((line . ,(flycheck-error-line err))
+                        (column . ,(flycheck-error-column err))
+                        (level . ,(flycheck-error-level err))
+                        (message . ,(flycheck-error-message err))
+                        (checker . ,(flycheck-error-checker err))
+                       )
+                    )
+                    errors
+                   )
+               )
+              context-info
+        )
+      )
+
+      ;; LSP info for symbol at cursor (if available)
+      ;; TODO: Didn't work when I tested (nothing is added).
+      (when (and (bound-and-true-p lsp-mode) (lsp--capability "textDocument/hover"))
+        (when-let ((hover-info (lsp--text-document-hover)))
+          (push `(lsp-hover-at-cursor . ,hover-info) context-info)))
+
+      context-info
+      (message "%s" context-info) ; TODO: Remove once done.
+    )
+  )
+
 #+end_src
 
 *** Setting up the API keys                                  :manual_setup:
