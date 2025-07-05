@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-01 23:22:33 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-05 23:30:32 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -194,6 +194,43 @@ USAGE:
   "Returns non-nil if given FACE is applied at text at the current point."
   (let ((face-at-point (get-text-property (point) 'face)))
     (or (eq face-at-point face) (and (listp face-at-point) (memq face face-at-point)))
+  )
+)
+
+(defun my/line-beg-pos (line)
+  (save-excursion
+    (goto-line line)
+    (line-beginning-position)
+  )
+)
+
+(defun my/line-end-pos (line)
+  (save-excursion
+    (goto-line line)
+    (line-end-position)
+  )
+)
+
+(defun my/line-and-column-at-pos (pos)
+  "Return a cons cell (LINE . COLUMN) for position POS."
+  (save-excursion
+    (goto-char pos)
+    (cons (line-number-at-pos) (current-column))
+  )
+)
+
+;; Implemented based on 'lsp-describe-thing-at-point'.
+(defun my/lsp-describe-thing-at-point-f ()
+  "Return string with the type signature and documentation of the thing at point."
+  (interactive)
+  (let ((contents (-some->> (lsp--text-document-position-params)
+                    (lsp--make-request "textDocument/hover")
+                    (lsp--send-request)
+                    (lsp:hover-contents))))
+    (if (and contents (not (equal contents "")))
+        contents
+      nil
+    )
   )
 )
 
@@ -2258,67 +2295,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package gptel
   :config
-
-  ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
-  ;; that I style separately.
-  ;; I did that for the main reason of us not being able to control what level of headings will
-  ;; LLM return -> it doesn't listen even if explicitly told and it might include any heading level
-  ;; in its response. This is a problem because if it returns the heading of the same or higher level
-  ;; as what I use for prefixes, then the structure of the docs gets messed up. The only solution for that
-  ;; is to tell LLM not to use headings + rewrite any that it adds by accident.
-  ;; But if LLM can't return headings, than me using headings for prefixes also doesn't do much,
-  ;; since I don't need the doc to be structured in that fashion, I would rather then use headings
-  ;; to structure it per conversation topics or something like that.
-  ;; Therefore, I do non-heading prefixes + ensure LLM can't return headings. Author of gptel,
-  ;; karthink, is doing the same, I got the idea from him.
-  (let ((my/gptel-prompt-prefix "@You:\n\n")
-        (my/gptel-response-prefix "@AI:\n\n")
-       )
-    (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
-                                      (org-mode . ,my/gptel-prompt-prefix)
-                                      (text-mode . ,my/gptel-prompt-prefix)))
-    (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
-                                        (org-mode . ,my/gptel-response-prefix)
-                                        (text-mode . ,my/gptel-response-prefix)))
-    (defface my/gptel-prompt-response-prefix-face
-      `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
-            :weight bold
-            :height 1.2
-            :inverse-video t
-      )))
-      "Gptel prompt/response prefix face"
-    )
-    (defun my/gptel-setup-font-lock ()
-      "Setup font-lock for gptel."
-      (font-lock-add-keywords
-       nil
-       `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
-          . 'my/gptel-prompt-response-prefix-face)
-         (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
-          . 'my/gptel-prompt-response-prefix-face)
-       )
-      )
-    )
-    (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
-  )
-  (defun my/gptel-transform-headings (beg end)
-    "Turn any org heading in the current buffer between BEG and END into just text."
-    (when (derived-mode-p 'org-mode)
-      (save-excursion
-        (goto-char beg)
-        (while (re-search-forward org-heading-regexp end t)
-          (forward-line 0)
-          (delete-char (1+ (length (match-string 1))))
-          (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
-          (end-of-line)
-          (skip-chars-backward " \t\r")
-          (insert-and-inherit "*"))
-      )
-    )
-  )
-  (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
-  ;; ---------------
-
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
   ;; On response, move cursor to the next prompt.
@@ -2341,7 +2317,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
     )
   )
   (setf (alist-get 'default gptel-directives) #'my/gptel-default-directive)
-
 
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
@@ -2374,6 +2349,67 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; Set default model.
   (setq gptel-model 'claude-sonnet-4-20250514 gptel-backend my/gptel-claude-backend)
   ;(setq gptel-model 'gpt-4.1)
+)
+
+(with-eval-after-load 'gptel
+  ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
+  ;; that I style separately.
+  ;; I did that for the main reason of us not being able to control what level of headings will
+  ;; LLM return -> it doesn't listen even if explicitly told and it might include any heading level
+  ;; in its response. This is a problem because if it returns the heading of the same or higher level
+  ;; as what I use for prefixes, then the structure of the docs gets messed up. The only solution for that
+  ;; is to tell LLM not to use headings + rewrite any that it adds by accident.
+  ;; But if LLM can't return headings, than me using headings for prefixes also doesn't do much,
+  ;; since I don't need the doc to be structured in that fashion, I would rather then use headings
+  ;; to structure it per conversation topics or something like that.
+  ;; Therefore, I do non-heading prefixes + ensure LLM can't return headings. Author of gptel,
+  ;; karthink, is doing the same, I got the idea from him.
+  (let ((my/gptel-prompt-prefix "@You:\n\n")
+        (my/gptel-response-prefix "@AI:\n\n")
+       )
+    (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
+                                      (org-mode . ,my/gptel-prompt-prefix)
+                                      (text-mode . ,my/gptel-prompt-prefix)))
+    (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
+                                        (org-mode . ,my/gptel-response-prefix)
+                                        (text-mode . ,my/gptel-response-prefix)))
+    (defface my/gptel-prompt-response-prefix-face
+      `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
+            :weight bold
+            :height 1.2
+            :inverse-video t
+      )))
+      "Gptel prompt/response prefix face"
+    )
+    (defun my/gptel-prefix-font-lock-setup ()
+      "Setup font-lock for gptel."
+      (font-lock-add-keywords
+       nil
+       `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
+          . 'my/gptel-prompt-response-prefix-face)
+         (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
+          . 'my/gptel-prompt-response-prefix-face)
+       )
+      )
+    )
+    (add-hook 'gptel-mode-hook #'my/gptel-prefix-font-lock-setup)
+  )
+  (defun my/gptel-transform-headings (beg end)
+    "Turn any org heading in the current buffer between BEG and END into just text."
+    (when (derived-mode-p 'org-mode)
+      (save-excursion
+        (goto-char beg)
+        (while (re-search-forward org-heading-regexp end t)
+          (forward-line 0)
+          (delete-char (1+ (length (match-string 1))))
+          (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
+          (end-of-line)
+          (skip-chars-backward " \t\r")
+          (insert-and-inherit "*"))
+      )
+    )
+  )
+  (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
 )
 
 (with-eval-after-load 'gptel

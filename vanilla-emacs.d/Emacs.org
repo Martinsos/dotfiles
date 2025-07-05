@@ -390,8 +390,49 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
     )
   )
 
+  (defun my/line-beg-pos (line)
+    (save-excursion
+      (goto-line line)
+      (line-beginning-position)
+    )
+  )
+
+  (defun my/line-end-pos (line)
+    (save-excursion
+      (goto-line line)
+      (line-end-position)
+    )
+  )
+
+  (defun my/line-and-column-at-pos (pos)
+    "Return a cons cell (LINE . COLUMN) for position POS."
+    (save-excursion
+      (goto-char pos)
+      (cons (line-number-at-pos) (current-column))
+    )
+  )
+
 #+end_src
 
+** LSP
+#+begin_src emacs-lisp
+
+  ;; Implemented based on 'lsp-describe-thing-at-point'.
+  (defun my/lsp-describe-thing-at-point-f ()
+    "Return string with the type signature and documentation of the thing at point."
+    (interactive)
+    (let ((contents (-some->> (lsp--text-document-position-params)
+                      (lsp--make-request "textDocument/hover")
+                      (lsp--send-request)
+                      (lsp:hover-contents))))
+      (if (and contents (not (equal contents "")))
+          contents
+        nil
+      )
+    )
+  )
+
+#+end_src
 * Basic Emacs config
 ** General
 
@@ -3316,67 +3357,6 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+begin_src emacs-lisp
   (use-package gptel
     :config
-
-    ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
-    ;; that I style separately.
-    ;; I did that for the main reason of us not being able to control what level of headings will
-    ;; LLM return -> it doesn't listen even if explicitly told and it might include any heading level
-    ;; in its response. This is a problem because if it returns the heading of the same or higher level
-    ;; as what I use for prefixes, then the structure of the docs gets messed up. The only solution for that
-    ;; is to tell LLM not to use headings + rewrite any that it adds by accident.
-    ;; But if LLM can't return headings, than me using headings for prefixes also doesn't do much,
-    ;; since I don't need the doc to be structured in that fashion, I would rather then use headings
-    ;; to structure it per conversation topics or something like that.
-    ;; Therefore, I do non-heading prefixes + ensure LLM can't return headings. Author of gptel,
-    ;; karthink, is doing the same, I got the idea from him.
-    (let ((my/gptel-prompt-prefix "@You:\n\n")
-          (my/gptel-response-prefix "@AI:\n\n")
-         )
-      (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
-                                        (org-mode . ,my/gptel-prompt-prefix)
-                                        (text-mode . ,my/gptel-prompt-prefix)))
-      (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
-                                          (org-mode . ,my/gptel-response-prefix)
-                                          (text-mode . ,my/gptel-response-prefix)))
-      (defface my/gptel-prompt-response-prefix-face
-        `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
-              :weight bold
-              :height 1.2
-              :inverse-video t
-        )))
-        "Gptel prompt/response prefix face"
-      )
-      (defun my/gptel-setup-font-lock ()
-        "Setup font-lock for gptel."
-        (font-lock-add-keywords
-         nil
-         `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
-            . 'my/gptel-prompt-response-prefix-face)
-           (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
-            . 'my/gptel-prompt-response-prefix-face)
-         )
-        )
-      )
-      (add-hook 'gptel-mode-hook #'my/gptel-setup-font-lock)
-    )
-    (defun my/gptel-transform-headings (beg end)
-      "Turn any org heading in the current buffer between BEG and END into just text."
-      (when (derived-mode-p 'org-mode)
-        (save-excursion
-          (goto-char beg)
-          (while (re-search-forward org-heading-regexp end t)
-            (forward-line 0)
-            (delete-char (1+ (length (match-string 1))))
-            (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
-            (end-of-line)
-            (skip-chars-backward " \t\r")
-            (insert-and-inherit "*"))
-        )
-      )
-    )
-    (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
-    ;; ---------------
-
     (setq gptel-default-mode 'org-mode)
     (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
     ;; On response, move cursor to the next prompt.
@@ -3399,7 +3379,6 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       )
     )
     (setf (alist-get 'default gptel-directives) #'my/gptel-default-directive)
-
 
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
@@ -3435,6 +3414,69 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
   )
 #+end_src
 
+*** Gptel prompt/response prefixes (You:, AI:)
+#+begin_src emacs-lisp
+  (with-eval-after-load 'gptel
+    ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
+    ;; that I style separately.
+    ;; I did that for the main reason of us not being able to control what level of headings will
+    ;; LLM return -> it doesn't listen even if explicitly told and it might include any heading level
+    ;; in its response. This is a problem because if it returns the heading of the same or higher level
+    ;; as what I use for prefixes, then the structure of the docs gets messed up. The only solution for that
+    ;; is to tell LLM not to use headings + rewrite any that it adds by accident.
+    ;; But if LLM can't return headings, than me using headings for prefixes also doesn't do much,
+    ;; since I don't need the doc to be structured in that fashion, I would rather then use headings
+    ;; to structure it per conversation topics or something like that.
+    ;; Therefore, I do non-heading prefixes + ensure LLM can't return headings. Author of gptel,
+    ;; karthink, is doing the same, I got the idea from him.
+    (let ((my/gptel-prompt-prefix "@You:\n\n")
+          (my/gptel-response-prefix "@AI:\n\n")
+         )
+      (setq gptel-prompt-prefix-alist `((markdown-mode . ,my/gptel-prompt-prefix)
+                                        (org-mode . ,my/gptel-prompt-prefix)
+                                        (text-mode . ,my/gptel-prompt-prefix)))
+      (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
+                                          (org-mode . ,my/gptel-response-prefix)
+                                          (text-mode . ,my/gptel-response-prefix)))
+      (defface my/gptel-prompt-response-prefix-face
+        `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
+              :weight bold
+              :height 1.2
+              :inverse-video t
+        )))
+        "Gptel prompt/response prefix face"
+      )
+      (defun my/gptel-prefix-font-lock-setup ()
+        "Setup font-lock for gptel."
+        (font-lock-add-keywords
+         nil
+         `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
+            . 'my/gptel-prompt-response-prefix-face)
+           (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
+            . 'my/gptel-prompt-response-prefix-face)
+         )
+        )
+      )
+      (add-hook 'gptel-mode-hook #'my/gptel-prefix-font-lock-setup)
+    )
+    (defun my/gptel-transform-headings (beg end)
+      "Turn any org heading in the current buffer between BEG and END into just text."
+      (when (derived-mode-p 'org-mode)
+        (save-excursion
+          (goto-char beg)
+          (while (re-search-forward org-heading-regexp end t)
+            (forward-line 0)
+            (delete-char (1+ (length (match-string 1))))
+            (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
+            (end-of-line)
+            (skip-chars-backward " \t\r")
+            (insert-and-inherit "*"))
+        )
+      )
+    )
+    (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
+  )
+#+end_src
 *** My command for chat summarization
 
 #+begin_src emacs-lisp
@@ -3641,32 +3683,20 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       (push `(major-mode . ,major-mode) context-info)
 
       ;; Position information.
-      ;; TODO: Currently positions are returned as relative offset in buffer.
-      ;;       Should I instead return line and col? Or is this maybe even better?
-      (push `(cursor-position . ,(point)) context-info)
+      (push `(cursor-position . ,(line-and-column-at-pos (point))) context-info)
       (when (use-region-p)
         (progn
-          (push `(selection-start . ,(region-beginning)) context-info)
-          (push `(selection-end . ,(region-end)) context-info)
-        )
-      )
-
-      ;; TODO: Maybe this is redundant?
-      ;; Region (selected) text.
-      (when (use-region-p)
-        (let ((region-text (buffer-substring-no-properties (region-beginning) (region-end))))
-          (push `(selection-text . ,region-text) context-info)
+          (push `(selection-start-position . ,(line-and-column-at-pos (region-beginning))) context-info)
+          (push `(selection-end-position . ,(line-and-column-at-pos (region-end))) context-info)
         )
       )
 
       ;; Flycheck errors/warnings in the region (or at cursor if no region).
-      ;; TODO: Didn't work when I tested (nothing is added).
       (when-let* ((bound-and-true-p flycheck-mode)
                   (errors (flycheck-overlay-errors-in
-                           (line-beginning-position context-start-line)
-                           (line-end-position context-end-line)))
+                           (line-beg-pos context-start-line)
+                           (line-end-pos context-end-line)))
                  )
-        (message "%s" errors) ; TODO: Remove when done with testing.
         (push `(flycheck-errors
                 . ,(mapcar
                     (lambda (err)
@@ -3685,17 +3715,17 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       )
 
       ;; LSP info for symbol at cursor (if available)
-      ;; TODO: Didn't work when I tested (nothing is added).
-      (when (and (bound-and-true-p lsp-mode) (lsp--capability "textDocument/hover"))
-        (when-let ((hover-info (lsp--text-document-hover)))
-          (push `(lsp-hover-at-cursor . ,hover-info) context-info)))
+      (when (bound-and-true-p lsp-mode)
+        (push `(lsp-info . ,(my/lsp-describe-thing-at-point-f)) context-info)
+      )
 
       context-info
-      (message "%s" context-info) ; TODO: Remove once done.
     )
   )
 
 #+end_src
+
+**** TODO Plug this in somewhere in the gptel so it is used by it.
 
 *** Setting up the API keys                                  :manual_setup:
 - Set the API keys for the LLM providers (OpenAI, Anthropic, ...) in the =~/.authinfo= file (check the gptel docs for detail
@@ -3723,6 +3753,8 @@ Here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains
 He basically takes default value of "rewrite" directive (its a fuction) and creates his own based on it.
 - I could also look into collecting the errors/warnings in the buffer and sending that to the LLM. That shouldn't be hard. Maybe as a part of rewrite, but also as a part of just chatting with the LLM? Meaning even as "ask" or just sending to chat hm. I can just collect errors as reported by flymake/check probably? That would be cool.
 - When adding errors/warnings, I can add them with org drawers so they are collapsed but there.
+*** TODO gptel-send responds in place. I need to have that for chat buffers. But find a way to add similar thing that instead always responds in the chat. Maybe just calling gptel-send with extra variable (output) locally bound? Actually it kind of already works, read on.
+Actually, this already works: I just need to call ~gptel~ (~SPC i c~) with something selected. It will open chat and put the selection in there. Ok, now what would be super cool is if could add that editor context to that.
 *** TODO Have a way to ask stuff
 I should compose "ask" of following:
 - the question itself
