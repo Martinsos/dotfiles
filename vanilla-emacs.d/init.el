@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-05 23:30:32 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-06 19:53:04 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2584,6 +2584,61 @@ It uses external `gitstatusd' program to calculate the actual git status."
        )
      )
    )
+  )
+)
+
+(defun my/gptel-collect-editor-context ()
+  "Collect useful contextual information (errs, warns, lsp, ...) for the current region(selection) and/or cursor position.
+Returns a structured list of information that can be sent to an LLM."
+  (interactive)
+  (let ((context-info '())
+        ;; TODO: Should I add -5 and +5 to these to expand the context, get some surrounding info also?
+        (context-start-line (line-number-at-pos (if (use-region-p) (region-beginning) (point))))
+        (context-end-line (line-number-at-pos (if (use-region-p) (region-end) (point))))
+       )
+
+    ;; Basic buffer information.
+    (push `(buffer-name . ,(buffer-name)) context-info)
+    (push `(major-mode . ,major-mode) context-info)
+
+    ;; Position information.
+    (push `(cursor-position . ,(line-and-column-at-pos (point))) context-info)
+    (when (use-region-p)
+      (progn
+        (push `(selection-start-position . ,(line-and-column-at-pos (region-beginning))) context-info)
+        (push `(selection-end-position . ,(line-and-column-at-pos (region-end))) context-info)
+      )
+    )
+
+    ;; Flycheck errors/warnings in the region (or at cursor if no region).
+    (when-let* ((bound-and-true-p flycheck-mode)
+                (errors (flycheck-overlay-errors-in
+                         (line-beg-pos context-start-line)
+                         (line-end-pos context-end-line)))
+               )
+      (push `(flycheck-errors
+              . ,(mapcar
+                  (lambda (err)
+                    `((line . ,(flycheck-error-line err))
+                      (column . ,(flycheck-error-column err))
+                      (level . ,(flycheck-error-level err))
+                      (message . ,(flycheck-error-message err))
+                      (checker . ,(flycheck-error-checker err))
+                     )
+                  )
+                  errors
+                 )
+             )
+            context-info
+      )
+    )
+
+    ;; LSP info for symbol at cursor (if available)
+    (when (bound-and-true-p lsp-mode)
+      (push `(lsp-info . ,(my/lsp-describe-thing-at-point-f)) context-info)
+    )
+
+    context-info
   )
 )
 

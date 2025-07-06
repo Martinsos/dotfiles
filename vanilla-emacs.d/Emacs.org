@@ -3665,15 +3665,15 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
   )
 #+end_src
 
-*** TODO Collecting editor context
-#+begin_src emacs-lisp :tangle no
+*** Collecting editor context
+#+begin_src emacs-lisp
 
-  (defun collect-editor-context ()
-    "Collect useful contextual information for the current region and/or cursor position.
+  (defun my/gptel-collect-editor-context ()
+    "Collect useful contextual information (errs, warns, lsp, ...) for the current region(selection) and/or cursor position.
   Returns a structured list of information that can be sent to an LLM."
     (interactive)
     (let ((context-info '())
-          ;; TODO: Should I add -5 and +5 to these to expand the context?
+          ;; TODO: Should I add -5 and +5 to these to expand the context, get some surrounding info also?
           (context-start-line (line-number-at-pos (if (use-region-p) (region-beginning) (point))))
           (context-end-line (line-number-at-pos (if (use-region-p) (region-end) (point))))
          )
@@ -3725,8 +3725,6 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 
 #+end_src
 
-**** TODO Plug this in somewhere in the gptel so it is used by it.
-
 *** Setting up the API keys                                  :manual_setup:
 - Set the API keys for the LLM providers (OpenAI, Anthropic, ...) in the =~/.authinfo= file (check the gptel docs for detail
 *** Cheatsheet :cheatsheet:
@@ -3739,49 +3737,38 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 - To save the convo, I can just save the chat to a file, open it later and turn on ~gptel-mode~.
 - Run ~gptel-tools~ to select the tools to use (from the ones we defined). Or do it via gptel transient menu.
 - *Sending media*: If I add link as a "standalone" thing (alone on the line, blank lines above and below), and I enable "Sending media", then it will be sent as part of chat. It needs to be proper Org link (so in [] brackets) and should point to a file (image, text file, ...) on the disk (so start with ~file:/~).
-- I can use ~gptel-request~ function to write my custom functions that use =gptel=.
+- I can use ~gptel-request~ function to write my custom functions/commands that use =gptel=.
+  - https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
 - I can override ~gptel-directives~ with my custom directives, changing how certain =gptel= commands requests are composed (e.g. "rewrite").
 - ~gptel-org-branching-context~ makes it so that only current headings branch in org are supplied as context/chat. Allowing for branching chats.
-*** TODO How can I use evil kbs in gptel minibuffer?
-Is the problem in the fact that I disabled evil-collection in the minibuffer?
+- I can add ~@my-preset~ ("cookie") in any part of the chat message and that preset will be used only for that iteration of the chat, that single time.
+*** TODO Figure out best way to ask about piece of code/buffer (while adding context)
+Do I just use ~gptel~ (~SPC i c~) to send selection to chat and that is basis of it? Figure out the best workflow.
+How easy is it to pick chat? Do I always want it in chat? What if I want it in fresh chat, no previous context? How hard is that?
+How easy is it to write extra text/question next to it?
+I will also want to enrich it with ~my/gptel-collect-editor-context~. Maybe even add some extra context in that case (+-5 lines) around the selection? Best to try using first, then I will figure out if I need that or not.
+What about the situation when nothing is selected -> am I really ok with sending whole buffer to that point? Maybe that is ok.
+If I can't customize ~gptel~ command enough, I can possibly write my own command based on it.
+*** TODO Use my/collect-editor-context in gptel
+- when doing rewrite?
+- when sending to chat (asking)?
+  - I could add it using org drawer.
+- for all the gptel contexts (buffer regions)?
+  - Is gptel-context-wrap-function maybe way to go about it?
+- manually add to chat for my current region/selection?
+
+*** TODO Enrich "rewrite" (gptel-directives? look into them)
+*** TODO Look into gptel-context-wrap-function
+- Hm I can't find it, maybe I need to update gptel?
+*** TODO Set up tool usage via MCP (check gptel's docs)
+- Github MCP sounds exciting.
 *** TODO Open an issue about confusing DX with the rewrite result overlay
 How can one know he needs to press enter on it? It is quite non-intuitive. It should come with some instructions on top I think, e.g. "press Enter". Also cursor jumps around it a bit weirdly, but maybe that is ok.
-*** TODO Look into gptel-directives (enrich "rewrite")
-I can write my own gptel-directives, therefore controlling how e.g. rewrite is done.
-They are dynamic -> functions -> so I can enrich the request any way I want. E.g. I could fetch the location of current region for the "rewrite" and pass that, if I implement my own "rewrite" directive.
-Here is reddit answer https://www.reddit.com/r/emacs/s/5FYxlNZVCZ which contains this example: https://paste.karthinks.com/67b98a11-gptel-rewrite-with-context.html .
-He basically takes default value of "rewrite" directive (its a fuction) and creates his own based on it.
-- I could also look into collecting the errors/warnings in the buffer and sending that to the LLM. That shouldn't be hard. Maybe as a part of rewrite, but also as a part of just chatting with the LLM? Meaning even as "ask" or just sending to chat hm. I can just collect errors as reported by flymake/check probably? That would be cool.
-- When adding errors/warnings, I can add them with org drawers so they are collapsed but there.
-*** TODO gptel-send responds in place. I need to have that for chat buffers. But find a way to add similar thing that instead always responds in the chat. Maybe just calling gptel-send with extra variable (output) locally bound? Actually it kind of already works, read on.
-Actually, this already works: I just need to call ~gptel~ (~SPC i c~) with something selected. It will open chat and put the selection in there. Ok, now what would be super cool is if could add that editor context to that.
-*** TODO Have a way to ask stuff
-I should compose "ask" of following:
-- the question itself
-- "context":
-  - selection if exists (content, location), otherwise current line.
-  - point location
-  - current buffer name
-  - Some extra lines around the point/selection. +-5?
-  - any warnings / errors in current selection / line. Maybe further around it?
-  - usual context should be added of course.
-And then I send this to gtpel-send or something? It makes sense that I can have this in chat if I want.
-I should implement a function that pick all this stuff up and then I can use it in my custom directives / commands.
-*** TODO Have a way to send piece of code to chat for a question (+ errors, ...)
-What I want is to be able to select a piece of text in the code and ask LLM something about it, but in the context of the current chat, so it is added to the chat, my question + that code. Otherwise I have to describe manually which code I am talking about -> hey what do you think about that functoin X in that part? I think I also want information like errors and stuff added, not sure if it should always be added though hm. If yes, it should be added in somewhat non-intrusive way, probably some kind of org drawer or something I am not sure.
-*** TODO Look into gptel-context-wrap-function
-*** TODO Look into defining custom gptel commands
-- https://github.com/karthink/gptel/wiki/Defining-custom-gptel-commands
-- Useful if I want to write my own rewrite and ask commands with gptel-request?
-*** DONE Write a function that summarizes the current chat.
-I could maybe combine this with that "org branching gptel" feature, so that the whole history of the convo is still kept, but it also gets branched with context or something. Ok I probably don't need that though hah.
-Btw I should look online for "summarizing" prompt, I am sure people have figured out some good prompts.
-*** TODO Set up tool usage via MCP (check gptel's docs)
-*** TODO Add https://github.com/karthink/gptel-quick ?
+*** TODO Add https://github.com/karthink/gptel-quick ? Likely I don't need it.
 *** TODO Look up into using gptel for completion at point, there is a package for it
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
-*** TODO Dynamically choose preset depending on major mode
+*** TODO Dynamically choose preset depending on major mode?
 https://github.com/karthink/gptel/issues/916
 ** Copilot
 
