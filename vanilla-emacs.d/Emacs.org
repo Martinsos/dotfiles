@@ -1113,6 +1113,20 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (org-hide-emphasis-markers t)
   )
 
+  ;; Automatic downloading and link-insertng of images in the system clipboard / kill ring.
+  ;; By default it downloads the image into current directory, but this can be customized per buffer.
+  (use-package org-download
+    :config
+    (general-define-key
+     :states '(normal)
+     :keymaps 'org-mode-map
+     :prefix ","
+     "d" '("download" . (keymap))
+     "dc" '("from clipboard" . org-download-clipboard)
+     "dp" '("from kill ring" . org-download-yank)
+     "dx" '("delete" . org-download-delete)
+    )
+  )
 #+end_src
 
 ** Show org links in echo area
@@ -3443,13 +3457,21 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
                                           (org-mode . ,my/gptel-response-prefix)
                                           (text-mode . ,my/gptel-response-prefix)))
 
-      (defface my/gptel-prompt-response-prefix-face
+      (defface my/gptel-prompt-prefix-face
         `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
               :weight bold
               :height 1.2
               :inverse-video t
         )))
-        "Gptel prompt/response prefix face"
+        "Gptel prompt prefix face"
+      )
+      (defface my/gptel-response-prefix-face
+        `((t (:foreground ,(face-attribute 'org-link :foreground)
+              :weight bold
+              :height 1.2
+              :inverse-video t
+        )))
+        "Gptel response prefix face"
       )
 
       (defun my/gptel-prefix-font-lock-setup ()
@@ -3457,9 +3479,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
         (font-lock-add-keywords
          nil
          `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
-            . 'my/gptel-prompt-response-prefix-face)
+            . 'my/gptel-prompt-prefix-face)
            (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
-            . 'my/gptel-prompt-response-prefix-face)
+            . 'my/gptel-response-prefix-face)
          )
         )
       )
@@ -3541,6 +3563,21 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 **** TODO Summarize could ask for extra instructions in minibuffer.
 **** TODO Summarize could optionally not replace text (on C-u?)
 
+*** Image download support in chat
+#+begin_src emacs-lisp
+
+  (defun my/gptel-image-download-setup ()
+    (when (derived-mode-p 'org-mode)
+      (with-eval-after-load 'org-download
+        (setq-local org-download-image-dir
+              (file-name-as-directory (concat (file-name-as-directory temporary-file-directory) "gptel")))
+        (setq-local org-download-heading-lvl nil)
+      )
+    )
+  )
+  (add-hook 'gptel-mode-hook #'my/gptel-image-download-setup)
+
+#+end_src
 *** Presets
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel

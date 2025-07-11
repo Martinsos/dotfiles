@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-11 23:18:40 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-12 00:52:36 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -778,6 +778,21 @@ USAGE:
   ;; Make bold and italic and similar nice by default, since we now have org-appear
   ;; to show them as raw when needed.
   (org-hide-emphasis-markers t)
+)
+
+;; Automatic downloading and link-insertng of images in the system clipboard / kill ring.
+;; By default it downloads the image into current directory, but this can be customized per buffer.
+(use-package org-download
+  :config
+  (general-define-key
+   :states '(normal)
+   :keymaps 'org-mode-map
+   :prefix ","
+   "d" '("download" . (keymap))
+   "dc" '("from clipboard" . org-download-clipboard)
+   "dp" '("from kill ring" . org-download-yank)
+   "dx" '("delete" . org-download-delete)
+  )
 )
 
 (with-eval-after-load 'org
@@ -2378,13 +2393,21 @@ It uses external `gitstatusd' program to calculate the actual git status."
                                         (org-mode . ,my/gptel-response-prefix)
                                         (text-mode . ,my/gptel-response-prefix)))
 
-    (defface my/gptel-prompt-response-prefix-face
+    (defface my/gptel-prompt-prefix-face
       `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
             :weight bold
             :height 1.2
             :inverse-video t
       )))
-      "Gptel prompt/response prefix face"
+      "Gptel prompt prefix face"
+    )
+    (defface my/gptel-response-prefix-face
+      `((t (:foreground ,(face-attribute 'org-link :foreground)
+            :weight bold
+            :height 1.2
+            :inverse-video t
+      )))
+      "Gptel response prefix face"
     )
 
     (defun my/gptel-prefix-font-lock-setup ()
@@ -2392,9 +2415,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
       (font-lock-add-keywords
        nil
        `((,(concat "^" (string-trim-right my/gptel-prompt-prefix) "\s*$")
-          . 'my/gptel-prompt-response-prefix-face)
+          . 'my/gptel-prompt-prefix-face)
          (,(concat "^" (string-trim-right my/gptel-response-prefix) "\s*$")
-          . 'my/gptel-prompt-response-prefix-face)
+          . 'my/gptel-response-prefix-face)
        )
       )
     )
@@ -2468,6 +2491,17 @@ It uses external `gitstatusd' program to calculate the actual git status."
     )
   )
 )
+
+(defun my/gptel-image-download-setup ()
+  (when (derived-mode-p 'org-mode)
+    (with-eval-after-load 'org-download
+      (setq-local org-download-image-dir
+            (file-name-as-directory (concat (file-name-as-directory temporary-file-directory) "gptel")))
+      (setq-local org-download-heading-lvl nil)
+    )
+  )
+)
+(add-hook 'gptel-mode-hook #'my/gptel-image-download-setup)
 
 (with-eval-after-load 'gptel
   (gptel-make-preset 'coding
