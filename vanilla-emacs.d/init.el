@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-06 19:53:04 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-11 23:18:40 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -657,17 +657,21 @@ USAGE:
    :states '(normal)
    :keymaps 'org-mode-map
    :prefix ","
-   "cs" 'org-schedule
-   "cd" 'org-deadline
-   "ct" 'org-set-tags-command
-   "ce" 'org-set-effort
-   "x" 'org-toggle-checkbox
-   "J" 'org-priority-down
-   "K" 'org-priority-up
-   "t" 'org-todo
-   "/" 'org-sparse-tree
-   "ln" 'org-next-link
-   "lp" 'org-previous-link
+   "c" '("change" . (keymap))
+   "cs" '("schedule" . org-schedule)
+   "cd" '("deadline" . org-deadline)
+   "ct" '("tags" . org-set-tags-command)
+   "ce" '("effort" . org-set-effort)
+   "t" '("toggle todo" . org-todo)
+   "x" '("toggle checkbox" . org-toggle-checkbox)
+   "J" '("priority down" . org-priority-down)
+   "K" '("priority up" . org-priority-up)
+   "/" '("sparse tree" . org-sparse-tree)
+   "%" '("update [%]" . org-update-statistics-cookies)
+   "l" '("link" . (keymap))
+   "ln" '("next link" . org-next-link)
+   "lp" '("prev link" . org-previous-link)
+   "li" '("insert link" . org-insert-link)
   )
 
   ;; Set headers to have different sizes.
@@ -2373,6 +2377,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
     (setq gptel-response-prefix-alist `((markdown-mode . ,my/gptel-response-prefix)
                                         (org-mode . ,my/gptel-response-prefix)
                                         (text-mode . ,my/gptel-response-prefix)))
+
     (defface my/gptel-prompt-response-prefix-face
       `((t (:foreground ,(face-attribute 'font-lock-keyword-face :foreground)
             :weight bold
@@ -2381,6 +2386,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
       )))
       "Gptel prompt/response prefix face"
     )
+
     (defun my/gptel-prefix-font-lock-setup ()
       "Setup font-lock for gptel."
       (font-lock-add-keywords
@@ -2392,23 +2398,27 @@ It uses external `gitstatusd' program to calculate the actual git status."
        )
       )
     )
+
     (add-hook 'gptel-mode-hook #'my/gptel-prefix-font-lock-setup)
   )
+
   (defun my/gptel-transform-headings (beg end)
     "Turn any org heading in the current buffer between BEG and END into just text."
     (when (derived-mode-p 'org-mode)
       (save-excursion
         (goto-char beg)
         (while (re-search-forward org-heading-regexp end t)
-          (forward-line 0)
+          (beginning-of-line)
           (delete-char (1+ (length (match-string 1))))
           (insert-and-inherit (concat (make-string (length (match-string 1)) ?🔷) " *"))
           (end-of-line)
           (skip-chars-backward " \t\r")
-          (insert-and-inherit "*"))
+          (insert-and-inherit "*")
+        )
       )
     )
   )
+
   (add-hook 'gptel-post-response-functions #'my/gptel-transform-headings)
 )
 
