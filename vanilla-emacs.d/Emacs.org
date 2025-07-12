@@ -1113,9 +1113,17 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (org-hide-emphasis-markers t)
   )
 
-  ;; Automatic downloading and link-insertng of images in the system clipboard / kill ring.
-  ;; By default it downloads the image into current directory, but this can be customized per buffer.
+#+end_src
+
+** Support for downloading and inserting images
+
+Automatic downloading and link-inserting of images from the system clipboard / kill ring.
+By default it downloads the image into current directory, but this can be customized per buffer.
+
+#+begin_src emacs-lisp
+
   (use-package org-download
+    :after (org)
     :config
     (general-define-key
      :states '(normal)
@@ -1127,8 +1135,11 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
      "dx" '("delete" . org-download-delete)
     )
   )
+
 #+end_src
 
+*** TODO Look into using ~yank-media~ instead of ~org-download~.
+It is a new thing in org mode, built-int since emacs 29, and allegedly it does the same/similar thing?
 ** Show org links in echo area
 
 Org and org-agenda mode show links in echo area when you go over them with mouse, but they don't show them if you move to them with cursor.
@@ -3578,6 +3589,7 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
   (add-hook 'gptel-mode-hook #'my/gptel-image-download-setup)
 
 #+end_src
+
 *** Presets
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
@@ -4127,8 +4139,6 @@ Elpaca now has some support for it, look into that:
 I might even want to use both hm! Gotta figure it out.
 
 ** Should do
-*** TODO Make it possible to paste images directly into org mode
-- https://emacs.stackexchange.com/questions/71100/pasting-images-from-clipboard-into-orgmode
 *** TODO Look into workgroups
 *** TODO I will want some way to easily restore where I stopped working.
 

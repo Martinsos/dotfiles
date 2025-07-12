@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-12 00:52:36 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-12 21:38:19 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -780,9 +780,8 @@ USAGE:
   (org-hide-emphasis-markers t)
 )
 
-;; Automatic downloading and link-insertng of images in the system clipboard / kill ring.
-;; By default it downloads the image into current directory, but this can be customized per buffer.
 (use-package org-download
+  :after (org)
   :config
   (general-define-key
    :states '(normal)
