@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-12 21:38:19 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-12 21:48:29 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2497,6 +2497,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
       (setq-local org-download-image-dir
             (file-name-as-directory (concat (file-name-as-directory temporary-file-directory) "gptel")))
       (setq-local org-download-heading-lvl nil)
+      (setq-local org-download-annotate-function (lambda (_) "Return empty string" ""))
     )
   )
 )

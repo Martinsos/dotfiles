@@ -1140,6 +1140,8 @@ By default it downloads the image into current directory, but this can be custom
 
 *** TODO Look into using ~yank-media~ instead of ~org-download~.
 It is a new thing in org mode, built-int since emacs 29, and allegedly it does the same/similar thing?
+Allegedly works for any buffer, not just org.
+And you can even drag and drop (ok maybe org-download can do that also?).
 ** Show org links in echo area
 
 Org and org-agenda mode show links in echo area when you go over them with mouse, but they don't show them if you move to them with cursor.
@@ -3583,6 +3585,7 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
         (setq-local org-download-image-dir
               (file-name-as-directory (concat (file-name-as-directory temporary-file-directory) "gptel")))
         (setq-local org-download-heading-lvl nil)
+        (setq-local org-download-annotate-function (lambda (_) "Return empty string" ""))
       )
     )
   )
