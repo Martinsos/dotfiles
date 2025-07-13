@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-12 21:48:29 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-13 15:00:30 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -42,6 +42,7 @@
 (elpaca `(,@elpaca-order))
 
 (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+;;(setq elpaca-lock-file nil)
 
 (defun my/elpaca-write-lock-file ()
   (interactive)

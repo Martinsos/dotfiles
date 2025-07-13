@@ -179,6 +179,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+begin_src emacs-lisp
 
   (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+  ;;(setq elpaca-lock-file nil)
 
   (defun my/elpaca-write-lock-file ()
     (interactive)
