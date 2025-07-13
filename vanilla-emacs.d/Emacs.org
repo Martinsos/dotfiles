@@ -1188,16 +1188,17 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
   			       ("py" . "src python")))
       (add-to-list 'org-structure-template-alist key-to-block-type)
     )
-    
+
     ;; Define which languages can be evaluated/executed in org files.
     ;; Org will load support for them.
     (org-babel-do-load-languages
       'org-babel-load-languages
       '((emacs-lisp . t)
-        (python . t))
+        (python . t)
+       )
     )
 
-    (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluation a block.
+    (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluating a block.
   )
 
 #+end_src
@@ -3807,11 +3808,101 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 - I can add ~@my-preset~ ("cookie") in any part of the chat message and that preset will be used only for that iteration of the chat, that single time.
 *** TODO Figure out best way to ask about piece of code/buffer (while adding context)
 Do I just use ~gptel~ (~SPC i c~) to send selection to chat and that is basis of it? Figure out the best workflow.
+- It works when chat is empty, but if it is not, it doesn't add anything. That is how `gptel` works.
+- There also doesn't seem to be any other gptel command that would do this.
+
 How easy is it to pick chat? Do I always want it in chat? What if I want it in fresh chat, no previous context? How hard is that?
-How easy is it to write extra text/question next to it?
+- Yeah, I think I always want it to be pasted into chat and then I want to add some text to it and then I want to send that as a question. Either existing chat, or new chat.
+
 I will also want to enrich it with ~my/gptel-collect-editor-context~. Maybe even add some extra context in that case (+-5 lines) around the selection? Best to try using first, then I will figure out if I need that or not.
-What about the situation when nothing is selected -> am I really ok with sending whole buffer to that point? Maybe that is ok.
+
+What about the situation when nothing is selected -> am I really ok with sending whole buffer to that point?
+- I think it is best to not do anything in that case, I should demand selection.
+
 If I can't customize ~gptel~ command enough, I can possibly write my own command based on it.
+- Yup, seems like I will have to do so.
+
+Why don't I just add the region to context though, and that is it?
+- No, because I might want to actually want to refer to a single or a few lines from a region that is part of context already.
+
+- Solution
+  - Write my custom command that uses ~gptel-request~. Call it ~my/gptel-send-to-chat~.
+  - Region needs to be selected.
+  - I need to pick the chat, existing or new. Region then gets pasted there.
+    - Possibly also add prompt prefix before it, if needed (~@You:~).
+  - Would be cool if code block delimiters would be added (if region is in code block).
+  - Consider using ~my/gptel-collect-editor-context~ to enrich.
+  - I could maybe call ~gptel~ directly, or copy its source as inspiration./
+
+#+begin_src emacs-lisp
+
+  (defun my/gptel-send-to-chat (buffer beg end)
+    (interactive
+     (if (use-region-p)
+         (list (current-buffer) (region-beginning) (region-end))
+       (user-error "No region selected")
+     )
+    )
+    ;; I call 'gptel' interactively, but set its INITIAL arg to empty string,
+    ;; because we want it to do all the stuff it does, like asking for buffer name
+    ;; and setting up the new buffer correctly, but we don't want it to paste selected
+    ;; region on its own in the fresh buffer, since we will do that in a better way.
+    ;; NOTE: If this proves to not be enough control for us in the future,
+    ;;   we can not call 'gptel' and instead do the stuff it does manually (look at its source).
+    (let* ((interactive-args-spec (cadr (interactive-form 'gptel)))
+           (interactive-args-values (eval interactive-args-spec))
+          )
+      (setf (nth 2 interactive-args-values) "") ; INITIAL is 3rd (index 2) argument, and we set it to "".
+      (let ((gptel-buffer (apply #'gptel interactive-args-values))
+            (region-text (with-current-buffer buffer (buffer-substring beg end)))
+            (lang (my/get-org-babel-lang-name-at-pos (point)))
+           )
+        ;; Add the selected text to the gptel buffer.
+        (with-current-buffer gptel-buffer
+          (goto-char (point-max))
+          (when (bobp) (insert (gptel-prompt-prefix-string)))
+          (when lang (my/insert-at-beg-of-line (format "#+begin_src %s\n" lang)))
+          (my/insert-at-beg-of-line region-text)
+          (when lang (my/insert-at-beg-of-line "#+end_src\n"))
+        )
+      )
+    )
+  )
+
+  (defun my/get-org-babel-lang-name-at-pos (pos)
+    "Get the programming language at position POS if it's code, as valid name for org babel code blocks."
+    (save-excursion
+      (goto-char pos)
+      (cond
+       ((derived-mode-p 'org-mode)
+        (car (org-babel-get-src-block-info t))
+       )
+
+       ((derived-mode-p 'prog-mode)
+        (let* ((mode-name (symbol-name major-mode))
+               (base-name (car (split-string mode-name "-")))
+              )
+          (cond
+           ((string= base-name "js") "javascript")
+           ((string= base-name "ts") "typescript")
+           ((string= base-name "sh") "bash")
+           ((string= base-name "shell-script") "bash")
+           (t base-name)
+          )
+        )
+       )
+
+       (t nil)
+      )
+    )
+  )
+
+  (defun my/insert-at-beg-of-line (text)
+    (insert (concat (unless (bolp) "\n") text))
+  )
+
+#+end_src
+
 *** TODO Use my/collect-editor-context in gptel
 - when doing rewrite?
 - when sending to chat (asking)?

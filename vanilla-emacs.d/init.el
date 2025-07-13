@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-13 15:00:30 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-14 01:24:51 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -822,16 +822,17 @@ USAGE:
 			       ("py" . "src python")))
     (add-to-list 'org-structure-template-alist key-to-block-type)
   )
-  
+
   ;; Define which languages can be evaluated/executed in org files.
   ;; Org will load support for them.
   (org-babel-do-load-languages
     'org-babel-load-languages
     '((emacs-lisp . t)
-      (python . t))
+      (python . t)
+     )
   )
 
-  (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluation a block.
+  (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluating a block.
 )
 
 (with-eval-after-load 'org
@@ -2685,6 +2686,71 @@ Returns a structured list of information that can be sent to an LLM."
 
     context-info
   )
+)
+
+(defun my/gptel-send-to-chat (buffer beg end)
+  (interactive
+   (if (use-region-p)
+       (list (current-buffer) (region-beginning) (region-end))
+     (user-error "No region selected")
+   )
+  )
+  ;; I call 'gptel' interactively, but set its INITIAL arg to empty string,
+  ;; because we want it to do all the stuff it does, like asking for buffer name
+  ;; and setting up the new buffer correctly, but we don't want it to paste selected
+  ;; region on its own in the fresh buffer, since we will do that in a better way.
+  ;; NOTE: If this proves to not be enough control for us in the future,
+  ;;   we can not call 'gptel' and instead do the stuff it does manually (look at its source).
+  (let* ((interactive-args-spec (cadr (interactive-form 'gptel)))
+         (interactive-args-values (eval interactive-args-spec))
+        )
+    (setf (nth 2 interactive-args-values) "") ; INITIAL is 3rd (index 2) argument, and we set it to "".
+    (let ((gptel-buffer (apply #'gptel interactive-args-values))
+          (region-text (with-current-buffer buffer (buffer-substring beg end)))
+          (lang (my/get-org-babel-lang-name-at-pos (point)))
+         )
+      ;; Add the selected text to the gptel buffer.
+      (with-current-buffer gptel-buffer
+        (goto-char (point-max))
+        (when (bobp) (insert (gptel-prompt-prefix-string)))
+        (when lang (my/insert-at-beg-of-line (format "#+begin_src %s\n" lang)))
+        (my/insert-at-beg-of-line region-text)
+        (when lang (my/insert-at-beg-of-line "#+end_src\n"))
+      )
+    )
+  )
+)
+
+(defun my/get-org-babel-lang-name-at-pos (pos)
+  "Get the programming language at position POS if it's code, as valid name for org babel code blocks."
+  (save-excursion
+    (goto-char pos)
+    (cond
+     ((derived-mode-p 'org-mode)
+      (car (org-babel-get-src-block-info t))
+     )
+
+     ((derived-mode-p 'prog-mode)
+      (let* ((mode-name (symbol-name major-mode))
+             (base-name (car (split-string mode-name "-")))
+            )
+        (cond
+         ((string= base-name "js") "javascript")
+         ((string= base-name "ts") "typescript")
+         ((string= base-name "sh") "bash")
+         ((string= base-name "shell-script") "bash")
+         (t base-name)
+        )
+      )
+     )
+
+     (t nil)
+    )
+  )
+)
+
+(defun my/insert-at-beg-of-line (text)
+  (insert (concat (unless (bolp) "\n") text))
 )
 
 (use-package copilot
