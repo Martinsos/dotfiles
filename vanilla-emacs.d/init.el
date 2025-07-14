@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-14 01:24:51 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-07-15 01:11:01 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2633,34 +2633,35 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
-(defun my/gptel-collect-editor-context ()
-  "Collect useful contextual information (errs, warns, lsp, ...) for the current region(selection) and/or cursor position.
+(defun my/gptel-collect-region-editor-context ()
+  "Collect useful contextual information (errs, warns, lsp, ...) for the current region(selection).
 Returns a structured list of information that can be sent to an LLM."
   (interactive)
+  (unless (use-region-p) (user-error "Region not active!"))
   (let ((context-info '())
         ;; TODO: Should I add -5 and +5 to these to expand the context, get some surrounding info also?
         (context-start-line (line-number-at-pos (if (use-region-p) (region-beginning) (point))))
         (context-end-line (line-number-at-pos (if (use-region-p) (region-end) (point))))
        )
 
-    ;; Basic buffer information.
+    ;; Basic information.
     (push `(buffer-name . ,(buffer-name)) context-info)
+    (push `(buffer-filepath . ,(buffer-file-name)) context-info)
     (push `(major-mode . ,major-mode) context-info)
 
     ;; Position information.
-    (push `(cursor-position . ,(line-and-column-at-pos (point))) context-info)
     (when (use-region-p)
       (progn
-        (push `(selection-start-position . ,(line-and-column-at-pos (region-beginning))) context-info)
-        (push `(selection-end-position . ,(line-and-column-at-pos (region-end))) context-info)
+        (push `(selection-start-position . ,(my/line-and-column-at-pos (region-beginning))) context-info)
+        (push `(selection-end-position . ,(my/line-and-column-at-pos (region-end))) context-info)
       )
     )
 
-    ;; Flycheck errors/warnings in the region (or at cursor if no region).
+    ;; Flycheck errors/warnings in the region.
     (when-let* ((bound-and-true-p flycheck-mode)
                 (errors (flycheck-overlay-errors-in
-                         (line-beg-pos context-start-line)
-                         (line-end-pos context-end-line)))
+                         (my/line-beg-pos context-start-line)
+                         (my/line-end-pos context-end-line)))
                )
       (push `(flycheck-errors
               . ,(mapcar
@@ -2677,11 +2678,6 @@ Returns a structured list of information that can be sent to an LLM."
              )
             context-info
       )
-    )
-
-    ;; LSP info for symbol at cursor (if available)
-    (when (bound-and-true-p lsp-mode)
-      (push `(lsp-info . ,(my/lsp-describe-thing-at-point-f)) context-info)
     )
 
     context-info
@@ -2709,13 +2705,36 @@ Returns a structured list of information that can be sent to an LLM."
           (region-text (with-current-buffer buffer (buffer-substring beg end)))
           (lang (my/get-org-babel-lang-name-at-pos (point)))
          )
-      ;; Add the selected text to the gptel buffer.
+      ;; Add the selected text to the gptel buffer + additional useful context.
       (with-current-buffer gptel-buffer
         (goto-char (point-max))
+
         (when (bobp) (insert (gptel-prompt-prefix-string)))
-        (when lang (my/insert-at-beg-of-line (format "#+begin_src %s\n" lang)))
+
+        (my/insert-at-beg-of-line (format "#+header: :source \"%s:L%s\"\n"
+                                          (buffer-name buffer)
+                                          (with-current-buffer buffer (line-number-at-pos beg))))
+
+        (my/insert-at-beg-of-line (if lang (format "#+begin_src %s\n" lang) "#+begin_quote"))
         (my/insert-at-beg-of-line region-text)
-        (when lang (my/insert-at-beg-of-line "#+end_src\n"))
+        (my/insert-at-beg-of-line (if lang "#+end_src" "#+end_quote"))
+
+        (my/insert-at-beg-of-line ":BLOCK_CONTEXT:\n")
+        (my/insert-at-beg-of-line
+          (pp-to-string
+            (with-current-buffer buffer
+              (save-mark-and-excursion
+                (set-mark beg)
+                (goto-char end)
+                (my/gptel-collect-region-editor-context)
+              )
+            )
+          )
+        )
+        (my/insert-at-beg-of-line ":END:\n\n")
+        (previous-line 2)
+        (org-fold-hide-drawer-toggle t)
+        (goto-char (point-max))
       )
     )
   )
