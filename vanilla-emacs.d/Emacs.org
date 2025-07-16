@@ -3933,6 +3933,11 @@ Why don't I just add the region to context though, and that is it?
 *** TODO Enrich "rewrite" (gptel-directives? look into them)
 *** TODO Look into gptel-context-wrap-function
 - Hm I can't find it, maybe I need to update gptel?
+*** TODO Look more into presets
+- Karthink said they are super powerful/flexible actually, and that macher uses that https://github.com/kmontag/macher/tree/main?tab=readme-ov-file#using-gptel-presets .
+  Allegedly they are a general concept that can be used for a lot of control.
+**** TODO Dynamically choose preset depending on major mode?
+https://github.com/karthink/gptel/issues/916
 *** TODO Set up tool usage via MCP (check gptel's docs)
 - Github MCP sounds exciting.
 *** TODO Open an issue about confusing DX with the rewrite result overlay
@@ -3941,8 +3946,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 *** TODO Look up into using gptel for completion at point, there is a package for it
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
-*** TODO Dynamically choose preset depending on major mode?
-https://github.com/karthink/gptel/issues/916
+*** TODO Look into "macher" package
 ** Copilot
 
 *** copilot.el
