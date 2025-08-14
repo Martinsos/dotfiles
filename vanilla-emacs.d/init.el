@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-07-16 22:27:53 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-08-14 01:52:22 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1397,7 +1397,7 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s43")
+        (work-diary-sprint-current-tag "s45")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -2189,13 +2189,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (defun my/haskell-mode-setup ()
   (lsp-deferred)
-  (ormolu-format-on-save-mode)
   (face-remap-add-relative 'font-lock-operator-face '(:foreground unspecified :inherit font-lock-keyword-face))
   (add-hook 'lsp-after-open-hook 'my/lsp-haskell-local-face-setup nil t)
+  ;; Will by default use ormolu that comes packaged with HLS as a plugin.
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t)
 )
-
-;; NOTE: Requires ormolu to be installed on the machine.
-(use-package ormolu)
 
 (use-package haskell-mode
   :hook
@@ -2224,7 +2222,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
-  :after lsp-mode 
+  :after lsp-mode
   :custom
   ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
   (lsp-haskell-plugin-semantic-tokens-global-on t)
