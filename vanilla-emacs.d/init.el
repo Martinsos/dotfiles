@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-08-14 01:52:22 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-08-16 23:27:08 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -454,6 +454,7 @@ USAGE:
 
     "w"   '("windows" . (keymap))
     "ww"  '("other window" . ace-window)
+    "wW"  '("rotate windows" . evil-window-rotate-upwards)
     "wd"  '("delete window" . delete-window)
     "wx"  '("delete window and buffer" . kill-buffer-and-window)
     "w/"  '("split vertically" . split-window-right)
@@ -493,11 +494,6 @@ USAGE:
     "vv"  '("top-level form" . eval-defun)
     "vr"  '("region" . eval-region)
     "v:"  '("expression" . eval-expression)
-
-    "o"   '("org" . (keymap))
-    "oa"  '("agenda" . org-agenda)
-    "oc"  '("capture" . org-capture)
-    "ol"  '("store link" . org-store-link)
 
     "p"   '("projects" . (keymap))
     "pf"  '("find file" . counsel-projectile-find-file)
@@ -645,6 +641,11 @@ USAGE:
   :config (evil-collection-init)
 )
 
+;; This goes first so that all the rest of org-related config can add keys without any waiting.
+(my/leader-keys
+  "o"   '("org" . (keymap))
+)
+
 (use-package org
   :defer t
   :hook
@@ -654,6 +655,13 @@ USAGE:
     (setq evil-auto-indent nil)
   ))
   :config
+  (my/leader-keys
+    "oa"  '("agenda" . org-agenda)
+    "oc"  '("capture" . org-capture)
+    "ol"  '("store link" . org-store-link)
+    "od"  '("daily agenda view" . (lambda () (interactive) (delete-other-windows) (scratch-buffer) (org-agenda nil "d")))
+  )
+
   (general-define-key
    :states '(normal)
    :keymaps 'org-mode-map
@@ -1324,37 +1332,29 @@ Return minutes (number)."
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
-	(agenda ""
-		(,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
+        (agenda ""
+                (,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
                  (org-agenda-span 'day)
-		 (org-habit-show-all-today t)
+                 (org-habit-show-all-today t)
                  (org-agenda-time-grid '((daily remove-match)
                                          (800 1000 1200 1400 1600 1800 2000)
                                          " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
                                         )
                  )
-		)
-	)
+                )
+        )
         (my/journal-agenda-block)
-	(alltodo ""
-		 ((org-agenda-overriding-header "")
-		  (org-agenda-prefix-format " %5e ")
-		  (org-super-agenda-groups
-		   '((:name "Notes" :order 1 :category "note")
-                     (:name "Inbox" :order 2 :todo "INBOX")
-                     (:name "Epics" :order 3 :todo "EPIC")
-                     (:name "To read"
-                            :order 5
-                            :and (:category "task" :tag "read"))
-		     (:discard (:scheduled t :deadline t :time-grid t))
-                     (:name "All tasks with no schedule / deadline"
-                            :order 4
-			    :category "task")
-		     (:discard (:anything t))
-		    )
-		  )
-		 )
-	)
+        ;; Notes.
+        (alltodo ""
+                 ((org-agenda-overriding-header "")
+                  (org-agenda-prefix-format "    ")
+                  (org-super-agenda-groups
+                   '((:name "Notes" :category "note")
+                     (:discard (:anything t))
+                    )
+                  )
+                 )
+        )
        )
        (,@(my/make-work-diary-cmd-base-settings)
         (org-agenda-start-day ,cmd-start-day)
@@ -1518,16 +1518,18 @@ Return minutes (number)."
   )
 ))
 
-(defun my/work-diary-open-sprint-planning-windows ()
-  "Open windows for sprint planning."
-  (interactive)
-  (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
-  (org-agenda nil "w")
-  (delete-other-windows)
-  (org-agenda nil "A")
-)
-(my/leader-keys
-  "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+(with-eval-after-load 'org
+  (defun my/work-diary-open-sprint-planning-windows ()
+    "Open windows for sprint planning."
+    (interactive)
+    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+    (org-agenda nil "w")
+    (delete-other-windows)
+    (org-agenda nil "A")
+  )
+  (my/leader-keys
+    "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+  )
 )
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
@@ -2805,6 +2807,11 @@ Returns a structured list of information that can be sent to an LLM."
                   whitespace-tab
                   whitespace-trailing))
     (set-face-attribute face nil :foreground "dark red")
+  )
+  ;; Make tabs extra emphasized.
+  (dolist (face '(whitespace-indentation
+                  whitespace-tab))
+    (set-face-attribute face nil :inverse-video t)
   )
 
   (my/leader-keys

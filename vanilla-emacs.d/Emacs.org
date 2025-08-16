@@ -749,6 +749,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
 
       "w"   '("windows" . (keymap))
       "ww"  '("other window" . ace-window)
+      "wW"  '("rotate windows" . evil-window-rotate-upwards)
       "wd"  '("delete window" . delete-window)
       "wx"  '("delete window and buffer" . kill-buffer-and-window)
       "w/"  '("split vertically" . split-window-right)
@@ -788,11 +789,6 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "vv"  '("top-level form" . eval-defun)
       "vr"  '("region" . eval-region)
       "v:"  '("expression" . eval-expression)
-
-      "o"   '("org" . (keymap))
-      "oa"  '("agenda" . org-agenda)
-      "oc"  '("capture" . org-capture)
-      "ol"  '("store link" . org-store-link)
 
       "p"   '("projects" . (keymap))
       "pf"  '("find file" . counsel-projectile-find-file)
@@ -978,6 +974,11 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
 
+  ;; This goes first so that all the rest of org-related config can add keys without any waiting.
+  (my/leader-keys
+    "o"   '("org" . (keymap))
+  )
+
   (use-package org
     :defer t
     :hook
@@ -987,6 +988,13 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       (setq evil-auto-indent nil)
     ))
     :config
+    (my/leader-keys
+      "oa"  '("agenda" . org-agenda)
+      "oc"  '("capture" . org-capture)
+      "ol"  '("store link" . org-store-link)
+      "od"  '("daily agenda view" . (lambda () (interactive) (delete-other-windows) (scratch-buffer) (org-agenda nil "d")))
+    )
+
     (general-define-key
      :states '(normal)
      :keymaps 'org-mode-map
@@ -1371,7 +1379,7 @@ In the config above I then fetch those credentials from .authinfo and provide th
   This is the command I will most often want to run.
 - ~org-gcal-sync-tokens-clear~ clears the sync tokens (which is gcalendar concept). If they are not cleared, ~org-gcal-fetch~ will be fetching only changes after the time of the last fetch! This is ok if we kept all the events stored, but if we maybe deleted files with events and want to fetch them again, there want to do full sync -> we should run this command first.
 ** org-agenda
-*** General setup
+*** General config
 #+begin_src emacs-lisp
 
   (with-eval-after-load 'org
@@ -1520,7 +1528,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 
 #+end_src
 
-*** Work Diary
+*** Work Diary (general config)
 
 #+name: my/work-diary-org-path
 #+begin_src emacs-lisp :tangle no :results value none
@@ -1573,7 +1581,6 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
 ***** System requirements and defining an OS keybinding    :manual_setup:
 - For the bash script to work, make sure that ~yad~ and ~wl-clipboard~ are installed system wide.
 - Also set up a keybinding at the OS level that will allow to easily run the script. A good one is =Win + I=.
-
 *** Marking todo deadlines with earlier schedule
 
 These are todo deadline entries that are not yet done and have a schedule some earlier day.
@@ -1838,37 +1845,29 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
     (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
       `(,cmd-key ,cmd-name
          (;; The main view: a list of tasks for today.
-  	(agenda ""
-  		(,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
+          (agenda ""
+                  (,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
                    (org-agenda-span 'day)
-  		 (org-habit-show-all-today t)
+                   (org-habit-show-all-today t)
                    (org-agenda-time-grid '((daily remove-match)
                                            (800 1000 1200 1400 1600 1800 2000)
                                            " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
                                           )
                    )
-  		)
-  	)
+                  )
+          )
           (my/journal-agenda-block)
-  	(alltodo ""
-  		 ((org-agenda-overriding-header "")
-  		  (org-agenda-prefix-format " %5e ")
-  		  (org-super-agenda-groups
-  		   '((:name "Notes" :order 1 :category "note")
-                       (:name "Inbox" :order 2 :todo "INBOX")
-                       (:name "Epics" :order 3 :todo "EPIC")
-                       (:name "To read"
-                              :order 5
-                              :and (:category "task" :tag "read"))
-  		     (:discard (:scheduled t :deadline t :time-grid t))
-                       (:name "All tasks with no schedule / deadline"
-                              :order 4
-  			    :category "task")
-  		     (:discard (:anything t))
-  		    )
-  		  )
-  		 )
-  	)
+          ;; Notes.
+          (alltodo ""
+                   ((org-agenda-overriding-header "")
+                    (org-agenda-prefix-format "    ")
+                    (org-super-agenda-groups
+                     '((:name "Notes" :category "note")
+                       (:discard (:anything t))
+                      )
+                    )
+                   )
+          )
          )
          (,@(my/make-work-diary-cmd-base-settings)
           (org-agenda-start-day ,cmd-start-day)
@@ -2032,16 +2031,18 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
     )
   ))
 
-  (defun my/work-diary-open-sprint-planning-windows ()
-    "Open windows for sprint planning."
-    (interactive)
-    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
-    (org-agenda nil "w")
-    (delete-other-windows)
-    (org-agenda nil "A")
-  )
-  (my/leader-keys
-    "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+  (with-eval-after-load 'org
+    (defun my/work-diary-open-sprint-planning-windows ()
+      "Open windows for sprint planning."
+      (interactive)
+      (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+      (org-agenda nil "w")
+      (delete-other-windows)
+      (org-agenda nil "A")
+    )
+    (my/leader-keys
+      "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+    )
   )
 
 #+end_src
@@ -4026,6 +4027,11 @@ Most straightforward way to use it is to run ~copilot-chat-transient~ since that
                     whitespace-tab
                     whitespace-trailing))
       (set-face-attribute face nil :foreground "dark red")
+    )
+    ;; Make tabs extra emphasized.
+    (dolist (face '(whitespace-indentation
+                    whitespace-tab))
+      (set-face-attribute face nil :inverse-video t)
     )
 
     (my/leader-keys
