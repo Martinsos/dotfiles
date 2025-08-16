@@ -1708,12 +1708,10 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 #+end_src
 
 *** Agenda custom commands
-
-#+begin_src emacs-lisp :noweb yes
-  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-  ;; calendar events, and I need to know those paths so I can show events in the agenda.
-  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
-
+Order of headings below is important because they depend on each other.
+**** Base settings for Work Diary agenda (daily, weekly, ...) block
+#+begin_src emacs-lisp
+  (with-eval-after-load 'org
     (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
       "Base settings for the agenda block in my work-diary custom agenda commands."
       `((org-agenda-prefix-format " %12s %5e %?-12t")
@@ -1771,37 +1769,12 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
         )
        )
     )
+  )
+#+end_src
 
-    (defun my/make-work-diary-cmd-base-settings ()
-      "Base settings for my work-diary custom agenda commands."
-      `((org-agenda-files `("<<my/work-diary-org-path()>>"
-                            ,my/calendar-events-wasp-org-file
-                            ,my/calendar-events-private-org-file
-                           ))
-
-        ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
-        ;; in this logs about closing an entry and logs about clocking an entry. I could also have
-        ;; added 'state' if needed. I track "closed" logs in order to ensure that entries that are
-        ;; DONE but have been scheduled in the past are shown in agenda (normally they are
-        ;; not). What is not great is that they are not normal but special log entries which are a
-        ;; bit different, so a bit harder to organize.
-        (org-agenda-start-with-log-mode '(closed clock))
-
-        ;; Org agenda shows both scheduled and deadline entries for an item, when available.
-        ;; I don't want that: having duplicate entries for the same item is confusing.
-        ;; With settings below, I have the following behaviour when item is both scheduled and has
-        ;; deadline:
-        ;;  - If it is not deadline yet, then only scheduled entry is shown (be it late or not).
-        ;;  - If the deadline is today or has passed, only deadline entry is shown.
-        ;; NOTE: (org-agenda-skip-deadline-prewarning-if-scheduled t) will still show both scheduled
-        ;;   and deadline entry if the deadline is today. That is why we also need
-        ;;   (org-agenda-skip-scheduled-if-deadline-is-shown t), to solve that case.
-        (org-agenda-skip-deadline-prewarning-if-scheduled t)
-        (org-agenda-skip-scheduled-repeats-after-deadline t)
-        (org-agenda-skip-scheduled-if-deadline-is-shown t)
-       )
-    )
-
+**** Journal agenda block
+#+begin_src emacs-lisp
+  (with-eval-after-load 'org
     ;; TODO: Ok, now I have this as first step, but the next step is actually creating a
     ;; custom custom agenda block in which I will manually display the text I want.
     ;; From what I read, this means that I need to write a lambda that writes that
@@ -1841,7 +1814,49 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
       ;;(insert (org-agenda-finalize-entries entries))  ; not needed?
       (insert "\n")
     )
+  )
+#+end_src
 
+**** Base settings for Work Diary custom agenda commands
+#+begin_src emacs-lisp :noweb yes
+  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
+  ;; calendar events, and I need to know those paths so I can show events in the agenda.
+  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+    (defun my/make-work-diary-cmd-base-settings ()
+      "Base settings for my work-diary custom agenda commands."
+      `((org-agenda-files `("<<my/work-diary-org-path()>>"
+                            ,my/calendar-events-wasp-org-file
+                            ,my/calendar-events-private-org-file
+                           ))
+
+        ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
+        ;; in this logs about closing an entry and logs about clocking an entry. I could also have
+        ;; added 'state' if needed. I track "closed" logs in order to ensure that entries that are
+        ;; DONE but have been scheduled in the past are shown in agenda (normally they are
+        ;; not). What is not great is that they are not normal but special log entries which are a
+        ;; bit different, so a bit harder to organize.
+        (org-agenda-start-with-log-mode '(closed clock))
+
+        ;; Org agenda shows both scheduled and deadline entries for an item, when available.
+        ;; I don't want that: having duplicate entries for the same item is confusing.
+        ;; With settings below, I have the following behaviour when item is both scheduled and has
+        ;; deadline:
+        ;;  - If it is not deadline yet, then only scheduled entry is shown (be it late or not).
+        ;;  - If the deadline is today or has passed, only deadline entry is shown.
+        ;; NOTE: (org-agenda-skip-deadline-prewarning-if-scheduled t) will still show both scheduled
+        ;;   and deadline entry if the deadline is today. That is why we also need
+        ;;   (org-agenda-skip-scheduled-if-deadline-is-shown t), to solve that case.
+        (org-agenda-skip-deadline-prewarning-if-scheduled t)
+        (org-agenda-skip-scheduled-repeats-after-deadline t)
+        (org-agenda-skip-scheduled-if-deadline-is-shown t)
+       )
+    )
+  ))
+#+end_src
+
+**** Work Diary (daily) custom agenda command
+#+begin_src emacs-lisp
+  (with-eval-after-load 'org
     (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
       `(,cmd-key ,cmd-name
          (;; The main view: a list of tasks for today.
@@ -1874,8 +1889,13 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
          )
       )
     )
+  )
+#+end_src
 
-    (defun my/org-time-prefix-format (time)
+**** Show scheduled/deadline as short time prefix
+#+begin_src emacs-lisp
+  (with-eval-after-load 'org
+    (defun my/org-time-to-short-day-with-num (time)
       (if time
           (let* ((day3 (format-time-string "%a" time))
                  (day2 (cond ((string= day3 "Mon") "Mo")
@@ -1895,13 +1915,20 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 
 
     (defun my/org-scheduled-time-prefix ()
-      (my/org-time-prefix-format (org-get-scheduled-time (point)))
+      (my/org-time-to-short-day-with-num (org-get-scheduled-time (point)))
     )
 
     (defun my/org-deadline-time-prefix ()
-      (my/org-time-prefix-format (org-get-deadline-time (point)))
+      (my/org-time-to-short-day-with-num (org-get-deadline-time (point)))
     )
+  )
+#+end_src
 
+**** My custom agenda commands definitions
+#+begin_src emacs-lisp
+  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
+  ;; calendar events, and I need to know those paths so I can show events in the agenda.
+  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
     (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
           ;;   from the work-diary.org file. I could have a heading there called Sprints
           ;;   with category "sprints" where each subheading is a single sprint.
