@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-08-17 00:18:56 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-08-17 00:43:25 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1334,6 +1334,35 @@ Return minutes (number)."
 ))
 
 (with-eval-after-load 'org
+  (defun my/org-time-to-short-day-with-num (time)
+    (if time
+        (let* ((day3 (format-time-string "%a" time))
+               (day2 (cond ((string= day3 "Mon") "Mo")
+                           ((string= day3 "Tue") "Tu")
+                           ((string= day3 "Wed") "We")
+                           ((string= day3 "Thu") "Th")
+                           ((string= day3 "Fri") "Fr")
+                           ((string= day3 "Sat") "Sa")
+                           ((string= day3 "Sun") "Su")))
+               (dayNum (format-time-string "%d" time))
+              )
+            (format "%s%s" day2 dayNum)
+        )
+      "    "
+    )
+  )
+
+
+  (defun my/org-scheduled-time-prefix ()
+    (my/org-time-to-short-day-with-num (org-get-scheduled-time (point)))
+  )
+
+  (defun my/org-deadline-time-prefix ()
+    (my/org-time-to-short-day-with-num (org-get-deadline-time (point)))
+  )
+)
+
+(with-eval-after-load 'org
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
@@ -1369,31 +1398,64 @@ Return minutes (number)."
 )
 
 (with-eval-after-load 'org
-  (defun my/org-time-to-short-day-with-num (time)
-    (if time
-        (let* ((day3 (format-time-string "%a" time))
-               (day2 (cond ((string= day3 "Mon") "Mo")
-                           ((string= day3 "Tue") "Tu")
-                           ((string= day3 "Wed") "We")
-                           ((string= day3 "Thu") "Th")
-                           ((string= day3 "Fri") "Fr")
-                           ((string= day3 "Sat") "Sa")
-                           ((string= day3 "Sun") "Su")))
-               (dayNum (format-time-string "%d" time))
-              )
-            (format "%s%s" day2 dayNum)
-        )
-      "    "
-    )
+  (defun my/make-work-diary-all-tasks-cmd (sprint-current-tag)
+    `("A" "Work Diary: all tasks"
+      ((alltodo ""
+                ((org-agenda-overriding-header "")
+                 (org-agenda-prefix-format
+                  " %(my/org-scheduled-time-prefix) %(my/org-deadline-time-prefix) %5e ")
+                 (org-agenda-sorting-strategy '(scheduled-up
+                                                deadline-up
+                                                priority-down
+                                                todo-state-down
+                                                urgency-down)
+                 )
+                 (org-super-agenda-groups
+                  '((:name ,(concat "Current sprint (" sprint-current-tag ") tasks" )
+                           :order 0
+                           :and (:category "task" :tag ,sprint-current-tag))
+                    (:name "Epics"
+                           :order 1
+                           :and (:category "task" :todo "EPIC"))
+                    (:name "Inbox"
+                           :order 2
+                           :and (:category "task" :todo "INBOX"))
+                    (:name "To read"
+                           :order 4
+                           :and (:category "task" :tag "read"))
+                    (:name "Tasks"
+                           :order 3
+                           :category "task")
+                    (:discard (:anything t))
+                   )
+                 )
+                )
+      ))
+      (,@(my/make-work-diary-cmd-base-settings)
+      )
+     )
   )
+)
 
-
-  (defun my/org-scheduled-time-prefix ()
-    (my/org-time-to-short-day-with-num (org-get-scheduled-time (point)))
-  )
-
-  (defun my/org-deadline-time-prefix ()
-    (my/org-time-to-short-day-with-num (org-get-deadline-time (point)))
+(with-eval-after-load 'org
+  (defun my/make-work-diary-sprint-calendar-cmd (sprint-length-in-weeks sprint-start-weekday)
+    `("w" "Work Diary: sprint calendar"
+      ((agenda ""
+               (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
+                (org-agenda-span ,(* 7 sprint-length-in-weeks))
+                (org-agenda-time-grid '((require-timed remove-match)
+                                        ()
+                                        " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+                                       )
+                )
+               )
+       )
+      )
+      (,@(my/make-work-diary-cmd-base-settings)
+       ;; NOTE: `org-agenda-start-on-weekday' works only if sprint length is 7 or 14 days.
+       (org-agenda-start-on-weekday ,sprint-start-weekday)
+      )
+     )
   )
 )
 
@@ -1416,60 +1478,8 @@ Return minutes (number)."
           (list
            (my/make-work-diary-day-cmd "d" "Work Diary: today"      nil)
            (my/make-work-diary-day-cmd "D" "Work Diary: tomorrow" "+1d")
-
-           `("w" "Work Diary: sprint calendar"
-             ((agenda ""
-                      (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
-                       (org-agenda-span ,(* 7 work-diary-sprint-length-in-weeks))
-                       (org-agenda-time-grid '((require-timed remove-match)
-                                               ()
-                                               " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
-                                              )
-                       )
-                      )
-              )
-             )
-             (,@(my/make-work-diary-cmd-base-settings)
-              ;; NOTE: `org-agenda-start-on-weekday' works only if sprint length is 7 or 14 days.
-              (org-agenda-start-on-weekday ,work-diary-sprint-start-weekday)
-             )
-            )
-
-           `("A" "Work Diary: all tasks"
-             ((alltodo ""
-                       ((org-agenda-overriding-header "")
-                        (org-agenda-prefix-format
-                         " %(my/org-scheduled-time-prefix) %(my/org-deadline-time-prefix) %5e ")
-                        (org-agenda-sorting-strategy '(scheduled-up
-                                                       deadline-up
-                                                       priority-down
-                                                       todo-state-down
-                                                       urgency-down)
-                        )
-                        (org-super-agenda-groups
-                         '((:name ,(concat "Current sprint (" work-diary-sprint-current-tag ") tasks" )
-                                  :order 0
-                                  :and (:category "task" :tag ,work-diary-sprint-current-tag))
-                           (:name "Epics"
-                                  :order 1
-                                  :and (:category "task" :todo "EPIC"))
-                           (:name "Inbox"
-                                  :order 2
-                                  :and (:category "task" :todo "INBOX"))
-                           (:name "To read"
-                                  :order 4
-                                  :and (:category "task" :tag "read"))
-                           (:name "Tasks"
-                                  :order 3
-                                  :category "task")
-                           (:discard (:anything t))
-                          )
-                        )
-                       )
-             ))
-             (,@(my/make-work-diary-cmd-base-settings)
-             )
-            )
+           (my/make-work-diary-sprint-calendar-cmd work-diary-sprint-length-in-weeks work-diary-sprint-start-weekday)
+           (my/make-work-diary-all-tasks-cmd work-diary-sprint-current-tag)
 
            '("p" "Private Diary"
              (;; The main view: a list of tasks for today.
