@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-08-17 00:43:25 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-08-17 00:57:15 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1462,6 +1462,65 @@ Return minutes (number)."
 ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
 ;; calendar events, and I need to know those paths so I can show events in the agenda.
 (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (defun my/make-private-diary-cmd ()
+    '("p" "Private Diary"
+      (;; The main view: a list of tasks for today.
+       (agenda ""
+               ((org-agenda-span 'day)
+                (org-agenda-prefix-format " %12s %5e ")
+                (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
+                (org-habit-show-all-today t)
+                (org-super-agenda-groups
+                 '((:name "Habits"
+                          :and (:category "habit"
+                                :not (:log t))
+                   )
+                   ;; Tasks to be done today.
+                   (:name "Todo"
+                          :and (:category "task"
+                                :scheduled t
+                                :not (:scheduled future)
+                                :not (:log t))
+                   )
+                   ;; Tasks that were done today.
+                   (:name none
+                          :and (:category "task"
+                                :log closed)
+                   )
+                  )
+                )
+               )
+       )
+       ;; All tasks without a schedule or a deadline.
+       (alltodo ""
+                ((org-agenda-overriding-header "")
+                 (org-agenda-prefix-format " %5e ")
+                 (org-super-agenda-groups
+                  '((:discard (:scheduled t :deadline t :time-grid t))
+                    (:name "All tasks with no schedule / deadline"
+                           :category "task"
+                    )
+                    (:discard (:anything t))
+                   )
+                 )
+                )
+       )
+      )
+      ((org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
+
+       (org-agenda-start-with-log-mode '(closed clock))
+       (org-agenda-skip-scheduled-if-done t)
+       (org-agenda-skip-deadline-if-done t)
+
+       (org-agenda-skip-deadline-prewarning-if-scheduled t)
+       (org-agenda-skip-scheduled-repeats-after-deadline t)
+      )
+     )
+  )
+))
+
+;; Some of the functions used here are evaled only after org-gcal (as defined above), so I also have to wait for it here.
+(with-eval-after-load 'org (with-eval-after-load 'org-gcal
   (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
         ;;   from the work-diary.org file. I could have a heading there called Sprints
         ;;   with category "sprints" where each subheading is a single sprint.
@@ -1480,60 +1539,7 @@ Return minutes (number)."
            (my/make-work-diary-day-cmd "D" "Work Diary: tomorrow" "+1d")
            (my/make-work-diary-sprint-calendar-cmd work-diary-sprint-length-in-weeks work-diary-sprint-start-weekday)
            (my/make-work-diary-all-tasks-cmd work-diary-sprint-current-tag)
-
-           '("p" "Private Diary"
-             (;; The main view: a list of tasks for today.
-              (agenda ""
-                      ((org-agenda-span 'day)
-                       (org-agenda-prefix-format " %12s %5e ")
-                       (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
-                       (org-habit-show-all-today t)
-                       (org-super-agenda-groups
-                        '((:name "Habits"
-                                 :and (:category "habit"
-                                       :not (:log t))
-                          )
-                          ;; Tasks to be done today.
-                          (:name "Todo"
-                                 :and (:category "task"
-                                       :scheduled t
-                                       :not (:scheduled future)
-                                       :not (:log t))
-                          )
-                          ;; Tasks that were done today.
-                          (:name none
-                                 :and (:category "task"
-                                       :log closed)
-                          )
-                         )
-                       )
-                      )
-              )
-              ;; All tasks without a schedule or a deadline.
-              (alltodo ""
-                       ((org-agenda-overriding-header "")
-                        (org-agenda-prefix-format " %5e ")
-                        (org-super-agenda-groups
-                         '((:discard (:scheduled t :deadline t :time-grid t))
-                           (:name "All tasks with no schedule / deadline"
-                                  :category "task"
-                           )
-                           (:discard (:anything t))
-                          )
-                        )
-                       )
-              )
-             )
-             ((org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
-
-              (org-agenda-start-with-log-mode '(closed clock))
-              (org-agenda-skip-scheduled-if-done t)
-              (org-agenda-skip-deadline-if-done t)
-
-              (org-agenda-skip-deadline-prewarning-if-scheduled t)
-              (org-agenda-skip-scheduled-repeats-after-deadline t)
-             )
-            )
+           (my/make-private-diary-cmd)
           )
     )
   )
