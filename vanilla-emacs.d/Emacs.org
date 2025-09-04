@@ -1057,8 +1057,9 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
             ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
             ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
             ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-            ("EPIC" . (:foreground "orchid" :weight bold))
-            ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("PROJECT" . (:foreground "orchid" :weight bold))
+            ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
             ("CHKL" . (:foreground "grey" :weight bold))
             ("NOTE" . (:foreground "white" :weight bold))
            )
@@ -1943,9 +1944,9 @@ Order of headings below is important because they depend on each other.
                     '((:name ,(concat "Current sprint (" sprint-current-tag ") tasks" )
                              :order 0
                              :and (:category "task" :tag ,sprint-current-tag))
-                      (:name "Epics"
+                      (:name "Projects"
                              :order 1
-                             :and (:category "task" :todo "EPIC"))
+                             :and (:category "task" :todo "PROJECT"))
                       (:name "Inbox"
                              :order 2
                              :and (:category "task" :todo "INBOX"))

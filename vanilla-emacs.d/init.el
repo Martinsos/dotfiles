@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-08-17 00:57:15 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-04 21:57:06 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -724,8 +724,9 @@ USAGE:
           ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
           ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
           ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-          ("EPIC" . (:foreground "orchid" :weight bold))
-          ("CANCELED[EPIC]" . (:foreground "dim gray" :weight bold :strike-through t))
+          ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
+          ("PROJECT" . (:foreground "orchid" :weight bold))
+          ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
           ("CHKL" . (:foreground "grey" :weight bold))
           ("NOTE" . (:foreground "white" :weight bold))
          )
@@ -1414,9 +1415,9 @@ Return minutes (number)."
                   '((:name ,(concat "Current sprint (" sprint-current-tag ") tasks" )
                            :order 0
                            :and (:category "task" :tag ,sprint-current-tag))
-                    (:name "Epics"
+                    (:name "Projects"
                            :order 1
-                           :and (:category "task" :todo "EPIC"))
+                           :and (:category "task" :todo "PROJECT"))
                     (:name "Inbox"
                            :order 2
                            :and (:category "task" :todo "INBOX"))
