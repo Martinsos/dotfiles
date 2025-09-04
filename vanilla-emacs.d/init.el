@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-04 21:57:06 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-04 22:09:16 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -659,7 +659,12 @@ USAGE:
     "oa"  '("agenda" . org-agenda)
     "oc"  '("capture" . org-capture)
     "ol"  '("store link" . org-store-link)
-    "od"  '("daily agenda view" . (lambda () (interactive) (delete-other-windows) (scratch-buffer) (org-agenda nil "d")))
+    "od"  '("[view] daily agenda" . (lambda ()
+                                    (interactive)
+                                    (delete-other-windows)
+                                    (scratch-buffer)
+                                    (org-agenda nil "d")
+                                    (org-agenda-redo)))
   )
 
   (general-define-key
@@ -1552,11 +1557,13 @@ Return minutes (number)."
     (interactive)
     (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
     (org-agenda nil "w")
+    (org-agenda-redo)
     (delete-other-windows)
     (org-agenda nil "A")
+    (org-agenda-redo)
   )
   (my/leader-keys
-    "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+    "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
   )
 )
 

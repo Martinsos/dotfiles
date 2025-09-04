@@ -992,7 +992,12 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       "oa"  '("agenda" . org-agenda)
       "oc"  '("capture" . org-capture)
       "ol"  '("store link" . org-store-link)
-      "od"  '("daily agenda view" . (lambda () (interactive) (delete-other-windows) (scratch-buffer) (org-agenda nil "d")))
+      "od"  '("[view] daily agenda" . (lambda ()
+                                      (interactive)
+                                      (delete-other-windows)
+                                      (scratch-buffer)
+                                      (org-agenda nil "d")
+                                      (org-agenda-redo)))
     )
 
     (general-define-key
@@ -2092,11 +2097,13 @@ Order of headings below is important because they depend on each other.
       (interactive)
       (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
       (org-agenda nil "w")
+      (org-agenda-redo)
       (delete-other-windows)
       (org-agenda nil "A")
+      (org-agenda-redo)
     )
     (my/leader-keys
-      "op"  '("planning view" . my/work-diary-open-sprint-planning-windows)
+      "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
     )
   )
 
