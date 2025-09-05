@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-04 22:09:16 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-05 13:31:42 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1264,44 +1264,52 @@ Return minutes (number)."
 )
 
 (with-eval-after-load 'org
-  ;; TODO: Ok, now I have this as first step, but the next step is actually creating a
-  ;; custom custom agenda block in which I will manually display the text I want.
-  ;; From what I read, this means that I need to write a lambda that writes that
-  ;; text to buffer. I will also want to add text properties that are typical for org agenda,
-  ;; for example marker for place in org file from which the text originated,
-  ;; so I can easily jump there. I can use text-describe to see how they do it and copy it.
-  ;; So I will probably want to jump to "Journal" top level heading in the file,
-  ;; then go down the date tree to the correct date, and show its content, or if none,
-  ;; show "no entry yet" that jumps to the right place in the org file.
-  ;; This function below might change in this process, but is a nice starting point.
-  ;; TODO: Implement this based on the implementation of org-ql-block . Check function
-  ;; below where I started.
-  (defun my/org-entry-in-todays-datetree-p ()
-    "Return t if the current Org entry is under today's datetree path."
-    (let ((dt-heading-today-regex (format-time-string "\\b%Y-%m-%d\\b"))
-          (current-org-entry-outline-path (org-get-outline-path t)))
-      (not (null
-            (cl-some
-             (lambda (heading) (string-match dt-heading-today-regex heading))
-             current-org-entry-outline-path)
-      ))
+  (defun my/render-today-journal-in-agenda (journal-file-path)
+    "Display today's journal content in the agenda buffer (from given file, from datetree under heading \"Journal\")."
+    (let* ((journal-heading "Journal")
+           (curr-time-smhdmy (decode-time (current-time)))
+           (today-date-mdy (list (nth 4 curr-time-smhdmy)
+                                 (nth 3 curr-time-smhdmy)
+                                 (nth 5 curr-time-smhdmy)))
+           (journal-content-to-insert
+            (if (file-exists-p journal-file-path)
+                ;; We open the existing (or create new) buffer that points to file with Journal.
+                ;; But we don't display/select it, it is opened in the background.
+                ;; This is how agenda in general works with the org files that are data sources,
+                ;; so we emulate that.
+                (with-current-buffer (find-file-noselect journal-file-path)
+                  ;; We need 'font-lock-ensure' because otherwise no higlighting is performed
+                  ;; by org-mode (because buffer is opened with noselect),
+                  ;; so the journal content text we copy over would be bland.
+                  (font-lock-ensure)
+                  (save-excursion
+                    (let ((journal-heading-pos (org-find-exact-headline-in-buffer journal-heading nil t)))
+                      (if journal-heading-pos
+                          (progn
+                            (goto-char journal-heading-pos)
+                            (org-datetree-find-date-create today-date-mdy 'subtree-at-point)
+                            (let* ((journal-today-content (org-get-entry)))
+                              (if (not (string-blank-p journal-today-content))
+                                  journal-today-content
+                                "No entries yet"
+                              )
+                            )
+                          )
+                        (format "%s heading not found" journal-heading)
+                      )
+                    )
+                  )
+                )
+              (format "Journal file (%s) not found" journal-file-path)
+            )
+           )
+          )
+      (org-agenda-prepare) ; Prepage agenda for writing into it.
+      ;; TODO: Attach marker that will take us back to the journal entry, using org-marker.
+      (insert (org-add-props " Journal (today)" nil 'face 'org-agenda-structure) "\n")
+      (insert (replace-regexp-in-string "^" "    " journal-content-to-insert)) ; Indent.
+      (insert "\n")
     )
-  )
-
-  ;; TODO: Implement this based on the implementation of org-ql-block .
-  ;; I just implemented something very dummy for now, it renders some text,
-  ;; but at the start of the agenda buffer.
-  (defun my/journal-agenda-block (arg1)
-    "TODO"
-    (org-agenda-prepare) ; Sets up the agenda buffer for us to write in it.
-    (insert (org-add-props " Journal (today)" nil 'face 'org-agenda-structure) "\n")
-    (insert " - This is some dummy entry\n - And this is another one")
-    ;; TODO: Open the file with the journal (get it from arg1 or hardcode it?),
-    ;; jump to the "Journal" heading, get to the right day heading, show its content/entries.
-    ;; I might even want to create the datetree day heading (and its parents) if it doesn't exist.
-    ;; Propertize the entries with correct org props so that one can easily jump into journal.
-    ;;(insert (org-agenda-finalize-entries entries))  ; not needed?
-    (insert "\n")
   )
 )
 
@@ -1369,6 +1377,10 @@ Return minutes (number)."
 )
 
 (with-eval-after-load 'org
+  (defun my/work-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
+    (my/render-today-journal-in-agenda "~/Dropbox/work-diary.org")
+  )
+
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
        (;; The main view: a list of tasks for today.
@@ -1383,7 +1395,7 @@ Return minutes (number)."
                  )
                 )
         )
-        (my/journal-agenda-block)
+        (my/work-diary-journal-agenda-block "")
         ;; Notes.
         (alltodo ""
                  ((org-agenda-overriding-header "")
