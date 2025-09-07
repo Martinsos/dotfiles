@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-05 13:31:42 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-05 22:15:33 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1547,7 +1547,7 @@ Return minutes (number)."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s45")
+        (work-diary-sprint-current-tag "s48")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )

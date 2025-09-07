@@ -2085,7 +2085,7 @@ Order of headings below is important because they depend on each other.
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s45")
+          (work-diary-sprint-current-tag "s48")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -4346,6 +4346,7 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 - https://github.com/jdtsmith/ultra-scroll -> external package
 *** TODO Try org roam, what is it about?
 ** Going beyond
+*** TODO package: org-modern for very nice org mode look.
 *** TODO Set up RSS feeds following in emacs ([[https://www.reddit.com/r/emacs/s/bOnWC7cv44][reddit]])
 *** TODO Read [[https://www.reddit.com/r/emacs/s/mnpkOjzbOT][Article with nice explanation of IDE packages (lsp, dap, ...)]]
 *** TODO Check out Prot's basic [[https://protesilaos.com/codelog/2024-11-28-basic-emacs-configuration/][emacs config]]
