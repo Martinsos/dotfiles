@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-05 22:15:33 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-07 23:06:30 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -650,7 +650,7 @@ USAGE:
   :defer t
   :hook
   (org-mode . (lambda ()
-    (org-indent-mode) ; Enforces correct indentation under each heading.
+    ;; (org-indent-mode) ; Enforces correct indentation under each heading.
     (visual-line-mode 1)
     (setq evil-auto-indent nil)
   ))
@@ -746,22 +746,6 @@ USAGE:
   )
 )
 
-;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
-(use-package org-superstar
-  :after (org)
-  :defer t
-  :hook (org-mode . org-superstar-mode)
-  :custom
-  ;; I use `org-superstar-leading-bullets' to hide leading stars of the heading by setting them to space.
-  ;; I use two spaces because that is how they have shown it should be done in the docs and it works well.
-  ;; Why don't I use `org-superstar-remove-leading-stars', which should hide them for real?
-  ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
-  (org-superstar-leading-bullet "  ")
-  (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
-  :config
-  (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
-)
-
 ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
 (use-package org-tempo
   :after (org)
@@ -776,6 +760,22 @@ USAGE:
   (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'normal))
   (org-rainbow-tags-adjust-color-percent 100) ; Make colors as light as possible, so they work well with dark bg.
 )
+
+;; ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
+;; (use-package org-superstar
+;;   :after (org)
+;;   :defer t
+;;   :hook (org-mode . org-superstar-mode)
+;;   :custom
+;;   ;; I use `org-superstar-leading-bullets' to hide leading stars of the heading by setting them to space.
+;;   ;; I use two spaces because that is how they have shown it should be done in the docs and it works well.
+;;   ;; Why don't I use `org-superstar-remove-leading-stars', which should hide them for real?
+;;   ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
+;;   (org-superstar-leading-bullet "  ")
+;;   (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
+;;   :config
+;;   (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
+;; )
 
 ;; Display "prettified" pieces of text in their raw shape when point is on them.
 ;; E.g. links or superscript.
@@ -793,6 +793,11 @@ USAGE:
   ;; Make bold and italic and similar nice by default, since we now have org-appear
   ;; to show them as raw when needed.
   (org-hide-emphasis-markers t)
+)
+
+(use-package org-modern
+  :config
+  (global-org-modern-mode)
 )
 
 (use-package org-download
