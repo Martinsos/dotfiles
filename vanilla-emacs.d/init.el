@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-05 22:15:33 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-08 22:59:22 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1202,6 +1202,48 @@ Return minutes (number)."
 )
 
 (add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
+
+(defun my/org-get-parent-todo (marker)
+  "Return parent TODO info as (:heading HEADING :marker MARKER) if exists, nil otherwise."
+  (when-let* ((buffer (marker-buffer marker))
+              (pos (marker-position marker)))
+    (with-current-buffer buffer
+      (save-excursion
+        (goto-char pos)
+        (when (org-up-heading-safe)
+          (when (org-get-todo-state)
+            (list :heading (org-get-heading)
+                  :marker (point-marker))))))))
+
+(defun my/org-agenda-show-parent-todo ()
+  "Add overlay showing parent TODO only for actual TODO agenda entries."
+  (my/org-agenda-remove-parent-overlays)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (when-let* ((marker (get-text-property (point) 'org-marker))
+                  (todo-state (get-text-property (point) 'todo-state))
+                  (parent-info (my/org-get-parent-todo marker)))
+        (let ((ov (make-overlay (line-end-position) (line-end-position))))
+          ;; TODO: Improve highlighting. Heading is propertized, so use that, and also don't
+          ;;   somehow make it less visible (purple background or something?).
+          ;;   Or maybe leave it as it is? Hm what about smaller / different font?
+          ;; TODO: Shift it so that it maches the entry above, is a bit right from it,
+          ;;   right now it starts on the left.
+          ;; TODO: For some reason, when I call refresh in agenda view, if cursor is after
+          ;;    any of the overlays, whole agenda moves (for 1 or for as many overlays is above?),
+          ;;    can we fix that?
+          (overlay-put ov 'after-string
+                      (propertize (concat "\n    ↳ " (plist-get parent-info :heading))
+                                'face 'org-agenda-dimmed-todo-face))
+          (overlay-put ov 'org-parent-todo-overlay t)))
+      (forward-line 1))))
+
+(defun my/org-agenda-remove-parent-todo-overlays ()
+  "Remove parent TODO overlays."
+  (remove-overlays (point-min) (point-max) 'org-parent-todo-overlay t))
+
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-show-parent-todo)
 
 (with-eval-after-load 'org
   (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
