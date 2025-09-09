@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-08 22:59:22 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-09 10:29:03 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1203,6 +1203,35 @@ Return minutes (number)."
 
 (add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
 
+(defun my/org-agenda-show-parent-todo ()
+  "Add overlay showing parent TODO only for actual TODO agenda entries."
+  (remove-overlays (point-min) (point-max) 'org-parent-todo-overlay t)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (when-let* ((marker (get-text-property (point) 'org-marker))
+                  (todo-state (get-text-property (point) 'todo-state))
+                  (parent-info (my/org-get-parent-todo marker))
+                  (heading-offset (my/org-agenda-find-heading-offset)))
+        (let ((ov (make-overlay (line-end-position) (line-end-position))))
+          ;; TODO: Improve highlighting. Heading is propertized, so use that, and also don't
+          ;;   somehow make it less visible (purple background or something?).
+          ;;   Or maybe leave it as it is? Hm what about smaller / different font?
+          ;; TODO: For some reason, when I call refresh in agenda view, if cursor is after
+          ;;    any of the overlays, whole agenda moves (for 1 or for as many overlays is above?),
+          ;;    can we fix that?
+          (overlay-put ov 'after-string
+                       (propertize (concat "\n"
+                                           ;; TODO: heading-offset spaces is not enough indentation in case when my/org-agenda-parent-todo-face has smaller font than the entry itself. So what I need to do is scale the number of spaces according to the difference in the face heights. For now I just popped in 7 extra spaces as a hardcoded fix for when parent todo face is 0.9, but I should extract that value of 0.9 and use it here to calculate num of spaces (probably heading-offset * 1 / 0.9, and then +1 to be safe?).
+                                           (make-string (+ heading-offset 7) ?\s)
+                                           "↳ "
+                                           (plist-get parent-info :heading))
+                                   'face 'my/org-agenda-parent-todo-face))
+          (overlay-put ov 'org-parent-todo-overlay t)))
+      (forward-line 1))))
+
+(add-hook 'org-agenda-finalize-hook 'my/org-agenda-show-parent-todo)
+
 (defun my/org-get-parent-todo (marker)
   "Return parent TODO info as (:heading HEADING :marker MARKER) if exists, nil otherwise."
   (when-let* ((buffer (marker-buffer marker))
@@ -1215,35 +1244,23 @@ Return minutes (number)."
             (list :heading (org-get-heading)
                   :marker (point-marker))))))))
 
-(defun my/org-agenda-show-parent-todo ()
-  "Add overlay showing parent TODO only for actual TODO agenda entries."
-  (my/org-agenda-remove-parent-overlays)
+(defun my/org-agenda-find-heading-offset ()
+  "Find the column offset (from the start of the line) where the heading starts on the current agenda line.
+Returns nil if no heading found."
   (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (when-let* ((marker (get-text-property (point) 'org-marker))
-                  (todo-state (get-text-property (point) 'todo-state))
-                  (parent-info (my/org-get-parent-todo marker)))
-        (let ((ov (make-overlay (line-end-position) (line-end-position))))
-          ;; TODO: Improve highlighting. Heading is propertized, so use that, and also don't
-          ;;   somehow make it less visible (purple background or something?).
-          ;;   Or maybe leave it as it is? Hm what about smaller / different font?
-          ;; TODO: Shift it so that it maches the entry above, is a bit right from it,
-          ;;   right now it starts on the left.
-          ;; TODO: For some reason, when I call refresh in agenda view, if cursor is after
-          ;;    any of the overlays, whole agenda moves (for 1 or for as many overlays is above?),
-          ;;    can we fix that?
-          (overlay-put ov 'after-string
-                      (propertize (concat "\n    ↳ " (plist-get parent-info :heading))
-                                'face 'org-agenda-dimmed-todo-face))
-          (overlay-put ov 'org-parent-todo-overlay t)))
-      (forward-line 1))))
+    (beginning-of-line)
+    (let ((line-start (point))
+          (line-end (line-end-position)))
+      (while (and (< (point) line-end)
+                  (not (get-text-property (point) 'org-heading)))
+        (forward-char))
+      (when (< (point) line-end)
+        (- (point) line-start)))))
 
-(defun my/org-agenda-remove-parent-todo-overlays ()
-  "Remove parent TODO overlays."
-  (remove-overlays (point-min) (point-max) 'org-parent-todo-overlay t))
-
-(add-hook 'org-agenda-finalize-hook 'my/org-agenda-show-parent-todo)
+(defface my/org-agenda-parent-todo-face
+  '((t :inherit shadow :height 0.9))
+  "Face for parent TODO items shown in org agenda."
+  :group 'org-faces)
 
 (with-eval-after-load 'org
   (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
