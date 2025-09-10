@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-09 10:29:03 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-10 12:21:17 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1214,19 +1214,35 @@ Return minutes (number)."
                   (parent-info (my/org-get-parent-todo marker))
                   (heading-offset (my/org-agenda-find-heading-offset)))
         (let ((ov (make-overlay (line-end-position) (line-end-position))))
-          ;; TODO: Improve highlighting. Heading is propertized, so use that, and also don't
-          ;;   somehow make it less visible (purple background or something?).
-          ;;   Or maybe leave it as it is? Hm what about smaller / different font?
           ;; TODO: For some reason, when I call refresh in agenda view, if cursor is after
           ;;    any of the overlays, whole agenda moves (for 1 or for as many overlays is above?),
           ;;    can we fix that?
+          ;; TODO: Idea: Optimize coloring of the parent todo.
+          ;;    So the text below, from '(plist-get parent-info :heading)', actually comes with
+          ;;    full coloring from the org file. The reason we cover it with ':foreground "gray"'
+          ;;    is that it is too colorful actually - normal agenda entries don't have all those
+          ;;    colors form org file, only ToDo keywords and some other stuff.
+          ;;    So right now it is just gray, because it was grabbing too much attention.
+          ;;    But we could look into some middle ground possibly: e.g. split the heading string
+          ;;    by the first space, which will give us the ToDo keyword, then apply "gray"
+          ;;    to the rest of the heading, and then concat them back together -> that way
+          ;;    we make it all gray except for the ToDo keyword.
+          ;;    Might still be too colorful though.
           (overlay-put ov 'after-string
-                       (propertize (concat "\n"
-                                           ;; TODO: heading-offset spaces is not enough indentation in case when my/org-agenda-parent-todo-face has smaller font than the entry itself. So what I need to do is scale the number of spaces according to the difference in the face heights. For now I just popped in 7 extra spaces as a hardcoded fix for when parent todo face is 0.9, but I should extract that value of 0.9 and use it here to calculate num of spaces (probably heading-offset * 1 / 0.9, and then +1 to be safe?).
-                                           (make-string (+ heading-offset 7) ?\s)
-                                           "↳ "
-                                           (plist-get parent-info :heading))
-                                   'face 'my/org-agenda-parent-todo-face))
+                       (concat
+                        "\n"
+                        (make-string heading-offset ?\s)
+                        (my/add-face-text-property-to-string
+                         `(:height ,(floor (* (face-attribute 'default :height) 0.8))
+                           :weight light
+                           :slant italic
+                           ;:background "black"
+                           :foreground "gray")
+                         nil
+                         (concat "↳ " (plist-get parent-info :heading))
+                        )
+                       )
+          )
           (overlay-put ov 'org-parent-todo-overlay t)))
       (forward-line 1))))
 
@@ -1257,10 +1273,11 @@ Returns nil if no heading found."
       (when (< (point) line-end)
         (- (point) line-start)))))
 
-(defface my/org-agenda-parent-todo-face
-  '((t :inherit shadow :height 0.9))
-  "Face for parent TODO items shown in org agenda."
-  :group 'org-faces)
+(defun my/add-face-text-property-to-string (face append str)
+  "Add FACE to the string STR.  Modify it in place but also return it.  Check 'add-face-text-property' for more details (e.g. for info on APPEND)."
+  (add-face-text-property 0 (length str) face append str)
+  str
+)
 
 (with-eval-after-load 'org
   (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
