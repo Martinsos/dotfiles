@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-10 12:21:17 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-18 21:57:54 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -971,7 +971,9 @@ USAGE:
   (set-face-attribute 'org-agenda-current-time nil
                       :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
                       :weight 'bold)
-  ;; Make events in the time grid that are not scheduled tasks not stand out.
+  (set-face-attribute 'org-agenda-date-today nil
+                      :underline t)
+  ;; Make events in the time grid that are not tasks not stand out.
   (set-face-attribute 'org-agenda-calendar-event nil
                       :foreground (face-attribute 'org-time-grid :foreground))
 )
@@ -1294,14 +1296,14 @@ Returns nil if no heading found."
          (:discard (:todo "INBOX"))
          ,@(if show-daily-checklist
                '(;; Repeating tasks to be done every day, including today.
-                 (:name "Daily Checklist"
+                 (:name "📋 Daily Checklist"
                         :and (:category "dc"
                               :not (:log t))
                  )
                 )
              '()
            )
-         (:name "Todo (today)"
+         (:name "🎯 Todo (today)"
                 :and (:time-grid t :not (:log t))
          )
          (:name "        No specific time:"
@@ -1320,12 +1322,12 @@ Returns nil if no heading found."
                  :and (:category "task"
                        :log closed)
          )
-         (:name "Clock log"
+         (:name "🕐 Clock log"
                 :log clocked
          )
          ,@(if show-other-tasks
                '(
-                 (:name "Other (e.g. deadline w/o scheduled)"
+                 (:name "🗃️ Other (e.g. deadline w/o scheduled)"
                         :anything t
                  )
                 )
@@ -1382,7 +1384,7 @@ Returns nil if no heading found."
           )
       (org-agenda-prepare) ; Prepage agenda for writing into it.
       ;; TODO: Attach marker that will take us back to the journal entry, using org-marker.
-      (insert (org-add-props " Journal (today)" nil 'face 'org-agenda-structure) "\n")
+      (insert (org-add-props " 💭 Journal (today)" nil 'face 'org-agenda-structure) "\n")
       (insert (replace-regexp-in-string "^" "    " journal-content-to-insert)) ; Indent.
       (insert "\n")
     )
@@ -1477,7 +1479,7 @@ Returns nil if no heading found."
                  ((org-agenda-overriding-header "")
                   (org-agenda-prefix-format "    ")
                   (org-super-agenda-groups
-                   '((:name "Notes" :category "note")
+                   '((:name "📌 Notes" :category "note")
                      (:discard (:anything t))
                     )
                   )
