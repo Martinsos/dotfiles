@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-18 21:57:54 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-22 11:37:06 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.10)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -283,6 +283,18 @@ USAGE:
   (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
 
   (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
+
+  ;; Emacs looks at these two to decide if new window should be opened vertically (width threshold) or horizontally (height threshold).
+  ;; Caveat: if both thresholds are met, it will prefer opening horizontally.
+  ;; I however prefer opening new windows vertically, so I put quite strict threshold on height, so that it will open
+  ;; them horizontally only if screen is really tall enough to support it.
+  ;;
+  ;; If I can fit two windows of 80 rows above each other, then I am ok with splitting horizontally.
+  ;; This will normally be satisfied only if we are on the screen in portrait mode.
+  (setq split-height-threshold 160)
+  ;; If I can fit two windows of 80 chars width next to each other, then I am ok with splitting vertically.
+  ;; This should be satisfied on most of the screens.
+  (setq split-width-threshold 160)
 )
 
 (use-package epg-config
@@ -971,7 +983,7 @@ USAGE:
   (set-face-attribute 'org-agenda-current-time nil
                       :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
                       :weight 'bold)
-  (set-face-attribute 'org-agenda-date-today nil
+  (set-face-attribute 'org-agenda-date nil
                       :underline t)
   ;; Make events in the time grid that are not tasks not stand out.
   (set-face-attribute 'org-agenda-calendar-event nil
@@ -1480,6 +1492,9 @@ Returns nil if no heading found."
                   (org-agenda-prefix-format "    ")
                   (org-super-agenda-groups
                    '((:name "📌 Notes" :category "note")
+                     (:name "📥 Inbox"
+                           :order 2
+                           :and (:category "task" :todo "INBOX"))
                      (:discard (:anything t))
                     )
                   )
@@ -1625,7 +1640,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s48")
+        (work-diary-sprint-current-tag "s49")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
