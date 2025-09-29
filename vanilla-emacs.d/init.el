@@ -1,8 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-22 11:37:06 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-30 00:50:11 CEST, don't edit it manually.
 
-(defvar elpaca-installer-version 0.10)
+(defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -11,9 +11,9 @@
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-      (build (expand-file-name "elpaca/" elpaca-builds-directory))
-      (order (cdr elpaca-order))
-      (default-directory repo))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
   (add-to-list 'load-path (if (file-exists-p build) build repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
@@ -37,11 +37,13 @@
   (unless (require 'elpaca-autoloads nil t)
     (require 'elpaca)
     (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
+    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
 (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
+;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
 ;;(setq elpaca-lock-file nil)
 
 (defun my/elpaca-write-lock-file ()
@@ -435,9 +437,13 @@ USAGE:
 
     "`"   '("mark ring" . counsel-mark-ring)
 
-    "t"   '("toggles" . (keymap)) ; This is how prefix is defined.
-    "tt"  '("choose theme" . counsel-load-theme)
-    "ts"  '("scale text" . hydra-text-scale/body)
+    "t"   '("toggle" . (keymap))
+
+    "c"   '("change / customize" . (keymap))
+    "cT"  '("choose theme" . counsel-load-theme)
+    "ct"  '("scale text" . (keymap))
+    "ctg"  '("scale text [global]" . global-text-scale-adjust)
+    "ctl"  '("scale text [local]" . hydra-text-scale/body)
 
     "a"   '("apps" . (keymap))
     "au"  '("undo tree" . vundo)
@@ -712,6 +718,18 @@ USAGE:
     (set-face-attribute (car face) nil :height (cdr face))
   )
 
+  ;; By default, org columns view produces rows of of different font heights for different heading levels,
+  ;; caused somehow by org-indent, and that result in misaligned cells per column.
+  ;; Therefore, I set :inherit 'default here, which fixes that (but looses pulling in any original styling from heading).
+  (set-face-attribute 'org-column nil
+                      :inherit 'default
+                      :height 1.333
+                      :foreground (face-attribute 'outline-1 :foreground)
+                      :weight 'bold)
+  (set-face-attribute 'org-column-title nil
+                      :height 1.333
+                      :foreground (face-attribute 'outline-1 :foreground))
+
   (setq org-log-into-drawer t)
   (setq org-habit-graph-column 60)
 
@@ -983,8 +1001,6 @@ USAGE:
   (set-face-attribute 'org-agenda-current-time nil
                       :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
                       :weight 'bold)
-  (set-face-attribute 'org-agenda-date nil
-                      :underline t)
   ;; Make events in the time grid that are not tasks not stand out.
   (set-face-attribute 'org-agenda-calendar-event nil
                       :foreground (face-attribute 'org-time-grid :foreground))

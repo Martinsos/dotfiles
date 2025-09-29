@@ -131,7 +131,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 #+begin_src emacs-lisp
 
-  (defvar elpaca-installer-version 0.10)
+  (defvar elpaca-installer-version 0.11)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
   (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -140,9 +140,9 @@ That also means that `after-init-hook` is often not the right choice any more, a
                                 :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                                 :build (:not elpaca--activate-package)))
   (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-        (build (expand-file-name "elpaca/" elpaca-builds-directory))
-        (order (cdr elpaca-order))
-        (default-directory repo))
+         (build (expand-file-name "elpaca/" elpaca-builds-directory))
+         (order (cdr elpaca-order))
+         (default-directory repo))
     (add-to-list 'load-path (if (file-exists-p build) build repo))
     (unless (file-exists-p repo)
       (make-directory repo t)
@@ -166,7 +166,7 @@ That also means that `after-init-hook` is often not the right choice any more, a
     (unless (require 'elpaca-autoloads nil t)
       (require 'elpaca)
       (elpaca-generate-autoloads "elpaca" repo)
-      (load "./elpaca-autoloads")))
+      (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
   (add-hook 'after-init-hook #'elpaca-process-queues)
   (elpaca `(,@elpaca-order))
 
@@ -179,6 +179,8 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+begin_src emacs-lisp
 
   (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+  ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
+  ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
   ;;(setq elpaca-lock-file nil)
 
   (defun my/elpaca-write-lock-file ()
@@ -202,7 +204,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 - ~elpaca-manager~ to run the main elpaca UI.
 - ~elpaca-update-all~ to fetch package updates and apply them.
 - To create/update a lock file, run ~my/elpaca-write-lock-file~.
-- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update the package, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package.
+- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update some package, for example with ~elpaca-update~, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package. Make sure to restart emacs once you unset ~elpaca-lock-file~ in config, because elpaca won't pick it up if I just evaluate it. So I will want to modify the config code above to unset lock file, save it, restart emacs, update the packages I want to update, then put the config above to again use lock file, save it, restart emacs.
 * Utils
 ** Packages
 
@@ -730,9 +732,13 @@ Seems to not be on any package manager though, so I need straight.el probably.
 
       "`"   '("mark ring" . counsel-mark-ring)
 
-      "t"   '("toggles" . (keymap)) ; This is how prefix is defined.
-      "tt"  '("choose theme" . counsel-load-theme)
-      "ts"  '("scale text" . hydra-text-scale/body)
+      "t"   '("toggle" . (keymap))
+
+      "c"   '("change / customize" . (keymap))
+      "cT"  '("choose theme" . counsel-load-theme)
+      "ct"  '("scale text" . (keymap))
+      "ctg"  '("scale text [global]" . global-text-scale-adjust)
+      "ctl"  '("scale text [local]" . hydra-text-scale/body)
 
       "a"   '("apps" . (keymap))
       "au"  '("undo tree" . vundo)
@@ -1044,6 +1050,18 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
                     (org-level-8 . 1.1)))
       (set-face-attribute (car face) nil :height (cdr face))
     )
+
+    ;; By default, org columns view produces rows of of different font heights for different heading levels,
+    ;; caused somehow by org-indent, and that result in misaligned cells per column.
+    ;; Therefore, I set :inherit 'default here, which fixes that (but looses pulling in any original styling from heading).
+    (set-face-attribute 'org-column nil
+                        :inherit 'default
+                        :height 1.333
+                        :foreground (face-attribute 'outline-1 :foreground)
+                        :weight 'bold)
+    (set-face-attribute 'org-column-title nil
+                        :height 1.333
+                        :foreground (face-attribute 'outline-1 :foreground))
 
     (setq org-log-into-drawer t)
     (setq org-habit-graph-column 60)
@@ -1407,8 +1425,6 @@ In the config above I then fetch those credentials from .authinfo and provide th
     (set-face-attribute 'org-agenda-current-time nil
                         :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
                         :weight 'bold)
-    (set-face-attribute 'org-agenda-date nil
-                        :underline t)
     ;; Make events in the time grid that are not tasks not stand out.
     (set-face-attribute 'org-agenda-calendar-event nil
                         :foreground (face-attribute 'org-time-grid :foreground))
@@ -4443,7 +4459,18 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 *** TODO Smooth scrolling
 - Enable that new smooth/pixel scroll setting in emacs?
 - https://github.com/jdtsmith/ultra-scroll -> external package
-*** TODO Try org roam, what is it about?
+*** TODO Set up note taking in org.
+- org-roam is most popular, the first one.
+- Denote is also popular, some people love it.
+- org-supertag is a "weird/new" one but also used / being developed.
+
+I am tempted to try Denote since people say it is quite friendly, although I should first check org-roam more I think
+*** TODO Look into bookmark mechanisms
+- markers?
+- bookmarks
+- consult-bookmarks
+- activities
+- buferlio
 ** Going beyond
 *** TODO package: org-modern for very nice org mode look.
 *** TODO Set up RSS feeds following in emacs ([[https://www.reddit.com/r/emacs/s/bOnWC7cv44][reddit]])
