@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-30 00:50:11 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-30 02:24:09 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -718,17 +718,18 @@ USAGE:
     (set-face-attribute (car face) nil :height (cdr face))
   )
 
-  ;; By default, org columns view produces rows of of different font heights for different heading levels,
-  ;; caused somehow by org-indent, and that result in misaligned cells per column.
-  ;; Therefore, I set :inherit 'default here, which fixes that (but looses pulling in any original styling from heading).
   (set-face-attribute 'org-column nil
-                      :inherit 'default
-                      :height 1.333
-                      :foreground (face-attribute 'outline-1 :foreground)
+                      ;; I had to set height here to fixed, round size, not scaling factor (e.g. 1.3), or it would apply scaling
+                      ;; to height of the underlying org heading, which is not the same for different heading levels,
+                      ;; and then the whole table goes out of whack.
+                      ;; This is the only way I was able to preserve underlying styling while also having columns view table
+                      ;; look properly aligned. Otherwise I could get it aligned with :inherit 'default but then I loose all
+                      ;; the underlying styling.
+                      :height (round (* 1.3 (face-attribute 'default :height)))
                       :weight 'bold)
   (set-face-attribute 'org-column-title nil
-                      :height 1.333
-                      :foreground (face-attribute 'outline-1 :foreground))
+                      :height 1.3
+                      :foreground (face-attribute 'org-document-title :foreground))
 
   (setq org-log-into-drawer t)
   (setq org-habit-graph-column 60)
