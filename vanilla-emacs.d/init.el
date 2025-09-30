@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-30 02:24:09 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-09-30 21:27:56 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -683,6 +683,7 @@ USAGE:
                                     (scratch-buffer)
                                     (org-agenda nil "d")
                                     (org-agenda-redo)))
+    "o|"  '("columns view" . org-columns)
   )
 
   (general-define-key
@@ -718,18 +719,36 @@ USAGE:
     (set-face-attribute (car face) nil :height (cdr face))
   )
 
-  (set-face-attribute 'org-column nil
-                      ;; I had to set height here to fixed, round size, not scaling factor (e.g. 1.3), or it would apply scaling
-                      ;; to height of the underlying org heading, which is not the same for different heading levels,
-                      ;; and then the whole table goes out of whack.
-                      ;; This is the only way I was able to preserve underlying styling while also having columns view table
-                      ;; look properly aligned. Otherwise I could get it aligned with :inherit 'default but then I loose all
-                      ;; the underlying styling.
-                      :height (round (* 1.3 (face-attribute 'default :height)))
-                      :weight 'bold)
-  (set-face-attribute 'org-column-title nil
-                      :height 1.3
-                      :foreground (face-attribute 'org-document-title :foreground))
+  (defun my/dynamically-configure-org-column-faces (&rest args)
+    "Configures org-column faces with regard to current state of the system (i.e. default face).
+     Should be called each time before calling org-columns, to update the faces."
+    ;; I have to pick a single height for all the headings/rows, so I pick the one from level 2
+    ;; heading as some good middle.
+    (let ((height-scaling-factor (face-attribute 'org-level-2 :height)))
+      (set-face-attribute 'org-column nil
+                          ;; I had to set height here to fixed, integer size, not scaling factor
+                          ;; (e.g. 1.3), or it would apply scaling to height of the underlying org
+                          ;; heading, which is not the same for different heading levels, resulting in
+                          ;; org columns rows also having different heights, and then the whole table
+                          ;; goes out of whack.
+                          ;; This is the only way I was able to preserve underlying styling of
+                          ;; headings (i.e. foreground color) while also having columns view table
+                          ;; look properly aligned. Otherwise I could get it aligned with `:inherit
+                          ;; 'default` but then I would loose all the underlying styling of the
+                          ;; heading (i.e. foreground color).
+                          ;; Since height is a fixed number, it does mean that if value of height for
+                          ;; 'default' face changes, e.g. because of zoom-in/out, this height here
+                          ;; will become outdated.  That is why this function is called "dynamically"
+                          ;; because you are supposed to call it when you want to update the column
+                          ;; faces.
+                          :height (round (* height-scaling-factor (face-attribute 'default :height)))
+                          :weight 'bold)
+      (set-face-attribute 'org-column-title nil
+                          :height height-scaling-factor
+                          :foreground (face-attribute 'org-document-title :foreground))
+    )
+  )
+  (advice-add 'org-columns :before #'my/dynamically-configure-org-column-faces)
 
   (setq org-log-into-drawer t)
   (setq org-habit-graph-column 60)
