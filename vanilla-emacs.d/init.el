@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-03 13:45:40 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-04 15:48:43 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -245,18 +245,6 @@ USAGE:
   )
 )
 
-;; Monaspace fonts were created by "Github Next" -> Github's dev tools research team. I
-;; specifically installed ttf "frozen" version that comes with all the goodies baked in (check
-;; below under Manual Setup).
-;; Some other nice fonts: "RobotoMono Nerd Font" (best right after Monaspace), "Source Code Pro",
-;; "Noto Sans Mono".
-;; NOTE: Monaspace has very cool "texture healing" feature where some letters are widened or
-;;   narrowed when there is space due to the neighbouring letters, but Emacs doesn't (yet, there
-;;   is a todo)) support OTF's "contextual alternate" feature that is needed for this.  If it does
-;;   support it one day, I should enable it to reap all the benefits.
-(defvar my/main-monospace-font "Monaspace Neon Frozen")
-(defvar my/main-handwriting-font "Monaspace Radon Frozen")
-
 (use-package emacs
   :ensure nil
   :config
@@ -277,8 +265,12 @@ USAGE:
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
 
-  ;; Sets default font (at size 12).
-  (set-face-attribute 'default nil :family my/main-monospace-font :height 120)
+  ;; Sets default font (and size).
+  ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
+  ;; TODO: I should deduplicate this in regard to default face somehow, there is an example somewhere. Not inherit i think, because when variable-pitch-mode, default inherits from variable-pitch?
+  (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120)
+  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2)
+  (set-face-attribute 'default nil :family "Iosevka Extended" :height 120)
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -685,8 +677,17 @@ USAGE:
   :hook
   (org-mode . (lambda ()
     (org-indent-mode) ; Enforces correct indentation under each heading.
-    (visual-line-mode 1)
+    (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
     (setq evil-auto-indent nil)
+
+    (visual-line-mode 1)
+
+    ;; Let's get some breathing space:
+    (setq-local left-margin-width 2)
+    (setq-local right-margin-width 2)
+    (set-window-buffer nil (current-buffer)) ; We have to reset buffer for margin changes to take effect.
+
+    (variable-pitch-mode 1)
   ))
   :config
   (my/leader-keys
@@ -723,6 +724,26 @@ USAGE:
    "li" '("insert link" . org-insert-link)
   )
 
+  (set-face-attribute 'org-document-info-keyword nil)
+  (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
+  (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
+  (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
+  (set-face-attribute 'org-block-begin-line nil :height 0.9 :slant 'italic :weight 'extra-light)
+  (set-face-attribute 'org-block-end-line nil :height 0.9 :slant 'italic :weight 'extra-light)
+  (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
+  ;; TODO: Set more stuff to fixed pitch?
+  ;;   Or go different way and leave fixed pitch default, and then set variable one xplcitly on stuff (that is how person in ricing mode does it).
+  (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-meta-line nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-checkbox nil :inherit '(org-todo fixed-pitch))
+  (set-face-attribute 'org-tag nil :inherit 'fixed-pitch)
+
+  (setq org-startup-folded 'nofold) ; By default, start file with all open except for drawers.
+
+  (setq org-fontify-whole-heading-line t)
+
   ;; Set headers to have different sizes.
   (dolist (face '((org-level-1 . 1.5)
                   (org-level-2 . 1.3)
@@ -734,6 +755,10 @@ USAGE:
                   (org-level-8 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
   )
+
+  (setq org-ellipsis " ▼")
+  (set-face-attribute 'org-ellipsis nil
+                      :foreground (face-attribute 'shadow :foreground))
 
   (defun my/dynamically-configure-org-column-faces (&rest args)
     "Configures org-column faces with regard to current state of the system (i.e. default face).
@@ -768,10 +793,6 @@ USAGE:
 
   (setq org-log-into-drawer t)
   (setq org-habit-graph-column 60)
-
-  (setq org-ellipsis " ▼")
-  (set-face-attribute 'org-ellipsis nil
-                      :foreground (face-attribute 'shadow :foreground))
 
   (add-to-list 'org-modules 'org-habit)
   (add-to-list 'org-modules 'org-inlinetask)
@@ -816,20 +837,78 @@ USAGE:
   (set-face-attribute 'org-verse nil :family my/main-handwriting-font)
 )
 
+;; TODO: I am trying to make my org mode as nice as in this blog post: https://lepisma.xyz/2017/10/28/ricing-org-mode/ .
+;;   - [ ] Set up variable pitch font, the one he recommends.
+;;     - I should probably also set the "fixed-pitch" font, next to "variable-pitch". And then
+;;       `default` face just copies the values from 'fixed-pitch'.
+;;   - [ ] Make front matter (title, ...) nice the same way he does.
+;;   - [ ] Make heading faces as nice as author does. Including "toggle".
+;;   - [ ] Check the rest of his config for potential improvements.
+;;   - [ ] Consider removing background from org blocks (org-block face + the faces for begin/end).
+;;   - [ ] Also check out more ricing tutorials.
+;;     - [ ] https://www.dwarfb.in/blog/ricing-org-mode/
+;;     - [ ] https://lucidmanager.org/productivity/ricing-org-mode/
+;;   - [ ] Play more with org-modern below (check TODOs).
+
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
   :after (org)
   :defer t
   :hook (org-mode . org-superstar-mode)
   :custom
-  ;; I use `org-superstar-leading-bullets' to hide leading stars of the heading by setting them to space.
-  ;; I use two spaces because that is how they have shown it should be done in the docs and it works well.
-  ;; Why don't I use `org-superstar-remove-leading-stars', which should hide them for real?
-  ;; Because when I tried using it, it resulted in headings being shifted too much to the left.
-  (org-superstar-leading-bullet "  ")
-  (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•)))
+  ;; Hide leading stars in front of a heading.
+  ;; 'org-hide-leading-stars' and 'org-indent-mode-turns-on-hiding-stars' must be 'nil' for this to work correctly.
+  (org-superstar-leading-bullet ?\s)
+  (org-superstar-headline-bullets-list '(nil)) ; No last star/bullet in front of headings.
+  (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•))) ; Chars to use as bullets for lists.
   :config
+  (setq org-hide-leading-stars nil) ; Needed for org-superstar-leading-bullet to work.
+  (setq org-indent-mode-turns-on-hiding-stars nil) ; Needed for org-superstar-leading-bullet to work.
   (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
+  (set-face-attribute 'org-superstar-leading nil :inherit '(fixed-pitch default))
+)
+
+(use-package org-modern
+  :after (org)
+  :defer t
+  :hook ((org-mode . org-modern-mode)
+         (org-agenda-finalize . org-modern-agenda))
+  :custom
+  ;; I couldn't find combo of settings that gives me nicely aligned, no-star headings,
+  ;; so I leave that to org-superstar. Also lists while at it.
+  (org-modern-hide-stars nil)
+  (org-modern-star nil)
+  (org-modern-list nil)
+
+  (org-modern-checkbox nil) ; Glyphs are too small and emojis are kitch, so skip them.
+
+  (org-modern-horizontal-rule t)
+
+  (org-modern-table t)
+
+  (org-modern-todo nil) ; TODO t
+  ;(org-modern-todo-faces ...) ; TODO
+
+  (org-modern-priority nil) ; TODO: t
+  ;(org-modern-priority-faces ...) ; TODO
+
+  (org-modern-tag nil) ; TODO t
+  ;(org-modern-tag-faces ...) ; TODO
+
+  (org-modern-timestamp nil) ; TODO: t
+
+  (org-modern-block-name '(("src" . ("❴❵" ""))
+                           ("quote" . ("❝❞" ""))
+                           ("verse" . ("♭♩" ""))
+                           ("example" . ("example" ""))
+                           (t . ("" "/"))))
+  (org-modern-block-fringe nil)
+
+  (org-modern-keyword '(("title" . "")
+                        (t . t)))
+
+  ;;:config
+  ;; TODO: Customize org-modern faces as needed, with set-face-attribute.
 )
 
 ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
@@ -846,6 +925,8 @@ USAGE:
   (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'normal))
   (org-rainbow-tags-adjust-color-percent 100) ; Make colors as light as possible, so they work well with dark bg.
 )
+
+(setq org-pretty-entities t)
 
 ;; Display "prettified" pieces of text in their raw shape when point is on them.
 ;; E.g. links or superscript.
