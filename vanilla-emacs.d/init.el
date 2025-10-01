@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-09-30 21:27:56 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-02 00:29:06 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -237,6 +237,18 @@ USAGE:
   )
 )
 
+;; Monaspace fonts were created by "Github Next" -> Github's dev tools research team. I
+;; specifically installed ttf "frozen" version that comes with all the goodies baked in (check
+;; below under Manual Setup).
+;; Some other nice fonts: "RobotoMono Nerd Font" (best right after Monaspace), "Source Code Pro",
+;; "Noto Sans Mono".
+;; NOTE: Monaspace has very cool "texture healing" feature where some letters are widened or
+;;   narrowed when there is space due to the neighbouring letters, but Emacs doesn't (yet, there
+;;   is a todo)) support OTF's "contextual alternate" feature that is needed for this.  If it does
+;;   support it one day, I should enable it to reap all the benefits.
+(defvar my/main-monospace-font "Monaspace Neon Frozen")
+(defvar my/main-handwriting-font "Monaspace Radon Frozen")
+
 (use-package emacs
   :ensure nil
   :config
@@ -257,22 +269,14 @@ USAGE:
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
 
-  ;; Sets default font (at size 10). I use Monaspace font (Neon variant) which was created by
-  ;; "Github Next" -> Github's dev tools research team. I specifically installed otf "frozen"
-  ;; version that comes with all the goodies baked in (check below under Manual Setup).
-  ;; Some other nice fonts: "RobotoMono Nerd Font" (best right after Monaspace),
-  ;; "Source Code Pro", "Noto Sans Mono".
-  ;; NOTE: Monaspace has very cool "texture healing" feature where some letters are widened or narrowed
-  ;;   when there is space due to the neighbouring letters, but Emacs doesn't (yet, there is a todo))
-  ;;   support OTF's "contextual alternate" feature that is needed for this.
-  ;;   If it does support it one day, I should enable it to reap all the benefits of Monaspace font.
-  (set-face-attribute 'default nil :family "Monaspace Neon" :height 100)
+  ;; Sets default font (at size 12).
+  (set-face-attribute 'default nil :family my/main-monospace-font :height 120)
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
   (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
-  (setq initial-scratch-message (concat "# " (random-atom my-motivational-quotes) "\n\n"))
+  (setq initial-scratch-message (concat "#+begin_quote\n  " (random-atom my-motivational-quotes) "\n#+end_quote\n\n"))
 
   (global-subword-mode) ; Makes vim motions treat subwords in camelCase as individual words.
 
@@ -794,6 +798,10 @@ USAGE:
                  (direction . below)
                 )
   )
+
+  (setq org-fontify-quote-and-verse-blocks t)
+  (set-face-attribute 'org-quote nil :family my/main-handwriting-font)
+  (set-face-attribute 'org-verse nil :family my/main-handwriting-font)
 )
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
@@ -1024,6 +1032,7 @@ USAGE:
   ;; Make events in the time grid that are not tasks not stand out.
   (set-face-attribute 'org-agenda-calendar-event nil
                       :foreground (face-attribute 'org-time-grid :foreground))
+  (setq org-agenda-block-separator nil)
 )
 
 (with-eval-after-load 'evil
@@ -1432,7 +1441,7 @@ Returns nil if no heading found."
           )
       (org-agenda-prepare) ; Prepage agenda for writing into it.
       ;; TODO: Attach marker that will take us back to the journal entry, using org-marker.
-      (insert (org-add-props " 💭 Journal (today)" nil 'face 'org-agenda-structure) "\n")
+      (insert (org-add-props "\n 💭 Journal (today)" nil 'face 'org-agenda-structure) "\n")
       (insert (replace-regexp-in-string "^" "    " journal-content-to-insert)) ; Indent.
       (insert "\n")
     )
