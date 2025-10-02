@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-02 00:29:06 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-02 15:12:05 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -180,17 +180,17 @@ USAGE:
 )
 
 (defvar my-motivational-quotes
-  '("\"You have power over your mind – not outside events. Realize this, and you will find strength.\" – Marcus Aurelius"
-    "\"First say to yourself what you would be; and then do what you have to do.\" – Epictetus"
-    "\"Waste no more time arguing about what a good man should be. Be one.\" - Marcus Aurelius"
-    "\"No man is free who is not master of himself.\" – Epictetus"
-    "\"Well-being is attained by little and little, and nevertheless is no little thing itself.\" – Zeno of Citium"
-    "\"Don’t explain your philosophy. Embody it.\" - Epictetus"
-    "\"No great thing is created suddenly.\" – Epictetus"
-    "\"Begin at once to live, and count each separate day as a separate life.\" – Seneca"
-    "\"Dwell on the beauty of life. Watch the stars, and see yourself running with them.\" – Marcus Aurelius"
-    "\"Nulla dies sine linea.\" - Pliny the Elder"
-    )
+  '("You have power over your mind – not outside events. Realize this, and you will find strength. – Marcus Aurelius"
+    "Waste no more time arguing about what a good man should be. Be one. - Marcus Aurelius"
+    "Dwell on the beauty of life. Watch the stars, and see yourself running with them. – Marcus Aurelius"
+    "First say to yourself what you would be; and then do what you have to do. – Epictetus"
+    "No man is free who is not master of himself. – Epictetus"
+    "Don’t explain your philosophy. Embody it. - Epictetus"
+    "No great thing is created suddenly. – Epictetus"
+    "Well-being is attained by little and little, and nevertheless is no little thing itself. – Zeno of Citium"
+    "Begin at once to live, and count each separate day as a separate life. – Seneca"
+    "Nulla dies sine linea. - Pliny the Elder"
+   )
 )
 
 (defun my/is-face-at-point (face)
@@ -1685,7 +1685,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s49")
+        (work-diary-sprint-current-tag "s50")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
