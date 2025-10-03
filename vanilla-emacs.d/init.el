@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-02 15:12:05 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-03 13:45:40 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -179,19 +179,27 @@ USAGE:
   (nth (random (length xs)) xs)
 )
 
-(defvar my-motivational-quotes
-  '("You have power over your mind – not outside events. Realize this, and you will find strength. – Marcus Aurelius"
-    "Waste no more time arguing about what a good man should be. Be one. - Marcus Aurelius"
-    "Dwell on the beauty of life. Watch the stars, and see yourself running with them. – Marcus Aurelius"
-    "First say to yourself what you would be; and then do what you have to do. – Epictetus"
-    "No man is free who is not master of himself. – Epictetus"
-    "Don’t explain your philosophy. Embody it. - Epictetus"
-    "No great thing is created suddenly. – Epictetus"
-    "Well-being is attained by little and little, and nevertheless is no little thing itself. – Zeno of Citium"
-    "Begin at once to live, and count each separate day as a separate life. – Seneca"
-    "Nulla dies sine linea. - Pliny the Elder"
-   )
-)
+(defvar my/motivational-quotes
+  '((:author "Marcus Aurelius"
+     :quote "You have power over your mind – not outside events. Realize this, and you will find strength.")
+    (:author "Marcus Aurelius"
+     :quote "Waste no more time arguing about what a good man should be. Be one.")
+    (:author "Marcus Aurelius"
+     :quote "Dwell on the beauty of life. Watch the stars, and see yourself running with them.")
+    (:author "Epictetus"
+     :quote "First say to yourself what you would be; and then do what you have to do.")
+    (:author "Epictetus"
+     :quote "No man is free who is not master of himself.")
+    (:author "Epictetus"
+     :quote "Don't explain your philosophy. Embody it.")
+    (:author "Epictetus"
+     :quote "No great thing is created suddenly.")
+    (:author "Zeno of Citium"
+     :quote "Well-being is attained by little and little, and nevertheless is no little thing itself.")
+    (:author "Seneca"
+     :quote "Begin at once to live, and count each separate day as a separate life.")
+    (:author "Pliny the Elder"
+     :quote "Nulla dies sine linea.")))
 
 (defun my/is-face-at-point (face)
   "Returns non-nil if given FACE is applied at text at the current point."
@@ -276,7 +284,11 @@ USAGE:
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
   (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
-  (setq initial-scratch-message (concat "#+begin_quote\n  " (random-atom my-motivational-quotes) "\n#+end_quote\n\n"))
+  (setq initial-scratch-message
+        (let ((q (random-atom my/motivational-quotes)))
+          (format "\n # \"%s\" - %s\n\n" (plist-get q :quote) (plist-get q :author))
+        )
+  )
 
   (global-subword-mode) ; Makes vim motions treat subwords in camelCase as individual words.
 
