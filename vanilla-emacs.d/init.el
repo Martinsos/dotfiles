@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-04 15:48:43 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-04 15:54:40 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -743,6 +743,7 @@ USAGE:
   (setq org-startup-folded 'nofold) ; By default, start file with all open except for drawers.
 
   (setq org-fontify-whole-heading-line t)
+  (setq org-fontify-quote-and-verse-blocks t)
 
   ;; Set headers to have different sizes.
   (dolist (face '((org-level-1 . 1.5)
@@ -831,10 +832,6 @@ USAGE:
                  (direction . below)
                 )
   )
-
-  (setq org-fontify-quote-and-verse-blocks t)
-  (set-face-attribute 'org-quote nil :family my/main-handwriting-font)
-  (set-face-attribute 'org-verse nil :family my/main-handwriting-font)
 )
 
 ;; TODO: I am trying to make my org mode as nice as in this blog post: https://lepisma.xyz/2017/10/28/ricing-org-mode/ .
@@ -849,6 +846,7 @@ USAGE:
 ;;     - [ ] https://www.dwarfb.in/blog/ricing-org-mode/
 ;;     - [ ] https://lucidmanager.org/productivity/ricing-org-mode/
 ;;   - [ ] Play more with org-modern below (check TODOs).
+;;   - [ ] Define deafult face using fixed pitch face (there is TODO for it).
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
