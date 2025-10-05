@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-04 15:54:40 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-06 01:07:01 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -230,6 +230,22 @@ USAGE:
   )
 )
 
+(defun my/face-add-to-inherit (face face-to-inherit)
+  "Add FACE-TO-INHERIT as the first face in :inherit of FACE."
+  (let* ((old-inherit-value (face-attribute face :inherit))
+         (new-inherit-value (if (and old-inherit-value (not (eq old-inherit-value 'unspecified)))
+                                (if (listp old-inherit-value)
+                                    (cons face-to-inherit old-inherit-value)
+                                    `(,face-to-inherit ,old-inherit-value)
+                                )
+                                face-to-inherit
+                            )
+         )
+        )
+    (set-face-attribute face nil :inherit new-inherit-value)
+  )
+)
+
 ;; Implemented based on 'lsp-describe-thing-at-point'.
 (defun my/lsp-describe-thing-at-point-f ()
   "Return string with the type signature and documentation of the thing at point."
@@ -265,12 +281,12 @@ USAGE:
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
 
-  ;; Sets default font (and size).
+  ;; Default fonts.
   ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
-  ;; TODO: I should deduplicate this in regard to default face somehow, there is an example somewhere. Not inherit i think, because when variable-pitch-mode, default inherits from variable-pitch?
-  (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120)
-  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2)
-  (set-face-attribute 'default nil :family "Iosevka Extended" :height 120)
+  (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120) ; fixed == monospace
+  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2) ; variable == proportional
+  (set-face-attribute 'default nil :family (face-attribute 'fixed-pitch :family)
+                                   :height (face-attribute 'fixed-pitch :height))
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -278,7 +294,7 @@ USAGE:
   (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
   (setq initial-scratch-message
         (let ((q (random-atom my/motivational-quotes)))
-          (format "\n # \"%s\" - %s\n\n" (plist-get q :quote) (plist-get q :author))
+          (format "\n# \"%s\" - %s\n\n" (plist-get q :quote) (plist-get q :author))
         )
   )
 
@@ -728,17 +744,20 @@ USAGE:
   (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
   (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
   (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
-  (set-face-attribute 'org-block-begin-line nil :height 0.9 :slant 'italic :weight 'extra-light)
-  (set-face-attribute 'org-block-end-line nil :height 0.9 :slant 'italic :weight 'extra-light)
   (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
-  ;; TODO: Set more stuff to fixed pitch?
-  ;;   Or go different way and leave fixed pitch default, and then set variable one xplcitly on stuff (that is how person in ricing mode does it).
-  (set-face-attribute 'org-table nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-block nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-meta-line nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-checkbox nil :inherit '(org-todo fixed-pitch))
-  (set-face-attribute 'org-tag nil :inherit 'fixed-pitch)
+  (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
+
+  (dolist (face '(org-table
+                  org-block
+                  org-meta-line
+                  org-checkbox
+                  org-tag))
+    (my/face-add-to-inherit face 'fixed-pitch)
+  )
+  (dolist (face '(org-quote
+                  org-verse))
+    (my/face-add-to-inherit face 'variable-pitch)
+  )
 
   (setq org-startup-folded 'nofold) ; By default, start file with all open except for drawers.
 
@@ -757,7 +776,7 @@ USAGE:
     (set-face-attribute (car face) nil :height (cdr face))
   )
 
-  (setq org-ellipsis " ▼")
+  (setq org-ellipsis " ▾")
   (set-face-attribute 'org-ellipsis nil
                       :foreground (face-attribute 'shadow :foreground))
 
@@ -835,18 +854,14 @@ USAGE:
 )
 
 ;; TODO: I am trying to make my org mode as nice as in this blog post: https://lepisma.xyz/2017/10/28/ricing-org-mode/ .
-;;   - [ ] Set up variable pitch font, the one he recommends.
-;;     - I should probably also set the "fixed-pitch" font, next to "variable-pitch". And then
-;;       `default` face just copies the values from 'fixed-pitch'.
-;;   - [ ] Make front matter (title, ...) nice the same way he does.
 ;;   - [ ] Make heading faces as nice as author does. Including "toggle".
 ;;   - [ ] Check the rest of his config for potential improvements.
-;;   - [ ] Consider removing background from org blocks (org-block face + the faces for begin/end).
 ;;   - [ ] Also check out more ricing tutorials.
 ;;     - [ ] https://www.dwarfb.in/blog/ricing-org-mode/
 ;;     - [ ] https://lucidmanager.org/productivity/ricing-org-mode/
 ;;   - [ ] Play more with org-modern below (check TODOs).
-;;   - [ ] Define deafult face using fixed pitch face (there is TODO for it).
+;;   - [ ] Make all org titles/headings the same color, this with multiple colors it just too confusing.
+;;   - [ ] Consider what to do with ellipsis. Maybe remove it? Or change it to something else maybe?
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
@@ -895,7 +910,7 @@ USAGE:
 
   (org-modern-timestamp nil) ; TODO: t
 
-  (org-modern-block-name '(("src" . ("❴❵" ""))
+  (org-modern-block-name '(("src" . ("{}" ""))
                            ("quote" . ("❝❞" ""))
                            ("verse" . ("♭♩" ""))
                            ("example" . ("example" ""))
@@ -2107,6 +2122,7 @@ Returns nil if no heading found."
     (t              "    ." shadow))
   )
   :config
+  (my/face-add-to-inherit 'company-tooltip 'fixed-pitch)
   (global-company-mode 1)
 )
 
