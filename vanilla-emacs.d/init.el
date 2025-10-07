@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-06 01:07:01 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-08 00:26:01 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -283,6 +283,10 @@ USAGE:
 
   ;; Default fonts.
   ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
+  ;; NOTE: The way I assigned heights currently works well everywhere, including org-mode where I found that
+  ;;   it looks better when fixed pitch text (code blocks) is a bit smaller than variable pitch text (the rest).
+  ;;   That said, I am not sure I did it completely right regarding what is absolute and what is relative,
+  ;;   and if it works because I did it well or it works by "accident". I might want to improve this in the future.
   (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120) ; fixed == monospace
   (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2) ; variable == proportional
   (set-face-attribute 'default nil :family (face-attribute 'fixed-pitch :family)
@@ -693,7 +697,7 @@ USAGE:
   :hook
   (org-mode . (lambda ()
     (org-indent-mode) ; Enforces correct indentation under each heading.
-    (set-face-attribute 'org-indent nil :inherit '(org-hide fixed-pitch))
+    (my/face-add-to-inherit 'org-indent 'fixed-pitch)
     (setq evil-auto-indent nil)
 
     (visual-line-mode 1)
@@ -740,17 +744,31 @@ USAGE:
    "li" '("insert link" . org-insert-link)
   )
 
+  (setq-default org-startup-with-inline-images t ; By default, preview the images.
+                org-image-actual-width '(300) ; By default, all images are 300px width (so they are not too big).
+                org-pretty-entities t ; Displays math nicely (superscript, subscript, latex constants, ...).
+                org-use-sub-superscripts "{}" ; Require subscript to be enclosed in {}.
+  )
+
   (set-face-attribute 'org-document-info-keyword nil)
   (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
   (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
   (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
   (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
   (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
+  (set-face-attribute 'org-verse nil :foreground "#d4c49c")
+
+  ;; These inherit height from code-block, but they are inline with variable pitch text,
+  ;; so we want to make sure they have the same height as variable pitch text
+  ;; (since code-block is fixed pitch).
+  (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
+  (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
 
   (dolist (face '(org-table
                   org-block
                   org-meta-line
                   org-checkbox
+                  org-verbatim
                   org-tag))
     (my/face-add-to-inherit face 'fixed-pitch)
   )
@@ -765,7 +783,7 @@ USAGE:
   (setq org-fontify-quote-and-verse-blocks t)
 
   ;; Set headers to have different sizes.
-  (dolist (face '((org-level-1 . 1.5)
+  (dolist (face '((org-level-1 . 1.6)
                   (org-level-2 . 1.3)
                   (org-level-3 . 1.2)
                   (org-level-4 . 1.1)
@@ -817,6 +835,10 @@ USAGE:
   (add-to-list 'org-modules 'org-habit)
   (add-to-list 'org-modules 'org-inlinetask)
 
+  (with-eval-after-load 'org-inlinetask
+    (set-face-attribute 'org-inlinetask nil :inherit 'unspecified :slant 'italic :weight 'ultralight :height 0.9)
+  )
+
   (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
                              (?B . (:foreground "orange" :weight light))
                              (?C . (:foreground "yellow" :weight light))))
@@ -853,15 +875,10 @@ USAGE:
   )
 )
 
-;; TODO: I am trying to make my org mode as nice as in this blog post: https://lepisma.xyz/2017/10/28/ricing-org-mode/ .
-;;   - [ ] Make heading faces as nice as author does. Including "toggle".
-;;   - [ ] Check the rest of his config for potential improvements.
-;;   - [ ] Also check out more ricing tutorials.
-;;     - [ ] https://www.dwarfb.in/blog/ricing-org-mode/
-;;     - [ ] https://lucidmanager.org/productivity/ricing-org-mode/
+;; TODO: Ricing my org mode:
 ;;   - [ ] Play more with org-modern below (check TODOs).
-;;   - [ ] Make all org titles/headings the same color, this with multiple colors it just too confusing.
-;;   - [ ] Consider what to do with ellipsis. Maybe remove it? Or change it to something else maybe?
+;;   - [ ] Tables look a bit weird fix that, either by tweaking or by using org-table-pretty package directly.
+;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
@@ -893,7 +910,7 @@ USAGE:
   (org-modern-star nil)
   (org-modern-list nil)
 
-  (org-modern-checkbox nil) ; Glyphs are too small and emojis are kitch, so skip them.
+  (org-modern-checkbox nil) ; Glyphs are too small and emojis are kitch, so I don't decorate checkboxes.
 
   (org-modern-horizontal-rule t)
 
@@ -938,8 +955,6 @@ USAGE:
   (org-rainbow-tags-extra-face-attributes '(:slant 'italic :weight 'normal))
   (org-rainbow-tags-adjust-color-percent 100) ; Make colors as light as possible, so they work well with dark bg.
 )
-
-(setq org-pretty-entities t)
 
 ;; Display "prettified" pieces of text in their raw shape when point is on them.
 ;; E.g. links or superscript.
@@ -1839,6 +1854,10 @@ Returns nil if no heading found."
            "%?" :unnarrowed t)
          )
   )
+)
+
+(use-package olivetti
+  :defer t
 )
 
 (use-package emacs
