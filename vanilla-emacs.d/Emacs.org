@@ -645,7 +645,7 @@ Solution I settled on then is to remap the =fixed-pitch= face in such buffer (th
   )
 #+end_src
 
-*** Install the fonts                                        :manual_setup:
+** Install the fonts                                          :manual_setup:
 For Emacs to be able to use a font, it needs to be installed on your machine.
 To install on Archlinux:
  - Iosevka: ~sudo pacman -S ttc-iosevka ttc-iosevka-aile~
@@ -1087,16 +1087,14 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :defer t
     :hook
     (org-mode . (lambda ()
-      (org-indent-mode) ; Enforces correct indentation under each heading.
-      (my/face-add-to-inherit 'org-indent 'fixed-pitch)
-      (setq evil-auto-indent nil)
-
-      (visual-line-mode 1)
-
       ;; Let's get some breathing space:
       (setq-local left-margin-width 2)
       (setq-local right-margin-width 2)
       (set-window-buffer nil (current-buffer)) ; We have to reset buffer for margin changes to take effect.
+
+      (setq-local evil-auto-indent nil) ; Having it on would be annoying due to org-indent-mode being on.
+
+      (visual-line-mode 1)
 
       (my/variable-pitch-mode-on)
     ))
@@ -1105,74 +1103,62 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       "oa"  '("agenda" . org-agenda)
       "oc"  '("capture" . org-capture)
       "ol"  '("store link" . org-store-link)
-      "od"  '("[view] daily agenda" . (lambda ()
-                                      (interactive)
-                                      (delete-other-windows)
-                                      (scratch-buffer)
-                                      (org-agenda nil "d")
-                                      (org-agenda-redo)))
-      "o|"  '("columns view" . org-columns)
+      "od"  '("[view] daily agenda" . (lambda () (interactive)
+                                        (delete-other-windows)
+                                        (scratch-buffer)
+                                        (org-agenda nil "d")
+                                        (org-agenda-redo)))
     )
-
+    ;; "In-the-mode" keymap with handy shortcuts for the org commands I use often.
     (general-define-key
      :states '(normal)
      :keymaps 'org-mode-map
      :prefix ","
-     "c" '("change" . (keymap))
-     "cs" '("schedule" . org-schedule)
-     "cd" '("deadline" . org-deadline)
-     "ct" '("tags" . org-set-tags-command)
-     "ce" '("effort" . org-set-effort)
-     "t" '("toggle todo" . org-todo)
-     "x" '("toggle checkbox" . org-toggle-checkbox)
-     "J" '("priority down" . org-priority-down)
-     "K" '("priority up" . org-priority-up)
-     "/" '("sparse tree" . org-sparse-tree)
-     "%" '("update [%]" . org-update-statistics-cookies)
-     "l" '("link" . (keymap))
-     "ln" '("next link" . org-next-link)
-     "lp" '("prev link" . org-previous-link)
-     "li" '("insert link" . org-insert-link)
+     "c"  '("change" . (keymap))
+      "cs" '("schedule" . org-schedule)
+      "cd" '("deadline" . org-deadline)
+      "ct" '("tags" . org-set-tags-command)
+      "ce" '("effort" . org-set-effort)
+     "t"  '("toggle todo" . org-todo)
+     "x"  '("toggle checkbox" . org-toggle-checkbox)
+     "J"  '("priority down" . org-priority-down)
+     "K"  '("priority up" . org-priority-up)
+     "/"  '("sparse tree" . org-sparse-tree)
+     "%"  '("update [%]" . org-update-statistics-cookies)
+     "l"  '("link" . (keymap))
+      "ln" '("next link" . org-next-link)
+      "lp" '("prev link" . org-previous-link)
+      "li" '("insert link" . org-insert-link)
+     "|" '("columns view" . org-columns)
     )
 
-    (setq-default org-startup-with-inline-images t ; By default, preview the images.
-                  org-image-actual-width '(300) ; By default, all images are 300px width (so they are not too big).
+    (add-to-list 'org-modules 'org-habit)
+    (add-to-list 'org-modules 'org-inlinetask)
+
+    (setq-default org-startup-with-inline-images t ; Preview/show the images.
+                  org-image-actual-width '(300) ; Sets all images to 300px width by default (so they are not too big).
+                  org-startup-indented t ; Turn org-indent-mode on at startup.
                   org-pretty-entities t ; Displays math nicely (superscript, subscript, latex constants, ...).
-                  org-use-sub-superscripts "{}" ; Require subscript to be enclosed in {}.
+                  org-use-sub-superscripts "{}" ; Require subscript to be enclosed in {}, reducing false positives.
+                  org-startup-folded 'nofold ; By default, start file with all open except for drawers.
+                  org-fontify-whole-heading-line t
+                  org-fontify-quote-and-verse-blocks t ; Make it so they have their own faces applied.
+                  org-ellipsis " ▾" ; At the end of the collapes heading / list / drawer / ... .
+                  org-log-into-drawer t ; Will log state changes in org into LOGBOOK drawer.
+    )
+    (with-eval-after-load 'org-habit
+      (setq-default org-habit-graph-column 60)
     )
 
-    (set-face-attribute 'org-document-info-keyword nil)
-    (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
-    (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
-    (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
-    (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
-    (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
-    (set-face-attribute 'org-verse nil :foreground "#d4c49c")
-
-    ;; These inherit height from code-block, which is fixed-height, but they are inline with
-    ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
-    ;; (since code-block is fixed pitch).
-    (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
-    (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
-
-    (dolist (face '(org-table
-                    org-block
-                    org-meta-line
-                    org-checkbox
-                    org-verbatim
-                    org-tag))
-      (my/face-add-to-inherit face 'fixed-pitch)
-    )
-    (dolist (face '(org-quote
-                    org-verse))
-      (my/face-add-to-inherit face 'variable-pitch)
+    ;; Show org calendar at the bottom of current buffer, instead of taking half the screen.
+    (add-to-list 'display-buffer-alist
+                 '("\\*Calendar\\*"
+                   (display-buffer-in-direction)
+                   (direction . below)
+                  )
     )
 
-    (setq org-startup-folded 'nofold) ; By default, start file with all open except for drawers.
-
-    (setq org-fontify-whole-heading-line t)
-    (setq org-fontify-quote-and-verse-blocks t)
-
+    ;;; Styling (faces) customization. ;;;
     ;; Set headers to have different sizes.
     (dolist (face '((org-level-1 . 1.6)
                     (org-level-2 . 1.3)
@@ -1184,10 +1170,64 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
                     (org-level-8 . 1.1)))
       (set-face-attribute (car face) nil :height (cdr face))
     )
+    (set-face-attribute 'org-document-info-keyword nil)
+    (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
+    (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
+    (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
+    (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
+    (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
+    (set-face-attribute 'org-verse nil :foreground "#d4c49c")
+    (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
+    (set-face-attribute 'org-mode-line-clock nil :inherit 'highlight :weight 'bold)
+    (set-face-attribute 'org-mode-line-clock-overrun nil
+                        :inherit 'org-mode-line-clock
+                        :background (face-attribute 'error :foreground))
+    (with-eval-after-load 'org-inlinetask
+      (set-face-attribute 'org-inlinetask nil :inherit 'unspecified :slant 'italic :weight 'ultralight :height 0.9)
+    )
+    (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
+                               (?B . (:foreground "orange" :weight light))
+                               (?C . (:foreground "yellow" :weight light))))
+    (setq org-todo-keyword-faces
+          '(("INBOX" . (:foreground "yellow" :weight bold))
+            ("INPR" . (:foreground "dark orange" :weight bold))
+            ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+            ("DONE" . (:foreground "#446a73" :weight bold))
+            ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
+            ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
+            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("PROJECT" . (:foreground "orchid" :weight bold))
+            ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("CHKL" . (:foreground "grey" :weight bold))
+            ("NOTE" . (:foreground "white" :weight bold))
+           )
+    )
 
-    (setq org-ellipsis " ▾")
-    (set-face-attribute 'org-ellipsis nil
-                        :foreground (face-attribute 'shadow :foreground))
+    ;;; Fine tuning of fixed and variable pitch ;;;
+    (dolist (face '(org-table
+                    org-block
+                    org-meta-line
+                    org-checkbox
+                    org-verbatim
+                    org-tag))
+      (my/face-add-to-inherit face 'fixed-pitch)
+    )
+    (with-eval-after-load 'org-indent
+      ;; Otherwise, in variable-pitch-mode, org-indent indentation goes out of whack.
+      (my/face-add-to-inherit 'org-indent 'fixed-pitch)
+    )
+    ;; These blocks inherit from 'org-block' which is fixed-pitch, but we want them to be
+    ;; variable pitch, so we add variable-pitch again to :inherit chain.
+    (dolist (face '(org-quote
+                    org-verse))
+      (my/face-add-to-inherit face 'variable-pitch)
+    )
+    ;; These inherit height from code-block, which is fixed-height, but they are inline with
+    ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
+    ;; (since code-block is fixed pitch).
+    (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
+    (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
 
     (defun my/dynamically-configure-org-column-faces (&rest args)
       "Configures org-column faces with regard to current state of the system (i.e. default face).
@@ -1219,51 +1259,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       )
     )
     (advice-add 'org-columns :before #'my/dynamically-configure-org-column-faces)
-
-    (setq org-log-into-drawer t)
-    (setq org-habit-graph-column 60)
-
-    (add-to-list 'org-modules 'org-habit)
-    (add-to-list 'org-modules 'org-inlinetask)
-
-    (with-eval-after-load 'org-inlinetask
-      (set-face-attribute 'org-inlinetask nil :inherit 'unspecified :slant 'italic :weight 'ultralight :height 0.9)
-    )
-
-    (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
-                               (?B . (:foreground "orange" :weight light))
-                               (?C . (:foreground "yellow" :weight light))))
-
-    (set-face-attribute 'org-mode-line-clock nil
-                        :inherit 'highlight
-                        :weight 'bold)
-    (set-face-attribute 'org-mode-line-clock-overrun nil
-                        :inherit 'org-mode-line-clock
-                        :background (face-attribute 'error :foreground))
-
-    (setq org-todo-keyword-faces
-          '(("INBOX" . (:foreground "yellow" :weight bold))
-            ("INPR" . (:foreground "dark orange" :weight bold))
-            ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
-            ("DONE" . (:foreground "#446a73" :weight bold))
-            ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-            ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
-            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-            ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
-            ("PROJECT" . (:foreground "orchid" :weight bold))
-            ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
-            ("CHKL" . (:foreground "grey" :weight bold))
-            ("NOTE" . (:foreground "white" :weight bold))
-           )
-    )
-
-    ;; Show org calendar at the bottom of current buffer, instead of taking half the screen.
-    (add-to-list 'display-buffer-alist
-                 '("\\*Calendar\\*"
-                   (display-buffer-in-direction)
-                   (direction . below)
-                  )
-    )
   )
 
   ;; TODO: Ricing my org mode:
