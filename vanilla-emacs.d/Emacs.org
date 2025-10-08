@@ -484,17 +484,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
     (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
     (delete-selection-mode t) ; Delete the selection with a keypress.
 
-    ;; Default fonts.
-    ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
-    ;; NOTE: The way I assigned heights currently works well everywhere, including org-mode where I found that
-    ;;   it looks better when fixed pitch text (code blocks) is a bit smaller than variable pitch text (the rest).
-    ;;   That said, I am not sure I did it completely right regarding what is absolute and what is relative,
-    ;;   and if it works because I did it well or it works by "accident". I might want to improve this in the future.
-    (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120) ; fixed == monospace
-    (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2) ; variable == proportional
-    (set-face-attribute 'default nil :family (face-attribute 'fixed-pitch :family)
-                                     :height (face-attribute 'fixed-pitch :height))
-
     (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
     (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
@@ -531,12 +520,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
   )
 
 #+end_src
-
-*** Install the fonts                                        :manual_setup:
-For Emacs to be able to use any font, it needs to be installed on your machine.
-To install on Archlinux:
- - Iosevka: ~sudo pacman -S ttc-iosevka ttc-iosevka-aile~
-NOTE: Sometimes I had trouble with otf fonts rendering weird in browser, so I prefer ttf when I can.
 
 ** Pretty startup
 
@@ -592,6 +575,81 @@ Some emacs packages use it.
     )
 
 #+end_src
+
+* Fonts
+
+In Emacs, the most basic way to set a global, default font through the whole Emacs is to set the font on the =default= face, its =:family= and =:height= attributes.
+Digression, but in Emacs, all faces by default, if =:inherit= is =unspecified=, will inherit from the =default= face, and since in every inheritance chain, a last face will have =:inherit= unspecified, and =:inherits= in the chain are composed, that means =default= always acts as the base setting for all the faces.
+Normally, you will set =default= face's font to a monospace font and some default height that you like.
+
+Emacs also has a notion of =variable-pitch= (proportional font) and =fixed-pitch= (monospace font) (and has corresponding faces). You can avoid configuring these at all if you are happy with having one default font and that is it, but if you want to mix and match the variable and fixed pitch fonts, you will want to use these faces. Their definition and usage is defined somewhat freely though, which is what makes the whole situation confusing to a degree.
+
+More important is =variable-pitch= face because it comes with the =variable-pitch-mode= that when turned on will, for that buffer, remap (mask) the =default= face to =variable-pitch= face, effectively inserting =variable-pitch= face in front of =default= face for anybody that is inheriting from the =default= face.
+Therefore, =variable-pitch-mode= is a way to get your buffer to use variable pitch as a default font.
+
+However, what happens if you want to use fixed pitch font for some parts of the buffer that has variable pitch font as a default (e.g. in org-mode, with =variable-pitch-mode= turned on, for code blocks?)
+In that case, you will want to set those parts of buffer (corresponding faces) to use =fixed-pitch= font, to override again the =variable-pitch= font settings.
+
+So we have two usual situations then:
+  - Buffer without =variable-pitch-mode= on:
+    - =default= face used for all
+  - Buffer with =variable-pitch-mode= on (e.g. org-mode):
+    - =default= -> =variable-pitch= face chain used as the basis (is the new default due to face remapping).
+    - =default= -> =variable-pitch= -> =fixed-pitch= face chain used for code snippets and similar, assuming you have modified corresponding faces (e.g. =org-block=) to use =fixed-pitch=.
+
+So the way I look at it is, =variable-pitch= face is here to be the default face and to be mainly used by =variable-pitch-mode=.
+=fixed-pitch= face on the other hand, is here to explicitly mark something as fixed pitch, which is most useful when the current default is variable pitch.
+
+One thing that remains to consider is font heights (=:height= property). What is specific for the =:height= property is that they compose in a specific way: if height is an integer, then it is taken as an absolute font size in =pt= (/ by 10, so 120 = 12pt) and that is it, no composition. But, if height is a float, then it is used as a relative scaling factor, and is multiplied with the height from the face that it inherits from. So if we have =default (:height 120)= -> =variable-pitch (:height 1.2)= face chain, height will be =120 * 1.2 -> 14pt=, but if we have =default (:height 120)= -> =variable-pitch (:height 100)= face chain, height will be =10pt=.
+
+Another thing to note is text zoom. Emacs offers two main ways to zoom text in/out: globally or locally. But both work in the same ways, which is remaping over =default= face with a relative =:height=, therefore scaling it up or down.
+
+Taking all this into account, how =:height= composition works, and how text zoom works, it follows us that =default= face should have an absolute height (e.g. =120=), while =variable-pitch= and =fixed-pitch= should have relative heights (e.g. =1.2=).
+
+That is why I set =default= to =120= below, =variable-pitch= to =1.2= and =fixed-pitch= to =1.0= (or nothing, same effect).
+I like the default of =12pt=, I found that to works well for monospace (fixed) fonts, which is my default font.
+If something is somewhere marked explicitly as =fixed-pitch= (which you won't see often but still), I want it to be same as =default= font height, in usual circumstances, that is why I set it to =1.0=. That felt more semantically correct than setting it to e.g. =1/1.2= which would make it work well when used with =variable-pitch-mode= on.
+And I set =variable-pitch= to =1.2= because I want variable font to be bigger than fixed font, I found that works good for some reason, and found that many others also do so online.
+
+Notice that I decided to define all the relative heights as relative to the =default= face, and that is important to keep in mind when using them.
+And, as a consequence, there is one common situation where special attention is needed: when a face uses a =fixed-pitch= and =variable-pitch-mode= is on, which is the most common use of =fixed-pitch= actually (e.g. in org-mode with default variable pitch, in a code block that has fixed pitch). What happens then is that face chain for that fixed-pitch part is =default (:height 120)= -> =variable-pitch (:height 1.2)= -> =fixed-pitch (:height 1.0)= and as a result, the height of that fixed-pitch part of the buffer is the same (14 pt) as for the rest of it (which is variable-pitched), even though we instead wanted fixed-pitch to be smaller in height (12pt, not 14pt). That is because that relative height of =1.0= was intended to be composed on top of the =default= face, not on top of the =variable-pitch= face.
+Solution I settled on then is to remap the =fixed-pitch= face in such buffer (that uses =variable-pitch= face) to have a relative height that is adjusted to be relative to =variable-pitch= face, not to =default= face. I use this in org-mode.
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :ensure nil
+    :config
+    ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
+    (defvar my/main-fixed-pitch-font "Iosevka Extended") ; fixed pitch == monospace
+    (defvar my/main-variable-pitch-font "Iosevka Aile") ; variable pitch == proportional
+    (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
+    (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
+    (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
+  )
+#+end_src
+
+#+begin_src emacs-lisp
+
+  (defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
+    "Remaps the fixed-pitch face's (for the buffer) with adjusted height so it is relative to variable-pitch face."
+    (let* ((fixp-h (face-attribute 'fixed-pitch :height))
+           (varp-h (face-attribute 'variable-pitch :height))
+           (new-fixp-h (/ fixp-h varp-h)))
+      (face-remap-add-relative 'fixed-pitch `(:height ,new-fixp-h))
+    )
+  )
+
+  (defun my/variable-pitch-mode-on ()
+    (variable-pitch-mode 1)
+    (my/remap-fixed-pitch-height-relative-to-variable-pitch)
+  )
+#+end_src
+
+*** Install the fonts                                        :manual_setup:
+For Emacs to be able to use a font, it needs to be installed on your machine.
+To install on Archlinux:
+ - Iosevka: ~sudo pacman -S ttc-iosevka ttc-iosevka-aile~
+NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I prefer ttf when I can.
 
 * Theme
 
@@ -1040,7 +1098,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
       (setq-local right-margin-width 2)
       (set-window-buffer nil (current-buffer)) ; We have to reset buffer for margin changes to take effect.
 
-      (variable-pitch-mode 1)
+      (my/variable-pitch-mode-on)
     ))
     :config
     (my/leader-keys
@@ -1091,8 +1149,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
     (set-face-attribute 'org-verse nil :foreground "#d4c49c")
 
-    ;; These inherit height from code-block, but they are inline with variable pitch text,
-    ;; so we want to make sure they have the same height as variable pitch text
+    ;; These inherit height from code-block, which is fixed-height, but they are inline with
+    ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
     ;; (since code-block is fixed pitch).
     (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
     (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
@@ -1210,7 +1268,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
   ;; TODO: Ricing my org mode:
   ;;   - [ ] Play more with org-modern below (check TODOs).
-  ;;   - [ ] Tables look a bit weird fix that, either by tweaking or by using org-table-pretty package directly.
   ;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
   ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
@@ -2832,10 +2889,9 @@ It adds indicator to the left margin/side of the window.
       (t              "    ." shadow))
     )
     :config
-    (my/face-add-to-inherit 'company-tooltip 'fixed-pitch)
+    (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
     (global-company-mode 1)
   )
-
 #+end_src
 
 ** TODO Find a way to also show additional docs next to each item. E.g. company-box

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-08 00:26:01 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-08 16:32:44 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -281,17 +281,6 @@ USAGE:
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
 
-  ;; Default fonts.
-  ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
-  ;; NOTE: The way I assigned heights currently works well everywhere, including org-mode where I found that
-  ;;   it looks better when fixed pitch text (code blocks) is a bit smaller than variable pitch text (the rest).
-  ;;   That said, I am not sure I did it completely right regarding what is absolute and what is relative,
-  ;;   and if it works because I did it well or it works by "accident". I might want to improve this in the future.
-  (set-face-attribute 'fixed-pitch nil :family "Iosevka Extended" :height 120) ; fixed == monospace
-  (set-face-attribute 'variable-pitch nil :family "Iosevka Aile" :height 1.2) ; variable == proportional
-  (set-face-attribute 'default nil :family (face-attribute 'fixed-pitch :family)
-                                   :height (face-attribute 'fixed-pitch :height))
-
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
 
@@ -341,6 +330,31 @@ USAGE:
   ; NOTE: If this stops working, alternative is to set it to use GPG key for encryption.
   ;       Check plstore code for instructions on this if it will ever be needed.
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
+)
+
+(use-package emacs
+  :ensure nil
+  :config
+  ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
+  (defvar my/main-fixed-pitch-font "Iosevka Extended") ; fixed pitch == monospace
+  (defvar my/main-variable-pitch-font "Iosevka Aile") ; variable pitch == proportional
+  (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
+  (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
+  (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
+)
+
+(defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
+  "Remaps the fixed-pitch face's (for the buffer) with adjusted height so it is relative to variable-pitch face."
+  (let* ((fixp-h (face-attribute 'fixed-pitch :height))
+         (varp-h (face-attribute 'variable-pitch :height))
+         (new-fixp-h (/ fixp-h varp-h)))
+    (face-remap-add-relative 'fixed-pitch `(:height ,new-fixp-h))
+  )
+)
+
+(defun my/variable-pitch-mode-on ()
+  (variable-pitch-mode 1)
+  (my/remap-fixed-pitch-height-relative-to-variable-pitch)
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -707,7 +721,7 @@ USAGE:
     (setq-local right-margin-width 2)
     (set-window-buffer nil (current-buffer)) ; We have to reset buffer for margin changes to take effect.
 
-    (variable-pitch-mode 1)
+    (my/variable-pitch-mode-on)
   ))
   :config
   (my/leader-keys
@@ -758,8 +772,8 @@ USAGE:
   (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
   (set-face-attribute 'org-verse nil :foreground "#d4c49c")
 
-  ;; These inherit height from code-block, but they are inline with variable pitch text,
-  ;; so we want to make sure they have the same height as variable pitch text
+  ;; These inherit height from code-block, which is fixed-height, but they are inline with
+  ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
   ;; (since code-block is fixed pitch).
   (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
   (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
@@ -877,7 +891,6 @@ USAGE:
 
 ;; TODO: Ricing my org mode:
 ;;   - [ ] Play more with org-modern below (check TODOs).
-;;   - [ ] Tables look a bit weird fix that, either by tweaking or by using org-table-pretty package directly.
 ;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
@@ -2141,7 +2154,7 @@ Returns nil if no heading found."
     (t              "    ." shadow))
   )
   :config
-  (my/face-add-to-inherit 'company-tooltip 'fixed-pitch)
+  (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
   (global-company-mode 1)
 )
 
