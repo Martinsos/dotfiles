@@ -880,6 +880,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "fj"  '("jump in file" . avy-goto-char-timer)
       "ff"  '("find file" . counsel-find-file)
       "fs"  '("save" . save-buffer)
+      "fS"  '("save all files" . (lambda () (interactive) (same-some-buffers t)))
       "fr"  '("recent files" . counsel-recentf)
 
       "fe"  '("emacs" . (keymap))
@@ -1028,7 +1029,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 ** Evil
 
 #+begin_src emacs-lisp
-
   ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
   (use-package evil
     :init
@@ -1046,11 +1046,9 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (define-key evil-motion-state-map (kbd "SPC") nil) ; To avoid conflict with me using SPC as leader key (defined via general.el).
     (define-key evil-motion-state-map (kbd ",") nil) ; I prefer using "," for mode-specific keymap (e.g. for lsp).
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   (use-package evil-escape
     :after evil
     :custom
@@ -1058,11 +1056,9 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :config
     (evil-escape-mode)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Sets evil keybindings in many more parts of emacs than evil-mode does by default,
   ;; and in a better way than evil does.
   (use-package evil-collection
@@ -1070,7 +1066,30 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :custom (evil-collection-setup-minibuffer nil)  ; If set to `t` it messes up / overrides my custom keybindings for Ivy (e.g. C-k).
     :config (evil-collection-init)
   )
+#+end_src
 
+Evil-surround brings ability to surround stuff with delimiters:
+  - ~ys<textobject><delimiter>~ to add delimiters (or ~S<textobject><delimiter>~ in visual mode).
+  - ~cs<old-textobject><new-textobject>~ to change old for new delimiters.
+  - ~ds<textobject>~ to delete existing delimiters.
+#+begin_src emacs-lisp
+  (use-package evil-surround
+    :after evil
+    :config
+    (global-evil-surround-mode 1)
+    (setq-default evil-surround-pairs-alist
+                  '((?\( "(" . ")")
+                    (?\[ "[" . "]")
+                    (?\{ "{" . "}")
+                    (?\) "(" . ")")
+                    (?\] "[" . "]")
+                    (?\} "{" . "}")
+                    (?>  "<" . ">")
+                    (?=  "=" . "=")
+                    (?~  "~" . "~")
+                    (?t . evil-surround-read-tag)
+                    (?< . evil-surround-read-tag)))
+  )
 #+end_src
 
 * Org mode
@@ -1114,22 +1133,26 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
      :states '(normal)
      :keymaps 'org-mode-map
      :prefix ","
-     "c"  '("change" . (keymap))
-      "cs" '("schedule" . org-schedule)
-      "cd" '("deadline" . org-deadline)
-      "ct" '("tags" . org-set-tags-command)
-      "ce" '("effort" . org-set-effort)
-     "t"  '("toggle todo" . org-todo)
-     "x"  '("toggle checkbox" . org-toggle-checkbox)
-     "J"  '("priority down" . org-priority-down)
-     "K"  '("priority up" . org-priority-up)
-     "/"  '("sparse tree" . org-sparse-tree)
-     "%"  '("update [%]" . org-update-statistics-cookies)
-     "l"  '("link" . (keymap))
-      "ln" '("next link" . org-next-link)
-      "lp" '("prev link" . org-previous-link)
-      "li" '("insert link" . org-insert-link)
+     "c" '("change" . (keymap))
+     "c s" '("schedule" . org-schedule)
+     "c d" '("deadline" . org-deadline)
+     "c t" '("tags" . org-set-tags-command)
+     "c e" '("effort" . org-set-effort)
+     "t" '("toggle todo" . org-todo)
+     "x" '("toggle checkbox" . org-toggle-checkbox)
+     "J" '("priority down" . org-priority-down)
+     "K" '("priority up" . org-priority-up)
+     "/" '("sparse tree" . org-sparse-tree)
+     "%" '("update [%]" . org-update-statistics-cookies)
+     "l" '("link" . (keymap))
+     "l n" '("next link" . org-next-link)
+     "l p" '("prev link" . org-previous-link)
+     "l i" '("insert link" . org-insert-link)
      "|" '("columns view" . org-columns)
+     "m" '("mark" . (keymap))
+     "m b"  '("babel block" . org-babel-mark-block)
+     "m t"  '("subtree" . org-mark-subtree)
+     "m e"  '("element" . org-mark-element)
     )
 
     (add-to-list 'org-modules 'org-habit)
@@ -1172,7 +1195,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     )
     (set-face-attribute 'org-document-info-keyword nil)
     (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
-    (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
+    (set-face-attribute 'org-document-info nil :height 1.2)
     (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
     (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
     (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
@@ -1291,6 +1314,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :custom
     ;; I couldn't find combo of settings that gives me nicely aligned, no-star headings,
     ;; so I leave that to org-superstar. Also lists while at it.
+    ;; TODO: Ask on org-modern GH repo for advice? Ask if it is possible to hide all the stars, and if so, how? Maybe also hide that leading space?
     (org-modern-hide-stars nil)
     (org-modern-star nil)
     (org-modern-list nil)
@@ -1299,7 +1323,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
     (org-modern-horizontal-rule t)
 
-    (org-modern-table t)
+    (org-modern-table nil) ; I found it to not be that nice visually, while being harder to edit tables.
 
     (org-modern-todo nil) ; TODO t
     ;(org-modern-todo-faces ...) ; TODO
@@ -1311,6 +1335,8 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     ;(org-modern-tag-faces ...) ; TODO
 
     (org-modern-timestamp nil) ; TODO: t
+
+    (org-modern-progress nil) ; TODO: t
 
     (org-modern-block-name '(("src" . ("{}" ""))
                              ("quote" . ("❝❞" ""))
@@ -2478,10 +2504,36 @@ A simple Emacs minor mode for nice writing environment.
 It automatically balances margins in order to put the content in the middle, with fixed width.
 
 #+begin_src emacs-lisp
+
+  (my/leader-keys
+    "aw" '("writing mode (olivetti)" . my/writing-mode)
+  )
+
   (use-package olivetti
-    :defer t
+    :config
+    (setq-default olivetti-body-width 120)
+  )
+
+  ;; I got this function from https://lucidmanager.org/productivity/ricing-org-mode/.
+  (defun my/writing-mode ()
+    "Distraction-free writing environment using Olivetti package."
+    (interactive)
+    (if (equal olivetti-mode nil)
+        (progn
+          (window-configuration-to-register 1)
+          (delete-other-windows)
+          (olivetti-mode t)
+        )
+      (progn
+        (if (eq (length (window-list)) 1)
+            (jump-to-register 1))
+        (olivetti-mode 0)
+      )
+    )
   )
 #+end_src
+
+*** TODO Hide modeline with https://github.com/hlissner/emacs-hide-mode-line
 
 *** Cheatshet :cheatsheet:
 - Run ~olivetti-mode~ to toggle it.
@@ -2801,6 +2853,12 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
   (use-package magit
     :after transient
     :defer t
+    :config
+    (general-define-key
+     :keymaps 'magit-diff-section-map
+     ;; Originally it opens file in the same window, but I prefer when it opens in another window.
+     "C-<return>" #'magit-diff-visit-worktree-file-other-window
+    )
   )
   ;; I define this outside of (use-package magit) because later is deferred.
   (my/leader-keys
@@ -3240,6 +3298,48 @@ Im not using it for now since I managed to set up Flycheck quite well, but I mig
   )
 
 #+end_src
+
+* Link checking
+
+For link checking, we use external program called =lychee=.
+It is quite versatile, checks a lot of different formats, checks both local and outgoing links, ... .
+Not org files unfortunately.
+
+#+begin_src elisp
+  (defun my/lychee-check (target)
+    "Run lychee link checker on TARGET (file or directory)."
+    (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
+      (message "Running: %s" cmd)
+      (shell-command cmd))
+  )
+
+  (defun my/lychee-check-current-file ()
+    "Run lychee link checker on the current file."
+    (interactive)
+    (let ((file-name (buffer-file-name)))
+      (if file-name
+          (my/lychee-check file-name)
+        (error "Buffer is not associated with a file")))
+  )
+
+  (defun my/lychee-check-project ()
+    "Run lychee link checker on the current project."
+    (interactive)
+    (let ((project-root (projectile-project-root)))
+      (if project-root
+          (my/lychee-check project-root)
+        (error "Not in a project")))
+  )
+
+  (my/leader-keys
+    "a l" '("check links" . (keymap))
+    "a l l" '("in buffer" . my/lychee-check-current-file)
+    "a l p" '("in project" . my/lychee-check-project)
+  )
+#+end_src
+
+** Install lychee :manual_setup:
+~sudo pacman -S lychee~
 
 * Sideline
 
@@ -3739,6 +3839,13 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
     )
   )
 
+#+end_src
+
+** Powershell
+
+#+begin_src emacs-lisp
+  (use-package powershell
+  )
 #+end_src
 
 * AI

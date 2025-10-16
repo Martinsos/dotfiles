@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-08 22:00:17 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-16 22:44:02 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -541,6 +541,7 @@ USAGE:
     "fj"  '("jump in file" . avy-goto-char-timer)
     "ff"  '("find file" . counsel-find-file)
     "fs"  '("save" . save-buffer)
+    "fS"  '("save all files" . (lambda () (interactive) (same-some-buffers t)))
     "fr"  '("recent files" . counsel-recentf)
 
     "fe"  '("emacs" . (keymap))
@@ -701,6 +702,24 @@ USAGE:
   :config (evil-collection-init)
 )
 
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode 1)
+  (setq-default evil-surround-pairs-alist
+                '((?\( "(" . ")")
+                  (?\[ "[" . "]")
+                  (?\{ "{" . "}")
+                  (?\) "(" . ")")
+                  (?\] "[" . "]")
+                  (?\} "{" . "}")
+                  (?>  "<" . ">")
+                  (?=  "=" . "=")
+                  (?~  "~" . "~")
+                  (?t . evil-surround-read-tag)
+                  (?< . evil-surround-read-tag)))
+)
+
 ;; This goes first so that all the rest of org-related config can add keys without any waiting.
 (my/leader-keys
   "o"   '("org" . (keymap))
@@ -737,22 +756,26 @@ USAGE:
    :states '(normal)
    :keymaps 'org-mode-map
    :prefix ","
-   "c"  '("change" . (keymap))
-    "cs" '("schedule" . org-schedule)
-    "cd" '("deadline" . org-deadline)
-    "ct" '("tags" . org-set-tags-command)
-    "ce" '("effort" . org-set-effort)
-   "t"  '("toggle todo" . org-todo)
-   "x"  '("toggle checkbox" . org-toggle-checkbox)
-   "J"  '("priority down" . org-priority-down)
-   "K"  '("priority up" . org-priority-up)
-   "/"  '("sparse tree" . org-sparse-tree)
-   "%"  '("update [%]" . org-update-statistics-cookies)
-   "l"  '("link" . (keymap))
-    "ln" '("next link" . org-next-link)
-    "lp" '("prev link" . org-previous-link)
-    "li" '("insert link" . org-insert-link)
+   "c" '("change" . (keymap))
+   "c s" '("schedule" . org-schedule)
+   "c d" '("deadline" . org-deadline)
+   "c t" '("tags" . org-set-tags-command)
+   "c e" '("effort" . org-set-effort)
+   "t" '("toggle todo" . org-todo)
+   "x" '("toggle checkbox" . org-toggle-checkbox)
+   "J" '("priority down" . org-priority-down)
+   "K" '("priority up" . org-priority-up)
+   "/" '("sparse tree" . org-sparse-tree)
+   "%" '("update [%]" . org-update-statistics-cookies)
+   "l" '("link" . (keymap))
+   "l n" '("next link" . org-next-link)
+   "l p" '("prev link" . org-previous-link)
+   "l i" '("insert link" . org-insert-link)
    "|" '("columns view" . org-columns)
+   "m" '("mark" . (keymap))
+   "m b"  '("babel block" . org-babel-mark-block)
+   "m t"  '("subtree" . org-mark-subtree)
+   "m e"  '("element" . org-mark-element)
   )
 
   (add-to-list 'org-modules 'org-habit)
@@ -795,7 +818,7 @@ USAGE:
   )
   (set-face-attribute 'org-document-info-keyword nil)
   (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
-  (set-face-attribute 'org-document-info nil :height 1.2 :slant 'italic)
+  (set-face-attribute 'org-document-info nil :height 1.2)
   (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
   (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
   (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
@@ -914,6 +937,7 @@ USAGE:
   :custom
   ;; I couldn't find combo of settings that gives me nicely aligned, no-star headings,
   ;; so I leave that to org-superstar. Also lists while at it.
+  ;; TODO: Ask on org-modern GH repo for advice? Ask if it is possible to hide all the stars, and if so, how? Maybe also hide that leading space?
   (org-modern-hide-stars nil)
   (org-modern-star nil)
   (org-modern-list nil)
@@ -922,7 +946,7 @@ USAGE:
 
   (org-modern-horizontal-rule t)
 
-  (org-modern-table t)
+  (org-modern-table nil) ; I found it to not be that nice visually, while being harder to edit tables.
 
   (org-modern-todo nil) ; TODO t
   ;(org-modern-todo-faces ...) ; TODO
@@ -934,6 +958,8 @@ USAGE:
   ;(org-modern-tag-faces ...) ; TODO
 
   (org-modern-timestamp nil) ; TODO: t
+
+  (org-modern-progress nil) ; TODO: t
 
   (org-modern-block-name '(("src" . ("{}" ""))
                            ("quote" . ("❝❞" ""))
@@ -1864,8 +1890,31 @@ Returns nil if no heading found."
   )
 )
 
+(my/leader-keys
+  "aw" '("writing mode (olivetti)" . my/writing-mode)
+)
+
 (use-package olivetti
-  :defer t
+  :config
+  (setq-default olivetti-body-width 120)
+)
+
+;; I got this function from https://lucidmanager.org/productivity/ricing-org-mode/.
+(defun my/writing-mode ()
+  "Distraction-free writing environment using Olivetti package."
+  (interactive)
+  (if (equal olivetti-mode nil)
+      (progn
+        (window-configuration-to-register 1)
+        (delete-other-windows)
+        (olivetti-mode t)
+      )
+    (progn
+      (if (eq (length (window-list)) 1)
+          (jump-to-register 1))
+      (olivetti-mode 0)
+    )
+  )
 )
 
 (use-package emacs
@@ -2088,6 +2137,12 @@ Returns nil if no heading found."
 (use-package magit
   :after transient
   :defer t
+  :config
+  (general-define-key
+   :keymaps 'magit-diff-section-map
+   ;; Originally it opens file in the same window, but I prefer when it opens in another window.
+   "C-<return>" #'magit-diff-visit-worktree-file-other-window
+  )
 )
 ;; I define this outside of (use-package magit) because later is deferred.
 (my/leader-keys
@@ -2630,6 +2685,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
                   (markdown-header-face-6 . 1.1)))
     (set-face-attribute (car face) nil :height (cdr face))
   )
+)
+
+(use-package powershell
 )
 
 (use-package gptel
