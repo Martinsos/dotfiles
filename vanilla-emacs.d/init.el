@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-16 22:44:02 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-17 16:55:04 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2348,6 +2348,37 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (my/leader-keys
     "ee" '("(un)expand" . my/show-flycheck-errors-posframe-at-point)
   )
+)
+
+(defun my/lychee-check (target)
+  "Run lychee link checker on TARGET (file or directory)."
+  (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
+    (message "Running: %s" cmd)
+    (shell-command cmd))
+)
+
+(defun my/lychee-check-current-file ()
+  "Run lychee link checker on the current file."
+  (interactive)
+  (let ((file-name (buffer-file-name)))
+    (if file-name
+        (my/lychee-check file-name)
+      (error "Buffer is not associated with a file")))
+)
+
+(defun my/lychee-check-project ()
+  "Run lychee link checker on the current project."
+  (interactive)
+  (let ((project-root (projectile-project-root)))
+    (if project-root
+        (my/lychee-check project-root)
+      (error "Not in a project")))
+)
+
+(my/leader-keys
+  "a l" '("check links" . (keymap))
+  "a l l" '("in buffer" . my/lychee-check-current-file)
+  "a l p" '("in project" . my/lychee-check-project)
 )
 
 (use-package sideline

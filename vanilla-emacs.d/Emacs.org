@@ -3303,9 +3303,8 @@ Im not using it for now since I managed to set up Flycheck quite well, but I mig
 
 For link checking, we use external program called =lychee=.
 It is quite versatile, checks a lot of different formats, checks both local and outgoing links, ... .
-Not org files unfortunately.
 
-#+begin_src elisp
+#+begin_src emacs-lisp
   (defun my/lychee-check (target)
     "Run lychee link checker on TARGET (file or directory)."
     (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
@@ -4796,6 +4795,7 @@ I am tempted to try Denote since people say it is quite friendly, although I sho
 *** TODO Install separedit for easy editing of minibuffer
 https://github.com/twlz0ne/separedit.el
 ** Going beyond
+*** TODO Set up this cool package for permanently highlighting pieces of text: https://github.com/jkitchin/ov-highlight
 *** TODO package: org-modern for very nice org mode look.
 *** TODO Set up RSS feeds following in emacs ([[https://www.reddit.com/r/emacs/s/bOnWC7cv44][reddit]])
 *** TODO Read [[https://www.reddit.com/r/emacs/s/mnpkOjzbOT][Article with nice explanation of IDE packages (lsp, dap, ...)]]
