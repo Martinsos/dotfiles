@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-17 16:55:04 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-18 00:08:18 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -730,9 +730,18 @@ USAGE:
   :hook
   (org-mode . (lambda ()
     ;; Let's get some breathing space:
-    (setq-local left-margin-width 2)
-    (setq-local right-margin-width 2)
-    (set-window-buffer nil (current-buffer)) ; We have to reset buffer for margin changes to take effect.
+    (setq-local left-margin-width 2
+                right-margin-width 2)
+    ;; We have to reset buffer for margin changes to take effect.
+    ;; We use 'set-window-buffer' for that.
+    ;; We want to do it only for displayed buffers though,
+    ;; otherwise it would put display buffers that weren't visible moment ago
+    ;; (e.g. buffers of org files that org-agenda pulls data from),
+    ;; so we do it only for buffers that have window.
+    (when-let* ((b (current-buffer))
+                (w (get-buffer-window b)))
+      (set-window-buffer w b)
+    )
 
     (setq-local evil-auto-indent nil) ; Having it on would be annoying due to org-indent-mode being on.
 
