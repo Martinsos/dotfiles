@@ -651,6 +651,27 @@ To install on Archlinux:
  - Iosevka: ~sudo pacman -S ttc-iosevka ttc-iosevka-aile~
 NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I prefer ttf when I can.
 
+* Startup
+
+#+begin_src emacs-lisp
+  (defun my/display-startup-time ()
+    (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
+           (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+          )
+      (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
+        (+ init-duration elpaca-only-init-duration)
+        init-duration
+        elpaca-only-init-duration
+        gcs-done
+      )
+    )
+  )
+
+  (add-hook 'emacs-startup-hook #'my/display-startup-time)
+#+end_src
+
+** TODO Use use-package-compute-statistics + use-package-report
+
 * Theme
 
 #+begin_src emacs-lisp

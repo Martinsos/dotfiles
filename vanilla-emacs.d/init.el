@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-21 00:00:29 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-21 00:28:57 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -356,6 +356,21 @@ USAGE:
   (variable-pitch-mode 1)
   (my/remap-fixed-pitch-height-relative-to-variable-pitch)
 )
+
+(defun my/display-startup-time ()
+  (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
+         (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+        )
+    (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
+      (+ init-duration elpaca-only-init-duration)
+      init-duration
+      elpaca-only-init-duration
+      gcs-done
+    )
+  )
+)
+
+(add-hook 'emacs-startup-hook #'my/display-startup-time)
 
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
