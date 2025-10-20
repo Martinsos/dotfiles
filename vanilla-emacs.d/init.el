@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-18 00:08:18 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-21 00:00:29 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1090,6 +1090,8 @@ USAGE:
   :bind (
     :map org-present-mode-keymap
            ("q" . org-present-quit)
+           (", n" . org-present-next)
+           (", p" . org-present-prev)
   )
   :config
 
@@ -1117,8 +1119,8 @@ USAGE:
 
       (org-present-big)
       (org-display-inline-images)
-      (org-present-hide-cursor)
-      (org-present-read-only)
+      ;(org-present-hide-cursor)  ;; Trying out without
+      ;(org-present-read-only)    ;; Trying out without
 
       ;; Soft wraps the text at fixed width while also centering it.
       ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
@@ -1140,8 +1142,8 @@ USAGE:
       (defun my/on-presentation-quit ()
 	(org-present-small)
 	(org-remove-inline-images)
-	(org-present-show-cursor)
-	(org-present-read-write)
+	;(org-present-show-cursor)  ;; Trying out without
+	;(org-present-read-write)   ;; Trying out without
 
 	(funcall restore-local-vars)
 	(funcall restore-modes)

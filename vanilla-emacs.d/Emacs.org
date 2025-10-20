@@ -1518,6 +1518,8 @@ Turns any org document into a presentation! Each top-level header is one slide.
     :bind (
       :map org-present-mode-keymap
              ("q" . org-present-quit)
+             (", n" . org-present-next)
+             (", p" . org-present-prev)
     )
     :config
 
@@ -1545,8 +1547,8 @@ Turns any org document into a presentation! Each top-level header is one slide.
 
         (org-present-big)
         (org-display-inline-images)
-        (org-present-hide-cursor)
-        (org-present-read-only)
+        ;(org-present-hide-cursor)  ;; Trying out without
+        ;(org-present-read-only)    ;; Trying out without
 
         ;; Soft wraps the text at fixed width while also centering it.
         ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
@@ -1568,8 +1570,8 @@ Turns any org document into a presentation! Each top-level header is one slide.
         (defun my/on-presentation-quit ()
   	(org-present-small)
   	(org-remove-inline-images)
-  	(org-present-show-cursor)
-  	(org-present-read-write)
+  	;(org-present-show-cursor)  ;; Trying out without
+  	;(org-present-read-write)   ;; Trying out without
 
   	(funcall restore-local-vars)
   	(funcall restore-modes)
