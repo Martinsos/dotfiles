@@ -521,30 +521,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+end_src
 
-** Pretty startup
-
-#+begin_src emacs-lisp :tangle ./early-init.el
-
-  ;; I had emacs window appearing at the very start, for a short time (~0.5-1s), as a small window with white background,
-  ;; before the config from init.el (or even early-init.el) is applied.
-  ;; Usual advice of setting the `(background . "black")` in early-init.el didn't help, that would happen after it.
-  ;; From what I got, the problem is that window is white because Emacs doesn't have control yet, GTK does, and
-  ;; by default it shows white window.
-  ;; I solved that at the end by setting `(visibility . nil)`, and then when emacs progresses enough, by explicitly
-  ;; calling `make-frame-visible` (otherwise it would remain invisible forever).
-  ;; This hides the window until init.el is loaded, which means now wait time is longer before first render, ~2s,
-  ;; but there is no flashing and sudden changes.
-  (setq initial-frame-alist '(
-    (visibility . nil)
-    (undecorated . t)
-    (menu-bar-lines . 0)
-    (tool-bar-lines . 0)
-    (fullscreen . maximized)
-  ))
-  (add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
-
-#+end_src
-
 ** GPG
 
 #+begin_src emacs-lisp
@@ -652,9 +628,34 @@ To install on Archlinux:
 NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I prefer ttf when I can.
 
 * Startup
+** Pretty startup
+
+#+begin_src emacs-lisp :tangle ./early-init.el
+
+  ;; I had emacs window appearing at the very start, for a short time (~0.5-1s), as a small window with white background,
+  ;; before the config from init.el (or even early-init.el) is applied.
+  ;; Usual advice of setting the `(background . "black")` in early-init.el didn't help, that would happen after it.
+  ;; From what I got, the problem is that window is white because Emacs doesn't have control yet, GTK does, and
+  ;; by default it shows white window.
+  ;; I solved that at the end by setting `(visibility . nil)`, and then when emacs progresses enough, by explicitly
+  ;; calling `make-frame-visible` (otherwise it would remain invisible forever).
+  ;; This hides the window until init.el is loaded, which means now wait time is longer before first render, ~2s,
+  ;; but there is no flashing and sudden changes.
+  (setq initial-frame-alist '(
+    (visibility . nil)
+    (undecorated . t)
+    (menu-bar-lines . 0)
+    (tool-bar-lines . 0)
+    (fullscreen . maximized)
+  ))
+  (add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
+
+#+end_src
+
+** Measuring startup time
 
 #+begin_src emacs-lisp
-  (defun my/display-startup-time ()
+  (defun my/print-startup-time ()
     (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
            (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
           )
@@ -667,10 +668,14 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
     )
   )
 
-  (add-hook 'emacs-startup-hook #'my/display-startup-time)
+  (add-hook 'emacs-startup-hook #'my/print-startup-time)
 #+end_src
 
-** TODO Use use-package-compute-statistics + use-package-report
+This measures how long each package took. Run ~use-package-report~ to see the result.
+
+#+begin_src emacs-lisp :tangle ./early-init.el
+  (setq use-package-compute-statistics 1)
+#+end_src
 
 * Theme
 
@@ -1525,7 +1530,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 ** org-tidy
 
 #+begin_src emacs-lisp
-  (use-package org-tidy)
+  (use-package org-tidy
+    :commands org-tidy-mode
+  )
 #+end_src
 
 ** org-present
@@ -1535,7 +1542,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
 #+begin_src emacs-lisp
 
   (use-package org-present
-    :after (org visual-fill-column org-tidy)
+    :after (org visual-fill-column)
     :bind (
       :map org-present-mode-keymap
              ("q" . org-present-quit)
@@ -4511,26 +4518,6 @@ I have it off by default because I find it intrusive. I however defined a keybin
 - install the copilot server: ~M-x copilot-install-server~
 - login to copilot with ~M-x copilot-login~
 
-
-*** copilot-chat.el
-
-Has big overlap with gptel but I have both for now, to see which I like better, or maybe I can mix and match.
-
-Besides basic chat in which you can add/remove buffers into context, it also has some convenience commands for reviewing/fixing/optimizing code, writing tests and similar.
-
-Most straightforward way to use it is to run ~copilot-chat-transient~ since that shows all the possible things one can do. All the reviewing/fixing/testing code commands are under =code= option.
-
-#+begin_src emacs-lisp
-
-  (use-package copilot-chat
-    :config
-    (my/leader-keys
-      "i I" '("copilot chat" . copilot-chat-transient))
-  )
-
-#+end_src
-
-**** TODO When in buffer list, its special keybindings (RET, g, ...) don't work, I believe because of evil, fix that.
 
 ** TODOs
 *** TODO Learn/configure gptel

@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2025-10-21 00:28:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-21 23:30:49 CEST, don't edit it manually.
 
 (setq package-enable-at-startup nil) ; Elpaca requires this.
 
@@ -19,5 +19,7 @@
   (fullscreen . maximized)
 ))
 (add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
+
+(setq use-package-compute-statistics 1)
 
 (setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization. Also neccessary for lsp-booster below to work.

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-21 00:28:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-10-21 23:30:49 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -357,7 +357,7 @@ USAGE:
   (my/remap-fixed-pitch-height-relative-to-variable-pitch)
 )
 
-(defun my/display-startup-time ()
+(defun my/print-startup-time ()
   (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
          (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
         )
@@ -370,7 +370,7 @@ USAGE:
   )
 )
 
-(add-hook 'emacs-startup-hook #'my/display-startup-time)
+(add-hook 'emacs-startup-hook #'my/print-startup-time)
 
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
@@ -1098,10 +1098,12 @@ USAGE:
   (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
-(use-package org-tidy)
+(use-package org-tidy
+  :commands org-tidy-mode
+)
 
 (use-package org-present
-  :after (org visual-fill-column org-tidy)
+  :after (org visual-fill-column)
   :bind (
     :map org-present-mode-keymap
            ("q" . org-present-quit)
@@ -3213,12 +3215,6 @@ Returns a structured list of information that can be sent to an LLM."
   (my/leader-keys
     "i TAB" '("toggle copilot" . copilot-mode)
   )
-)
-
-(use-package copilot-chat
-  :config
-  (my/leader-keys
-    "i I" '("copilot chat" . copilot-chat-transient))
 )
 
 (use-package whitespace
