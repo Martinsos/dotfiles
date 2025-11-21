@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-10-21 23:30:49 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-11-21 02:20:48 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -785,6 +785,7 @@ USAGE:
    "c d" '("deadline" . org-deadline)
    "c t" '("tags" . org-set-tags-command)
    "c e" '("effort" . org-set-effort)
+   "c p" '("property" . org-set-property)
    "t" '("toggle todo" . org-todo)
    "x" '("toggle checkbox" . org-toggle-checkbox)
    "J" '("priority down" . org-priority-down)
@@ -800,6 +801,8 @@ USAGE:
    "m b"  '("babel block" . org-babel-mark-block)
    "m t"  '("subtree" . org-mark-subtree)
    "m e"  '("element" . org-mark-element)
+   "h" '("insert heading" . org-insert-heading)
+   "H" '("insert subheading" . org-insert-subheading)
   )
 
   (add-to-list 'org-modules 'org-habit)
@@ -985,10 +988,10 @@ USAGE:
 
   (org-modern-progress nil) ; TODO: t
 
-  (org-modern-block-name '(("src" . ("{}" ""))
-                           ("quote" . ("❝❞" ""))
-                           ("verse" . ("♭♩" ""))
-                           ("example" . ("example" ""))
+  (org-modern-block-name '(("src" . ("{}" ";"))
+                           ("quote" . ("❝" "❞"))
+                           ("verse" . ("♭♩" "♪♫"))
+                           ("example" . ("example" "end"))
                            (t . ("" "/"))))
   (org-modern-block-fringe nil)
 
@@ -1868,7 +1871,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s50")
+        (work-diary-sprint-current-tag "s53")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -1943,6 +1946,17 @@ Returns nil if no heading found."
       (olivetti-mode 0)
     )
   )
+)
+
+(use-package elfeed
+  :config
+  (setq elfeed-feeds '(
+                       ("https://sachachua.com/blog/feed/" blog emacs)
+                       ("https://www.masteringemacs.org/feed" blog emacs)
+                       ("https://systemcrafters.net/rss.xml" blog emacs)
+                       ("https://karthinks.com/index.xml" blog emacs)
+                       ("https://hojberg.xyz/rss.xml" blog programming)
+  ))
 )
 
 (use-package emacs
@@ -2464,6 +2478,24 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :hook (prog-mode . hs-minor-mode)
 )
 
+(use-package imenu
+  :ensure nil ; Built-in into emacs.
+  :config
+  (setq imenu-sort-function #'imenu--sort-by-position) ; Keep ordering of items same as in the buffer.
+)
+
+(use-package imenu-list
+  :after imenu
+  :config
+  (setq imenu-list-focus-after-activation t
+        imenu-list-position 'left
+        imenu-list-size 35
+  )
+  (my/leader-keys
+    "a i" '("toggle imenu-list" . imenu-list-smart-toggle)
+  )
+)
+
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix ",")
@@ -2489,6 +2521,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; At the top of the file, show info about the position of the cursor (path, module, symbol, ...).
   (lsp-headerline-breadcrumb-enable t)
   (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+
+  (lsp-imenu-sort-methods '(position kind name))
 
   ;; Turned off for now, I found it to bee too much of a "rainbow soup".
   ;;(lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).

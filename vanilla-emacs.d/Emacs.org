@@ -1173,6 +1173,7 @@ Evil-surround brings ability to surround stuff with delimiters:
      "c d" '("deadline" . org-deadline)
      "c t" '("tags" . org-set-tags-command)
      "c e" '("effort" . org-set-effort)
+     "c p" '("property" . org-set-property)
      "t" '("toggle todo" . org-todo)
      "x" '("toggle checkbox" . org-toggle-checkbox)
      "J" '("priority down" . org-priority-down)
@@ -1188,6 +1189,8 @@ Evil-surround brings ability to surround stuff with delimiters:
      "m b"  '("babel block" . org-babel-mark-block)
      "m t"  '("subtree" . org-mark-subtree)
      "m e"  '("element" . org-mark-element)
+     "h" '("insert heading" . org-insert-heading)
+     "H" '("insert subheading" . org-insert-subheading)
     )
 
     (add-to-list 'org-modules 'org-habit)
@@ -1373,10 +1376,10 @@ Evil-surround brings ability to surround stuff with delimiters:
 
     (org-modern-progress nil) ; TODO: t
 
-    (org-modern-block-name '(("src" . ("{}" ""))
-                             ("quote" . ("❝❞" ""))
-                             ("verse" . ("♭♩" ""))
-                             ("example" . ("example" ""))
+    (org-modern-block-name '(("src" . ("{}" ";"))
+                             ("quote" . ("❝" "❞"))
+                             ("verse" . ("♭♩" "♪♫"))
+                             ("example" . ("example" "end"))
                              (t . ("" "/"))))
     (org-modern-block-fringe nil)
 
@@ -1419,7 +1422,6 @@ Evil-surround brings ability to surround stuff with delimiters:
     ;; to show them as raw when needed.
     (org-hide-emphasis-markers t)
   )
-
 #+end_src
 
 ** Support for downloading and inserting images
@@ -2465,7 +2467,7 @@ Order of headings below is important because they depend on each other.
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s50")
+          (work-diary-sprint-current-tag "s53")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -2577,6 +2579,26 @@ It automatically balances margins in order to put the content in the middle, wit
 *** Cheatshet :cheatsheet:
 - Run ~olivetti-mode~ to toggle it.
 - There are commands starting with ~olivetti-~ for expanding/shrinking the space for content.
+
+* Reading
+** RSS
+
+#+begin_src emacs-lisp
+  (use-package elfeed
+    :config
+    (setq elfeed-feeds '(
+                         ("https://sachachua.com/blog/feed/" blog emacs)
+                         ("https://www.masteringemacs.org/feed" blog emacs)
+                         ("https://systemcrafters.net/rss.xml" blog emacs)
+                         ("https://karthinks.com/index.xml" blog emacs)
+                         ("https://hojberg.xyz/rss.xml" blog programming)
+    ))
+  )
+#+end_src
+
+*** Potentially useful
+- https://sr.ht/~ghost08/ratt/ -> converts any website into rss/atom feed.
+- https://kill-the-newsletter.com/ -> converts email newsletters into atom feeds.
 
 * My buffer/file functions
 
@@ -3459,6 +3481,31 @@ You can plug in multiple backends into it, and it will display the information u
   - ~z 0~ to unfold recursively
   - ...
 ** TODO Try some richer package for folding, e.g. origami or treesit-fold
+* File overview (imenu)
+Imenu (index menu) is a builtin package that gives an overview of the major definitions in the buffer.
+It works for any mode, as long as that mode is sending it info to show. For example treesitter or lsp might be sending it info. Or org mode.
+
+Imenu-list displays imenu in the sidebar with some nice features for easily managing/using it.
+
+#+begin_src emacs-lisp
+  (use-package imenu
+    :ensure nil ; Built-in into emacs.
+    :config
+    (setq imenu-sort-function #'imenu--sort-by-position) ; Keep ordering of items same as in the buffer.
+  )
+
+  (use-package imenu-list
+    :after imenu
+    :config
+    (setq imenu-list-focus-after-activation t
+          imenu-list-position 'left
+          imenu-list-size 35
+    )
+    (my/leader-keys
+      "a i" '("toggle imenu-list" . imenu-list-smart-toggle)
+    )
+  )
+#+end_src
 * Development
 ** LSP
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
@@ -3507,6 +3554,8 @@ Therefore, for optimal experience, we should customize the faces used for semant
     ;; At the top of the file, show info about the position of the cursor (path, module, symbol, ...).
     (lsp-headerline-breadcrumb-enable t)
     (lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+
+    (lsp-imenu-sort-methods '(position kind name))
 
     ;; Turned off for now, I found it to bee too much of a "rainbow soup".
     ;;(lsp-semantic-tokens-enable t) ; Richer highlighting (e.g. differentiates function symbol from var symbol).
@@ -4478,6 +4527,8 @@ Why don't I just add the region to context though, and that is it?
   - Is gptel-context-wrap-function maybe way to go about it?
 - manually add to chat for my current region/selection?
 
+*** TODO Set up saving of the conversations
+How to save files and extra: https://www.reddit.com/r/emacs/s/UHqhbSHFNr .
 *** TODO Enrich "rewrite" (gptel-directives? look into them)
 *** TODO Look into gptel-context-wrap-function
 - Hm I can't find it, maybe I need to update gptel?
@@ -4806,16 +4857,21 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 
 I am tempted to try Denote since people say it is quite friendly, although I should first check org-roam more I think
 *** TODO Look into bookmark mechanisms
+- =bookmarks= come with emacs
+- https://www.emacswiki.org/emacs/BookmarkPlus -> =bookmarks+= has additional goodies, like bookmarks to non-file buffers (which I want).
+
 - markers?
-- bookmarks
 - consult-bookmarks
 - activities
 - buferlio
 *** TODO Install separedit for easy editing of minibuffer
 https://github.com/twlz0ne/separedit.el
+*** TODO Look into window position management
+https://www.reddit.com/r/emacs/s/o0IpQS9v24
 ** Going beyond
+*** TODO Check "casual" package for easier access to popular commands. Especially their EditKit for search and replace commands.
 *** TODO Set up this cool package for permanently highlighting pieces of text: https://github.com/jkitchin/ov-highlight
-*** TODO package: org-modern for very nice org mode look.
+*** DONE package: org-modern for very nice org mode look.
 *** TODO Set up RSS feeds following in emacs ([[https://www.reddit.com/r/emacs/s/bOnWC7cv44][reddit]])
 *** TODO Read [[https://www.reddit.com/r/emacs/s/mnpkOjzbOT][Article with nice explanation of IDE packages (lsp, dap, ...)]]
 *** TODO Check out Prot's basic [[https://protesilaos.com/codelog/2024-11-28-basic-emacs-configuration/][emacs config]]
