@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# This script assumes it is positioned in dotfiles directory
+# This script assumes it is positioned in dotfiles directory.
 
 DOT_DIR=$( cd $(dirname $0) ; pwd -P ) # absolute path to dotfiles directory
 
 COLOR_NONE='\e[0m'
 COLOR_BROWN='\e[0;33m'
-COLOR_WHITE='\e[1;37m'
 
-# Takes source and target and creates link if it does not exist
+# Takes source and target and creates link if it does not exist.
 install_link() {
     local s=$1
     local t=$2
@@ -22,19 +21,13 @@ install_link() {
     ln --symbolic --no-target-directory --interactive --verbose $s $t
 }
 
-
 echo "Installing dotfiles..."
 
-
-echo "Installing emacs.d:"
-install_link $DOT_DIR/emacs.d $HOME/.emacs.d
-
-echo "Installing .spacemacs.d:"
-install_link $DOT_DIR/spacemacs.d $HOME/.spacemacs.d
+echo "Installing .emacs.d:"
+install_link $DOT_DIR/vanilla-emacs.d $HOME/.emacs.d
 
 echo "Installing .vimrc:"
 install_link $DOT_DIR/vimrc $HOME/.vimrc
-
 
 echo "Installing login session configuration files:"
 install_link $DOT_DIR/profile $HOME/.profile
@@ -47,9 +40,9 @@ if [ ! -e $HOME/.bashrc_local ]; then
     echo "$HOME/.bashrc_local created. Put machine specific bash settings here!"
 fi
 
-
 echo "Installing git completion:"
 install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
+echo "Installing git prompt:"
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
 echo "Installing global gitconfig:"
 install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
