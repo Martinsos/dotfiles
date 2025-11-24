@@ -3200,7 +3200,7 @@ Jinx uses Enchant program on your machine, which uses spelling backends like hun
 *** Manual setup                                             :manual_setup:
 
 On Arch, install ~enchant~ and ~pkgconf~.
-Enchant needs to use some spelling backend, so also install e.g. ~hunspell~ (and make sure it is using it when I expect, file =/usr/share/enchant-2/enchant.ordering= on Arch defines that).
+Enchant needs to use some spelling backend, so also install e.g. ~hunspell~ (and make sure it is using it when I expect, file =/usr/share/enchant-2/enchant.ordering= on Arch defines that - default was ok for me though).
 Finally, that backend needs dictionaries for the languages I want to spell-check, so e.g. if I want english, I should install ~hunspell-en_us~.
 I can check backend and dictionaries that Enchant is picking up by running ~enchant-lsmod-2 -list-dicts~.
 
@@ -3658,7 +3658,7 @@ I copied the code below exactly as it is from the =lsp-booster= Github's README 
 
 **** Manual setup :manual_setup:
 I followed instructions from the =lsp-booster= Github's README:
-- Downloaded the latest binary from the Github releases and made it available on =PATH= (I put it into =~/opt= dir).
+- Downloaded the latest binary from the Github releases and made it available on =PATH= (e.g. put it in =~/.local/bin= dir).
 
 *** Misc
 
