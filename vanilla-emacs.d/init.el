@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-11-28 17:40:42 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-11-28 23:51:42 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -332,6 +332,21 @@ USAGE:
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
 )
 
+(defun my/print-startup-time ()
+  (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
+         (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+        )
+    (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
+      (+ init-duration elpaca-only-init-duration)
+      init-duration
+      elpaca-only-init-duration
+      gcs-done
+    )
+  )
+)
+
+(add-hook 'emacs-startup-hook #'my/print-startup-time)
+
 (use-package emacs
   :ensure nil
   :config
@@ -357,21 +372,6 @@ USAGE:
   (my/remap-fixed-pitch-height-relative-to-variable-pitch)
 )
 
-(defun my/print-startup-time ()
-  (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-         (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-        )
-    (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
-      (+ init-duration elpaca-only-init-duration)
-      init-duration
-      elpaca-only-init-duration
-      gcs-done
-    )
-  )
-)
-
-(add-hook 'emacs-startup-hook #'my/print-startup-time)
-
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
@@ -386,6 +386,13 @@ USAGE:
 ;; `ef-dream' is nice, also `ef-night'.
 (use-package ef-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
+)
+
+(defun my/toggle-background-transparency ()
+  (interactive)
+  (set-frame-parameter nil 'alpha-background
+    (if (memq (frame-parameter nil 'alpha-background) '(nil 100)) 93 100)
+  )
 )
 
 ;; TODO: Configure better or use some other modeline.
@@ -501,6 +508,8 @@ USAGE:
     "ct"  '("scale text" . (keymap))
     "ctg"  '("scale text [global]" . global-text-scale-adjust)
     "ctl"  '("scale text [local]" . hydra-text-scale/body)
+    "cb"  '("change background" . (keymap))
+    "cbt"  '("toggle background transparency" . my/toggle-background-transparency)
 
     "a"   '("apps" . (keymap))
     "au"  '("undo tree" . vundo)
