@@ -715,6 +715,10 @@ This measures how long each package took. Run ~use-package-report~ to see the re
 
 #+end_src
 
+** Install Nerd font                                           :manual_setup:
+In order for =doom-modeline= to be able to render symbols, we need a Nerd font installed.
+Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will download the =Symbols Nerd Font Mono= font which only brings the symbols and will set up modeline to use that specific font for symbols.
+
 * Undo
 ** Increase undo memory limits
 
@@ -1146,7 +1150,9 @@ Evil-surround brings ability to surround stuff with delimiters:
         (set-window-buffer w b)
       )
 
-      (setq-local evil-auto-indent nil) ; Having it on would be annoying due to org-indent-mode being on.
+      ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
+      ;; to continue writing line indented with "enter", instead of always continue fully indented.
+      (setq-local evil-auto-indent nil)
 
       (visual-line-mode 1)
 
@@ -2514,22 +2520,55 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
 
   (let* ((wd-path "<<my/work-diary-org-path()>>")
          (wd-tasks `(file+headline ,wd-path "Tasks"))
+         (wd-sprints `(file+headline ,wd-path "Sprints"))
         )
     (setq org-capture-templates
           `(("t" "Task" entry ,wd-tasks
-             "** TODO %?")
+             "** TODO %?"
+            )
             ("T" "Task (today)" entry ,wd-tasks
-             "** TODO %?\nSCHEDULED: %t")
+             "** TODO %?\nSCHEDULED: %t"
+            )
             ("n" "Task (now)" entry ,wd-tasks
-             "** TODO %?\nSCHEDULED: %t" :clock-in t :clock-keep t)
+             "** TODO %?\nSCHEDULED: %t"
+             :clock-in t
+             :clock-keep t
+            )
             ("i" "Task (inbox)" entry ,wd-tasks
-             "** INBOX %?" :prepend t)
+             "** INBOX %?"
+             :prepend t
+            )
             ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
-             "%?" :unnarrowed t)
+             "%?"
+             :unnarrowed t
+            )
+            ("s" "Sprint" entry ,wd-sprints
+             ,(string-join
+               `("** TODO Sprint %^{SprintNum} :s%\\1:"
+                 "SCHEDULED: %^{StartDate}t"
+                 ""
+                 "*** TODO Plan Sprint"
+                 "SCHEDULED: %t"
+                 ":PROPERTIES:"
+                 ":CATEGORY: task"
+                 ":END:"
+                 "- [ ] check Founder kanban"
+                 "- [ ] check Company kanban"
+                 "- [ ] check Dev kanban"
+                 "- [ ] clean up the Work Diary Inbox"
+                 "- [ ] organize all tasks in the Planning View"
+                 "- [ ] write short summary"
+                 ""
+                 "*** TODO Review"
+                 ""
+                )
+               "\n"
+              )
+             :prepend t
+            )
            )
     )
   )
-
 #+end_src
 
 *** TODO Read more about it [0/1]

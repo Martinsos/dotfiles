@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-11-24 02:04:59 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-11-28 17:32:57 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -758,7 +758,9 @@ USAGE:
       (set-window-buffer w b)
     )
 
-    (setq-local evil-auto-indent nil) ; Having it on would be annoying due to org-indent-mode being on.
+    ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
+    ;; to continue writing line indented with "enter", instead of always continue fully indented.
+    (setq-local evil-auto-indent nil)
 
     (visual-line-mode 1)
 
@@ -1905,18 +1907,52 @@ Returns nil if no heading found."
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
        (wd-tasks `(file+headline ,wd-path "Tasks"))
+       (wd-sprints `(file+headline ,wd-path "Sprints"))
       )
   (setq org-capture-templates
         `(("t" "Task" entry ,wd-tasks
-           "** TODO %?")
+           "** TODO %?"
+          )
           ("T" "Task (today)" entry ,wd-tasks
-           "** TODO %?\nSCHEDULED: %t")
+           "** TODO %?\nSCHEDULED: %t"
+          )
           ("n" "Task (now)" entry ,wd-tasks
-           "** TODO %?\nSCHEDULED: %t" :clock-in t :clock-keep t)
+           "** TODO %?\nSCHEDULED: %t"
+           :clock-in t
+           :clock-keep t
+          )
           ("i" "Task (inbox)" entry ,wd-tasks
-           "** INBOX %?" :prepend t)
+           "** INBOX %?"
+           :prepend t
+          )
           ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
-           "%?" :unnarrowed t)
+           "%?"
+           :unnarrowed t
+          )
+          ("s" "Sprint" entry ,wd-sprints
+           ,(string-join
+             `("** TODO Sprint %^{SprintNum} :s%\\1:"
+               "SCHEDULED: %^{StartDate}t"
+               ""
+               "*** TODO Plan Sprint"
+               "SCHEDULED: %t"
+               ":PROPERTIES:"
+               ":CATEGORY: task"
+               ":END:"
+               "- [ ] check Founder kanban"
+               "- [ ] check Company kanban"
+               "- [ ] check Dev kanban"
+               "- [ ] clean up the Work Diary Inbox"
+               "- [ ] organize all tasks in the Planning View"
+               "- [ ] write short summary"
+               ""
+               "*** TODO Review"
+               ""
+              )
+             "\n"
+            )
+           :prepend t
+          )
          )
   )
 )
