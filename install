@@ -3,6 +3,7 @@
 # This script assumes it is positioned in dotfiles directory.
 
 DOT_DIR=$( cd $(dirname $0) ; pwd -P ) # absolute path to dotfiles directory
+HOME_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 COLOR_NONE='\e[0m'
 COLOR_BROWN='\e[0;33m'
@@ -18,6 +19,7 @@ install_link() {
         return 0
     fi
 
+    mkdir -p "$(dirname "$t")"
     ln --symbolic --no-target-directory --interactive --verbose $s $t
 }
 
@@ -48,5 +50,8 @@ echo "Installing global gitconfig:"
 install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
 echo "Installing global gitignore:"
 install_link $DOT_DIR/git/gitignore $HOME/.gitignore
+
+echo "Installing Ghostty config:"
+install_link $DOT_DIR/ghostty/config $HOME_CONFIG/ghostty/config
 
 echo "Installation finished!"

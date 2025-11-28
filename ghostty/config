@@ -1,0 +1,28 @@
+window-decoration = none
+window-padding-x = 8
+window-padding-y = 8
+
+theme = TokyoNight Moon
+background-opacity = 0.8
+
+# `shell-integration-features = no-cursor` is needed for cursor styling options to be applied.
+shell-integration-features = no-cursor
+cursor-style = block
+
+# On archlinux, comes from ttc-iosevka package.
+font-family = "Iosevka Term Extended"
+font-size = 14
+
+# Don't show small overlay with new width x height when terminal is resized.
+resize-overlay = never
+
+keybind = ctrl+space>m=toggle_maximize
+
+keybind = ctrl+space>space=toggle_command_palette
+
+keybind = ctrl+space>q>q=quit
+keybind = ctrl+space>q>r=reset
+
+keybind = ctrl+space>w>/=new_split:right
+keybind = ctrl+space>w>-=new_split:down
+keybind = ctrl+space>w>w=goto_split:next

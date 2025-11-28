@@ -2556,6 +2556,7 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
                  "- [ ] check Company kanban"
                  "- [ ] check Dev kanban"
                  "- [ ] clean up the Work Diary Inbox"
+                 "- [ ] clean up the Email Inbox"
                  "- [ ] organize all tasks in the Planning View"
                  "- [ ] write short summary"
                  ""

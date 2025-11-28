@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-11-28 17:32:57 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-11-28 17:40:42 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1943,6 +1943,7 @@ Returns nil if no heading found."
                "- [ ] check Company kanban"
                "- [ ] check Dev kanban"
                "- [ ] clean up the Work Diary Inbox"
+               "- [ ] clean up the Email Inbox"
                "- [ ] organize all tasks in the Planning View"
                "- [ ] write short summary"
                ""
