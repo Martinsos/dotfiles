@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-11-28 23:51:42 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-12-18 11:58:18 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -565,7 +565,7 @@ USAGE:
     "fj"  '("jump in file" . avy-goto-char-timer)
     "ff"  '("find file" . counsel-find-file)
     "fs"  '("save" . save-buffer)
-    "fS"  '("save all files" . (lambda () (interactive) (same-some-buffers t)))
+    "fS"  '("save all files" . (lambda () (interactive) (save-some-buffers t)))
     "fr"  '("recent files" . counsel-recentf)
 
     "fe"  '("emacs" . (keymap))
@@ -999,7 +999,7 @@ USAGE:
 
   (org-modern-progress nil) ; TODO: t
 
-  (org-modern-block-name '(("src" . ("{}" ";"))
+  (org-modern-block-name '(("src" . ("{}" "∎"))
                            ("quote" . ("❝" "❞"))
                            ("verse" . ("♭♩" "♪♫"))
                            ("example" . ("example" "end"))
@@ -1882,7 +1882,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s53")
+        (work-diary-sprint-current-tag "s55")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -1953,7 +1953,9 @@ Returns nil if no heading found."
                "- [ ] check Dev kanban"
                "- [ ] clean up the Work Diary Inbox"
                "- [ ] clean up the Email Inbox"
-               "- [ ] organize all tasks in the Planning View"
+               "- [ ] organize all the tasks in the work diary (planning view)"
+               "  - [ ] set new sprint as current and add tasks to it"
+               "  - [ ] set estimate, scheduled and deadline for all the tasks"
                "- [ ] write short summary"
                ""
                "*** TODO Review"
@@ -2509,7 +2511,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (sideline-lsp-show-hover nil) ; This I already show in minibuffer (eldoc) or in popup (lsp-ui-doc).
   (sideline-lsp-show-symbol nil) ; This I didn't find useful.
   (sideline-lsp-show-code-actions t) ; But I do find it useful to see code actions.
-  (sideline-lsp-code-actions-prefix "✎ ")
+  (sideline-lsp-code-actions-prefix "> ")
   (sideline-lsp-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
   :config
   (set-face-attribute 'sideline-lsp-code-action nil
@@ -2546,7 +2548,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :init
   (setq lsp-keymap-prefix ",")
   (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
-  :hook (lsp-mode . lsp-enable-which-key-integration)
+  :hook ((lsp-mode . lsp-enable-which-key-integration)
+         ;;(lsp-mode . lsp-inlay-hints-mode) ; Skipped because I found them intrusive and not so helpful.
+        )
   :commands (lsp lsp-deferred)
   :custom
   ;; lsp-modeline is about showing "stats" in the modeline: number of errors, warnings, code actions.
@@ -2577,7 +2581,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
                       :keymaps 'lsp-mode-map
                       "," lsp-command-map
   )
-)
+  (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
+  )
 
 (use-package lsp-ui
   :after (lsp-mode evil)

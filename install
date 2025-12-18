@@ -7,6 +7,7 @@ HOME_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 COLOR_NONE='\e[0m'
 COLOR_BROWN='\e[0;33m'
+COLOR_RED='\e[0;31m'
 
 # Takes source and target and creates link if it does not exist.
 install_link() {
@@ -15,7 +16,7 @@ install_link() {
 
     # if correct link exists
     if [[ -L $t && $(readlink -f $t) == $(readlink -f $s) ]]; then
-        echo -e "${COLOR_BROWN}Link already installed${COLOR_NONE}"
+        echo -e "${COLOR_BROWN}Skipping, correct link already exists ($t -> $s) ${COLOR_NONE}"
         return 0
     fi
 
@@ -23,15 +24,15 @@ install_link() {
     ln --symbolic --no-target-directory --interactive --verbose $s $t
 }
 
-echo "Installing dotfiles..."
+echo "== Installing dotfiles =="
 
-echo "Installing .emacs.d:"
+echo -e "\nInstalling .emacs.d:"
 install_link $DOT_DIR/vanilla-emacs.d $HOME/.emacs.d
 
-echo "Installing .vimrc:"
+echo -e "\nInstalling .vimrc:"
 install_link $DOT_DIR/vimrc $HOME/.vimrc
 
-echo "Installing login session configuration files:"
+echo -e "\nInstalling login session configuration files:"
 install_link $DOT_DIR/profile $HOME/.profile
 install_link $DOT_DIR/bash/bash_profile $HOME/.bash_profile
 install_link $DOT_DIR/bash/bashrc $HOME/.bashrc
@@ -42,16 +43,14 @@ if [ ! -e $HOME/.bashrc_local ]; then
     echo "$HOME/.bashrc_local created. Put machine specific bash settings here!"
 fi
 
-echo "Installing git completion:"
+echo -e "\nInstalling git configuration files:"
 install_link $DOT_DIR/git/git-completion.bash $HOME/.git-completion.bash
-echo "Installing git prompt:"
 install_link $DOT_DIR/git/git-prompt.sh $HOME/.git-prompt.sh
-echo "Installing global gitconfig:"
 install_link $DOT_DIR/git/gitconfig $HOME/.gitconfig
-echo "Installing global gitignore:"
+which delta &>/dev/null || echo -e "${COLOR_RED}WARNING: 'delta' is not installed, but we use it in ~/.gitconfig as custom pager/diff. On Arch Linux you can install it with 'pacman -S git-delta'.${COLOR_NONE}"
 install_link $DOT_DIR/git/gitignore $HOME/.gitignore
 
-echo "Installing Ghostty config:"
+echo -e "\nInstalling Ghostty config:"
 install_link $DOT_DIR/ghostty/config $HOME_CONFIG/ghostty/config
 
-echo "Installation finished!"
+echo -e "\n== Installation finished! =="
