@@ -15,6 +15,9 @@ This can be useful in order to nicely group and document the code. In this case,
 
 * Preamble (must go first)
 ** Lexical binding
+:PROPERTIES:
+:ID:       96df950e-f957-4a21-82dc-62835d034cd3
+:END:
 This has to be first line in the file (in this case init.el) for lexical binding to be enabled!
 
 #+begin_src emacs-lisp
@@ -22,6 +25,9 @@ This has to be first line in the file (in this case init.el) for lexical binding
 #+end_src
 
 ** Timestamps
+:PROPERTIES:
+:ID:       7f968f8c-192b-4849-8ca9-17c1e36b833f
+:END:
 I am actually not sure how useful is this but I found it fun.
 
 #+name: timestamp
@@ -121,6 +127,9 @@ That also means that `after-init-hook` is often not the right choice any more, a
 
 ** Config
 *** Disable package.el (in early-init.el)
+:PROPERTIES:
+:ID:       61a61dc9-0c50-4788-b008-2b6b829fe205
+:END:
 
 #+begin_src emacs-lisp :tangle ./early-init.el
 
@@ -129,6 +138,9 @@ That also means that `after-init-hook` is often not the right choice any more, a
 #+end_src
 
 *** Install and set up Elpaca (in init.el)
+:PROPERTIES:
+:ID:       ceee0d9e-6919-4255-8c98-12ca0fa13ff9
+:END:
 
 #+begin_src emacs-lisp
 
@@ -174,6 +186,9 @@ That also means that `after-init-hook` is often not the right choice any more, a
 #+end_src
 
 *** Set up elpaca lock file
+:PROPERTIES:
+:ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
+:END:
 
 Here we set the elpaca lock file, so that, when installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references. Meaning that exact versions of packages as in the lock file are installed each time, ensuring consistency.
 
@@ -193,6 +208,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 **** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
 *** Install and set up use-package (with Elpaca as backend)
+:PROPERTIES:
+:ID:       e1c4b11f-6277-4890-ac2a-3ed0be776300
+:END:
 
 #+begin_src emacs-lisp
 
@@ -208,6 +226,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 - *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update some package, for example with ~elpaca-update~, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package. Make sure to restart emacs once you unset ~elpaca-lock-file~ in config, because elpaca won't pick it up if I just evaluate it. So I will want to modify the config code above to unset lock file, save it, restart emacs, update the packages I want to update, then put the config above to again use lock file, save it, restart emacs.
 * Utils
 ** Packages
+:PROPERTIES:
+:ID:       2165adc8-7eb8-4612-a949-27383ba21294
+:END:
 
 #+begin_src emacs-lisp
 
@@ -220,6 +241,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** Vars
+:PROPERTIES:
+:ID:       e364c0b6-80c0-408b-bf8b-d5bcc3829d0c
+:END:
 
 #+begin_src emacs-lisp
 
@@ -241,6 +265,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 *** Saving and restoring buffer-local vars
+:PROPERTIES:
+:ID:       1c3976d4-d9a4-477f-8265-1aff33f3459a
+:END:
 
 #+begin_src emacs-lisp
 
@@ -298,6 +325,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 ** Modes
 *** Saving and restoring
+:PROPERTIES:
+:ID:       bd498802-b6f4-4be9-83b7-00e35d194e04
+:END:
 
 #+begin_src emacs-lisp
 
@@ -353,6 +383,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** List
+:PROPERTIES:
+:ID:       8b6bc736-177e-4a78-a49f-03f8921a6dda
+:END:
 
 #+begin_src emacs-lisp
 
@@ -364,6 +397,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** Quotes
+:PROPERTIES:
+:ID:       33bad109-ca22-44b2-80eb-d2afcd39775a
+:END:
 
 #+begin_src emacs-lisp
 
@@ -391,6 +427,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** Other
+:PROPERTIES:
+:ID:       53f34122-9923-4111-8920-68e2cc47ffb7
+:END:
 
 #+begin_src emacs-lisp
 
@@ -441,6 +480,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** LSP
+:PROPERTIES:
+:ID:       24929b96-3e07-48db-b46b-22e39f93bbbb
+:END:
 #+begin_src emacs-lisp
 
   ;; Implemented based on 'lsp-describe-thing-at-point'.
@@ -461,6 +503,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 * Basic Emacs config
 ** General
+:PROPERTIES:
+:ID:       f5522753-2e32-4519-8217-041a52e58aab
+:END:
 
 #+begin_src emacs-lisp
 
@@ -522,6 +567,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** GPG
+:PROPERTIES:
+:ID:       423b39cb-8f07-47cb-8a07-1da7b9981685
+:END:
 
 #+begin_src emacs-lisp
 
@@ -535,6 +583,9 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 #+end_src
 
 ** plstore
+:PROPERTIES:
+:ID:       67585a73-81b5-4d7f-a82c-f15d9b710883
+:END:
 
 =plstore= is a library for storing elisp plists on disk, in a file. It also encrypts them.
 Some emacs packages use it.
@@ -554,6 +605,9 @@ Some emacs packages use it.
 
 * Startup
 ** Pretty startup
+:PROPERTIES:
+:ID:       a3d79fa7-a348-4c01-9c85-7165967fa8dc
+:END:
 
 #+begin_src emacs-lisp :tangle ./early-init.el
 
@@ -578,6 +632,9 @@ Some emacs packages use it.
 #+end_src
 
 ** Measuring startup time
+:PROPERTIES:
+:ID:       4fa41c5d-845d-412f-a153-a51607a49336
+:END:
 
 #+begin_src emacs-lisp
   (defun my/print-startup-time ()
@@ -604,6 +661,9 @@ This measures how long each package took. Run ~use-package-report~ to see the re
 
 * Appearance
 ** Fonts
+:PROPERTIES:
+:ID:       7b2e1ab2-327b-41ee-8fa9-541bfc1f551f
+:END:
 
 In Emacs, the most basic way to set a global, default font through the whole Emacs is to set the font on the =default= face, its =:family= and =:height= attributes.
 Digression, but in Emacs, all faces by default, if =:inherit= is =unspecified=, will inherit from the =default= face, and since in every inheritance chain, a last face will have =:inherit= unspecified, and =:inherits= in the chain are composed, that means =default= always acts as the base setting for all the faces.
@@ -679,6 +739,9 @@ To install on Archlinux:
 NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I prefer ttf when I can.
 
 ** Theme
+:PROPERTIES:
+:ID:       6dd6ade0-a991-4fa2-abcd-602a3ab969c5
+:END:
 
 #+begin_src emacs-lisp
 
@@ -701,6 +764,9 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 #+end_src
 
 ** Misc
+:PROPERTIES:
+:ID:       6b6df170-cddf-42f8-a0b8-a3ed08067cb1
+:END:
 #+begin_src emacs-lisp
   (defun my/toggle-background-transparency ()
     (interactive)
@@ -711,6 +777,9 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 #+end_src
 
 * Modeline
+:PROPERTIES:
+:ID:       bb7be694-31a5-4c1b-863d-aca637f5bda7
+:END:
 
 #+begin_src emacs-lisp
 
@@ -732,6 +801,9 @@ Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will do
 
 * Undo
 ** Increase undo memory limits
+:PROPERTIES:
+:ID:       8a3da87d-9321-4b33-8eef-f5cc9bf95d2b
+:END:
 
 #+begin_src emacs-lisp
 
@@ -747,6 +819,9 @@ Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will do
 #+end_src
 
 ** undo-fu: "normal" undo behaviour
+:PROPERTIES:
+:ID:       cf9f1a4b-f75a-4f19-81d9-e582364db321
+:END:
 
 **undo-fu** is a simple package that brings undo/redo commands that behave in a simple, linear fashion, like you would expect.
 However, it still keeps emacs' undo/redo complex system intact with all the state it keeps, these commands just serve as a simpler interface toward it, so you can still interact with it if you wish (e.g. with vundo which visualizes the undo state as tree).
@@ -762,6 +837,9 @@ I don't set any keybindings here because it is enough to set undo-fu as evil's u
 #+end_src
 
 ** vundo: undo tree
+:PROPERTIES:
+:ID:       028873c5-45a7-4f9e-990f-48a8ce22b28a
+:END:
 
 #+begin_src emacs-lisp
 
@@ -806,6 +884,9 @@ Seems to not be on any package manager though, so I need straight.el probably.
 
 * Keybindings
 ** general.el
+:PROPERTIES:
+:ID:       66007cae-fa1e-4f22-b1a2-9cc258f7d1c7
+:END:
 
 #+begin_src emacs-lisp
 
@@ -958,6 +1039,9 @@ Seems to not be on any package manager though, so I need straight.el probably.
 #+end_src
 
 ** which-key
+:PROPERTIES:
+:ID:       40f3d757-89a5-4e8e-bb93-c7fddceca0d4
+:END:
 
 #+begin_src emacs-lisp
 
@@ -972,6 +1056,9 @@ Seems to not be on any package manager though, so I need straight.el probably.
 #+end_src
 
 ** hydras
+:PROPERTIES:
+:ID:       7f0e0bce-7c50-43c0-9272-3dd2006e9f68
+:END:
 
 Hydra enables you to define a small "menu", which when you activate, activates transient unique keybindings (which you also defined) that you can use only then, and lists them in the minibuffer in a nice menu.
 
@@ -1070,6 +1157,9 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+end_src
 
 ** Evil
+:PROPERTIES:
+:ID:       50d26a1d-e47d-4499-b55d-78a1bdbf817e
+:END:
 
 #+begin_src emacs-lisp
   ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
@@ -1137,6 +1227,9 @@ Evil-surround brings ability to surround stuff with delimiters:
 
 * Org mode
 ** Basic setup (org)
+:PROPERTIES:
+:ID:       8e3218c6-0464-4482-9c10-8554b175b284
+:END:
 
 #+begin_src emacs-lisp
 
@@ -1225,6 +1318,7 @@ Evil-surround brings ability to surround stuff with delimiters:
                   org-fontify-quote-and-verse-blocks t ; Make it so they have their own faces applied.
                   org-ellipsis " ▾" ; At the end of the collapes heading / list / drawer / ... .
                   org-log-into-drawer t ; Will log state changes in org into LOGBOOK drawer.
+                  org-id-link-to-org-use-id t ; Link to org headings via ids. Create if missing.
     )
     (with-eval-after-load 'org-habit
       (setq-default org-habit-graph-column 60)
@@ -1444,6 +1538,9 @@ Evil-surround brings ability to surround stuff with delimiters:
 #+end_src
 
 ** Support for downloading and inserting images
+:PROPERTIES:
+:ID:       b4b2926b-b315-49c1-abc9-98e7b5c153d4
+:END:
 
 Automatic downloading and link-inserting of images from the system clipboard / kill ring.
 By default it downloads the image into current directory, but this can be customized per buffer.
@@ -1471,6 +1568,9 @@ It is a new thing in org mode, built-int since emacs 29, and allegedly it does t
 Allegedly works for any buffer, not just org.
 And you can even drag and drop (ok maybe org-download can do that also?).
 ** Show org links in echo area
+:PROPERTIES:
+:ID:       9e7a8e41-d833-4b62-b555-cb565e2d79ef
+:END:
 
 Org and org-agenda mode show links in echo area when you go over them with mouse, but they don't show them if you move to them with cursor.
 Therefore, here we replicate that same behaviour when you move over them with cursor.
@@ -1494,6 +1594,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 
 #+end_src
 ** evil-org
+:PROPERTIES:
+:ID:       a172a396-8651-4658-97ee-ac03336fce7b
+:END:
 #+begin_src emacs-lisp
 
   (use-package evil-org
@@ -1504,6 +1607,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 #+end_src
 
 ** Code blocks (org-babel)
+:PROPERTIES:
+:ID:       dc847033-8afc-4b22-aabd-b6b58c6d2746
+:END:
 
 #+begin_src emacs-lisp
 
@@ -1531,6 +1637,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 #+end_src
 
 ** Automatically tangle this file (Emacs.org)
+:PROPERTIES:
+:ID:       6ca2d5fb-17ed-4f7f-9d0c-cd1a06e2e8f4
+:END:
 
 #+begin_src emacs-lisp
 
@@ -1549,6 +1658,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 #+end_src
 
 ** org-tidy
+:PROPERTIES:
+:ID:       712ca7e7-f9e2-48f2-beb4-205a8d9ab22e
+:END:
 
 #+begin_src emacs-lisp
   (use-package org-tidy
@@ -1557,6 +1669,9 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 #+end_src
 
 ** org-present
+:PROPERTIES:
+:ID:       290317b6-6e77-48de-ac7d-b81c987b77cf
+:END:
 
 Turns any org document into a presentation! Each top-level header is one slide.
 
@@ -1650,6 +1765,9 @@ Turns any org document into a presentation! Each top-level header is one slide.
 - I configured it so that it hides :NOTES: org drawer, so you can use it to add speaker notes to each slide.
 
 ** Calendar sync
+:PROPERTIES:
+:ID:       b90c465e-1265-4790-a0cc-031da1d439c8
+:END:
 
 Two most popular emacs packages for pulling in calendar events into org file are https://github.com/dengste/org-caldav and https://github.com/kidd/org-gcal.el . I decided to go with the later one, but for no strong reason except for it being specific for gcal.
 
@@ -1701,6 +1819,9 @@ In the config above I then fetch those credentials from .authinfo and provide th
 - ~org-gcal-sync-tokens-clear~ clears the sync tokens (which is gcalendar concept). If they are not cleared, ~org-gcal-fetch~ will be fetching only changes after the time of the last fetch! This is ok if we kept all the events stored, but if we maybe deleted files with events and want to fetch them again, there want to do full sync -> we should run this command first.
 ** org-agenda
 *** General config
+:PROPERTIES:
+:ID:       46827512-18e8-4a19-b469-fff65b4f108c
+:END:
 #+begin_src emacs-lisp
 
   (with-eval-after-load 'org
@@ -1719,6 +1840,9 @@ In the config above I then fetch those credentials from .authinfo and provide th
 #+end_src
 
 *** Evil keybindings
+:PROPERTIES:
+:ID:       6e8f82e9-c43c-4059-87f6-af5b5cbf1937
+:END:
 
 #+begin_src emacs-lisp
 
@@ -1827,6 +1951,9 @@ In the config above I then fetch those credentials from .authinfo and provide th
 #+end_src
 
 *** org-super-agenda
+:PROPERTIES:
+:ID:       6b15e24e-8008-43b0-88a4-52da7df0df40
+:END:
 
 Org-super-agenda allows both easier and smarter grouping of entries under a day/week org agenda view.
 Each org-super-agenda group "consumes" entries it shows, leaving the next group with less entries, kind of like a parser. Whatever is left at the end is shown at the end of agenda as "Other items".
@@ -1858,6 +1985,9 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 #+end_src
 
 **** Inbox
+:PROPERTIES:
+:ID:       4cd2543c-307b-4bd6-9ba7-c92345f8ea53
+:END:
 Inbox here is the same concept as is in GTD: a place where I can quickly drop raw ideas / tasks that are to be refined later (soon).
 We drop these in Work Diary org file, with the right todo keyword (INBOX), at the place of special org target in the org file.
 
@@ -1904,6 +2034,9 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
 - For the bash script to work, make sure that ~yad~ and ~wl-clipboard~ are installed system wide.
 - Also set up a keybinding at the OS level that will allow to easily run the script. A good one is =Win + I=.
 *** Marking todo deadlines with earlier schedule
+:PROPERTIES:
+:ID:       fe9c9d0a-42b4-4bfa-a4aa-9e43fcb7d6ca
+:END:
 
 These are todo deadline entries that are not yet done and have a schedule some earlier day.
 You will usually encounter such entries when looking at future dates in the weekly agenda view.
@@ -1957,6 +2090,9 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 #+end_src
 
 *** Calculating total daily leftover effort
+:PROPERTIES:
+:ID:       6c255ce1-5ac3-4e7e-9b20-ddded672eae2
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2030,6 +2166,9 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 #+end_src
 
 *** Show parent TODOs for agenda entries
+:PROPERTIES:
+:ID:       06eb74c5-3bae-4990-ae35-2e5d53ab4e3c
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2114,6 +2253,9 @@ They are indicators of deadlines, but are likely to be done earlier, so by clear
 *** Agenda custom commands
 Order of headings below is important because they depend on each other.
 **** Base settings for Work Diary agenda (daily, weekly, ...) block
+:PROPERTIES:
+:ID:       e19c5197-3da8-4705-b038-ea771859a5e9
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
@@ -2177,6 +2319,9 @@ Order of headings below is important because they depend on each other.
 #+end_src
 
 **** Journal agenda block
+:PROPERTIES:
+:ID:       ecf0f36c-9242-4579-993e-351346a4a7cd
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/render-today-journal-in-agenda (journal-file-path)
@@ -2230,6 +2375,9 @@ Order of headings below is important because they depend on each other.
 #+end_src
 
 **** Base settings for Work Diary custom agenda commands
+:PROPERTIES:
+:ID:       23ad42fb-71d9-4a50-aca1-a51ea01fb085
+:END:
 #+begin_src emacs-lisp :noweb yes
   ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
   ;; calendar events, and I need to know those paths so I can show events in the agenda.
@@ -2267,6 +2415,9 @@ Order of headings below is important because they depend on each other.
 #+end_src
 
 **** Show scheduled/deadline as short time prefix
+:PROPERTIES:
+:ID:       836b065e-6c59-41da-a9e0-d3b038df3045
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/org-time-to-short-day-with-num (time)
@@ -2299,6 +2450,9 @@ Order of headings below is important because they depend on each other.
 #+end_src
 
 **** Work Diary (daily) custom agenda command
+:PROPERTIES:
+:ID:       a1369637-1d55-40df-9980-6667728b5588
+:END:
 #+begin_src emacs-lisp :noweb yes
   (with-eval-after-load 'org
     (defun my/work-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
@@ -2344,6 +2498,9 @@ Order of headings below is important because they depend on each other.
 #+end_src
 
 **** Work Diary (all tasks) custom agenda command
+:PROPERTIES:
+:ID:       35735596-9c87-4972-a75d-e727229a909a
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/make-work-diary-all-tasks-cmd (sprint-current-tag)
@@ -2387,6 +2544,9 @@ Order of headings below is important because they depend on each other.
 
 #+end_src
 **** Work Diary (sprint calendar) custom agenda command
+:PROPERTIES:
+:ID:       2b9a1d7f-66ba-40f4-b868-9dc5739a0ae5
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/make-work-diary-sprint-calendar-cmd (sprint-length-in-weeks sprint-start-weekday)
@@ -2412,6 +2572,9 @@ Order of headings below is important because they depend on each other.
 
 #+end_src
 **** Private diary custom agenda command
+:PROPERTIES:
+:ID:       b64f7720-c3a3-4a15-a192-dbed3691330e
+:END:
 #+begin_src emacs-lisp
   ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
   ;; calendar events, and I need to know those paths so I can show events in the agenda.
@@ -2475,6 +2638,9 @@ Order of headings below is important because they depend on each other.
 
 #+end_src
 **** My custom agenda commands definitions
+:PROPERTIES:
+:ID:       0a8f2bb5-eb23-422b-bbf5-6bf15724d320
+:END:
 #+begin_src emacs-lisp
   ;; Some of the functions used here are evaled only after org-gcal (as defined above), so I also have to wait for it here.
   (with-eval-after-load 'org (with-eval-after-load 'org-gcal
@@ -2503,6 +2669,9 @@ Order of headings below is important because they depend on each other.
   ))
 #+end_src
 **** Work Diary sprint planning view
+:PROPERTIES:
+:ID:       89547443-54c8-4572-97d9-bc62de602f37
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'org
     (defun my/work-diary-open-sprint-planning-windows ()
@@ -2528,6 +2697,9 @@ I will probably want to put right after sorting by timestamp or maybe even first
 *** TODO Explore org-ql
 It gives a lot of control over what I want to show in agenda. I could use it to build some very custom agenda views, for example all tasks from the sprint, or something like that. Not sure yet but I think it is worth exploring it for creating additional custom agenda commands.
 ** Capture templates
+:PROPERTIES:
+:ID:       cd5a6022-6d86-4d4e-bb54-7d2169d8f0a1
+:END:
 
 #+begin_src emacs-lisp :noweb yes
 
@@ -2557,14 +2729,18 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
             )
             ("s" "Sprint" entry ,wd-sprints
              ,(string-join
-               `("** TODO Sprint %^{SprintNum} :s%\\1:"
-                 "SCHEDULED: %^{StartDate}t"
+               `("** TODO Sprint %^{SprintNum} :s%\\*1:" ; %\\*1 here should be referring to the SprintNum.
+                 ":PROPERTIES:"
+                 ":START_DATE: %^{StartDate}t"
+                 ":END_DATE: %^{EndDate}t"
+                 ":END:"
                  ""
-                 "*** TODO Plan Sprint"
+                 "*** TODO Plan my sprint"
                  "SCHEDULED: %t"
                  ":PROPERTIES:"
                  ":CATEGORY: task"
                  ":END:"
+                 "- [ ] check action items from my last sprint retro"
                  "- [ ] check Founder kanban"
                  "- [ ] check Company kanban"
                  "- [ ] check Dev kanban"
@@ -2575,7 +2751,18 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
                  "  - [ ] set estimate, scheduled and deadline for all the tasks"
                  "- [ ] write short summary"
                  ""
-                 "*** TODO Review"
+                 "*** TODO Review my sprint"
+                 "SCHEDULED: %\\*3" ; %\\*3 here should be referring to the EndDate.
+                 "**** Day by day"
+                 "***** Wed"
+                 "- ✅: "
+                 "- 🧠: "
+                 "**** Plan completion"
+                 "***** Done"
+                 "***** Not done"
+                 "**** Summary"
+                 "**** Action items"
+                 "- [ ] "
                  ""
                 )
                "\n"
@@ -2596,6 +2783,9 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
 - When in code block, to get full support for that language (proper completion, ...), open it in separate buffer with "C-c '" and do the editing there.
 * Writing
 ** Olivetti
+:PROPERTIES:
+:ID:       3a454094-c472-42ec-a102-048ff4998ee0
+:END:
 A simple Emacs minor mode for nice writing environment.
 It automatically balances margins in order to put the content in the middle, with fixed width.
 
@@ -2637,6 +2827,9 @@ It automatically balances margins in order to put the content in the middle, wit
 
 * Reading
 ** RSS
+:PROPERTIES:
+:ID:       ea697989-54e6-4046-bc1d-efa40540e3b2
+:END:
 
 #+begin_src emacs-lisp
   (use-package elfeed
@@ -2656,6 +2849,9 @@ It automatically balances margins in order to put the content in the middle, wit
 - https://kill-the-newsletter.com/ -> converts email newsletters into atom feeds.
 
 * My buffer/file functions
+:PROPERTIES:
+:ID:       6c4d24dc-a855-4ff8-b664-4fe8c480d685
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2703,6 +2899,9 @@ It automatically balances margins in order to put the content in the middle, wit
 
 * Ivy, Counsel and Swiper
 ** ivy
+:PROPERTIES:
+:ID:       4280267b-a49e-415d-b0d9-53f886722f9b
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2774,6 +2973,9 @@ It automatically balances margins in order to put the content in the middle, wit
 - M-o when in an Ivy buffer shows extra commands that can be run on selected completion item.
 
 ** counsel
+:PROPERTIES:
+:ID:       34b2c8b7-55f0-4f8a-84c5-93245a82c5af
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2790,6 +2992,9 @@ It automatically balances margins in order to put the content in the middle, wit
 #+end_src
 
 ** swiper
+:PROPERTIES:
+:ID:       baaacfe3-f19f-4737-86a1-3b4fa763abb6
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2809,6 +3014,9 @@ It automatically balances margins in order to put the content in the middle, wit
 #+end_src
 
 ** ivy-rich
+:PROPERTIES:
+:ID:       6607462c-e022-4033-9574-ceaa28432a52
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2854,6 +3062,9 @@ It automatically balances margins in order to put the content in the middle, wit
 #+end_src
 
 * Projectile
+:PROPERTIES:
+:ID:       a0614270-f059-46d7-839f-6fd086e9f94d
+:END:
 
 #+begin_src emacs-lisp
   
@@ -2891,6 +3102,9 @@ It automatically balances margins in order to put the content in the middle, wit
 - Projectile recognizes projects with its heuristics (.git/, maven files, ...), but you can add .projectile file to the project root to explicitly mark it as a project.
 
 * VC (Version Control)
+:PROPERTIES:
+:ID:       0b2388b8-6fbb-4701-bcf1-3be0153d9e21
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2919,6 +3133,9 @@ It automatically balances margins in order to put the content in the middle, wit
 - https://github.com/kaushalmodi/.emacs.d/blob/master/setup-files/setup-diff.el#L181
 
 ** TODO Configure ediff to work nicer
+:PROPERTIES:
+:ID:       5cacc307-d56d-42da-88e2-a3b97afb4a78
+:END:
 - found this on reddit:
   #+begin_src emacs-lisp
     '(ediff-split-window-function (quote split-window-horizontally))
@@ -2932,6 +3149,9 @@ It automatically balances margins in order to put the content in the middle, wit
   If you also add a hydra, you get the best DX.
 
 ** gitstatus.el
+:PROPERTIES:
+:ID:       4851a5e8-ed04-4df5-8b0c-80958772ae8a
+:END:
 
 =gitstatus.el= gives us an easy way to generate a nice git status message for specific directory.
 It is basically a wrapper that calls =gitstatusd= program in the background.
@@ -2953,6 +3173,9 @@ Then, make sure that ~gitstatusd-exe~ is set to the path to that binary.
 TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatusd~, doesn't work even when the binary is in PATH, and instead I have to set the exact path. Because if I can make that work that is great, I don't have to adjust the path above manually then.
 
 ** Magit
+:PROPERTIES:
+:ID:       9b123fd0-be4f-4b62-994e-267b1dbcb202
+:END:
 
 #+begin_src emacs-lisp
 
@@ -2990,6 +3213,9 @@ Some key combos I often use in magit:
 - ~h P u~ -> push to origin.
 
 ** Highlight lines
+:PROPERTIES:
+:ID:       c90a5b0c-12ac-4037-80cf-b3997f0fcecf
+:END:
 =diff-hl= package highlights lines that were modified (compared to versioned state of the file).
 It adds indicator to the left margin/side of the window.
 
@@ -3011,6 +3237,9 @@ It adds indicator to the left margin/side of the window.
 *** Cheatsheet :cheatsheet:
 - ~diff-hl-set-reference-rev~ allows you to define against what are differences shown. E.g. you can set it to =master= to see what changes feature branch branching from =master= introduced.
 * Company
+:PROPERTIES:
+:ID:       c9db3c71-d95a-4bea-9d7a-e51d50684bcf
+:END:
 
 #+begin_src emacs-lisp
 
@@ -3070,6 +3299,9 @@ But company-box currently overrides my setting for company-text-icons-mapping wi
 - C-s to search among the candidates. C-M-s to not just highlight but also filter. C-g to quit search mode.
   
 * Terminal (shell)
+:PROPERTIES:
+:ID:       94e44bdd-7bea-4c28-9433-459d619967e7
+:END:
 
 There are different ways to use terminal / shell in Emacs. There are implementations that are completely done in elisp, there are implementations that support all that normal terminal does, and then there are does that don't support ncurses / TUI or all ansi codes.
 
@@ -3110,6 +3342,9 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 #+end_src
 
 ** My custom hook that triggers on prompt in vterm
+:PROPERTIES:
+:ID:       cb1abd7a-92f9-4519-a71f-d84dca3f2f63
+:END:
 
 #+begin_src emacs-lisp
 
@@ -3135,6 +3370,9 @@ In order for us to be able to detect the prompt and run the hooks based on it, t
 Check [[*Shell-side configuration for vterm]] below for exact details.
 
 ** My custom header line in vterm (git status, path)
+:PROPERTIES:
+:ID:       412b5a84-f4ae-461b-b89c-f0680db8f29a
+:END:
 
 On vterm mode (so effectively for any new vterm buffer), I set a header line for that buffer that shows current working directory and its git status.
 In Emacs, header line refreshes on every buffer change, and its ~:eval~ forms are evaluated every time.
@@ -3237,6 +3475,9 @@ Flyspell is a builtin spell-checking frontend for Emacs, but there are also popu
 Main concept with all spell-checking frontends is that you have to install an actual spell-checker, that is not emacs-specific, on your system, and they use it as a backend. Most popular are Aspell and Hunspell, while Enchant is a wrapper on top of all these that does some extra smart stuff. Jinx uses Enchant.
 
 ** Jinx
+:PROPERTIES:
+:ID:       fb59e1bc-3e23-49c2-a74f-5384bc98fbcb
+:END:
 
 Jinx uses Enchant program on your machine, which uses spelling backends like hunspell and/or aspell, which use their dictionaries for specific languages.
 
@@ -3265,6 +3506,9 @@ Run ~jinx-correct~ to correct the word at point.
 
 * Syntax/error checking
 ** Flycheck
+:PROPERTIES:
+:ID:       01fd0e1f-fb09-4cdc-8569-e83bf1357d97
+:END:
 
 Flycheck is the central package for syntax checking, a "frontend" for code-related errors.
 Given backend(s) (e.g. LSP, linter, ...) that supply errors (and warnings, info, ...), it collects errors from them and visualizes and manipulates them in a unified way.
@@ -3416,6 +3660,9 @@ Im not using it for now since I managed to set up Flycheck quite well, but I mig
 #+end_src
 
 * Link checking
+:PROPERTIES:
+:ID:       de0fd882-a5af-4c6f-b52a-aa77fdd09ffe
+:END:
 
 For link checking, we use external program called =lychee=.
 It is quite versatile, checks a lot of different formats, checks both local and outgoing links, ... .
@@ -3457,6 +3704,9 @@ It is quite versatile, checks a lot of different formats, checks both local and 
 ~sudo pacman -S lychee~
 
 * Sideline
+:PROPERTIES:
+:ID:       7a5f03ec-0948-4556-964a-850b95ad2886
+:END:
 
 =sideline= package shows information (e.g. errors) inline with the code, but on the right (or left) edge of the screen.
 It shows that infomation in a smart way, to minimally disrupt the existing code.
@@ -3518,6 +3768,9 @@ You can plug in multiple backends into it, and it will display the information u
 #+end_src
 
 * Folding
+:PROPERTIES:
+:ID:       d9d54e73-344d-4575-8711-24d2253b55a9
+:END:
 
 #+begin_src emacs-lisp
 
@@ -3537,6 +3790,9 @@ You can plug in multiple backends into it, and it will display the information u
   - ...
 ** TODO Try some richer package for folding, e.g. origami or treesit-fold
 * File overview (imenu)
+:PROPERTIES:
+:ID:       f6b16b75-6c06-4e7f-a255-2cf604ad2db2
+:END:
 Imenu (index menu) is a builtin package that gives an overview of the major definitions in the buffer.
 It works for any mode, as long as that mode is sending it info to show. For example treesitter or lsp might be sending it info. Or org mode.
 
@@ -3563,6 +3819,9 @@ Imenu-list displays imenu in the sidebar with some nice features for easily mana
 #+end_src
 * Development
 ** LSP
+:PROPERTIES:
+:ID:       6e5f5a83-362d-4e1b-a2a4-d63a232a0675
+:END:
 LSP (Language Server Protocol) enables editors to use language servers (that usually come with the language itself) to answer all kinds of questions about the code in that language, with full semantic understanding of the project.
 
 LSP as a general protocol has some of its own nomenclature. Some of it that is useful to know to better understand the config below, is how they name the most important information that LS returns.
@@ -3633,6 +3892,9 @@ Therefore, for optimal experience, we should customize the faces used for semant
 #+end_src
 
 *** lsp-ui
+:PROPERTIES:
+:ID:       908aa4de-83c0-4631-b9c2-cc5c6a86e2d2
+:END:
 
 Official extension for lsp-mode that brings the nice UI features, mostly for displaying info returned by LS.
 It is common to use it next to lsp-mode.
@@ -3672,6 +3934,9 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 #+end_src
 
 *** lsp-booster
+:PROPERTIES:
+:ID:       5b24e690-5699-44db-b7c4-e0f429c85ce3
+:END:
 
 Both =lsp-mode= and =elgot= in emacs have the issue where emacs can get frozen when dealing with large amounts of data coming from / going to some language server.
 Solution to this is =lsp-booster=: standalone binary that serves as a proxy in between emacs and language servers and buffers the traffic as needed (and is multi-threaded).
@@ -3719,6 +3984,9 @@ I followed instructions from the =lsp-booster= Github's README:
 - Downloaded the latest binary from the Github releases and made it available on =PATH= (e.g. put it in =~/.local/bin= dir).
 
 *** Misc
+:PROPERTIES:
+:ID:       230a58d4-5100-498f-81bb-1faa9549e5e9
+:END:
 
 #+begin_src emacs-lisp
 
@@ -3737,6 +4005,9 @@ I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alterna
 - https://emacs-lsp.github.io/lsp-mode/page/settings/completion/ -> useful?
 
 ** Treesitter
+:PROPERTIES:
+:ID:       c70af643-70d6-4a86-afa8-4f7d74cccb04
+:END:
 Treesitter is for syntax understanding of the code what LSP is for semantic understanding of the code.
 Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language. In return, you get very good syntax highlighting, cleverer editing and movement through code, better indentation, ... -> anything that can be built with konwledge of concrete syntax tree.
 
@@ -3798,6 +4069,9 @@ For more details, this article is a great tutorial on treesitter support in Emac
 - Cool commands are ~treesit-explore-mode~ and ~treesit-inspect-mode~: they allow inspecting the concrete syntax tree in a buffer!
 
 ** Haskell
+:PROPERTIES:
+:ID:       b61f9c12-2b2f-4992-b358-372e6c7af115
+:END:
 
 #+begin_src emacs-lisp
   (defun my/lsp-haskell-local-face-setup ()
@@ -3869,6 +4143,9 @@ haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a
   - https://codeberg.org/pranshu/haskell-ts-mode
 
 ** TypeScript / Javascript
+:PROPERTIES:
+:ID:       dfac177b-e2dc-4ac5-a284-3a16ca2c4588
+:END:
 NOTE: I chose ts-ls as a language server, when asked.
 
 #+begin_src emacs-lisp
@@ -3936,6 +4213,9 @@ NOTE: I chose ts-ls as a language server, when asked.
 *** TODO Customize LSP semantic token faces to be aligned with treesitter highlighting.
 
 *** LSP ESLint
+:PROPERTIES:
+:ID:       069c3463-7ad1-47c9-84ad-e11c95cd0e42
+:END:
 
 This will also run eslint language server next to the other language servers if there is an eslint config file in the project.
 
@@ -3955,6 +4235,9 @@ This will also run eslint language server next to the other language servers if 
 Emacs comes with built-in =html=, =mhtml=, and =css= mode, so I am just relying on those for now, they seem to work well enough for my purposes.
 Also popular is =web-mode=, so I might want to look into that one day, but I haven't had the need so far so decided to keep it light.
 ** YAML
+:PROPERTIES:
+:ID:       926d17f1-bd2b-4b12-bf29-720c77457eb7
+:END:
 
 #+begin_src emacs-lisp
 
@@ -3968,6 +4251,9 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 #+end_src
 
 ** Markdown
+:PROPERTIES:
+:ID:       23151873-d6bb-45e7-ae65-1d7f32e72e7f
+:END:
 
 #+begin_src emacs-lisp
   (use-package markdown-mode
@@ -3985,6 +4271,9 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 #+end_src
 
 ** Powershell
+:PROPERTIES:
+:ID:       10173d65-d5f9-45ce-bcbc-774f6af5ec95
+:END:
 
 #+begin_src emacs-lisp
   (use-package powershell
@@ -4040,6 +4329,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 =gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
 *** General config
+:PROPERTIES:
+:ID:       fdfea65e-48dd-409d-8131-dbe9d5e35b59
+:END:
 #+begin_src emacs-lisp
   (use-package gptel
     :config
@@ -4101,6 +4393,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+end_src
 
 *** Gptel prompt/response prefixes (You:, AI:)
+:PROPERTIES:
+:ID:       305b7603-1b7c-489f-898c-38ff55a7fe6c
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
     ;; I decided to go with prefixes (You, AI) that are not org/md headings, but just normal text
@@ -4178,6 +4473,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
   )
 #+end_src
 *** My command for chat summarization
+:PROPERTIES:
+:ID:       19c156dd-d06a-4765-837d-72439722b9f9
+:END:
 
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
@@ -4232,6 +4530,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 **** TODO Summarize could optionally not replace text (on C-u?)
 
 *** Image download support in chat
+:PROPERTIES:
+:ID:       28978dcf-6232-43b4-8352-0ef11ebfa780
+:END:
 #+begin_src emacs-lisp
 
   (defun my/gptel-image-download-setup ()
@@ -4249,6 +4550,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+end_src
 
 *** Gptel presets
+:PROPERTIES:
+:ID:       f3e40760-2369-4d65-8077-c64d040c37af
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
     (gptel-make-preset 'coding
@@ -4261,6 +4565,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+end_src
 
 *** Tool calling
+:PROPERTIES:
+:ID:       140d8bbc-82b2-4f7a-a39f-bf2d561c04ff
+:END:
 #+begin_src emacs-lisp
   (with-eval-after-load 'gptel
     (gptel-make-tool
@@ -4383,6 +4690,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 #+end_src
 
 *** Collecting editor context
+:PROPERTIES:
+:ID:       131d06fb-335c-4349-98cb-a483fda5fc69
+:END:
 #+begin_src emacs-lisp
 
   (defun my/gptel-collect-region-editor-context ()
@@ -4456,6 +4766,9 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 - ~gptel-org-branching-context~ makes it so that only current headings branch in org are supplied as context/chat. Allowing for branching chats.
 - I can add ~@my-preset~ ("cookie") in any part of the chat message and that preset will be used only for that iteration of the chat, that single time.
 *** TODO Figure out best way to ask about piece of code/buffer (while adding context)
+:PROPERTIES:
+:ID:       13074390-b48f-482f-9d6b-632488c5f065
+:END:
 Do I just use ~gptel~ (~SPC i c~) to send selection to chat and that is basis of it? Figure out the best workflow.
 - It works when chat is empty, but if it is not, it doesn't add anything. That is how `gptel` works.
 - There also doesn't seem to be any other gptel command that would do this.
@@ -4605,6 +4918,9 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 ** Copilot
 
 *** copilot.el
+:PROPERTIES:
+:ID:       4699a041-7fc1-4c3c-a875-f16e7aa49694
+:END:
 
 I have it off by default because I find it intrusive. I however defined a keybinding for toggling copilot-mode easily.
 
@@ -4638,6 +4954,9 @@ I have it off by default because I find it intrusive. I however defined a keybin
 *** TODO Try other stuff (Elysium? Evedel? Others?)
 * Formatting
 ** Whitespaces
+:PROPERTIES:
+:ID:       d0be0d22-8533-4aac-8c8c-4281dc779779
+:END:
 
 =whitespace-mode= is a built-in emacs package whose main purpose is to *visualize all whitespaces*.
 
@@ -4702,6 +5021,9 @@ can turn off =ethan-mode= for a bit to add them. That will make the file dirty a
 
 
 ** Long lines
+:PROPERTIES:
+:ID:       524a7f05-06b6-4528-a03b-7ba40555be71
+:END:
 
 =column-enforce-mode= highlights lines that are too long (the part that goes over the max column).
 
@@ -4726,6 +5048,9 @@ That is why I instead I use this dedicated mode that does just this: highlights 
 #+end_src
 
 * Misc
+:PROPERTIES:
+:ID:       077aa206-359f-48a0-a57f-7828d1dd91a4
+:END:
 
 #+begin_src emacs-lisp
 

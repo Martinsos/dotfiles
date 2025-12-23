@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2025-12-18 11:58:18 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2025-12-24 00:31:52 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -829,6 +829,7 @@ USAGE:
                 org-fontify-quote-and-verse-blocks t ; Make it so they have their own faces applied.
                 org-ellipsis " ▾" ; At the end of the collapes heading / list / drawer / ... .
                 org-log-into-drawer t ; Will log state changes in org into LOGBOOK drawer.
+                org-id-link-to-org-use-id t ; Link to org headings via ids. Create if missing.
   )
   (with-eval-after-load 'org-habit
     (setq-default org-habit-graph-column 60)
@@ -1940,14 +1941,18 @@ Returns nil if no heading found."
           )
           ("s" "Sprint" entry ,wd-sprints
            ,(string-join
-             `("** TODO Sprint %^{SprintNum} :s%\\1:"
-               "SCHEDULED: %^{StartDate}t"
+             `("** TODO Sprint %^{SprintNum} :s%\\*1:" ; %\\*1 here should be referring to the SprintNum.
+               ":PROPERTIES:"
+               ":START_DATE: %^{StartDate}t"
+               ":END_DATE: %^{EndDate}t"
+               ":END:"
                ""
-               "*** TODO Plan Sprint"
+               "*** TODO Plan my sprint"
                "SCHEDULED: %t"
                ":PROPERTIES:"
                ":CATEGORY: task"
                ":END:"
+               "- [ ] check action items from my last sprint retro"
                "- [ ] check Founder kanban"
                "- [ ] check Company kanban"
                "- [ ] check Dev kanban"
@@ -1958,7 +1963,18 @@ Returns nil if no heading found."
                "  - [ ] set estimate, scheduled and deadline for all the tasks"
                "- [ ] write short summary"
                ""
-               "*** TODO Review"
+               "*** TODO Review my sprint"
+               "SCHEDULED: %\\*3" ; %\\*3 here should be referring to the EndDate.
+               "**** Day by day"
+               "***** Wed"
+               "- ✅: "
+               "- 🧠: "
+               "**** Plan completion"
+               "***** Done"
+               "***** Not done"
+               "**** Summary"
+               "**** Action items"
+               "- [ ] "
                ""
               )
              "\n"
