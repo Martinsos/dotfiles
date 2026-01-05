@@ -3061,6 +3061,35 @@ It automatically balances margins in order to put the content in the middle, wit
 
 #+end_src
 
+* Registers / Bookmarks
+:PROPERTIES:
+:ID:       3a40eb6b-54e4-46b3-a654-74c066877dc9
+:END:
+*Registers* are a built-in way in emacs to temporarily store a piece of info under a single character/number.
+They can be used to store a point, text, a window or frame configuration, ... , and then those can be jumped to, inserted, restored, ... .
+
+*Bookmarks* are also built-in and are similar to registers, but they are focused only on storing positions, they have long names, and they persist between the emacs sessions (they are stored in file(s)).
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :ensure nil
+    :config
+    (my/leader-keys
+      "r" '("registers" . (keymap))
+      "r s" '("set point to register" . point-to-register)
+      "r r" '("jump to register" . counsel-register)
+      "r l" '("list registers" . list-registers)
+    )
+
+    (my/leader-keys
+      "@" '("bookmarks" . (keymap))
+      "@ s" '("set bookmark" . bookmark-set)
+      "@ @" '("jump to bookmark" . bookmark-jump)
+      "@ l" '("bookmarks list" . list-bookmarks)
+    )
+  )
+#+end_src
+
 * Projectile
 :PROPERTIES:
 :ID:       a0614270-f059-46d7-839f-6fd086e9f94d
@@ -5214,6 +5243,9 @@ Troubleshooting:
 - package couldn't be found (upon install) -> local packages archive is old, run `list-packages` to update it.
 
 * TODO
+:PROPERTIES:
+:ID:       9d1c5dcd-2903-4493-bf97-32292a3f4ae4
+:END:
 ** A must
 *** TODO Pin down package versions (lockfile / freezing) [1/2]
 Elpaca now has some support for it, look into that:
@@ -5223,10 +5255,10 @@ I might even want to use both hm! Gotta figure it out.
 
 ** Should do
 *** TODO Look into workgroups
+Also look into https://github.com/alphapapa/activities.el , it seems connected / complementary.
 *** TODO I will want some way to easily restore where I stopped working.
-
 Maybe some presets -> e.g. quick loading of waspc project with certain file opened. Or maybe just from where I stopped.
-
+*** TODO Look into https://github.com/alphapapa/bufler.el -> auto-grouping of buffers in buffer list
 *** TODO Go through my spacemacs config and copy stuff I liked from there.
 *** TODO Smooth scrolling
 - Enable that new smooth/pixel scroll setting in emacs?
@@ -5237,14 +5269,6 @@ Maybe some presets -> e.g. quick loading of waspc project with certain file open
 - org-supertag is a "weird/new" one but also used / being developed.
 
 I am tempted to try Denote since people say it is quite friendly, although I should first check org-roam more I think
-*** TODO Look into bookmark mechanisms
-- =bookmarks= come with emacs
-- https://www.emacswiki.org/emacs/BookmarkPlus -> =bookmarks+= has additional goodies, like bookmarks to non-file buffers (which I want).
-
-- markers?
-- consult-bookmarks
-- activities
-- buferlio
 *** TODO Install separedit for easy editing of minibuffer
 https://github.com/twlz0ne/separedit.el
 *** TODO Look into window position management
