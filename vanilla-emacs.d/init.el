@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-05 15:15:15 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-05 19:29:29 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2724,6 +2724,23 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :config
   (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details (4/4) when doing syntax highlighting.
   (my/setup-install-grammars)
+)
+
+(use-package emacs
+  :ensure nil
+  :hook (compilation-filter . ansi-color-compilation-filter) ; Interprets ansii color codes in the output.
+  :custom
+  (compilation-environment '(
+                             "TERM=xterm-256color" ; Tells the compilation shell command to output colors.
+                             ))
+  :config
+  (my/leader-keys
+    "x" '("execute" . (keymap))
+    "x x" '("recompile" . recompile)
+    "x X" '("compile" . compile)
+    "x p x" '("recompile (project)" . project-recompile)
+    "x p X" '("compile (project)" . project-compile)
+  )
 )
 
 (defun my/lsp-haskell-local-face-setup ()

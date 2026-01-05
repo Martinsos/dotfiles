@@ -4097,6 +4097,44 @@ For more details, this article is a great tutorial on treesitter support in Emac
 *** Cheatsheet :cheatsheet:
 - Cool commands are ~treesit-explore-mode~ and ~treesit-inspect-mode~: they allow inspecting the concrete syntax tree in a buffer!
 
+** Compilation
+:PROPERTIES:
+:ID:       65738f9b-9a8d-41b2-b6d4-c502c4182885
+:END:
+Emacs comes with ~compile~ command which, for the current buffer, runs a specified shell command in its working directory, and shows the output in the =*compilation*= buffer.
+
+It is kind of like "run" button in other editors, that usually runs the correct thing / the project.
+
+This sounds very simple, it just runs a shell command, but:
+- In =*compilation*= buffer, errors are highlighted and linked to source files. It also has custom keybindings.
+  - Errors are recognized via default regex that usually just works, and of course be customized.
+- ~recompile~ will re-run the command.
+
+Usual ways to specify the compile command:
+- Dynamically, per-session, when ~compile~ asks you to specify it.
+- Via =compilate-command= var
+  - Could be set in the very file we are compiling, at the start/bottom, via local elisp variables.
+  - Could be set via =.dir-locals.el= file.
+
+#+begin_src emacs-lisp
+  (use-package emacs
+    :ensure nil
+    :hook (compilation-filter . ansi-color-compilation-filter) ; Interprets ansii color codes in the output.
+    :custom
+    (compilation-environment '(
+                               "TERM=xterm-256color" ; Tells the compilation shell command to output colors.
+                               ))
+    :config
+    (my/leader-keys
+      "x" '("execute" . (keymap))
+      "x x" '("recompile" . recompile)
+      "x X" '("compile" . compile)
+      "x p x" '("recompile (project)" . project-recompile)
+      "x p X" '("compile (project)" . project-compile)
+    )
+  )
+#+end_src
+
 ** Haskell
 :PROPERTIES:
 :ID:       b61f9c12-2b2f-4992-b358-372e6c7af115
