@@ -1269,11 +1269,6 @@ Evil-surround brings ability to surround stuff with delimiters:
       "oa"  '("agenda" . org-agenda)
       "oc"  '("capture" . org-capture)
       "ol"  '("store link" . org-store-link)
-      "od"  '("[view] daily agenda" . (lambda () (interactive)
-                                        (delete-other-windows)
-                                        (scratch-buffer)
-                                        (org-agenda nil "d")
-                                        (org-agenda-redo)))
     )
     ;; "In-the-mode" keymap with handy shortcuts for the org commands I use often.
     (general-define-key
@@ -2588,28 +2583,6 @@ Order of headings below is important because they depend on each other.
   )
 
 #+end_src
-****** Work Diary sprint planning view
-:PROPERTIES:
-:ID:       89547443-54c8-4572-97d9-bc62de602f37
-:END:
-#+begin_src emacs-lisp
-  (with-eval-after-load 'org
-    (defun my/work-diary-open-sprint-planning-windows ()
-      "Open windows for sprint planning."
-      (interactive)
-      (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
-      (org-agenda nil "w")
-      (org-agenda-redo)
-      (delete-other-windows)
-      (org-agenda nil "A")
-      (org-agenda-redo)
-    )
-    (my/leader-keys
-      "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
-    )
-  )
-
-#+end_src
 ***** Private Diary
 ****** Private Diary custom agenda command
 :PROPERTIES:
@@ -2707,6 +2680,28 @@ Order of headings below is important because they depend on each other.
             )
       )
     )
+    (my/leader-keys
+      "od"  '("[view] Work Diary (daily)" .
+              (lambda () (interactive)
+                (delete-other-windows)
+                (scratch-buffer)
+                (org-agenda nil "d")
+                (org-agenda-redo)))
+      "op"  '("[view] Work Diary (planning)" .
+              (lambda () (interactive)
+                (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+                (org-agenda nil "w")
+                (org-agenda-redo)
+                (delete-other-windows)
+                (org-agenda nil "A")
+                (org-agenda-redo)))
+      "oP"  '("[view] Private Diary" .
+              (lambda () (interactive)
+                (delete-other-windows)
+                (scratch-buffer)
+                (org-agenda nil "p")
+                (org-agenda-redo)))
+    )
   ))
 #+end_src
 *** TODO Add manual sorting of agenda entries
@@ -2724,28 +2719,31 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
   (let* ((wd-path "<<my/work-diary-org-path()>>")
          (wd-tasks `(file+headline ,wd-path "Tasks"))
          (wd-sprints `(file+headline ,wd-path "Sprints"))
+         (pd-path "<<my/private-diary-org-path()>>")
+         (pd-tasks `(file+headline ,pd-path "Tasks"))
         )
     (setq org-capture-templates
-          `(("t" "Task" entry ,wd-tasks
+          `(("w" "Work Diary")
+            ("wt" "Task" entry ,wd-tasks
              "** TODO %?"
             )
-            ("T" "Task (today)" entry ,wd-tasks
+            ("wT" "Task (today)" entry ,wd-tasks
              "** TODO %?\nSCHEDULED: %t"
             )
-            ("n" "Task (now)" entry ,wd-tasks
+            ("wn" "Task (now)" entry ,wd-tasks
              "** TODO %?\nSCHEDULED: %t"
              :clock-in t
              :clock-keep t
             )
-            ("i" "Task (inbox)" entry ,wd-tasks
+            ("wi" "Task (inbox)" entry ,wd-tasks
              "** INBOX %?"
              :prepend t
             )
-            ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
+            ("wj" "Journal" item (file+olp+datetree ,wd-path "Journal")
              "%?"
              :unnarrowed t
             )
-            ("s" "Sprint" entry ,wd-sprints
+            ("ws" "Sprint" entry ,wd-sprints
              ,(string-join
                `("** TODO Sprint %^{SprintNum} :s%\\*1:" ; %\\*1 here should be referring to the SprintNum.
                  ":PROPERTIES:"
@@ -2786,6 +2784,19 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
                "\n"
               )
              :prepend t
+            )
+
+            ("p" "Private Diary")
+            ("pt" "Task" entry ,pd-tasks
+             "** TODO %?"
+            )
+            ("pi" "Task (inbox)" entry ,pd-tasks
+             "** INBOX %?"
+             :prepend t
+            )
+            ("pj" "Journal" item (file+olp+datetree ,pd-path "Journal")
+             "%?"
+             :unnarrowed t
             )
            )
     )

@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-06 16:07:32 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-06 16:38:27 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -780,11 +780,6 @@ USAGE:
     "oa"  '("agenda" . org-agenda)
     "oc"  '("capture" . org-capture)
     "ol"  '("store link" . org-store-link)
-    "od"  '("[view] daily agenda" . (lambda () (interactive)
-                                      (delete-other-windows)
-                                      (scratch-buffer)
-                                      (org-agenda nil "d")
-                                      (org-agenda-redo)))
   )
   ;; "In-the-mode" keymap with handy shortcuts for the org commands I use often.
   (general-define-key
@@ -1815,22 +1810,6 @@ Returns nil if no heading found."
   )
 )
 
-(with-eval-after-load 'org
-  (defun my/work-diary-open-sprint-planning-windows ()
-    "Open windows for sprint planning."
-    (interactive)
-    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
-    (org-agenda nil "w")
-    (org-agenda-redo)
-    (delete-other-windows)
-    (org-agenda nil "A")
-    (org-agenda-redo)
-  )
-  (my/leader-keys
-    "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
-  )
-)
-
 ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
 ;; calendar events, and I need to know those paths so I can show events in the agenda.
 (with-eval-after-load 'org (with-eval-after-load 'org-gcal
@@ -1915,33 +1894,58 @@ Returns nil if no heading found."
           )
     )
   )
+  (my/leader-keys
+    "od"  '("[view] Work Diary (daily)" .
+            (lambda () (interactive)
+              (delete-other-windows)
+              (scratch-buffer)
+              (org-agenda nil "d")
+              (org-agenda-redo)))
+    "op"  '("[view] Work Diary (planning)" .
+            (lambda () (interactive)
+              (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+              (org-agenda nil "w")
+              (org-agenda-redo)
+              (delete-other-windows)
+              (org-agenda nil "A")
+              (org-agenda-redo)))
+    "oP"  '("[view] Private Diary" .
+            (lambda () (interactive)
+              (delete-other-windows)
+              (scratch-buffer)
+              (org-agenda nil "p")
+              (org-agenda-redo)))
+  )
 ))
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
        (wd-tasks `(file+headline ,wd-path "Tasks"))
        (wd-sprints `(file+headline ,wd-path "Sprints"))
+       (pd-path "~/Dropbox/private-diary.org")
+       (pd-tasks `(file+headline ,pd-path "Tasks"))
       )
   (setq org-capture-templates
-        `(("t" "Task" entry ,wd-tasks
+        `(("w" "Work Diary")
+          ("wt" "Task" entry ,wd-tasks
            "** TODO %?"
           )
-          ("T" "Task (today)" entry ,wd-tasks
+          ("wT" "Task (today)" entry ,wd-tasks
            "** TODO %?\nSCHEDULED: %t"
           )
-          ("n" "Task (now)" entry ,wd-tasks
+          ("wn" "Task (now)" entry ,wd-tasks
            "** TODO %?\nSCHEDULED: %t"
            :clock-in t
            :clock-keep t
           )
-          ("i" "Task (inbox)" entry ,wd-tasks
+          ("wi" "Task (inbox)" entry ,wd-tasks
            "** INBOX %?"
            :prepend t
           )
-          ("j" "Journal" item (file+olp+datetree ,wd-path "Journal")
+          ("wj" "Journal" item (file+olp+datetree ,wd-path "Journal")
            "%?"
            :unnarrowed t
           )
-          ("s" "Sprint" entry ,wd-sprints
+          ("ws" "Sprint" entry ,wd-sprints
            ,(string-join
              `("** TODO Sprint %^{SprintNum} :s%\\*1:" ; %\\*1 here should be referring to the SprintNum.
                ":PROPERTIES:"
@@ -1982,6 +1986,19 @@ Returns nil if no heading found."
              "\n"
             )
            :prepend t
+          )
+
+          ("p" "Private Diary")
+          ("pt" "Task" entry ,pd-tasks
+           "** TODO %?"
+          )
+          ("pi" "Task (inbox)" entry ,pd-tasks
+           "** INBOX %?"
+           :prepend t
+          )
+          ("pj" "Journal" item (file+olp+datetree ,pd-path "Journal")
+           "%?"
+           :unnarrowed t
           )
          )
   )
