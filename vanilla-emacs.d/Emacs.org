@@ -3077,7 +3077,7 @@ They can be used to store a point, text, a window or frame configuration, ... , 
     (my/leader-keys
       "r" '("registers" . (keymap))
       "r s" '("set point to register" . point-to-register)
-      "r r" '("jump to register" . counsel-register)
+      "r r" '("jump to register" . jump-to-register)
       "r l" '("list registers" . list-registers)
     )
 

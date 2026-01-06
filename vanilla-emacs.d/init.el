@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-05 19:29:29 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-05 19:31:57 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2193,7 +2193,7 @@ Returns nil if no heading found."
   (my/leader-keys
     "r" '("registers" . (keymap))
     "r s" '("set point to register" . point-to-register)
-    "r r" '("jump to register" . counsel-register)
+    "r r" '("jump to register" . jump-to-register)
     "r l" '("list registers" . list-registers)
   )
 
