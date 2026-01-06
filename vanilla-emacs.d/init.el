@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-05 19:31:57 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-06 16:07:32 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -1537,15 +1537,43 @@ Returns nil if no heading found."
 )
 
 (with-eval-after-load 'org
-  (defun my/make-work-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
-    "Base settings for the agenda block in my work-diary custom agenda commands."
+  (defun my/org-time-to-short-day-with-num (time)
+    (if time
+        (let* ((day3 (format-time-string "%a" time))
+               (day2 (cond ((string= day3 "Mon") "Mo")
+                           ((string= day3 "Tue") "Tu")
+                           ((string= day3 "Wed") "We")
+                           ((string= day3 "Thu") "Th")
+                           ((string= day3 "Fri") "Fr")
+                           ((string= day3 "Sat") "Sa")
+                           ((string= day3 "Sun") "Su")))
+               (dayNum (format-time-string "%d" time))
+              )
+            (format "%s%s" day2 dayNum)
+        )
+      "    "
+    )
+  )
+
+
+  (defun my/org-scheduled-time-prefix ()
+    (my/org-time-to-short-day-with-num (org-get-scheduled-time (point)))
+  )
+
+  (defun my/org-deadline-time-prefix ()
+    (my/org-time-to-short-day-with-num (org-get-deadline-time (point)))
+  )
+)
+
+(with-eval-after-load 'org
+  (defun my/make-diary-cmd-agenda-block-base-settings (show-daily-checklist show-other-tasks)
+    "Base settings for the agenda block in my diary custom agenda commands."
     `((org-agenda-prefix-format " %12s %5e %?-12t")
       (org-agenda-sorting-strategy '(time-up
                                      todo-state-down
                                      priority-down
                                      scheduled-up
-                                     urgency-down)
-      )
+                                     urgency-down))
       (org-super-agenda-groups
        '(
          (:discard (:todo "INBOX"))
@@ -1646,17 +1674,10 @@ Returns nil if no heading found."
   )
 )
 
-;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-;; calendar events, and I need to know those paths so I can show events in the agenda.
-(with-eval-after-load 'org (with-eval-after-load 'org-gcal
-  (defun my/make-work-diary-cmd-base-settings ()
-    "Base settings for my work-diary custom agenda commands."
-    `((org-agenda-files `("~/Dropbox/work-diary.org"
-                          ,my/calendar-events-wasp-org-file
-                          ,my/calendar-events-private-org-file
-                         ))
-
-      ;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
+(with-eval-after-load 'org
+  (defun my/make-diary-cmd-base-settings ()
+    "Base settings for my diary custom agenda commands."
+    `(;; Starts agenda log mode, which means that special extra "log" entries are added to agenda,
       ;; in this logs about closing an entry and logs about clocking an entry. I could also have
       ;; added 'state' if needed. I track "closed" logs in order to ensure that entries that are
       ;; DONE but have been scheduled in the past are shown in agenda (normally they are
@@ -1678,36 +1699,21 @@ Returns nil if no heading found."
       (org-agenda-skip-scheduled-if-deadline-is-shown t)
      )
   )
-))
-
-(with-eval-after-load 'org
-  (defun my/org-time-to-short-day-with-num (time)
-    (if time
-        (let* ((day3 (format-time-string "%a" time))
-               (day2 (cond ((string= day3 "Mon") "Mo")
-                           ((string= day3 "Tue") "Tu")
-                           ((string= day3 "Wed") "We")
-                           ((string= day3 "Thu") "Th")
-                           ((string= day3 "Fri") "Fr")
-                           ((string= day3 "Sat") "Sa")
-                           ((string= day3 "Sun") "Su")))
-               (dayNum (format-time-string "%d" time))
-              )
-            (format "%s%s" day2 dayNum)
-        )
-      "    "
-    )
-  )
-
-
-  (defun my/org-scheduled-time-prefix ()
-    (my/org-time-to-short-day-with-num (org-get-scheduled-time (point)))
-  )
-
-  (defun my/org-deadline-time-prefix ()
-    (my/org-time-to-short-day-with-num (org-get-deadline-time (point)))
-  )
 )
+
+;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
+;; calendar events, and I need to know those paths so I can show events in the agenda.
+(with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (defun my/make-work-diary-cmd-base-settings ()
+    "Base settings for my work-diary custom agenda commands."
+    `(,@(my/make-diary-cmd-base-settings)
+      (org-agenda-files `("~/Dropbox/work-diary.org"
+                          ,my/calendar-events-wasp-org-file
+                          ,my/calendar-events-private-org-file
+                         ))
+     )
+  )
+))
 
 (with-eval-after-load 'org
   (defun my/work-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
@@ -1716,9 +1722,8 @@ Returns nil if no heading found."
 
   (defun my/make-work-diary-day-cmd (cmd-key cmd-name cmd-start-day)
     `(,cmd-key ,cmd-name
-       (;; The main view: a list of tasks for today.
-        (agenda ""
-                (,@(my/make-work-diary-cmd-agenda-block-base-settings t t)
+       ((agenda ""
+                (,@(my/make-diary-cmd-agenda-block-base-settings t t)
                  (org-agenda-span 'day)
                  (org-habit-show-all-today t)
                  (org-agenda-time-grid '((daily remove-match)
@@ -1729,15 +1734,12 @@ Returns nil if no heading found."
                 )
         )
         (my/work-diary-journal-agenda-block "")
-        ;; Notes.
         (alltodo ""
                  ((org-agenda-overriding-header "")
                   (org-agenda-prefix-format "    ")
                   (org-super-agenda-groups
                    '((:name "📌 Notes" :category "note")
-                     (:name "📥 Inbox"
-                           :order 2
-                           :and (:category "task" :todo "INBOX"))
+                     (:name "📥 Inbox" :and (:category "task" :todo "INBOX"))
                      (:discard (:anything t))
                     )
                   )
@@ -1765,19 +1767,19 @@ Returns nil if no heading found."
                                                 urgency-down)
                  )
                  (org-super-agenda-groups
-                  '((:name ,(concat "Current sprint (" sprint-current-tag ") tasks" )
+                  '((:name ,(concat "🏃 Current sprint (" sprint-current-tag ") tasks" )
                            :order 0
                            :and (:category "task" :tag ,sprint-current-tag))
-                    (:name "Projects"
+                    (:name "🏗️ Projects"
                            :order 1
-                           :and (:category "task" :todo "PROJECT"))
-                    (:name "Inbox"
+                           :and (:todo "PROJECT"))
+                    (:name "📥 Inbox"
                            :order 2
                            :and (:category "task" :todo "INBOX"))
-                    (:name "To read"
+                    (:name "📚 To read"
                            :order 4
                            :and (:category "task" :tag "read"))
-                    (:name "Tasks"
+                    (:name "📋 Tasks"
                            :order 3
                            :category "task")
                     (:discard (:anything t))
@@ -1795,7 +1797,7 @@ Returns nil if no heading found."
   (defun my/make-work-diary-sprint-calendar-cmd (sprint-length-in-weeks sprint-start-weekday)
     `("w" "Work Diary: sprint calendar"
       ((agenda ""
-               (,@(my/make-work-diary-cmd-agenda-block-base-settings nil nil)
+               (,@(my/make-diary-cmd-agenda-block-base-settings nil nil)
                 (org-agenda-span ,(* 7 sprint-length-in-weeks))
                 (org-agenda-time-grid '((require-timed remove-match)
                                         ()
@@ -1813,61 +1815,77 @@ Returns nil if no heading found."
   )
 )
 
+(with-eval-after-load 'org
+  (defun my/work-diary-open-sprint-planning-windows ()
+    "Open windows for sprint planning."
+    (interactive)
+    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
+    (org-agenda nil "w")
+    (org-agenda-redo)
+    (delete-other-windows)
+    (org-agenda nil "A")
+    (org-agenda-redo)
+  )
+  (my/leader-keys
+    "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
+  )
+)
+
 ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
 ;; calendar events, and I need to know those paths so I can show events in the agenda.
 (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (defun my/private-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
+    (my/render-today-journal-in-agenda "~/Dropbox/private-diary.org")
+  )
+
   (defun my/make-private-diary-cmd ()
-    '("p" "Private Diary"
-      (;; The main view: a list of tasks for today.
-       (agenda ""
-               ((org-agenda-span 'day)
-                (org-agenda-prefix-format " %12s %5e ")
-                (org-agenda-sorting-strategy '(todo-state-down priority-down urgency-down effort-down))
+    `("p" "Private Diary"
+      ((agenda ""
+               (,@(my/make-diary-cmd-agenda-block-base-settings t t)
+                (org-agenda-span 'day)
                 (org-habit-show-all-today t)
-                (org-super-agenda-groups
-                 '((:name "Habits"
-                          :and (:category "habit"
-                                :not (:log t))
-                   )
-                   ;; Tasks to be done today.
-                   (:name "Todo"
-                          :and (:category "task"
-                                :scheduled t
-                                :not (:scheduled future)
-                                :not (:log t))
-                   )
-                   ;; Tasks that were done today.
-                   (:name none
-                          :and (:category "task"
-                                :log closed)
-                   )
-                  )
+                (org-agenda-time-grid '((daily remove-match)
+                                        (800 1000 1200 1400 1600 1800 2000)
+                                        " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄"
+                                       )
                 )
                )
        )
-       ;; All tasks without a schedule or a deadline.
+       (my/private-diary-journal-agenda-block "")
        (alltodo ""
                 ((org-agenda-overriding-header "")
-                 (org-agenda-prefix-format " %5e ")
+                 (org-agenda-prefix-format
+                  " %(my/org-scheduled-time-prefix) %(my/org-deadline-time-prefix) %5e ")
+                 (org-agenda-sorting-strategy '(scheduled-up
+                                                deadline-up
+                                                priority-down
+                                                todo-state-down
+                                                urgency-down)
+                 )
                  (org-super-agenda-groups
-                  '((:discard (:scheduled t :deadline t :time-grid t))
-                    (:name "All tasks with no schedule / deadline"
-                           :category "task"
-                    )
+                  '((:name "📌 Notes"
+                           :order 0
+                           :category "note")
+                    (:name "🏗️ Projects"
+                           :order 1
+                           :and (:todo "PROJECT"))
+                    (:name "📥 Inbox"
+                           :order 2
+                           :and (:category "task" :todo "INBOX"))
+                    (:name "📚 To read"
+                           :order 4
+                           :and (:category "task" :tag "read"))
+                    (:name "📋 Tasks"
+                           :order 3
+                           :category "task")
                     (:discard (:anything t))
                    )
                  )
                 )
        )
       )
-      ((org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
-
-       (org-agenda-start-with-log-mode '(closed clock))
-       (org-agenda-skip-scheduled-if-done t)
-       (org-agenda-skip-deadline-if-done t)
-
-       (org-agenda-skip-deadline-prewarning-if-scheduled t)
-       (org-agenda-skip-scheduled-repeats-after-deadline t)
+      (,@(my/make-diary-cmd-base-settings)
+       (org-agenda-files `("~/Dropbox/private-diary.org" ,my/calendar-events-private-org-file))
       )
      )
   )
@@ -1898,22 +1916,6 @@ Returns nil if no heading found."
     )
   )
 ))
-
-(with-eval-after-load 'org
-  (defun my/work-diary-open-sprint-planning-windows ()
-    "Open windows for sprint planning."
-    (interactive)
-    (org-toggle-sticky-agenda 1) ; This is needed to allow two agendas at the same time.
-    (org-agenda nil "w")
-    (org-agenda-redo)
-    (delete-other-windows)
-    (org-agenda nil "A")
-    (org-agenda-redo)
-  )
-  (my/leader-keys
-    "op"  '("[view] planning" . my/work-diary-open-sprint-planning-windows)
-  )
-)
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
        (wd-tasks `(file+headline ,wd-path "Tasks"))
