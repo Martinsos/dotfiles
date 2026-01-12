@@ -1030,7 +1030,6 @@ Seems to not be on any package manager though, so I need straight.el probably.
 
     (general-define-key
       :states '(normal visual)
-      :keymaps 'override
       "p" 'my/paste-after-then-hydra
       "P" 'my/paste-before-then-hydra
     )
@@ -3388,6 +3387,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     )
     (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
+    (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
   )
 
   ;; Allows easy toggling of terminal(vterm) window.

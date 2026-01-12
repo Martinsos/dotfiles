@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-12 22:13:34 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-12 22:31:30 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -591,7 +591,6 @@ USAGE:
 
   (general-define-key
     :states '(normal visual)
-    :keymaps 'override
     "p" 'my/paste-after-then-hydra
     "P" 'my/paste-before-then-hydra
   )
@@ -2372,6 +2371,7 @@ Returns nil if no heading found."
   )
   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
   (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
+  (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
 )
 
 ;; Allows easy toggling of terminal(vterm) window.
