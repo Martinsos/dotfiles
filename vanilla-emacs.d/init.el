@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-06 16:38:27 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-01-12 22:13:34 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -874,7 +874,7 @@ USAGE:
           ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
           ("DONE" . (:foreground "#446a73" :weight bold))
           ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-          ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
+          ("WAIT" . (:foreground "#bf6900" :weight bold :strike-through t))
           ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
           ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
           ("PROJECT" . (:foreground "orchid" :weight bold))
@@ -1880,7 +1880,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s55")
+        (work-diary-sprint-current-tag "s57")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -1958,19 +1958,23 @@ Returns nil if no heading found."
                ":PROPERTIES:"
                ":CATEGORY: task"
                ":END:"
-               "- [ ] check action items from my last sprint retro"
+               "- [ ] check action items from my last sprint retro (in Work Diary)"
                "- [ ] check Founder kanban"
                "- [ ] check Company kanban"
                "- [ ] check Dev kanban"
-               "- [ ] clean up the Work Diary Inbox"
                "- [ ] clean up the Email Inbox"
-               "- [ ] organize all the tasks in the work diary (planning view)"
+               "- [ ] Work Diary: clean up Inbox"
+               "- [ ] Work Diary: check the Projects and Tasks"
+               "- [ ] Work Diary: organize all the tasks (planning view)"
                "  - [ ] set new sprint as current and add tasks to it"
                "  - [ ] set estimate, scheduled and deadline for all the tasks"
                "- [ ] write short summary"
                ""
                "*** TODO Review my sprint"
                "SCHEDULED: %\\*3" ; %\\*3 here should be referring to the EndDate.
+               ":PROPERTIES:"
+               ":CATEGORY: task"
+               ":END:"
                "**** Day by day"
                "***** Wed"
                "- ✅: "
@@ -1986,6 +1990,7 @@ Returns nil if no heading found."
              "\n"
             )
            :prepend t
+           :unnarrowed t
           )
 
           ("p" "Private Diary")

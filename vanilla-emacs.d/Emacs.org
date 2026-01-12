@@ -1363,7 +1363,7 @@ Evil-surround brings ability to surround stuff with delimiters:
             ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
             ("DONE" . (:foreground "#446a73" :weight bold))
             ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-            ("BLCK" . (:foreground "#bf6900" :weight bold :strike-through t))
+            ("WAIT" . (:foreground "#bf6900" :weight bold :strike-through t))
             ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
             ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
             ("PROJECT" . (:foreground "orchid" :weight bold))
@@ -2666,7 +2666,7 @@ Order of headings below is important because they depend on each other.
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s55")
+          (work-diary-sprint-current-tag "s57")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -2756,19 +2756,23 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
                  ":PROPERTIES:"
                  ":CATEGORY: task"
                  ":END:"
-                 "- [ ] check action items from my last sprint retro"
+                 "- [ ] check action items from my last sprint retro (in Work Diary)"
                  "- [ ] check Founder kanban"
                  "- [ ] check Company kanban"
                  "- [ ] check Dev kanban"
-                 "- [ ] clean up the Work Diary Inbox"
                  "- [ ] clean up the Email Inbox"
-                 "- [ ] organize all the tasks in the work diary (planning view)"
+                 "- [ ] Work Diary: clean up Inbox"
+                 "- [ ] Work Diary: check the Projects and Tasks"
+                 "- [ ] Work Diary: organize all the tasks (planning view)"
                  "  - [ ] set new sprint as current and add tasks to it"
                  "  - [ ] set estimate, scheduled and deadline for all the tasks"
                  "- [ ] write short summary"
                  ""
                  "*** TODO Review my sprint"
                  "SCHEDULED: %\\*3" ; %\\*3 here should be referring to the EndDate.
+                 ":PROPERTIES:"
+                 ":CATEGORY: task"
+                 ":END:"
                  "**** Day by day"
                  "***** Wed"
                  "- ✅: "
@@ -2784,6 +2788,7 @@ It gives a lot of control over what I want to show in agenda. I could use it to 
                "\n"
               )
              :prepend t
+             :unnarrowed t
             )
 
             ("p" "Private Diary")
