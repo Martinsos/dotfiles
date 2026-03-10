@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-09 21:59:31 PDT, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-09 23:37:23 PDT, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2308,6 +2308,25 @@ Returns nil if no heading found."
     "gp" '("previous change" . diff-hl-previous-hunk)
     "gr" '("set ref rev (global)" . diff-hl-set-reference-rev) ;; NOTE: It sets this globally, so in other projects it will cause weird behaviour!
     "gR" '("reset ref rev (global)" . diff-hl-reset-reference-rev)
+  )
+)
+
+(use-package dired
+  :ensure nil ; emacs built-in
+  :commands (dired dired-jump)
+  :config
+  (evil-define-key 'normal dired-mode-map
+    (kbd "h") 'dired-up-directory
+    (kbd "l") 'dired-find-file
+    (kbd "TAB") 'dired-display-file
+  )
+  :custom ((dired-listing-switches "-agho"))
+  (my/leader-keys
+    "d" '("dired" . (keymap))
+    "d RET" '("dired" . dired)
+    "d d" '("dired @ buffer" . dired-jump)
+    "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
+    "d p" '("dired @ project" . project-dired)
   )
 )
 

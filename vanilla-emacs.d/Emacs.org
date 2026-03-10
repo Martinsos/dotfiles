@@ -3302,6 +3302,40 @@ It adds indicator to the left margin/side of the window.
 
 *** Cheatsheet :cheatsheet:
 - ~diff-hl-set-reference-rev~ allows you to define against what are differences shown. E.g. you can set it to =master= to see what changes feature branch branching from =master= introduced.
+* Dired
+:PROPERTIES:
+:ID:       9209047a-d06f-4244-85f6-f544ee11daf0
+:END:
+
+#+begin_src emacs-lisp
+  (use-package dired
+    :ensure nil ; emacs built-in
+    :commands (dired dired-jump)
+    :config
+    (evil-define-key 'normal dired-mode-map
+      (kbd "h") 'dired-up-directory
+      (kbd "l") 'dired-find-file
+      (kbd "TAB") 'dired-display-file
+    )
+    :custom ((dired-listing-switches "-agho"))
+    (my/leader-keys
+      "d" '("dired" . (keymap))
+      "d RET" '("dired" . dired)
+      "d d" '("dired @ buffer" . dired-jump)
+      "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
+      "d p" '("dired @ project" . project-dired)
+    )
+  )
+#+end_src
+
+** Cheatsheet :cheatsheet:
+- ~g r~ to refresh the buffer
+- ~m~ to mark, ~u~ to unmark
+  - then ~K~ to "kill" (hide from buffer)
+- ~d~ to mark for deletion, then ~x~ to execute deletion
+- ~*~ for premade marking commands
+- ~%~ to do something with files matching a regex
+
 * Company
 :PROPERTIES:
 :ID:       c9db3c71-d95a-4bea-9d7a-e51d50684bcf
