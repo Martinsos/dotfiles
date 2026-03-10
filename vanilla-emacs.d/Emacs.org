@@ -1025,6 +1025,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "pb"  '("switch buffer" . projectile-switch-to-buffer)
       "pp"  '("switch project" . counsel-projectile-switch-project)
       "pr"  '("find and replace" . projectile-replace)
+      "px"  '("compile project" . projectile-compile-project)
       "p."  '("all commands" . projectile-command-map)
     )
 
@@ -1297,6 +1298,7 @@ Evil-surround brings ability to surround stuff with delimiters:
      "m e"  '("element" . org-mark-element)
      "h" '("insert heading" . org-insert-heading)
      "H" '("insert subheading" . org-insert-subheading)
+     "e" '("export" . org-export-dispatch)
     )
 
     (add-to-list 'org-modules 'org-habit)
@@ -2665,7 +2667,7 @@ Order of headings below is important because they depend on each other.
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s57")
+          (work-diary-sprint-current-tag "s59")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -3264,6 +3266,8 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
   ;; I define this outside of (use-package magit) because later is deferred.
   (my/leader-keys
     "gg" 'magit
+    "gf" '("magit menu (current file)" . magit-file-dispatch)
+    "gF" '("magit find file" . magit-find-file)
   )
 
 #+end_src
@@ -4146,7 +4150,7 @@ This sounds very simple, it just runs a shell command, but:
 
 Usual ways to specify the compile command:
 - Dynamically, per-session, when ~compile~ asks you to specify it.
-- Via =compilate-command= var
+- Via =compile-command= var
   - Could be set in the very file we are compiling, at the start/bottom, via local elisp variables.
   - Could be set via =.dir-locals.el= file.
 
@@ -4163,8 +4167,8 @@ Usual ways to specify the compile command:
       "x" '("execute" . (keymap))
       "x x" '("recompile" . recompile)
       "x X" '("compile" . compile)
-      "x p x" '("recompile (project)" . project-recompile)
-      "x p X" '("compile (project)" . project-compile)
+      "x p" '("recompile (project)" . project-recompile)
+      "x P" '("compile (project)" . project-compile)
     )
   )
 #+end_src
@@ -4247,7 +4251,6 @@ haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a
 :PROPERTIES:
 :ID:       dfac177b-e2dc-4ac5-a284-3a16ca2c4588
 :END:
-NOTE: I chose ts-ls as a language server, when asked.
 
 #+begin_src emacs-lisp
 
@@ -4311,6 +4314,9 @@ NOTE: I chose ts-ls as a language server, when asked.
 
 #+end_src
 
+*** Install Typescript language server :manual_setup:
+Run ~lsp-install-server~ and then choose ~ts-ls~ to install Typescript Language Server for lsp-mode to use.
+
 *** TODO Customize LSP semantic token faces to be aligned with treesitter highlighting.
 
 *** LSP ESLint
@@ -4335,6 +4341,19 @@ This will also run eslint language server next to the other language servers if 
 ** Web (HTML, CSS, ...)
 Emacs comes with built-in =html=, =mhtml=, and =css= mode, so I am just relying on those for now, they seem to work well enough for my purposes.
 Also popular is =web-mode=, so I might want to look into that one day, but I haven't had the need so far so decided to keep it light.
+
+*** CSS
+:PROPERTIES:
+:ID:       15ee0024-8213-45a6-a103-2ac76a43e8a7
+:END:
+#+begin_src emacs-lisp
+  (use-package css-mode
+    :ensure nil ; Built-in, so don't install it via package manager.
+    :custom
+    (css-indent-offset 2)
+  )
+#+end_src
+
 ** YAML
 :PROPERTIES:
 :ID:       926d17f1-bd2b-4b12-bf29-720c77457eb7
@@ -5346,6 +5365,8 @@ https://github.com/twlz0ne/separedit.el
 *** TODO Look into window position management
 https://www.reddit.com/r/emacs/s/o0IpQS9v24
 ** Going beyond
+*** TODO https://github.com/gavv/om-dash -> dynamic dashboard in org files
+Dynamic org blocks that you can define how they pull in data, from github or email or custom shell cmd or lisp function, and they pull it in and show it as a table. Seems very cool when you want to pull in the data from multiple sources and show it all in one place.
 *** TODO Check "casual" package for easier access to popular commands. Especially their EditKit for search and replace commands.
 *** TODO Set up this cool package for permanently highlighting pieces of text: https://github.com/jkitchin/ov-highlight
 *** DONE package: org-modern for very nice org mode look.

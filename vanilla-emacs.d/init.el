@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-01-12 22:31:30 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-09 21:59:31 PDT, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -586,6 +586,7 @@ USAGE:
     "pb"  '("switch buffer" . projectile-switch-to-buffer)
     "pp"  '("switch project" . counsel-projectile-switch-project)
     "pr"  '("find and replace" . projectile-replace)
+    "px"  '("compile project" . projectile-compile-project)
     "p."  '("all commands" . projectile-command-map)
   )
 
@@ -808,6 +809,7 @@ USAGE:
    "m e"  '("element" . org-mark-element)
    "h" '("insert heading" . org-insert-heading)
    "H" '("insert subheading" . org-insert-subheading)
+   "e" '("export" . org-export-dispatch)
   )
 
   (add-to-list 'org-modules 'org-habit)
@@ -1879,7 +1881,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s57")
+        (work-diary-sprint-current-tag "s59")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -2294,6 +2296,8 @@ Returns nil if no heading found."
 ;; I define this outside of (use-package magit) because later is deferred.
 (my/leader-keys
   "gg" 'magit
+  "gf" '("magit menu (current file)" . magit-file-dispatch)
+  "gF" '("magit find file" . magit-find-file)
 )
 
 (use-package diff-hl
@@ -2762,8 +2766,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "x" '("execute" . (keymap))
     "x x" '("recompile" . recompile)
     "x X" '("compile" . compile)
-    "x p x" '("recompile (project)" . project-recompile)
-    "x p X" '("compile (project)" . project-compile)
+    "x p" '("recompile (project)" . project-recompile)
+    "x P" '("compile (project)" . project-compile)
   )
 )
 
@@ -2884,6 +2888,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
 (use-package lsp-eslint
   :ensure nil ;; Don't install since it comes built-in with lsp-mode.
   :after lsp-mode
+)
+
+(use-package css-mode
+  :ensure nil ; Built-in, so don't install it via package manager.
+  :custom
+  (css-indent-offset 2)
 )
 
 ;; Built-in YAML major mode with treesitter highlighting.
