@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-09 23:37:23 PDT, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-10 22:53:53 PDT, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2301,6 +2301,7 @@ Returns nil if no heading found."
 )
 
 (use-package diff-hl
+  :hook (dired-mode . diff-hl-dired-mode)
   :config
   (global-diff-hl-mode)
   (my/leader-keys
@@ -2313,20 +2314,38 @@ Returns nil if no heading found."
 
 (use-package dired
   :ensure nil ; emacs built-in
-  :commands (dired dired-jump)
+  :custom
+  (dired-listing-switches "-agho")
+  (dired-dwim-target t)
+  (dired-kill-when-opening-new-dired-buffer t)
   :config
-  (evil-define-key 'normal dired-mode-map
-    (kbd "h") 'dired-up-directory
-    (kbd "l") 'dired-find-file
-    (kbd "TAB") 'dired-display-file
-  )
-  :custom ((dired-listing-switches "-agho"))
+  (require 'dired-x)
   (my/leader-keys
     "d" '("dired" . (keymap))
     "d RET" '("dired" . dired)
     "d d" '("dired @ buffer" . dired-jump)
     "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
     "d p" '("dired @ project" . project-dired)
+  )
+  (with-eval-after-load 'evil
+    (evil-define-key 'normal dired-mode-map
+      (kbd "TAB") 'dired-display-file
+    )
+  )
+)
+
+(use-package all-the-icons-dired
+  :after all-the-icons
+  :hook (dired-mode . all-the-icons-dired-mode)
+)
+
+(use-package dired-hide-dotfiles
+  :hook (dired-mode . dired-hide-dotfiles-mode)
+  :config
+  (with-eval-after-load 'evil
+    (evil-define-key 'normal dired-mode-map
+      (kbd "H") 'dired-hide-dotfiles-mode
+    )
   )
 )
 
