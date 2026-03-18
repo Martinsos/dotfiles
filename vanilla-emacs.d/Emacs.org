@@ -639,12 +639,12 @@ Some emacs packages use it.
 #+begin_src emacs-lisp
   (defun my/print-startup-time ()
     (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-           (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+           (elpaca-after-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
           )
-      (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
-        (+ init-duration elpaca-only-init-duration)
+      (message "Emacs loaded in %.2f (%.2f (init) + %.2f (elpaca loading pkgs)) seconds with %d garbage collections."
+        (+ init-duration elpaca-after-init-duration)
         init-duration
-        elpaca-only-init-duration
+        elpaca-after-init-duration
         gcs-done
       )
     )
@@ -1201,30 +1201,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   )
 #+end_src
 
-Evil-surround brings ability to surround stuff with delimiters:
-  - ~ys<textobject><delimiter>~ to add delimiters (or ~S<textobject><delimiter>~ in visual mode).
-  - ~cs<old-textobject><new-textobject>~ to change old for new delimiters.
-  - ~ds<textobject>~ to delete existing delimiters.
-#+begin_src emacs-lisp
-  (use-package evil-surround
-    :after evil
-    :config
-    (global-evil-surround-mode 1)
-    (setq-default evil-surround-pairs-alist
-                  '((?\( "(" . ")")
-                    (?\[ "[" . "]")
-                    (?\{ "{" . "}")
-                    (?\) "(" . ")")
-                    (?\] "[" . "]")
-                    (?\} "{" . "}")
-                    (?>  "<" . ">")
-                    (?=  "=" . "=")
-                    (?~  "~" . "~")
-                    (?t . evil-surround-read-tag)
-                    (?< . evil-surround-read-tag)))
-  )
-#+end_src
-
 * Org mode
 ** Basic setup (org)
 :PROPERTIES:
@@ -1542,21 +1518,26 @@ Automatic downloading and link-inserting of images from the system clipboard / k
 By default it downloads the image into current directory, but this can be customized per buffer.
 
 #+begin_src emacs-lisp
-
   (use-package org-download
     :after (org)
-    :config
-    (general-define-key
-     :states '(normal)
-     :keymaps 'org-mode-map
-     :prefix ","
-     "d" '("download" . (keymap))
-     "dc" '("from clipboard" . org-download-clipboard)
-     "dp" '("from kill ring" . org-download-yank)
-     "dx" '("delete" . org-download-delete)
+    :defer t
+    :commands (org-download-clipboard org-download-yank org-download-delete)
+    :init
+    ;; NOTE: By having this package deferred after org, but its keybinings defined in init phase
+    ;; (after org though since it inserts into its keymap), I get bindings defined early so package
+    ;; can be triggered via them, but package is not loaded till actually one of them is called.
+    (with-eval-after-load 'org
+      (general-define-key
+       :states '(normal)
+       :keymaps 'org-mode-map
+       :prefix ","
+       "d" '("download" . (keymap))
+       "dc" '("from clipboard" . org-download-clipboard)
+       "dp" '("from kill ring" . org-download-yank)
+       "dx" '("delete" . org-download-delete)
+      )
     )
   )
-
 #+end_src
 
 *** TODO Look into using ~yank-media~ instead of ~org-download~.
@@ -1769,7 +1750,12 @@ Two most popular emacs packages for pulling in calendar events into org file are
 
 #+begin_src emacs-lisp
 
+  (defconst my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
+  (defconst my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
+
   (use-package org-gcal
+    :after (org)
+    :defer t
     :init
     ;; Get calendar credentials from .authinfo file and use them.
     (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
@@ -1779,8 +1765,6 @@ Two most popular emacs packages for pulling in calendar events into org file are
       )
     )
     ;; First elements of the pairs here are ids of google calendars.
-    (setq my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
-    (setq my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
     (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
   				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
   				    ))
@@ -2451,9 +2435,7 @@ Order of headings below is important because they depend on each other.
 :ID:       23ad42fb-71d9-4a50-aca1-a51ea01fb085
 :END:
 #+begin_src emacs-lisp :noweb yes
-  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-  ;; calendar events, and I need to know those paths so I can show events in the agenda.
-  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (with-eval-after-load 'org
     (defun my/make-work-diary-cmd-base-settings ()
       "Base settings for my work-diary custom agenda commands."
       `(,@(my/make-diary-cmd-base-settings)
@@ -2463,7 +2445,7 @@ Order of headings below is important because they depend on each other.
                            ))
        )
     )
-  ))
+  )
 #+end_src
 
 ****** Work Diary (daily) custom agenda command
@@ -2590,9 +2572,7 @@ Order of headings below is important because they depend on each other.
 :ID:       b64f7720-c3a3-4a15-a192-dbed3691330e
 :END:
 #+begin_src emacs-lisp :noweb yes
-  ;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-  ;; calendar events, and I need to know those paths so I can show events in the agenda.
-  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (with-eval-after-load 'org
     (defun my/private-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
       (my/render-today-journal-in-agenda "<<my/private-diary-org-path()>>")
     )
@@ -2648,7 +2628,7 @@ Order of headings below is important because they depend on each other.
         )
        )
     )
-  ))
+  )
 
 #+end_src
 
@@ -2657,8 +2637,7 @@ Order of headings below is important because they depend on each other.
 :ID:       0a8f2bb5-eb23-422b-bbf5-6bf15724d320
 :END:
 #+begin_src emacs-lisp
-  ;; Some of the functions used here are evaled only after org-gcal (as defined above), so I also have to wait for it here.
-  (with-eval-after-load 'org (with-eval-after-load 'org-gcal
+  (with-eval-after-load 'org
     (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
           ;;   from the work-diary.org file. I could have a heading there called Sprints
           ;;   with category "sprints" where each subheading is a single sprint.
@@ -2703,7 +2682,7 @@ Order of headings below is important because they depend on each other.
                 (org-agenda nil "p")
                 (org-agenda-redo)))
     )
-  ))
+  )
 #+end_src
 *** TODO Add manual sorting of agenda entries
 If I define ~org-agenda-cmp-user-defined~ then I can in ~org-agenda-sorting-strategy~ say that I use ~user-defined-up~ (or ~down~). I could define it to take a look at some custom ~order~ org property that I will define commands and keybindings to easily change in org agenda and that way I get manual sorting of entries in agenda.
@@ -2868,6 +2847,7 @@ It automatically balances margins in order to put the content in the middle, wit
 
 #+begin_src emacs-lisp
   (use-package elfeed
+    :defer t
     :config
     (setq elfeed-feeds '(
                          ("https://sachachua.com/blog/feed/" blog emacs)
@@ -3311,12 +3291,12 @@ It adds indicator to the left margin/side of the window.
 #+begin_src emacs-lisp
   (use-package dired
     :ensure nil ; emacs built-in
+    :defer t
     :custom
     (dired-listing-switches "-agho")
     (dired-dwim-target t)
     (dired-kill-when-opening-new-dired-buffer t)
-    :config
-    (require 'dired-x)
+    :init
     (my/leader-keys
       "d" '("dired" . (keymap))
       "d RET" '("dired" . dired)
@@ -3324,6 +3304,8 @@ It adds indicator to the left margin/side of the window.
       "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
       "d p" '("dired @ project" . project-dired)
     )
+    :config
+    (require 'dired-x)
     (with-eval-after-load 'evil
       (evil-define-key 'normal dired-mode-map
         (kbd "TAB") 'dired-display-file
@@ -3332,11 +3314,14 @@ It adds indicator to the left margin/side of the window.
   )
 
   (use-package all-the-icons-dired
-    :after all-the-icons
+    :after (all-the-icons dired)
+    :defer t
     :hook (dired-mode . all-the-icons-dired-mode)
   )
 
   (use-package dired-hide-dotfiles
+    :after (dired)
+    :defer t
     :hook (dired-mode . dired-hide-dotfiles-mode)
     :config
     (with-eval-after-load 'evil
@@ -3435,17 +3420,19 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
   ;; emacses have all those ready, so usually you don't have to think about it.
   (use-package vterm
+    :defer t
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
     :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
-    :config
+    :init
+    (my/leader-keys
+      "\"" '("new terminal" . my/vterm-new)
+    )
     (defun my/vterm-new ()
       (interactive)
       (vterm t)
     )
-    (my/leader-keys
-      "\"" '("new terminal" . my/vterm-new)
-    )
+    :config
     (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
     (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
@@ -3453,11 +3440,12 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
   ;; Allows easy toggling of terminal(vterm) window.
   (use-package vterm-toggle
-    :after (vterm)
-    :config
+    :defer t
+    :init
     (my/leader-keys
       "'" '("toggle terminal" . vterm-toggle)
     )
+    :config
     ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
     ;; me to dir of previous buffer! Very useful.
     (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
@@ -4406,6 +4394,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 #+begin_src emacs-lisp
   (use-package css-mode
     :ensure nil ; Built-in, so don't install it via package manager.
+    :defer t
     :custom
     (css-indent-offset 2)
   )
@@ -4511,6 +4500,17 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
 :END:
 #+begin_src emacs-lisp
   (use-package gptel
+    :after (org)
+    :defer t
+    :init
+    (my/leader-keys
+      "ii"  '("[gptel] menu" . gptel-menu)
+      "ic"  '("[gptel] chat" . gptel)
+      "is"  '("[gptel] send to chat" . gptel-send)
+      "ir"  '("[gptel] rewrite" . gptel-rewrite)
+      "ix"  '("[gptel] +/- ctxt" . gptel-add)
+      "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
+    )
     :config
     (setq gptel-default-mode 'org-mode)
     (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
@@ -4534,15 +4534,6 @@ I might also want to try out chatgpt-shell at some point, it is similar to gptel
       )
     )
     (setf (alist-get 'default gptel-directives) #'my/gptel-default-directive)
-
-    (my/leader-keys
-      "ii"  '("[gptel] menu" . gptel-menu)
-      "ic"  '("[gptel] chat" . gptel)
-      "is"  '("[gptel] send to chat" . gptel-send)
-      "ir"  '("[gptel] rewrite" . gptel-rewrite)
-      "ix"  '("[gptel] +/- ctxt" . gptel-add)
-      "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
-    )
 
     ;;; gptel context buffer
     ;; Evil mode messes up the keybindings in the gptel-context buffer, so I turn evil off.

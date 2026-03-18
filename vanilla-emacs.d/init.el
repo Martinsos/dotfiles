@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-10 22:53:53 PDT, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-19 00:10:32 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -334,12 +334,12 @@ USAGE:
 
 (defun my/print-startup-time ()
   (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-         (elpaca-only-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+         (elpaca-after-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
         )
-    (message "Emacs loaded in %.2f (%.2f + %.2f) seconds with %d garbage collections."
-      (+ init-duration elpaca-only-init-duration)
+    (message "Emacs loaded in %.2f (%.2f (init) + %.2f (elpaca loading pkgs)) seconds with %d garbage collections."
+      (+ init-duration elpaca-after-init-duration)
       init-duration
-      elpaca-only-init-duration
+      elpaca-after-init-duration
       gcs-done
     )
   )
@@ -726,24 +726,6 @@ USAGE:
   :config (evil-collection-init)
 )
 
-(use-package evil-surround
-  :after evil
-  :config
-  (global-evil-surround-mode 1)
-  (setq-default evil-surround-pairs-alist
-                '((?\( "(" . ")")
-                  (?\[ "[" . "]")
-                  (?\{ "{" . "}")
-                  (?\) "(" . ")")
-                  (?\] "[" . "]")
-                  (?\} "{" . "}")
-                  (?>  "<" . ">")
-                  (?=  "=" . "=")
-                  (?~  "~" . "~")
-                  (?t . evil-surround-read-tag)
-                  (?< . evil-surround-read-tag)))
-)
-
 ;; This goes first so that all the rest of org-related config can add keys without any waiting.
 (my/leader-keys
   "o"   '("org" . (keymap))
@@ -1045,15 +1027,22 @@ USAGE:
 
 (use-package org-download
   :after (org)
-  :config
-  (general-define-key
-   :states '(normal)
-   :keymaps 'org-mode-map
-   :prefix ","
-   "d" '("download" . (keymap))
-   "dc" '("from clipboard" . org-download-clipboard)
-   "dp" '("from kill ring" . org-download-yank)
-   "dx" '("delete" . org-download-delete)
+  :defer t
+  :commands (org-download-clipboard org-download-yank org-download-delete)
+  :init
+  ;; NOTE: By having this package deferred after org, but its keybinings defined in init phase
+  ;; (after org though since it inserts into its keymap), I get bindings defined early so package
+  ;; can be triggered via them, but package is not loaded till actually one of them is called.
+  (with-eval-after-load 'org
+    (general-define-key
+     :states '(normal)
+     :keymaps 'org-mode-map
+     :prefix ","
+     "d" '("download" . (keymap))
+     "dc" '("from clipboard" . org-download-clipboard)
+     "dp" '("from kill ring" . org-download-yank)
+     "dx" '("delete" . org-download-delete)
+    )
   )
 )
 
@@ -1192,7 +1181,12 @@ USAGE:
   )
 )
 
+(defconst my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
+(defconst my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
+
 (use-package org-gcal
+  :after (org)
+  :defer t
   :init
   ;; Get calendar credentials from .authinfo file and use them.
   (let* ((gcal-auth-info (car (auth-source-search :host "gcal" :max 1 :require '(:user :secret)))))
@@ -1202,8 +1196,6 @@ USAGE:
     )
   )
   ;; First elements of the pairs here are ids of google calendars.
-  (setq my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
-  (setq my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
   (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
 				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
 				    ))
@@ -1697,9 +1689,7 @@ Returns nil if no heading found."
   )
 )
 
-;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-;; calendar events, and I need to know those paths so I can show events in the agenda.
-(with-eval-after-load 'org (with-eval-after-load 'org-gcal
+(with-eval-after-load 'org
   (defun my/make-work-diary-cmd-base-settings ()
     "Base settings for my work-diary custom agenda commands."
     `(,@(my/make-diary-cmd-base-settings)
@@ -1709,7 +1699,7 @@ Returns nil if no heading found."
                          ))
      )
   )
-))
+)
 
 (with-eval-after-load 'org
   (defun my/work-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
@@ -1811,9 +1801,7 @@ Returns nil if no heading found."
   )
 )
 
-;; I wait for org-gcal because in :init of org-gcal I define vars that hold paths to files with
-;; calendar events, and I need to know those paths so I can show events in the agenda.
-(with-eval-after-load 'org (with-eval-after-load 'org-gcal
+(with-eval-after-load 'org
   (defun my/private-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
     (my/render-today-journal-in-agenda "~/Dropbox/private-diary.org")
   )
@@ -1869,10 +1857,9 @@ Returns nil if no heading found."
       )
      )
   )
-))
+)
 
-;; Some of the functions used here are evaled only after org-gcal (as defined above), so I also have to wait for it here.
-(with-eval-after-load 'org (with-eval-after-load 'org-gcal
+(with-eval-after-load 'org
   (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
         ;;   from the work-diary.org file. I could have a heading there called Sprints
         ;;   with category "sprints" where each subheading is a single sprint.
@@ -1917,7 +1904,7 @@ Returns nil if no heading found."
               (org-agenda nil "p")
               (org-agenda-redo)))
   )
-))
+)
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
        (wd-tasks `(file+headline ,wd-path "Tasks"))
@@ -2038,6 +2025,7 @@ Returns nil if no heading found."
 )
 
 (use-package elfeed
+  :defer t
   :config
   (setq elfeed-feeds '(
                        ("https://sachachua.com/blog/feed/" blog emacs)
@@ -2314,12 +2302,12 @@ Returns nil if no heading found."
 
 (use-package dired
   :ensure nil ; emacs built-in
+  :defer t
   :custom
   (dired-listing-switches "-agho")
   (dired-dwim-target t)
   (dired-kill-when-opening-new-dired-buffer t)
-  :config
-  (require 'dired-x)
+  :init
   (my/leader-keys
     "d" '("dired" . (keymap))
     "d RET" '("dired" . dired)
@@ -2327,6 +2315,8 @@ Returns nil if no heading found."
     "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
     "d p" '("dired @ project" . project-dired)
   )
+  :config
+  (require 'dired-x)
   (with-eval-after-load 'evil
     (evil-define-key 'normal dired-mode-map
       (kbd "TAB") 'dired-display-file
@@ -2335,11 +2325,14 @@ Returns nil if no heading found."
 )
 
 (use-package all-the-icons-dired
-  :after all-the-icons
+  :after (all-the-icons dired)
+  :defer t
   :hook (dired-mode . all-the-icons-dired-mode)
 )
 
 (use-package dired-hide-dotfiles
+  :after (dired)
+  :defer t
   :hook (dired-mode . dired-hide-dotfiles-mode)
   :config
   (with-eval-after-load 'evil
@@ -2400,17 +2393,19 @@ Returns nil if no heading found."
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
 (use-package vterm
+  :defer t
   ;; hl-line highlight flickers in vterm, so we turn it off.
   ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
   :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
-  :config
+  :init
+  (my/leader-keys
+    "\"" '("new terminal" . my/vterm-new)
+  )
   (defun my/vterm-new ()
     (interactive)
     (vterm t)
   )
-  (my/leader-keys
-    "\"" '("new terminal" . my/vterm-new)
-  )
+  :config
   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
   (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
@@ -2418,11 +2413,12 @@ Returns nil if no heading found."
 
 ;; Allows easy toggling of terminal(vterm) window.
 (use-package vterm-toggle
-  :after (vterm)
-  :config
+  :defer t
+  :init
   (my/leader-keys
     "'" '("toggle terminal" . vterm-toggle)
   )
+  :config
   ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
   ;; me to dir of previous buffer! Very useful.
   (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
@@ -2930,6 +2926,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package css-mode
   :ensure nil ; Built-in, so don't install it via package manager.
+  :defer t
   :custom
   (css-indent-offset 2)
 )
@@ -2958,6 +2955,17 @@ It uses external `gitstatusd' program to calculate the actual git status."
 )
 
 (use-package gptel
+  :after (org)
+  :defer t
+  :init
+  (my/leader-keys
+    "ii"  '("[gptel] menu" . gptel-menu)
+    "ic"  '("[gptel] chat" . gptel)
+    "is"  '("[gptel] send to chat" . gptel-send)
+    "ir"  '("[gptel] rewrite" . gptel-rewrite)
+    "ix"  '("[gptel] +/- ctxt" . gptel-add)
+    "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
+  )
   :config
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
@@ -2981,15 +2989,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
     )
   )
   (setf (alist-get 'default gptel-directives) #'my/gptel-default-directive)
-
-  (my/leader-keys
-    "ii"  '("[gptel] menu" . gptel-menu)
-    "ic"  '("[gptel] chat" . gptel)
-    "is"  '("[gptel] send to chat" . gptel-send)
-    "ir"  '("[gptel] rewrite" . gptel-rewrite)
-    "ix"  '("[gptel] +/- ctxt" . gptel-add)
-    "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
-  )
 
   ;;; gptel context buffer
   ;; Evil mode messes up the keybindings in the gptel-context buffer, so I turn evil off.
