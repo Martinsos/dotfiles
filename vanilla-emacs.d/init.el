@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-19 00:10:32 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-19 21:47:24 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -332,20 +332,23 @@ USAGE:
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
 )
 
-(defun my/print-startup-time ()
-  (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-         (elpaca-after-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-        )
-    (message "Emacs loaded in %.2f (%.2f (init) + %.2f (elpaca loading pkgs)) seconds with %d garbage collections."
-      (+ init-duration elpaca-after-init-duration)
-      init-duration
-      elpaca-after-init-duration
-      gcs-done
-    )
-  )
+(add-hook
+ 'emacs-startup-hook
+ (lambda ()
+   (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
+          (pkgs-load-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+          (final-setup-duration (float-time (time-subtract (current-time) elpaca-after-init-time)))
+         )
+     (message "Emacs ready in %.2f (%.2f (init) + %.2f (packages) + %.2f (final setup)) seconds with %d garbage collections."
+       (+ init-duration pkgs-load-duration final-setup-duration)
+       init-duration
+       pkgs-load-duration
+       final-setup-duration
+       gcs-done
+     )
+   )
+ )
 )
-
-(add-hook 'emacs-startup-hook #'my/print-startup-time)
 
 (use-package emacs
   :ensure nil

@@ -637,20 +637,23 @@ Some emacs packages use it.
 :END:
 
 #+begin_src emacs-lisp
-  (defun my/print-startup-time ()
-    (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-           (elpaca-after-init-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-          )
-      (message "Emacs loaded in %.2f (%.2f (init) + %.2f (elpaca loading pkgs)) seconds with %d garbage collections."
-        (+ init-duration elpaca-after-init-duration)
-        init-duration
-        elpaca-after-init-duration
-        gcs-done
-      )
-    )
+  (add-hook
+   'emacs-startup-hook
+   (lambda ()
+     (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
+            (pkgs-load-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
+            (final-setup-duration (float-time (time-subtract (current-time) elpaca-after-init-time)))
+           )
+       (message "Emacs ready in %.2f (%.2f (init) + %.2f (packages) + %.2f (final setup)) seconds with %d garbage collections."
+         (+ init-duration pkgs-load-duration final-setup-duration)
+         init-duration
+         pkgs-load-duration
+         final-setup-duration
+         gcs-done
+       )
+     )
+   )
   )
-
-  (add-hook 'emacs-startup-hook #'my/print-startup-time)
 #+end_src
 
 This measures how long each package took. Run ~use-package-report~ to see the result.
