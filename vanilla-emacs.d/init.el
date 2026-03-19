@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:25:18 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:48:19 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2223,6 +2223,7 @@ Returns nil if no heading found."
 
 ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
 (use-package projectile
+  :defer t
   :init
   ;; First thing that happens on switching to a new project.
   ;; TODO: Try without this, see if I like that better or not, or if I would like something else.
@@ -2237,6 +2238,7 @@ Returns nil if no heading found."
 
 ;; Provides better integration of Projectile and Counsel.
 (use-package counsel-projectile
+  :after (counsel projectile)
   :config
   (defun counsel-projectile-rg-region-or-symbol ()
     "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
