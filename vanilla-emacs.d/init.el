@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-19 21:47:24 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:22:38 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -377,7 +377,7 @@ USAGE:
 
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
-  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
+  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   :config
   ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
   ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
@@ -387,9 +387,9 @@ USAGE:
 
 ;; Nice themes by Prot.
 ;; `ef-dream' is nice, also `ef-night'.
-(use-package ef-themes
-  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
-)
+;;(use-package ef-themes
+;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+;;)
 
 (defun my/toggle-background-transparency ()
   (interactive)
@@ -2681,7 +2681,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
                       "," lsp-command-map
   )
   (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
-  )
+)
 
 (use-package lsp-ui
   :after (lsp-mode evil)
@@ -2752,6 +2752,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package treesit
   :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+  :defer t
   :preface
   (defun my/setup-install-grammars ()
     "Install Tree-sitter grammars if they are absent."
@@ -2859,6 +2860,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
 (use-package lsp-haskell
   :after lsp-mode
+  :defer t
   :custom
   ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
   (lsp-haskell-plugin-semantic-tokens-global-on t)

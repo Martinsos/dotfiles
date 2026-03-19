@@ -750,7 +750,7 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 
   ;; doom-themes have nice, high quality themes.
   (use-package doom-themes
-    :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
+    :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
     :config
     ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
     ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
@@ -760,9 +760,9 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 
   ;; Nice themes by Prot.
   ;; `ef-dream' is nice, also `ef-night'.
-  (use-package ef-themes
-    :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white scren.
-  )
+  ;;(use-package ef-themes
+  ;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+  ;;)
 
 #+end_src
 
@@ -3996,7 +3996,7 @@ Therefore, for optimal experience, we should customize the faces used for semant
                         "," lsp-command-map
     )
     (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
-    )
+  )
 
 #+end_src
 
@@ -4139,6 +4139,7 @@ For more details, this article is a great tutorial on treesitter support in Emac
 
   (use-package treesit
     :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+    :defer t
     :preface
     (defun my/setup-install-grammars ()
       "Install Tree-sitter grammars if they are absent."
@@ -4278,6 +4279,7 @@ Usual ways to specify the compile command:
   ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
   (use-package lsp-haskell
     :after lsp-mode
+    :defer t
     :custom
     ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
     (lsp-haskell-plugin-semantic-tokens-global-on t)
