@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:22:38 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:25:18 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2603,6 +2603,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
 ;; The rest of the information I show in other way (via flycheck, via minibuffer, popups, ...).
 ;; Note that flycheck again sends some of that information to sideline though.
 (use-package sideline-lsp
+  :after lsp-mode
+  :defer t
   :custom
   ;; By setting this to nil, lsp diagnostics (errors, warnings) get sent to flycheck, which we prefer since
   ;; it is a more standard / specific way to do it.

@@ -3863,6 +3863,8 @@ You can plug in multiple backends into it, and it will display the information u
   ;; The rest of the information I show in other way (via flycheck, via minibuffer, popups, ...).
   ;; Note that flycheck again sends some of that information to sideline though.
   (use-package sideline-lsp
+    :after lsp-mode
+    :defer t
     :custom
     ;; By setting this to nil, lsp diagnostics (errors, warnings) get sent to flycheck, which we prefer since
     ;; it is a more standard / specific way to do it.
