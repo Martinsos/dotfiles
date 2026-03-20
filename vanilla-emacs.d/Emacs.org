@@ -3994,7 +3994,6 @@ Therefore, for optimal experience, we should customize the faces used for semant
 
   (use-package lsp-mode
     :init
-    (setq lsp-keymap-prefix ",")
     (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
     :hook ((lsp-mode . lsp-enable-which-key-integration)
            ;;(lsp-mode . lsp-inlay-hints-mode) ; Skipped because I found them intrusive and not so helpful.

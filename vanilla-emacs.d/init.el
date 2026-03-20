@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-20 01:24:39 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-20 16:31:17 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2679,7 +2679,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package lsp-mode
   :init
-  (setq lsp-keymap-prefix ",")
   (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
   :hook ((lsp-mode . lsp-enable-which-key-integration)
          ;;(lsp-mode . lsp-inlay-hints-mode) ; Skipped because I found them intrusive and not so helpful.
