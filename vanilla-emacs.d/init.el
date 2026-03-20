@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-19 22:48:19 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-20 01:22:08 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2309,6 +2309,7 @@ Returns nil if no heading found."
   :ensure nil ; emacs built-in
   :defer t
   :custom
+  ;; NOTE: My metadata fontification regex relies on specific flags here, so update it if you change listing switches.
   (dired-listing-switches "-agho")
   (dired-dwim-target t)
   (dired-kill-when-opening-new-dired-buffer t)
@@ -2320,13 +2321,42 @@ Returns nil if no heading found."
     "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
     "d p" '("dired @ project" . project-dired)
   )
+  (defface my/dired-metadata-face
+    '((t :inherit shadow))
+    "Face used for Dired metadata."
+  )
   :config
   (require 'dired-x)
+
   (with-eval-after-load 'evil
     (evil-define-key 'normal dired-mode-map
       (kbd "TAB") 'dired-display-file
     )
   )
+
+  (defconst my/dired-metadata-regexp
+    (rx bol
+        "  "
+        (group
+         (+ (any "-drwxlsStT")) ; permissions/mode bits
+         (+ space)
+         (+ digit)              ; link count
+         (+ space)
+         (+ (any digit "." "KMGTPEZYkmgtpezyB")) ; human-readable size
+         (+ space)
+         (= 3 alpha) (+ space) (+ digit) (+ space) (+ (any digit ":")) ; Date and time, supports both Mar 17 11:45 and Mar 17 2024
+        )
+        " "
+    )
+    "Regexp matching Dired metadata before the filename for `-agho' listings."
+  )
+  (defvar my/dired-font-lock-keywords
+   `((,my/dired-metadata-regexp 1 'my/dired-metadata-face))
+  )
+  (defun my/dired-fontify-metadata ()
+   (font-lock-add-keywords nil my/dired-font-lock-keywords 'append)
+  )
+  (add-hook 'dired-mode-hook #'my/dired-fontify-metadata)
 )
 
 (use-package all-the-icons-dired
