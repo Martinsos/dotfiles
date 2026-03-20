@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-20 01:22:08 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-03-20 01:24:39 CET, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2310,7 +2310,7 @@ Returns nil if no heading found."
   :defer t
   :custom
   ;; NOTE: My metadata fontification regex relies on specific flags here, so update it if you change listing switches.
-  (dired-listing-switches "-agho")
+  (dired-listing-switches "-Agho")
   (dired-dwim-target t)
   (dired-kill-when-opening-new-dired-buffer t)
   :init

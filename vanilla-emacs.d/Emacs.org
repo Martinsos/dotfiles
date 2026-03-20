@@ -3299,7 +3299,7 @@ It adds indicator to the left margin/side of the window.
     :defer t
     :custom
     ;; NOTE: My metadata fontification regex relies on specific flags here, so update it if you change listing switches.
-    (dired-listing-switches "-agho")
+    (dired-listing-switches "-Agho")
     (dired-dwim-target t)
     (dired-kill-when-opening-new-dired-buffer t)
     :init
