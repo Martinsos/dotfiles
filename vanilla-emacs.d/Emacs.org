@@ -3186,22 +3186,6 @@ They can be used to store a point, text, a window or frame configuration, ... , 
   - https://github.com/alphapapa/unpackaged.el?tab=readme-ov-file#hydra
 - https://github.com/kaushalmodi/.emacs.d/blob/master/setup-files/setup-diff.el#L181
 
-** TODO Configure ediff to work nicer
-:PROPERTIES:
-:ID:       5cacc307-d56d-42da-88e2-a3b97afb4a78
-:END:
-- found this on reddit:
-  #+begin_src emacs-lisp
-    '(ediff-split-window-function (quote split-window-horizontally))
-    '(ediff-window-setup-function (quote ediff-setup-windows-plain))
-  #+end_src
-- search for more
-
-** TODO Consider setting up vdiff (as an alternative to ediff)
-- https://github.com/justbur/emacs-vdiff
-- Allegedly it makes more sense, you can more normally edit the buffers and DX is more intuitive.
-  If you also add a hydra, you get the best DX.
-
 ** gitstatus.el
 :PROPERTIES:
 :ID:       4851a5e8-ed04-4df5-8b0c-80958772ae8a
@@ -3971,6 +3955,53 @@ Imenu-list displays imenu in the sidebar with some nice features for easily mana
     )
   )
 #+end_src
+* Diffing
+** Ediff
+:PROPERTIES:
+:ID:       3116baba-2dd1-41d1-997b-6e2585f553e6
+:END:
+Ediff is the built-in emacs package for diffing files, old and powerful.
+It is a bit scary at the beginning, especially with its vanilla config, but once tweaked a bit, it is very nice.
+
+Main idea is that you use ~ediff-files~ command which opens any two files you select, A and B, and highlights the diffs in each buffer.
+It also opens additional, third buffer, called "ediff control panel", where you keep focus and use special keybindings to navigate and manipulate A and B buffers: you move from diff to diff, copy change from one buffer to another, ... , all while moving you at the same time through both files in sync and highlighting differences.
+When done, you exit ediff and save buffers as you want and that is it! Most often you will be editing only one buffer/file (e.g. A), but you can do what you want.
+You can also directly/manually edit the buffers A and B, but should then make sure to run ~! -update diff regions~ command in ediff control panel so it refreshes diffs.
+
+Tip: one or both of files need sudo access? Prefix with =/sudo::= when asked to pick a file, e.g. =/sudo::/etc/some-file=.
+Tip: If two files are marked in =dired=, then call to ~ediff-files~ will auto-select them.
+Note: there is no red/green coloring of changes, as ediff doesn't get into that, it doesn't have a base or try to figure out what was deleted or not.
+
+Diffing can also be done with ~ediff-merge-files~ which lets you build the final result in a new, third buffer =C=.
+So it is like ~ediff-files~ but gives you more control/precision, since you are not modifying existing files, but building a new one.
+
+There is also ~ediff3~ for merging two files that have a common ancestor (e.g. git merge conflict).
+
+And there is ~ediff-revision~ which compares a file to its (git) revision.
+
+#+begin_src emacs-lisp
+
+  (use-package ediff
+    :ensure nil ; emacs built-in
+    :custom
+    (ediff-keep-variants nil) ; Close variants (A, B buffers) upon quitting an ediff sessions.
+    (ediff-split-window-function #'split-window-horizontally) ; Show diffs side by side, not up and down.
+    (ediff-window-setup-function #'ediff-setup-windows-plain) ; Put control panel in the same frame.
+    :config
+    ;; Current diff was poorly highlihted, so I am making it more visible.
+    (dolist (face '(ediff-current-diff-A ediff-current-diff-B))
+      (set-face-attribute face nil :background "#4c638f"))
+    (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
+      (set-face-attribute face nil :background "#3b82f6"))
+  )
+
+#+end_src
+
+** TODO Consider setting up vdiff (as an alternative to ediff)
+- https://github.com/justbur/emacs-vdiff
+- Allegedly it makes more sense, you can more normally edit the buffers and DX is more intuitive.
+  If you also add a hydra, you get the best DX.
+
 * Development
 ** LSP
 :PROPERTIES:

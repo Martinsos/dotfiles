@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-08 12:05:41 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-08 23:58:21 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2262,9 +2262,6 @@ Returns nil if no heading found."
   "gC" '("resolve conflicts (advanced)" . smerge-ediff)
 )
 
-'(ediff-split-window-function (quote split-window-horizontally))
-'(ediff-window-setup-function (quote ediff-setup-windows-plain))
-
 (use-package gitstatus
   :custom
   (gitstatusd-exe "~/.local/bin/gitstatusd")
@@ -2680,6 +2677,20 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (my/leader-keys
     "a i" '("toggle imenu-list" . imenu-list-smart-toggle)
   )
+)
+
+(use-package ediff
+  :ensure nil ; emacs built-in
+  :custom
+  (ediff-keep-variants nil) ; Close variants (A, B buffers) upon quitting an ediff sessions.
+  (ediff-split-window-function #'split-window-horizontally) ; Show diffs side by side, not up and down.
+  (ediff-window-setup-function #'ediff-setup-windows-plain) ; Put control panel in the same frame.
+  :config
+  ;; Current diff was poorly highlihted, so I am making it more visible.
+  (dolist (face '(ediff-current-diff-A ediff-current-diff-B))
+    (set-face-attribute face nil :background "#4c638f"))
+  (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
+    (set-face-attribute face nil :background "#3b82f6"))
 )
 
 (use-package lsp-mode
