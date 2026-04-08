@@ -1,9 +1,9 @@
-window-decoration = none
+#window-decoration = none
 window-padding-x = 8
 window-padding-y = 8
 
 theme = TokyoNight Moon
-background-opacity = 0.8
+background-opacity = 0.9
 
 # `shell-integration-features = no-cursor` is needed for cursor styling options to be applied.
 shell-integration-features = no-cursor

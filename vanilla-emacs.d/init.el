@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-03-20 16:31:17 CET, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-08 12:05:41 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -280,6 +280,9 @@ USAGE:
   (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
+  (setq save-interprogram-paste-before-kill t) ; Avoids external copy/cut getting lost.
+  (setq kill-do-not-save-duplicates t)
+  (setq help-window-select t) ; Focus help window after opening it.
 
   (setq gc-cons-threshold 100000000) ; Default is low, so we set it to 100mb. Helps with e.g. lsp-mode.
   (setq read-process-output-max (* 1024 1024)) ;; Default is low, so we set it to 1mb. Helps with e.g. lsp-mode.
@@ -760,6 +763,8 @@ USAGE:
 
     (my/variable-pitch-mode-on)
   ))
+  :init
+  (setq org-export-backends '(ascii html icalendar latex odt md))
   :config
   (my/leader-keys
     "oa"  '("agenda" . org-agenda)
