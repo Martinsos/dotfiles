@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-09 18:20:47 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-09 23:34:54 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -179,6 +179,11 @@ USAGE:
   (nth (random (length xs)) xs)
 )
 
+(defun rotate-left (list num-steps)
+  (let ((n (mod num-steps (length list))))
+    (append (cl-subseq list n) (cl-subseq list 0 n)))
+)
+
 (defvar my/motivational-quotes
   '((:author "Marcus Aurelius"
      :quote "You have power over your mind – not outside events. Realize this, and you will find strength.")
@@ -243,6 +248,15 @@ USAGE:
          )
         )
     (set-face-attribute face nil :inherit new-inherit-value)
+  )
+)
+
+(defun my/string-truncate (str max-length &optional ellipsis)
+  "Truncate STR to MAX-LENGTH if longer, adding an ELLIPSIS if so (counts into length)."
+  (unless ellipsis (setq ellipsis "…"))
+  (if (> (length str) max-length)
+      (concat (substring str 0 (- max-length (length ellipsis))) ellipsis)
+    str
   )
 )
 
@@ -2464,6 +2478,24 @@ Returns nil if no heading found."
   (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
   (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
   (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
+
+  ;; Show list of other vterm buffers in the modeline.
+  (defconst my/vterm-toggle-modeline-segment
+    '(:eval (my/vterm-toggle-modeline-other-buffers-list)))
+  (defun my/vterm-toggle-list-other-buffers ()
+    "Return list of live vterm-toggle buffers, excluding and starting from the current buffer."
+    (let ((bs (seq-filter #'buffer-live-p vterm-toggle--buffer-list)))
+      (cdr (rotate-left bs (cl-position (current-buffer) bs)))))
+  (defun my/vterm-toggle-modeline-other-buffers-list ()
+    "Return mode-line text listing other vterm-toggle buffers."
+    (when-let* ((names (mapcar (lambda (b) (my/string-truncate (buffer-name b) 15))
+                               (my/vterm-toggle-list-other-buffers))))
+      (concat " " (string-join names " | ") " ")))
+  (defun my/vterm-toggle-setup-modeline ()
+    "Add vterm-toggle buffer list to `mode-line-misc-info' in current vterm buffer."
+    (setq-local mode-line-misc-info (append mode-line-misc-info
+                                            (list my/vterm-toggle-modeline-segment))))
+  (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
 )
 
 (with-eval-after-load 'vterm
