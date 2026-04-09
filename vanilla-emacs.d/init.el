@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-08 23:58:21 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-09 18:20:47 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -563,6 +563,7 @@ USAGE:
     "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
     "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
     "br"  '("reload buffer" . revert-buffer)
+    "bR"  '("rename buffer" . rename-buffer)
     "bv"  '("select whole buffer" . mark-whole-buffer)
 
     "e"   '("errors" . (keymap))
@@ -2427,6 +2428,11 @@ Returns nil if no heading found."
   (global-company-mode 1)
 )
 
+(defun my/vterm-new ()
+  (interactive)
+  (vterm t)
+)
+
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
 (use-package vterm
@@ -2437,10 +2443,6 @@ Returns nil if no heading found."
   :init
   (my/leader-keys
     "\"" '("new terminal" . my/vterm-new)
-  )
-  (defun my/vterm-new ()
-    (interactive)
-    (vterm t)
   )
   :config
   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
@@ -2459,6 +2461,9 @@ Returns nil if no heading found."
   ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
   ;; me to dir of previous buffer! Very useful.
   (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
+  (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
+  (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
+  (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
 )
 
 (with-eval-after-load 'vterm
