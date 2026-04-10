@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-09 23:34:54 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-10 11:45:21 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2490,7 +2490,7 @@ Returns nil if no heading found."
     "Return mode-line text listing other vterm-toggle buffers."
     (when-let* ((names (mapcar (lambda (b) (my/string-truncate (buffer-name b) 15))
                                (my/vterm-toggle-list-other-buffers))))
-      (concat " " (string-join names " | ") " ")))
+      (concat " Other: [ " (string-join names " | ") " ] ")))
   (defun my/vterm-toggle-setup-modeline ()
     "Add vterm-toggle buffer list to `mode-line-misc-info' in current vterm buffer."
     (setq-local mode-line-misc-info (append mode-line-misc-info

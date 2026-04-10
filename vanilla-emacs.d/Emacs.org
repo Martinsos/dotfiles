@@ -3505,7 +3505,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
       "Return mode-line text listing other vterm-toggle buffers."
       (when-let* ((names (mapcar (lambda (b) (my/string-truncate (buffer-name b) 15))
                                  (my/vterm-toggle-list-other-buffers))))
-        (concat " " (string-join names " | ") " ")))
+        (concat " Other: [ " (string-join names " | ") " ] ")))
     (defun my/vterm-toggle-setup-modeline ()
       "Add vterm-toggle buffer list to `mode-line-misc-info' in current vterm buffer."
       (setq-local mode-line-misc-info (append mode-line-misc-info
