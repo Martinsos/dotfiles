@@ -389,12 +389,12 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+begin_src emacs-lisp
 
-  (defun random-atom (xs)
+  (defun my/random-atom (xs)
     "Returns a random atom from the given list."
     (nth (random (length xs)) xs)
   )
 
-  (defun rotate-left (list num-steps)
+  (defun my/rotate-left (list num-steps)
     (let ((n (mod num-steps (length list))))
       (append (cl-subseq list n) (cl-subseq list 0 n)))
   )
@@ -540,7 +540,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
     (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
     (global-hl-line-mode 1) ; Highlights the line in which cursor is.
     (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
-    (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
     (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
     (delete-selection-mode t) ; Delete the selection with a keypress.
     (setq save-interprogram-paste-before-kill t) ; Avoids external copy/cut getting lost.
@@ -552,7 +551,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
     (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
     (setq initial-scratch-message
-          (let ((q (random-atom my/motivational-quotes)))
+          (let ((q (my/random-atom my/motivational-quotes)))
             (format "\n# \"%s\" - %s\n\n" (plist-get q :quote) (plist-get q :author))
           )
     )
@@ -629,7 +628,8 @@ Some emacs packages use it.
 
 #+begin_src emacs-lisp :tangle ./early-init.el
 
-  ;; I had emacs window appearing at the very start, for a short time (~0.5-1s), as a small window with white background,
+  ;; When running emacs in non-daemon mode, I had emacs window appearing at the very start,
+  ;; for a short time (~0.5-1s), as a small window with white background,
   ;; before the config from init.el (or even early-init.el) is applied.
   ;; Usual advice of setting the `(background . "black")` in early-init.el didn't help, that would happen after it.
   ;; From what I got, the problem is that window is white because Emacs doesn't have control yet, GTK does, and
@@ -640,13 +640,29 @@ Some emacs packages use it.
   ;; but there is no flashing and sudden changes.
   (setq initial-frame-alist '(
     (visibility . nil)
-    (undecorated . t)
-    (menu-bar-lines . 0)
-    (tool-bar-lines . 0)
-    (fullscreen . maximized)
   ))
   (add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
 
+  (setq default-frame-alist '(
+    (menu-bar-lines . 0)
+    (tool-bar-lines . 0)
+  ))
+
+  ;; If first visible frame, make it full screen.
+  ;; I don't just use 'initial-frame-alist' because I also want it to work
+  ;; when using emacs daemon (which uses initial frame for its internal frame).
+  ;; By doing it this way, it works in all cases.
+  (add-hook
+   'after-make-frame-functions
+   (lambda (frame)
+     ;; I check for 'display' in order to eliminate emacs daemon's internal initial frame,
+     ;; which claims it is visible even though it is not, but it does have 'display' set to nil.
+     (when (= 1 (length (filtered-frame-list (lambda (f) (frame-parameter f 'display)))))
+       (toggle-frame-maximized frame)
+       (toggle-frame-fullscreen frame)
+     )
+   )
+  )
 #+end_src
 
 ** Measuring startup time
@@ -770,10 +786,21 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
   (use-package doom-themes
     :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
     :config
-    ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
-    ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
-    ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-    (load-theme 'doom-moonlight t)
+    (defun my/load-default-theme (&optional frame)
+      (with-selected-frame (or frame (selected-frame))
+        ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
+        ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
+        ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
+        (load-theme 'doom-moonlight t)
+      )
+    )
+    (add-hook 'window-setup-hook #'my/load-default-theme)
+    ;; I added this one because addittional frames (or emacsclient frames) had some weird
+    ;; appearance issues like grey code in org file blocks or wrong font.
+    ;; This fixes it, although it does in theory load theme unneccessarily often, on each new frame,
+    ;; but haven't I found that problematic in practice. If I figure out the real cause
+    ;; of the issue, I might be able to remove this.
+    (add-hook 'after-make-frame-functions #'my/load-default-theme)
   )
 
   ;; Nice themes by Prot.
@@ -3508,7 +3535,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     (defun my/vterm-toggle-list-other-buffers ()
       "Return list of live vterm-toggle buffers, excluding and starting from the current buffer."
       (let ((bs (seq-filter #'buffer-live-p vterm-toggle--buffer-list)))
-        (cdr (rotate-left bs (cl-position (current-buffer) bs)))))
+        (cdr (my/rotate-left bs (cl-position (current-buffer) bs)))))
   )
 
 #+end_src

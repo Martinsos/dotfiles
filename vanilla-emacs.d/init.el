@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-10 12:22:05 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-12 01:54:07 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -174,12 +174,12 @@ USAGE:
   )
 )
 
-(defun random-atom (xs)
+(defun my/random-atom (xs)
   "Returns a random atom from the given list."
   (nth (random (length xs)) xs)
 )
 
-(defun rotate-left (list num-steps)
+(defun my/rotate-left (list num-steps)
   (let ((n (mod num-steps (length list))))
     (append (cl-subseq list n) (cl-subseq list 0 n)))
 )
@@ -291,7 +291,6 @@ USAGE:
   (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
   (global-hl-line-mode 1) ; Highlights the line in which cursor is.
   (global-auto-revert-mode t) ; Automatically reload files if they change on disk (will ask if conflict).
-  (add-hook 'window-setup-hook 'toggle-frame-fullscreen t) ; Start in fullscreen.
   (setq-default indent-tabs-mode nil) ; Don't use tabs when indenting.
   (delete-selection-mode t) ; Delete the selection with a keypress.
   (setq save-interprogram-paste-before-kill t) ; Avoids external copy/cut getting lost.
@@ -303,7 +302,7 @@ USAGE:
 
   (setq initial-major-mode 'org-mode) ; Start Scratch buffer with Org mode.
   (setq initial-scratch-message
-        (let ((q (random-atom my/motivational-quotes)))
+        (let ((q (my/random-atom my/motivational-quotes)))
           (format "\n# \"%s\" - %s\n\n" (plist-get q :quote) (plist-get q :author))
         )
   )
@@ -396,10 +395,21 @@ USAGE:
 (use-package doom-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   :config
-  ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
-  ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
-  ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-  (load-theme 'doom-moonlight t)
+  (defun my/load-default-theme (&optional frame)
+    (with-selected-frame (or frame (selected-frame))
+      ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
+      ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
+      ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
+      (load-theme 'doom-moonlight t)
+    )
+  )
+  (add-hook 'window-setup-hook #'my/load-default-theme)
+  ;; I added this one because addittional frames (or emacsclient frames) had some weird
+  ;; appearance issues like grey code in org file blocks or wrong font.
+  ;; This fixes it, although it does in theory load theme unneccessarily often, on each new frame,
+  ;; but haven't I found that problematic in practice. If I figure out the real cause
+  ;; of the issue, I might be able to remove this.
+  (add-hook 'after-make-frame-functions #'my/load-default-theme)
 )
 
 ;; Nice themes by Prot.
@@ -2493,7 +2503,7 @@ Returns nil if no heading found."
   (defun my/vterm-toggle-list-other-buffers ()
     "Return list of live vterm-toggle buffers, excluding and starting from the current buffer."
     (let ((bs (seq-filter #'buffer-live-p vterm-toggle--buffer-list)))
-      (cdr (rotate-left bs (cl-position (current-buffer) bs)))))
+      (cdr (my/rotate-left bs (cl-position (current-buffer) bs)))))
 )
 
 (with-eval-after-load 'vterm
