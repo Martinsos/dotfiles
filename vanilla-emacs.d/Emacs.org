@@ -786,21 +786,10 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
   (use-package doom-themes
     :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
     :config
-    (defun my/load-default-theme (&optional frame)
-      (with-selected-frame (or frame (selected-frame))
-        ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
-        ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
-        ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-        (load-theme 'doom-moonlight t)
-      )
-    )
-    (add-hook 'window-setup-hook #'my/load-default-theme)
-    ;; I added this one because addittional frames (or emacsclient frames) had some weird
-    ;; appearance issues like grey code in org file blocks or wrong font.
-    ;; This fixes it, although it does in theory load theme unneccessarily often, on each new frame,
-    ;; but haven't I found that problematic in practice. If I figure out the real cause
-    ;; of the issue, I might be able to remove this.
-    (add-hook 'after-make-frame-functions #'my/load-default-theme)
+    ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
+    ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
+    ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
+    (load-theme 'doom-moonlight t)
   )
 
   ;; Nice themes by Prot.
