@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-12 22:27:47 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-13 23:10:26 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -240,10 +240,13 @@ USAGE:
   (let* ((old-inherit-value (face-attribute face :inherit))
          (new-inherit-value (if (and old-inherit-value (not (eq old-inherit-value 'unspecified)))
                                 (if (listp old-inherit-value)
-                                    (cons face-to-inherit old-inherit-value)
+                                    (cons face-to-inherit (remq face-to-inherit old-inherit-value))
+                                  (if (eq face-to-inherit old-inherit-value)
+                                      face-to-inherit
                                     `(,face-to-inherit ,old-inherit-value)
+                                  )
                                 )
-                                face-to-inherit
+                              face-to-inherit
                             )
          )
         )
@@ -366,29 +369,12 @@ USAGE:
  )
 )
 
-(use-package emacs
-  :ensure nil
-  :config
-  ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
-  (defvar my/main-fixed-pitch-font "Iosevka Extended") ; fixed pitch == monospace
-  (defvar my/main-variable-pitch-font "Iosevka Aile") ; variable pitch == proportional
-  (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
-  (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
-  (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
-)
-
-(defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
-  "Remaps the fixed-pitch face's (for the buffer) with adjusted height so it is relative to variable-pitch face."
-  (let* ((fixp-h (face-attribute 'fixed-pitch :height))
-         (varp-h (face-attribute 'variable-pitch :height))
-         (new-fixp-h (/ fixp-h varp-h)))
-    (face-remap-add-relative 'fixed-pitch `(:height ,new-fixp-h))
-  )
-)
-
-(defun my/variable-pitch-mode-on ()
-  (variable-pitch-mode 1)
-  (my/remap-fixed-pitch-height-relative-to-variable-pitch)
+(defmacro my/after-theme (&rest body)
+  "Execute BODY now if there is any enabled theme, and on every future theme enable."
+  `(progn
+     (when custom-enabled-themes ,@body)
+     (add-hook 'enable-theme-functions (lambda (_theme) ,@body))
+   )
 )
 
 ;; doom-themes have nice, high quality themes.
@@ -406,6 +392,33 @@ USAGE:
 ;;(use-package ef-themes
 ;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
 ;;)
+
+(use-package emacs
+  :ensure nil
+  :config
+  ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
+  (defvar my/main-fixed-pitch-font "Iosevka Extended") ; fixed pitch == monospace
+  (defvar my/main-variable-pitch-font "Iosevka Aile") ; variable pitch == proportional
+  (my/after-theme
+    (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
+    (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
+    (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
+  )
+)
+
+(defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
+  "Remaps the fixed-pitch face's (for the buffer) with adjusted height so it is relative to variable-pitch face."
+  (let* ((fixp-h (face-attribute 'fixed-pitch :height))
+         (varp-h (face-attribute 'variable-pitch :height))
+         (new-fixp-h (/ fixp-h varp-h)))
+    (face-remap-add-relative 'fixed-pitch `(:height ,new-fixp-h))
+  )
+)
+
+(defun my/variable-pitch-mode-on ()
+  (variable-pitch-mode 1)
+  (my/remap-fixed-pitch-height-relative-to-variable-pitch)
+)
 
 (defun my/toggle-background-transparency ()
   (interactive)
@@ -843,76 +856,84 @@ USAGE:
                 )
   )
 
-  ;;; Styling (faces) customization. ;;;
-  ;; Set headers to have different sizes.
-  (dolist (face '((org-level-1 . 1.6)
-                  (org-level-2 . 1.3)
-                  (org-level-3 . 1.2)
-                  (org-level-4 . 1.1)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :height (cdr face))
-  )
-  (set-face-attribute 'org-document-info-keyword nil)
-  (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
-  (set-face-attribute 'org-document-info nil :height 1.2)
-  (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
-  (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
-  (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
-  (set-face-attribute 'org-verse nil :foreground "#d4c49c")
-  (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
-  (set-face-attribute 'org-mode-line-clock nil :inherit 'highlight :weight 'bold)
-  (set-face-attribute 'org-mode-line-clock-overrun nil
-                      :inherit 'org-mode-line-clock
-                      :background (face-attribute 'error :foreground))
-  (with-eval-after-load 'org-inlinetask
-    (set-face-attribute 'org-inlinetask nil :inherit 'unspecified :slant 'italic :weight 'ultralight :height 0.9)
-  )
-  (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
-                             (?B . (:foreground "orange" :weight light))
-                             (?C . (:foreground "yellow" :weight light))))
-  (setq org-todo-keyword-faces
-        '(("INBOX" . (:foreground "yellow" :weight bold))
-          ("INPR" . (:foreground "dark orange" :weight bold))
-          ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
-          ("DONE" . (:foreground "#446a73" :weight bold))
-          ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
-          ("WAIT" . (:foreground "#bf6900" :weight bold :strike-through t))
-          ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
-          ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
-          ("PROJECT" . (:foreground "orchid" :weight bold))
-          ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
-          ("CHKL" . (:foreground "grey" :weight bold))
-          ("NOTE" . (:foreground "white" :weight bold))
-         )
+  (my/after-theme
+    ;;; Styling (faces) customization. ;;;
+    ;; Set headers to have different sizes.
+    (dolist (face '((org-level-1 . 1.6)
+                    (org-level-2 . 1.3)
+                    (org-level-3 . 1.2)
+                    (org-level-4 . 1.1)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :height (cdr face))
+    )
+    (set-face-attribute 'org-document-info-keyword nil)
+    (set-face-attribute 'org-document-title nil :height 2.0 :weight 'normal)
+    (set-face-attribute 'org-document-info nil :height 1.2)
+    (set-face-attribute 'org-meta-line nil :height 0.8 :slant 'italic :weight 'ultra-light)
+    (set-face-attribute 'org-drawer nil :height 0.8 :slant 'italic :weight 'extra-light)
+    (my/face-add-to-inherit 'org-quote 'font-lock-comment-face)
+    (set-face-attribute 'org-verse nil :foreground "#d4c49c")
+    (set-face-attribute 'org-ellipsis nil :foreground (face-attribute 'shadow :foreground))
+    (set-face-attribute 'org-mode-line-clock nil :inherit 'highlight :weight 'bold)
+    (set-face-attribute 'org-mode-line-clock-overrun nil
+                        :inherit 'org-mode-line-clock
+                        :background (face-attribute 'error :foreground))
+    (with-eval-after-load 'org-inlinetask
+      (set-face-attribute 'org-inlinetask nil :inherit 'unspecified :slant 'italic :weight 'ultralight :height 0.9)
+    )
+    (setq org-priority-faces '((?A . (:foreground "#ff757f" :weight normal))
+                              (?B . (:foreground "orange" :weight light))
+                              (?C . (:foreground "yellow" :weight light))))
+    (setq org-todo-keyword-faces
+          '(("INBOX" . (:foreground "yellow" :weight bold))
+            ("INPR" . (:foreground "dark orange" :weight bold))
+            ;; I obtained #446a73 by adding a bit of green to the color of org-agenda-done face.
+            ("DONE" . (:foreground "#446a73" :weight bold))
+            ;; I got #bf6900 by darkening the "dark orange" which allegedly is #ff8c00.
+            ("WAIT" . (:foreground "#bf6900" :weight bold :strike-through t))
+            ("CANCELED" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("NOGO" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("PROJECT" . (:foreground "orchid" :weight bold))
+            ("CANCELED[PROJECT]" . (:foreground "dim gray" :weight bold :strike-through t))
+            ("CHKL" . (:foreground "grey" :weight bold))
+            ("NOTE" . (:foreground "white" :weight bold))
+          )
+    )
   )
 
   ;;; Fine tuning of fixed and variable pitch ;;;
-  (dolist (face '(org-table
-                  org-block
-                  org-meta-line
-                  org-checkbox
-                  org-verbatim
-                  org-tag))
-    (my/face-add-to-inherit face 'fixed-pitch)
+  (my/after-theme
+    (dolist (face '(org-table
+                    org-block
+                    org-meta-line
+                    org-checkbox
+                    org-verbatim
+                    org-tag))
+      (my/face-add-to-inherit face 'fixed-pitch)
+    )
+
+    ;; These blocks inherit from 'org-block' which is fixed-pitch, but we want them to be
+    ;; variable pitch, so we add variable-pitch again to :inherit chain.
+    (dolist (face '(org-quote
+                    org-verse))
+      (my/face-add-to-inherit face 'variable-pitch)
+    )
+
+    ;; These inherit height from code-block, which is fixed-height, but they are inline with
+    ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
+    ;; (since code-block is fixed pitch).
+    (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
+    (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
   )
   (with-eval-after-load 'org-indent
     ;; Otherwise, in variable-pitch-mode, org-indent indentation goes out of whack.
-    (my/face-add-to-inherit 'org-indent 'fixed-pitch)
+    (my/after-theme
+      (my/face-add-to-inherit 'org-indent 'fixed-pitch)
+    )
   )
-  ;; These blocks inherit from 'org-block' which is fixed-pitch, but we want them to be
-  ;; variable pitch, so we add variable-pitch again to :inherit chain.
-  (dolist (face '(org-quote
-                  org-verse))
-    (my/face-add-to-inherit face 'variable-pitch)
-  )
-  ;; These inherit height from code-block, which is fixed-height, but they are inline with
-  ;; variable pitch text, so we want to make sure they have the same height as variable pitch text
-  ;; (since code-block is fixed pitch).
-  (set-face-attribute 'org-code nil :height (face-attribute 'variable-pitch :height))
-  (set-face-attribute 'org-verbatim nil :height (face-attribute 'variable-pitch :height))
 
   (defun my/dynamically-configure-org-column-faces (&rest args)
     "Configures org-column faces with regard to current state of the system (i.e. default face).
@@ -964,8 +985,10 @@ USAGE:
   :config
   (setq org-hide-leading-stars nil) ; Needed for org-superstar-leading-bullet to work.
   (setq org-indent-mode-turns-on-hiding-stars nil) ; Needed for org-superstar-leading-bullet to work.
-  (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
-  (set-face-attribute 'org-superstar-leading nil :inherit '(fixed-pitch default))
+  (my/after-theme
+    (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
+    (set-face-attribute 'org-superstar-leading nil :inherit '(fixed-pitch default))
+  )
 )
 
 (use-package org-modern
@@ -1233,13 +1256,15 @@ USAGE:
 (with-eval-after-load 'org
   (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
   (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
-  ;; Make the current time in the time-grid (<- now --------) stand out.
-  (set-face-attribute 'org-agenda-current-time nil
-                      :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
-                      :weight 'bold)
-  ;; Make events in the time grid that are not tasks not stand out.
-  (set-face-attribute 'org-agenda-calendar-event nil
-                      :foreground (face-attribute 'org-time-grid :foreground))
+  (my/after-theme
+    ;; Make the current time in the time-grid (<- now --------) stand out.
+    (set-face-attribute 'org-agenda-current-time nil
+                        :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
+                        :weight 'bold)
+    ;; Make events in the time grid that are not tasks not stand out.
+    (set-face-attribute 'org-agenda-calendar-event nil
+                        :foreground (face-attribute 'org-time-grid :foreground))
+  )
   (setq org-agenda-block-separator nil)
 )
 
@@ -2437,7 +2462,9 @@ Returns nil if no heading found."
     (t              "    ." shadow))
   )
   :config
-  (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
+  (my/after-theme
+    (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
+  )
   (global-company-mode 1)
 )
 
@@ -2592,8 +2619,10 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; instead I will rather invoke it manually when I want to see the whole of it.
   (flycheck-display-errors-function nil)
   :config
-  (set-face-attribute 'flycheck-posframe-warning-face nil :inherit 'warning)
-  (set-face-attribute 'flycheck-posframe-error-face nil :inherit 'error)
+  (my/after-theme
+    (set-face-attribute 'flycheck-posframe-warning-face nil :inherit 'warning)
+    (set-face-attribute 'flycheck-posframe-error-face nil :inherit 'error)
+  )
   ;; TODO: Make the posframe(popup) visually nicer.
 
   (defun my/show-flycheck-errors-posframe-at-point ()
@@ -2653,17 +2682,19 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; If I need to see the full error, I have other methods to do that (e.g. flycheck-posframe).
   (sideline-flycheck-max-lines 1)
   :config
-  (set-face-attribute 'sideline-flycheck-error nil
-		      :slant 'italic
-		      :background "black")
-  (set-face-attribute 'sideline-flycheck-warning nil
-		      :weight 'light
-		      :slant 'italic
-		      :background "black")
-  (set-face-attribute 'sideline-flycheck-success nil
-		      :weight 'light
-		      :slant 'italic
-		      :background "black")
+  (my/after-theme
+    (set-face-attribute 'sideline-flycheck-error nil
+                        :slant 'italic
+                        :background "black")
+    (set-face-attribute 'sideline-flycheck-warning nil
+                        :weight 'light
+                        :slant 'italic
+                        :background "black")
+    (set-face-attribute 'sideline-flycheck-success nil
+                        :weight 'light
+                        :slant 'italic
+                        :background "black")
+  )
   ;; TODO: Somehow define following prefixes ✖ ⓘ ⚠ for errors / warning / success?
 )
 
@@ -2683,11 +2714,13 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (sideline-lsp-code-actions-prefix "> ")
   (sideline-lsp-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
   :config
-  (set-face-attribute 'sideline-lsp-code-action nil
-                      :inherit 'shadow
-                      :weight 'light
-		      :slant 'italic
-		      :background "black")
+  (my/after-theme
+    (set-face-attribute 'sideline-lsp-code-action nil
+                        :inherit 'shadow
+                        :weight 'light
+                        :slant 'italic
+                        :background "black")
+  )
 )
 
 (use-package hideshow
@@ -2720,11 +2753,13 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (ediff-split-window-function #'split-window-horizontally) ; Show diffs side by side, not up and down.
   (ediff-window-setup-function #'ediff-setup-windows-plain) ; Put control panel in the same frame.
   :config
-  ;; Current diff was poorly highlihted, so I am making it more visible.
-  (dolist (face '(ediff-current-diff-A ediff-current-diff-B))
-    (set-face-attribute face nil :background "#4c638f"))
-  (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
-    (set-face-attribute face nil :background "#3b82f6"))
+  (my/after-theme
+    ;; Current diff was poorly highlihted, so I am making it more visible.
+    (dolist (face '(ediff-current-diff-A ediff-current-diff-B))
+      (set-face-attribute face nil :background "#4c638f"))
+    (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
+      (set-face-attribute face nil :background "#3b82f6"))
+  )
 )
 
 (use-package lsp-mode
@@ -2763,7 +2798,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
                       :keymaps 'lsp-mode-map
                       "," lsp-command-map
   )
-  (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
+  (my/after-theme
+    (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
+  )
 )
 
 (use-package lsp-ui
@@ -3028,14 +3065,16 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package markdown-mode
   :config
-  ;; Set headers to have different sizes.
-  (dolist (face '((markdown-header-face-1 . 1.5)
-                  (markdown-header-face-2 . 1.3)
-                  (markdown-header-face-3 . 1.2)
-                  (markdown-header-face-4 . 1.1)
-                  (markdown-header-face-5 . 1.1)
-                  (markdown-header-face-6 . 1.1)))
-    (set-face-attribute (car face) nil :height (cdr face))
+  (my/after-theme
+    ;; Set headers to have different sizes.
+    (dolist (face '((markdown-header-face-1 . 1.5)
+                    (markdown-header-face-2 . 1.3)
+                    (markdown-header-face-3 . 1.2)
+                    (markdown-header-face-4 . 1.1)
+                    (markdown-header-face-5 . 1.1)
+                    (markdown-header-face-6 . 1.1)))
+      (set-face-attribute (car face) nil :height (cdr face))
+    )
   )
 )
 
@@ -3518,25 +3557,27 @@ Returns a structured list of information that can be sent to an LLM."
   ; Don't highlight too-long lines, because it is too noisy and we use another package for that anyway.
   (setq whitespace-style (delq 'lines whitespace-style))
 
-  ; Default faces are not visible enough (grey), so I set all the faces to something more visible.
-  (dolist (face '(whitespace-big-indent
-                  whitespace-empty
-                  whitespace-hspace
-                  whitespace-indentation
-                  whitespace-line
-                  whitespace-missing-newline-at-eof
-                  whitespace-newline
-                  whitespace-space
-                  whitespace-space-after-tab
-                  whitespace-space-before-tab
-                  whitespace-tab
-                  whitespace-trailing))
-    (set-face-attribute face nil :foreground "dark red")
-  )
-  ;; Make tabs extra emphasized.
-  (dolist (face '(whitespace-indentation
-                  whitespace-tab))
-    (set-face-attribute face nil :inverse-video t)
+  (my/after-theme
+    ; Default faces are not visible enough (grey), so I set all the faces to something more visible.
+    (dolist (face '(whitespace-big-indent
+                    whitespace-empty
+                    whitespace-hspace
+                    whitespace-indentation
+                    whitespace-line
+                    whitespace-missing-newline-at-eof
+                    whitespace-newline
+                    whitespace-space
+                    whitespace-space-after-tab
+                    whitespace-space-before-tab
+                    whitespace-tab
+                    whitespace-trailing))
+      (set-face-attribute face nil :foreground "dark red")
+    )
+    ;; Make tabs extra emphasized.
+    (dolist (face '(whitespace-indentation
+                    whitespace-tab))
+      (set-face-attribute face nil :inverse-video t)
+    )
   )
 
   (my/leader-keys
@@ -3556,10 +3597,12 @@ Returns a structured list of information that can be sent to an LLM."
   :hook (prog-mode . column-enforce-mode)
   :config
   (setq column-enforce-column fill-column)
-  (set-face-attribute 'column-enforce-face nil
-                      :inherit nil
-                      :background "black"
-                      :underline '(:style wave :color "purple")
+  (my/after-theme
+    (set-face-attribute 'column-enforce-face nil
+                        :inherit nil
+                        :background "black"
+                        :underline '(:style wave :color "purple")
+    )
   )
 )
 
