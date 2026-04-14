@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-14 10:48:14 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-14 10:50:12 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -392,7 +392,7 @@ USAGE:
   ;; will later not work for daemon. Forces me to write my config right, since in both cases theme
   ;; comes after init, so I can't so easily accidentally make it work for normal mode but not for
   ;; daemon mode.
-  (let ((hook (if (daemonp) 'after-make-frame-functions 'window-setup-hook))
+  (let ((hook (if (daemonp) 'server-after-make-frame-hook 'window-setup-hook))
         hook-fn)
     (setq hook-fn
           (lambda (&optional _frame)

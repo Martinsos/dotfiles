@@ -730,7 +730,7 @@ This measures how long each package took. Run ~use-package-report~ to see the re
     ;; will later not work for daemon. Forces me to write my config right, since in both cases theme
     ;; comes after init, so I can't so easily accidentally make it work for normal mode but not for
     ;; daemon mode.
-    (let ((hook (if (daemonp) 'after-make-frame-functions 'window-setup-hook))
+    (let ((hook (if (daemonp) 'server-after-make-frame-hook 'window-setup-hook))
           hook-fn)
       (setq hook-fn
             (lambda (&optional _frame)
