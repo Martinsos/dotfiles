@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-14 10:50:12 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-14 15:23:25 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -368,6 +368,13 @@ USAGE:
    )
  )
 )
+
+(add-hook 'after-init-hook
+          (lambda ()
+            (unless (daemonp)
+              (progn
+                (server-start)
+                (message "Started emacs server.")))))
 
 (defmacro my/on-theme-enabled (&rest body)
   "Execute BODY now if there is any enabled theme, and on every future theme enable."
@@ -1389,7 +1396,7 @@ USAGE:
 )
 
 (use-package org-super-agenda
-  :after org
+  :after org-agenda
   :init
   ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
   ;; from org-agenda-mode-map, but since I modify those later with evil-org, then I don't want
