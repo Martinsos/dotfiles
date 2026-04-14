@@ -1,4 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2026-04-14 15:23:25 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-14 21:44:07 CEST, don't edit it manually.
 
 (setq package-enable-at-startup nil) ; Elpaca requires this.
 
@@ -8,14 +8,12 @@
 ;; Usual advice of setting the `(background . "black")` in early-init.el didn't help, that would happen after it.
 ;; From what I got, the problem is that window is white because Emacs doesn't have control yet, GTK does, and
 ;; by default it shows white window.
-;; I solved that at the end by setting `(visibility . nil)`, and then when emacs progresses enough, by explicitly
-;; calling `make-frame-visible` (otherwise it would remain invisible forever).
-;; This hides the window until init.el is loaded, which means now wait time is longer before first render, ~2s,
-;; but there is no flashing and sudden changes.
-(setq initial-frame-alist '(
-  (visibility . nil)
-))
-(add-hook 'emacs-startup-hook (lambda () (make-frame-visible (selected-frame))))
+;; The best solution I found was setting `(visibility . nil)` in initial-frame-alist, and then
+;; calling `make-frame-visible` on selected frame from `emacs-startup-hook` (otherwise it would remain invisible forever).
+;; This hides the window until init.el is loaded, so there is no flashing and sudden changes, but it also means there is no
+;; screen till init finishes, which can be long if packages are being installed, or never if something goes wrong too early,
+;; so I gave up on that approach also at the end.
+;; Now I just accept there will be some white screen and that is it.
 
 (setq default-frame-alist '(
   (menu-bar-lines . 0)
