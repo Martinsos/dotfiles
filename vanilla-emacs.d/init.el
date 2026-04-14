@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-13 23:10:26 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-14 10:48:14 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -369,11 +369,12 @@ USAGE:
  )
 )
 
-(defmacro my/after-theme (&rest body)
+(defmacro my/on-theme-enabled (&rest body)
   "Execute BODY now if there is any enabled theme, and on every future theme enable."
   `(progn
      (when custom-enabled-themes ,@body)
-     (add-hook 'enable-theme-functions (lambda (_theme) ,@body))
+     ;; Positive depth (90 is "standard") ensures new hook fns are added after old ones.
+     (add-hook 'enable-theme-functions (lambda (_theme) ,@body) 90)
    )
 )
 
@@ -381,10 +382,26 @@ USAGE:
 (use-package doom-themes
   :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   :config
-  ;; I went with moonlight for now. palenight is also nice. city-lights is also not bad. Also tomorrow-night.
-  ;; TODO: Figure out where and how is the best way to do theme customization. I am guessing it shoudl be happening in a central place,
-  ;;   even if it is about other packages faces, and that it should happen next to loading of the theme?
-  (load-theme 'doom-moonlight t)
+  ;; If running in daemon mode, I want to load the theme only once real frame is available (daemon
+  ;; starts with fake frame), otherwise theme can wrongly set itself up (because it thinks there is
+  ;; no GUI so some of its face specs and similar won't trigger). That is why I make it run only
+  ;; after real frame has been made.
+  ;; As for non-daemon/normal mode, I could have just loaded theme immediatelly, but I decided to
+  ;; put it 'window-setup-hook' because it is semantically right (after window is ready) and also it
+  ;; weeds out early if some of my config (e.g. some 'set-face-attribute') is called too early and
+  ;; will later not work for daemon. Forces me to write my config right, since in both cases theme
+  ;; comes after init, so I can't so easily accidentally make it work for normal mode but not for
+  ;; daemon mode.
+  (let ((hook (if (daemonp) 'after-make-frame-functions 'window-setup-hook))
+        hook-fn)
+    (setq hook-fn
+          (lambda (&optional _frame)
+            ;; I went with moonlight for now. palenight is also nice. city-lights is also not
+            ;; bad. Also tomorrow-night. doom-one is also good.
+            (load-theme 'doom-moonlight t)
+            (remove-hook hook hook-fn)))
+    (add-hook hook hook-fn)
+  )
 )
 
 ;; Nice themes by Prot.
@@ -399,11 +416,12 @@ USAGE:
   ;; Some other nice monospace fonts: "Monaspace Neon", "RobotoMono Nerd Font", "Source Code Pro", "Noto Sans Mono".
   (defvar my/main-fixed-pitch-font "Iosevka Extended") ; fixed pitch == monospace
   (defvar my/main-variable-pitch-font "Iosevka Aile") ; variable pitch == proportional
-  (my/after-theme
-    (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
-    (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
-    (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
-  )
+  ;; I don't use my/on-theme-enabled here because themes shouldn't touch fonts so no worry of being
+  ;; overwritten by theme, and I do want correct font settings available early so the rest of the
+  ;; code can use it immediately if needed (e.g. setting relative variable pitch below).
+  (set-face-attribute 'default nil :family my/main-fixed-pitch-font :height 120)
+  (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
+  (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
 )
 
 (defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
@@ -856,7 +874,7 @@ USAGE:
                 )
   )
 
-  (my/after-theme
+  (my/on-theme-enabled
     ;;; Styling (faces) customization. ;;;
     ;; Set headers to have different sizes.
     (dolist (face '((org-level-1 . 1.6)
@@ -905,7 +923,7 @@ USAGE:
   )
 
   ;;; Fine tuning of fixed and variable pitch ;;;
-  (my/after-theme
+  (my/on-theme-enabled
     (dolist (face '(org-table
                     org-block
                     org-meta-line
@@ -930,7 +948,7 @@ USAGE:
   )
   (with-eval-after-load 'org-indent
     ;; Otherwise, in variable-pitch-mode, org-indent indentation goes out of whack.
-    (my/after-theme
+    (my/on-theme-enabled
       (my/face-add-to-inherit 'org-indent 'fixed-pitch)
     )
   )
@@ -985,7 +1003,7 @@ USAGE:
   :config
   (setq org-hide-leading-stars nil) ; Needed for org-superstar-leading-bullet to work.
   (setq org-indent-mode-turns-on-hiding-stars nil) ; Needed for org-superstar-leading-bullet to work.
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
     (set-face-attribute 'org-superstar-leading nil :inherit '(fixed-pitch default))
   )
@@ -1256,7 +1274,7 @@ USAGE:
 (with-eval-after-load 'org
   (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
   (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
-  (my/after-theme
+  (my/on-theme-enabled
     ;; Make the current time in the time-grid (<- now --------) stand out.
     (set-face-attribute 'org-agenda-current-time nil
                         :foreground "#9a93cf" ;; Obtained by making org-time-grid face a bit purple.
@@ -2462,7 +2480,7 @@ Returns nil if no heading found."
     (t              "    ." shadow))
   )
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
   )
   (global-company-mode 1)
@@ -2619,7 +2637,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; instead I will rather invoke it manually when I want to see the whole of it.
   (flycheck-display-errors-function nil)
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'flycheck-posframe-warning-face nil :inherit 'warning)
     (set-face-attribute 'flycheck-posframe-error-face nil :inherit 'error)
   )
@@ -2682,7 +2700,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; If I need to see the full error, I have other methods to do that (e.g. flycheck-posframe).
   (sideline-flycheck-max-lines 1)
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'sideline-flycheck-error nil
                         :slant 'italic
                         :background "black")
@@ -2714,7 +2732,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (sideline-lsp-code-actions-prefix "> ")
   (sideline-lsp-actions-kind-regex "quickfix.*") ; Show only quickfix code actions, otherwise it is too much noise.
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'sideline-lsp-code-action nil
                         :inherit 'shadow
                         :weight 'light
@@ -2753,7 +2771,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (ediff-split-window-function #'split-window-horizontally) ; Show diffs side by side, not up and down.
   (ediff-window-setup-function #'ediff-setup-windows-plain) ; Put control panel in the same frame.
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     ;; Current diff was poorly highlihted, so I am making it more visible.
     (dolist (face '(ediff-current-diff-A ediff-current-diff-B))
       (set-face-attribute face nil :background "#4c638f"))
@@ -2798,7 +2816,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
                       :keymaps 'lsp-mode-map
                       "," lsp-command-map
   )
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
   )
 )
@@ -3065,7 +3083,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package markdown-mode
   :config
-  (my/after-theme
+  (my/on-theme-enabled
     ;; Set headers to have different sizes.
     (dolist (face '((markdown-header-face-1 . 1.5)
                     (markdown-header-face-2 . 1.3)
@@ -3557,7 +3575,7 @@ Returns a structured list of information that can be sent to an LLM."
   ; Don't highlight too-long lines, because it is too noisy and we use another package for that anyway.
   (setq whitespace-style (delq 'lines whitespace-style))
 
-  (my/after-theme
+  (my/on-theme-enabled
     ; Default faces are not visible enough (grey), so I set all the faces to something more visible.
     (dolist (face '(whitespace-big-indent
                     whitespace-empty
@@ -3597,7 +3615,7 @@ Returns a structured list of information that can be sent to an LLM."
   :hook (prog-mode . column-enforce-mode)
   :config
   (setq column-enforce-column fill-column)
-  (my/after-theme
+  (my/on-theme-enabled
     (set-face-attribute 'column-enforce-face nil
                         :inherit nil
                         :background "black"
