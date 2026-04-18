@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-14 21:44:07 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-19 01:14:41 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -3104,6 +3104,21 @@ It uses external `gitstatusd' program to calculate the actual git status."
 )
 
 (use-package powershell
+)
+
+(define-derived-mode dirtree-mode text-mode "Dir Tree"
+  "Major mode for directory tree listings."
+  (setq font-lock-defaults '(dirtree-font-lock-keywords)))
+
+(defvar dirtree-font-lock-keywords
+  '(
+    ;; Directory names (ending with /).
+    (".*/" . font-lock-function-name-face)
+    ;; Box-drawing characters at start of line.
+    ("^[[:space:]]*[├└│─╭╰┌┐┘┤┬┴┼╮╯╰╭[:space:]]+" 0 font-lock-comment-face t)
+    ;; Comments (starting with #).
+    ("#.*" 0 font-lock-comment-face t)
+   )
 )
 
 (use-package gptel

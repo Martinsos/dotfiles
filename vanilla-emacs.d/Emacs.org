@@ -4638,6 +4638,48 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
   )
 #+end_src
 
+** Dir tree
+:PROPERTIES:
+:ID:       753907e1-c5e6-4879-b5ce-3cee14938383
+:END:
+I created my own major mode for highlighting the directory tree listing.
+
+#+begin_src emacs-lisp
+  (define-derived-mode dirtree-mode text-mode "Dir Tree"
+    "Major mode for directory tree listings."
+    (setq font-lock-defaults '(dirtree-font-lock-keywords)))
+
+  (defvar dirtree-font-lock-keywords
+    '(
+      ;; Directory names (ending with /).
+      (".*/" . font-lock-function-name-face)
+      ;; Box-drawing characters at start of line.
+      ("^[[:space:]]*[├└│─╭╰┌┐┘┤┬┴┼╮╯╰╭[:space:]]+" 0 font-lock-comment-face t)
+      ;; Comments (starting with #).
+      ("#.*" 0 font-lock-comment-face t)
+     )
+  )
+#+end_src
+
+*** Examples
+Examples of dir tree listing formats for which this highlighting will work nicely:
+
+#+begin_src dirtree
+foo/
+├── bar/
+│   ├── buzz.txt # Some file.
+│   └── fizz/fuzz.sh
+└── README.md
+#+end_src
+
+#+begin_src dirtree
+foo/
+  bar/
+    buzz.txt # Some file.
+    fizz/fuzz.sh
+  README.md
+#+end_src
+
 * AI
 ** Overview of popular packages
 Last updated: <2024-12-23 Mon>
