@@ -4680,6 +4680,32 @@ foo/
   README.md
 #+end_src
 
+** Ascii diagram
+:PROPERTIES:
+:ID:       74ef56cb-0eb0-457e-95b0-38132d9fe472
+:END:
+I created my own major mode for highlighting the ascii diagrams.
+
+#+begin_src emacs-lisp
+  (define-derived-mode ascii-diagram-mode fundamental-mode "Ascii Diagram"
+    "Major mode for ASCII diagrams."
+    (setq font-lock-defaults '(ascii-diagram-font-lock-keywords t))
+  )
+
+  (defvar ascii-diagram-font-lock-keywords
+    '(
+      ;; horizontal lines
+      ("\\(?:^\\|\\s-\\)\\([-+=<>#|~/\\\\]\\{3,\\}\\)\\(?:$\\|\\s-\\)"
+       (1 font-lock-keyword-face)
+      )
+      ;; vertical lines
+      ("\\(?:^\\|\\s-\\)\\([|vV\\^#]\\)\\(?:$\\|\\s-\\)"
+       (1 font-lock-keyword-face)
+      )
+     )
+  )
+#+end_src
+
 * AI
 ** Overview of popular packages
 Last updated: <2024-12-23 Mon>

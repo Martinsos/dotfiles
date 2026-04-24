@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-19 01:14:41 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-25 01:14:50 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -3118,6 +3118,24 @@ It uses external `gitstatusd' program to calculate the actual git status."
     ("^[[:space:]]*[├└│─╭╰┌┐┘┤┬┴┼╮╯╰╭[:space:]]+" 0 font-lock-comment-face t)
     ;; Comments (starting with #).
     ("#.*" 0 font-lock-comment-face t)
+   )
+)
+
+(define-derived-mode ascii-diagram-mode fundamental-mode "Ascii Diagram"
+  "Major mode for ASCII diagrams."
+  (setq font-lock-defaults '(ascii-diagram-font-lock-keywords t))
+)
+
+(defvar ascii-diagram-font-lock-keywords
+  '(
+    ;; horizontal lines
+    ("\\(?:^\\|\\s-\\)\\([-+=<>#|~/\\\\]\\{3,\\}\\)\\(?:$\\|\\s-\\)"
+     (1 font-lock-keyword-face)
+    )
+    ;; vertical lines
+    ("\\(?:^\\|\\s-\\)\\([|vV\\^#]\\)\\(?:$\\|\\s-\\)"
+     (1 font-lock-keyword-face)
+    )
    )
 )
 
