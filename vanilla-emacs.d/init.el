@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-25 01:14:50 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-04-29 01:50:38 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -44,7 +44,7 @@
 (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
 ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
 ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-;;(setq elpaca-lock-file nil)
+;;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
 (defun my/elpaca-write-lock-file ()
   (interactive)
@@ -342,6 +342,8 @@ USAGE:
   (setq epg-pinentry-mode 'loopback)
 )
 
+(setq auth-sources '("~/.authinfo"))
+
 (use-package plstore
   :ensure nil ; emacs built-in
   :config
@@ -350,6 +352,11 @@ USAGE:
   ;       Check plstore code for instructions on this if it will ever be needed.
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
 )
+
+(let ((f (expand-file-name "safe-local-variable-directories.eld" user-emacs-directory)))
+  (when (file-exists-p f)
+    (dolist (dir (with-temp-buffer (insert-file-contents f) (read (current-buffer))))
+      (add-to-list 'safe-local-variable-directories dir))))
 
 (add-hook
  'emacs-startup-hook
@@ -2359,6 +2366,11 @@ Returns nil if no heading found."
   "gF" '("magit find file" . magit-find-file)
 )
 
+;; TODO: Commented out till I update magit to latest, too complicated to get it working otherwise.
+;; (use-package forge
+;;   :after magit
+;; )
+
 (use-package diff-hl
   :hook (dired-mode . diff-hl-dired-mode)
   :config
@@ -2939,7 +2951,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package emacs
   :ensure nil
-  :hook (compilation-filter . ansi-color-compilation-filter) ; Interprets ansii color codes in the output.
+  :hook ((compilation-filter . ansi-color-compilation-filter) ; Interprets ansii color codes in the output.
+         (compilation-mode . hack-dir-local-variables-non-file-buffer) ; Apply .dir-locals.el: useful for per-project coloring.
+        )
   :custom
   (compilation-environment '(
                              "TERM=xterm-256color" ; Tells the compilation shell command to output colors.

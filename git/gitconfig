@@ -57,3 +57,5 @@
 	defaultBranch = main
 [merge]
 	conflictstyle = diff3
+[github]
+	user = martinsos
