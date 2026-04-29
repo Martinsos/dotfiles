@@ -137,6 +137,31 @@ github-frb() {
     $GIT_CO_CMD
 }
 
+# Run `make` against the Makefile in the current dir or in a parent dir
+# in the current git repo. Outside of a git repo, behaves like plain `make`.
+mk() {
+    local gitRepoRoot
+    gitRepoRoot=$(git rev-parse --show-toplevel 2>/dev/null)
+
+    if [ -z "$gitRepoRoot" ]; then
+        make "$@"
+        return
+    fi
+
+    local dir="$PWD"
+    while true; do
+        if [ -f "$dir/Makefile" ] || [ -f "$dir/makefile" ] || [ -f "$dir/GNUmakefile" ]; then
+            make -C "$dir" "$@"
+            return
+        fi
+        if [ "$dir" = "$gitRepoRoot" ] || [ "$dir" = "/" ]; then
+            echo "mk: no Makefile found in $PWD or any parent within the git repo" >&2
+            return 1
+        fi
+        dir=$(dirname "$dir")
+    done
+}
+
 # Shell-side configuration for emacs' vterm package (check my Emacs.org file for more info).
 if [[ "$INSIDE_EMACS" = 'vterm' ]] \
     && [[ -n ${EMACS_VTERM_PATH} ]] \
