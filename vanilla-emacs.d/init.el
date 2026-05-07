@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-04-29 01:50:38 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-07 13:51:08 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2546,13 +2546,14 @@ Returns nil if no heading found."
   (defun my/vterm-toggle-setup-modeline ()
     (setq-local mode-line-misc-info (append mode-line-misc-info (list my/vterm-toggle-modeline-segment))))
   (defconst my/vterm-toggle-modeline-segment
-    '(:eval (my/vterm-toggle-modeline-other-buffers-list)))
+    '(:eval (my/vterm-toggle-modeline-buffers-list)))
 
-  (defun my/vterm-toggle-modeline-other-buffers-list ()
+  (defun my/vterm-toggle-modeline-buffers-list ()
     "Return mode-line text listing other vterm-toggle buffers."
-    (when-let* ((names (mapcar (lambda (b) (my/string-truncate (buffer-name b) 15))
-                               (my/vterm-toggle-list-other-buffers))))
-      (concat " Other: [ " (string-join names " | ") " ] ")))
+    (when-let* ((names (mapcar (lambda (bn) (my/string-truncate bn 15))
+                               (cons (propertize (buffer-name (current-buffer)) 'face 'bold)
+                                     (mapcar #'buffer-name (my/vterm-toggle-list-other-buffers))))))
+      (concat " [ " (string-join names " | ") " ] ")))
   (defun my/vterm-toggle-list-other-buffers ()
     "Return list of live vterm-toggle buffers, excluding and starting from the current buffer."
     (let ((bs (seq-filter #'buffer-live-p vterm-toggle--buffer-list)))
