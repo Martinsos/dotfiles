@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-07 13:51:08 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-10 00:13:59 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -787,7 +787,7 @@ USAGE:
 ;; and in a better way than evil does.
 (use-package evil-collection
   :after evil
-  :custom (evil-collection-setup-minibuffer nil)  ; If set to `t` it messes up / overrides my custom keybindings for Ivy (e.g. C-k).
+  :custom (evil-collection-setup-minibuffer t)
   :config (evil-collection-init)
 )
 
@@ -2167,26 +2167,7 @@ Returns nil if no heading found."
 ;; color for all the rest.
 ;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
 (use-package ivy
-  :bind (
-        ;; I define some evil-ish keybindings here since neither evil not evil-connection
-        ;; define these specific ones for Ivy.
-        :map ivy-minibuffer-map ;; When in the minibuffer.
-              ("C-h" . ivy-backward-kill-word)
-              ("C-j" . ivy-next-line)
-              ("C-k" . ivy-previous-line)
-              ("C-l" . ivy-alt-done)
-              ("TAB" . ivy-alt-done)
-        :map ivy-switch-buffer-map ; When in the buffer switching mode.
-              ("C-j" . ivy-next-line)
-              ("C-k" . ivy-previous-line)
-              ("C-l" . ivy-done)
-              ("C-d" . ivy-switch-buffer-kill)
-        :map ivy-reverse-i-search-map ; When doing incremental search.
-              ("C-j" . ivy-next-line)
-              ("C-k" . ivy-previous-line)
-              ("C-l" . ivy-done)
-              ("C-d" . ivy-reverse-i-search-kill)
-        )
+  :after (evil)
   :custom
   (ivy-height 20)
   (ivy-use-virtual-buffers t)  ; Adds recent files and bookmarks and similar to results.
@@ -2194,6 +2175,25 @@ Returns nil if no heading found."
   (ivy-count-format "(%d/%d) ")  ; (num listed / total num)
   (ivy-extra-directories nil)  ; Don't show ./ and ../
   :config
+  ;; I define some evil-ish keybindings here since neither evil not evil-collection
+  ;; define these specific ones for Ivy.
+  (evil-define-key '(insert normal) ivy-minibuffer-map
+    (kbd "C-h") 'ivy-backward-kill-word
+    (kbd "C-j") 'ivy-next-line
+    (kbd "C-k") 'ivy-previous-line
+    (kbd "C-l") 'ivy-alt-done
+    (kbd "TAB") 'ivy-alt-done)
+  (evil-define-key '(insert normal) ivy-switch-buffer-map
+    (kbd "C-j") 'ivy-next-line
+    (kbd "C-k") 'ivy-previous-line
+    (kbd "C-l") 'ivy-done
+    (kbd "C-d") 'ivy-switch-buffer-kill)
+  (evil-define-key '(insert normal) ivy-reverse-i-search-map
+    (kbd "C-j") 'ivy-next-line
+    (kbd "C-k") 'ivy-previous-line
+    (kbd "C-l") 'ivy-done
+    (kbd "C-d") 'ivy-reverse-i-search-kill)
+
   ;; ivy-format-functions-alist determines for each place where ivy is used how the output should be formatted.
   ;; t stands for default case, if there was no more specific formatting function defined.
 
