@@ -194,10 +194,11 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+begin_src emacs-lisp
 
-  (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+  (defconst my/elpaca-lock-file-path (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+  (setq elpaca-lock-file my/elpaca-lock-file-path)
   ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
   ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-  ;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
+  (setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
   (defun my/elpaca-write-lock-file ()
     (interactive)
@@ -248,78 +249,71 @@ NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go
 :END:
 #+begin_src emacs-lisp
   (defun my/elpaca-lock-file-recipes ()
-    "Return alist (PACKAGE-ID . RECIPE-PLIST) read from elpaca-lock.eld."
-    (let ((path eplaca-lock-file))
+    "Read recipes from my elpaca lock file as alist (PACKAGE-ID . RECIPE-PLIST)."
+    (let ((path my/elpaca-lock-file-path))
       (with-temp-buffer
         (insert-file-contents path)
         (cl-loop for entry in (read (current-buffer))
                  collect (cons (car entry) (plist-get (cdr entry) :recipe))))))
 
   (defun my/elpaca--git (&rest args)
-    "Run git ARGS in `default-directory'.  Return trimmed stdout or nil on error."
+    "Run git ARGS in `default-directory'.  Return stdout (trailing newline stripped) or nil on error."
     (with-temp-buffer
-      (and (eq 0 (apply #'call-process "git" nil t nil args))
-           (string-trim (buffer-string)))))
+      (when (eq 0 (apply #'call-process "git" nil t nil args))
+        (string-trim-right (buffer-string)))))
 
   (defun my/elpaca-show-updates ()
-    "For each elpaca package, show locked ref+branch (lock file) vs. the
-  upstream tip on the LIVE recipe's branch (post `elpaca-update-menus'),
-  plus the commit log between them when computable.
-
+    "For each elpaca package, show info about its version from the lock file,
+  info about its newest version, and the git log difference between the two if possible.
   PREREQUISITES:
   - Disable lock file in config + restart (so live recipes don't carry :ref).
   - Run `elpaca-update-menus' for fresh recipe data.
-  - Run `elpaca-fetch-all' so origin/* refs are up to date.
-
-  DONE = up to date.  TODO = anything else.  If a log isn't shown, infer why
-  from the locked/new lines (missing branch, branches differ, refs unrelated)."
+  - Run `elpaca-fetch-all' to fetch updates (in elpaca/ dir, does fetch for each repo."
     (interactive)
-    (let ((lock-recipes (my/elpaca-lock-file-recipes))
-          (buf (get-buffer-create "*my-elpaca-updates*")))
-      (with-current-buffer buf
-        (let ((inhibit-read-only t))
-          (erase-buffer)
-          (insert "#+TITLE: Elpaca package updates\n")
-          (insert "#+TODO: TODO | DONE\n")
-          (insert "#+STARTUP: overview\n\n")
-          (cl-loop for (id . e) in (elpaca--queued)
-                   for repo = (elpaca<-repo-dir e)
-                   when (and repo (file-directory-p repo)) do
-                   (let* ((default-directory repo)
-                          (lock-recipe (alist-get id lock-recipes))
-                          (lock-ref    (plist-get lock-recipe :ref))
-                          (lock-branch (plist-get lock-recipe :branch))
-                          (lock-repo-spec (plist-get lock-recipe :repo))
-                          (live-recipe (elpaca<-recipe e))
-                          (live-branch (or (plist-get live-recipe :branch)
-                                           (let ((s (my/elpaca--git "symbolic-ref"
-                                                                    "refs/remotes/origin/HEAD" "--short")))
-                                             (and s (string-prefix-p "origin/" s)
-                                                  (substring s (length "origin/"))))))
-                          (live-repo-spec (plist-get live-recipe :repo))
-                          (new-ref (and live-branch
-                                        (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
-                          (log (and lock-ref new-ref live-branch
-                                    (not (string= lock-ref new-ref))
-                                    (my/elpaca--git "merge-base" "--is-ancestor"
-                                                    lock-ref (concat "origin/" live-branch))
-                                    (my/elpaca--git "--no-pager" "log" "--reverse"
-                                                    "--pretty=    %h %s (%ch)"
-                                                    (format "%s..origin/%s" lock-ref live-branch))))
-                          (status (if (and lock-ref new-ref (string= lock-ref new-ref)) 'done 'todo)))
-                     (insert (format "* %s %s\n"
-                                     (if (eq status 'done) "DONE" "TODO") id))
-                     (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
-                     (insert (format "  - locked: %s on %s in %s\n"
-                                     (or lock-ref "?") (or lock-branch "?") (or lock-repo-spec "?")))
-                     (insert (format "  - new:    %s on %s in %s\n"
-                                     (or new-ref "?") (or live-branch "?") (or live-repo-spec "?")))
-                     (when log
-                       (insert "\n" log "\n"))
-                     (insert "\n")))
-          (org-mode)
-          (goto-char (point-min)))
-        (display-buffer buf))))
+    (let ((lock-recipes (my/elpaca-lock-file-recipes)))
+      (with-current-buffer (get-buffer-create "*my-elpaca-updates*")
+        (erase-buffer)
+        (insert "#+TITLE: Elpaca package updates\n")
+        (insert "#+TODO: TODO | DONE\n")
+        (insert "#+STARTUP: overview\n\n")
+        (cl-loop for (pkg-id . pkg) in (elpaca--queued)
+                 for repo = (elpaca<-repo-dir pkg)
+                 when (and repo (file-directory-p repo)) do
+                 (let* ((default-directory repo)
+                        (lock-recipe (alist-get pkg-id lock-recipes))
+                        (lock-ref    (plist-get lock-recipe :ref))
+                        (lock-branch (plist-get lock-recipe :branch))
+                        (lock-repo-spec (plist-get lock-recipe :repo))
+                        (live-recipe (elpaca<-recipe pkg))
+                        (live-branch (or (plist-get live-recipe :branch)
+                                         (let ((s (my/elpaca--git "symbolic-ref"
+                                                                  "refs/remotes/origin/HEAD" "--short")))
+                                           (and s (string-prefix-p "origin/" s)
+                                                (substring s (length "origin/"))))))
+                        (live-repo-spec (plist-get live-recipe :repo))
+                        (live-branch-ref (and live-branch
+                                              (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
+                        (log (and lock-ref live-branch-ref live-branch
+                                  (not (string= lock-ref live-branch-ref))
+                                  (my/elpaca--git "merge-base" "--is-ancestor"
+                                                  lock-ref (concat "origin/" live-branch))
+                                  (my/elpaca--git "--no-pager" "log" "--reverse" "--decorate=short"
+                                                  "--pretty=    %h%d %s (%ch)"
+                                                  (format "%s..origin/%s" lock-ref live-branch))))
+                        (status (if (and lock-ref live-branch-ref (string= lock-ref live-branch-ref)) 'done 'todo)))
+                   (insert (format "* %s %s\n"
+                                   (if (eq status 'done) "DONE" "TODO") pkg-id))
+                   (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
+                   (insert (format "  - locked: %s on %s in %s\n"
+                                   (or lock-ref "?") (or lock-branch "?") (or lock-repo-spec "?")))
+                   (insert (format "  - new:    %s on %s in %s\n"
+                                   (or live-branch-ref "?") (or live-branch "?") (or live-repo-spec "?")))
+                   (when log
+                     (insert "\n" log "\n"))
+                   (insert "\n")))
+        (org-mode)
+        (goto-char (point-min))
+        (display-buffer (current-buffer)))))
 #+end_src
 
 ** Cheatsheet :cheatsheet:
