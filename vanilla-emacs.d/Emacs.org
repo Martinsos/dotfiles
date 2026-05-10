@@ -4151,6 +4151,9 @@ And there is ~ediff-revision~ which compares a file to its (git) revision.
       (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
         (set-face-attribute face nil :background "#3b82f6"))
     )
+    (my/leader-keys
+      "f d" '("ediff" . ediff)
+    )
   )
 
 #+end_src

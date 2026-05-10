@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-10 13:20:38 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-10 13:53:45 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2797,6 +2797,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
       (set-face-attribute face nil :background "#4c638f"))
     (dolist (face '(ediff-fine-diff-A ediff-fine-diff-B))
       (set-face-attribute face nil :background "#3b82f6"))
+  )
+  (my/leader-keys
+    "f d" '("ediff" . ediff)
   )
 )
 
