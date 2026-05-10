@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-10 22:07:13 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-10 22:17:03 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -91,6 +91,7 @@ PREREQUISITES:
                       (lock-ref    (plist-get lock-recipe :ref))
                       (lock-branch (plist-get lock-recipe :branch))
                       (lock-repo-spec (plist-get lock-recipe :repo))
+                      (lock-ver (and lock-ref (my/elpaca--git "describe" "--tags" "--always" lock-ref)))
                       (live-recipe (elpaca<-recipe pkg))
                       (live-branch (or (plist-get live-recipe :branch)
                                        (let ((s (my/elpaca--git "symbolic-ref"
@@ -100,6 +101,7 @@ PREREQUISITES:
                       (live-repo-spec (plist-get live-recipe :repo))
                       (live-branch-ref (and live-branch
                                             (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
+                      (live-ver (and live-branch-ref (my/elpaca--git "describe" "--tags" "--always" live-branch-ref)))
                       (log (and lock-ref live-branch-ref live-branch
                                 (not (string= lock-ref live-branch-ref))
                                 (my/elpaca--git "merge-base" "--is-ancestor"
@@ -111,10 +113,10 @@ PREREQUISITES:
                  (insert (format "* %s %s\n"
                                  (if (eq status 'done) "DONE" "TODO") pkg-id))
                  (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
-                 (insert (format "  - locked: %s on %s in %s\n"
-                                 (or lock-ref "?") (or lock-branch "?") (or lock-repo-spec "?")))
-                 (insert (format "  - new:    %s on %s in %s\n"
-                                 (or live-branch-ref "?") (or live-branch "?") (or live-repo-spec "?")))
+                 (insert (format "  - locked: %s (%s) on %s in %s\n"
+                                 (or lock-ref "?") (or lock-ver "?") (or lock-branch "?") (or lock-repo-spec "?")))
+                 (insert (format "  - new:    %s (%s) on %s in %s\n"
+                                 (or live-branch-ref "?") (or live-ver "?") (or live-branch "?") (or live-repo-spec "?")))
                  (when log
                    (insert "\n" log "\n"))
                  (insert "\n")))
