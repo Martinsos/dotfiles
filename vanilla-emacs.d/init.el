@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-10 13:53:45 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-10 15:02:30 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -2446,8 +2446,7 @@ Returns nil if no heading found."
 (use-package dired-hide-dotfiles
   :after (dired)
   :defer t
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :config
+  :init
   (with-eval-after-load 'evil
     (evil-define-key 'normal dired-mode-map
       (kbd "H") 'dired-hide-dotfiles-mode

@@ -3474,8 +3474,7 @@ It adds indicator to the left margin/side of the window.
   (use-package dired-hide-dotfiles
     :after (dired)
     :defer t
-    :hook (dired-mode . dired-hide-dotfiles-mode)
-    :config
+    :init
     (with-eval-after-load 'evil
       (evil-define-key 'normal dired-mode-map
         (kbd "H") 'dired-hide-dotfiles-mode
