@@ -197,7 +197,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
   (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
   ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
   ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-  ;;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
+  ;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
   (defun my/elpaca-write-lock-file ()
     (interactive)
@@ -219,21 +219,112 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 #+end_src
 
+** Updating packages
+*** Instructions :cheatsheet:
+- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
+  - Run ~my/elpaca-write-lock-file~, commit the lock file if any changes.
+  - As an extra measure in case any of the git refs in the lock file became invalid, do ~cp -a elpaca/ elpaca.backup/~.
+- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new versions of the packages.
+- Run ~elpaca-update-menus~ to update the recipes, they don't change often but you never know.
+- ~elpaca-fetch-all~ to have elpaca fetch the package updates to local package repos in =elpaca/=, but not yet apply them.
+- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched.
+  I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config.
+  I usually create a file on disk where I log any changes I will need to do as I go through it.
+  If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
+  Once done, I call ~elpaca-merge-all~ to merge/apply the package updates.
+  - ~PROBLEM~: This currently doesn't really when using a lock file in general! Even though we disabled a lock file, as a consequence of using it, package repos in =elpaca/= are in a detached state due to how elpaca implemented its lock file system, and then =*elpaca-log*= fails to show the logs because its implementation for showing them requires packages repos to not be in a detached state but on a branch. This is so because lock file feature addition is still somewhat unbaked and elpaca's workflow for it is still maturing / being developed.
+    Due to how it works, ~elpaca-merge-all~ also wouldn't work.
+    ~SOLUTION~: The way I currently solve it is by then doing the following:
+    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file. So now I have the logs I needed. Review them, figure out what I will need to fix in the config.
+    - Delete the =elpaca/= dir. I don't need it since elpaca logs don't work anyway, and why not then restart it fully then.
+    - Restart emacs. This will install all the packages from the scratch.
+- Fix/update my config as/if needed.
+- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config (and restart emacs). Delete ~elpaca.backup/~.
+- That is it!
+NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
+*** Helpers
+:PROPERTIES:
+:ID:       062e8839-654b-4b77-8877-cf4af31ac518
+:END:
+#+begin_src emacs-lisp
+  (defun my/elpaca-lock-file-recipes ()
+    "Return alist (PACKAGE-ID . RECIPE-PLIST) read from elpaca-lock.eld."
+    (let ((path eplaca-lock-file))
+      (with-temp-buffer
+        (insert-file-contents path)
+        (cl-loop for entry in (read (current-buffer))
+                 collect (cons (car entry) (plist-get (cdr entry) :recipe))))))
+
+  (defun my/elpaca--git (&rest args)
+    "Run git ARGS in `default-directory'.  Return trimmed stdout or nil on error."
+    (with-temp-buffer
+      (and (eq 0 (apply #'call-process "git" nil t nil args))
+           (string-trim (buffer-string)))))
+
+  (defun my/elpaca-show-updates ()
+    "For each elpaca package, show locked ref+branch (lock file) vs. the
+  upstream tip on the LIVE recipe's branch (post `elpaca-update-menus'),
+  plus the commit log between them when computable.
+
+  PREREQUISITES:
+  - Disable lock file in config + restart (so live recipes don't carry :ref).
+  - Run `elpaca-update-menus' for fresh recipe data.
+  - Run `elpaca-fetch-all' so origin/* refs are up to date.
+
+  DONE = up to date.  TODO = anything else.  If a log isn't shown, infer why
+  from the locked/new lines (missing branch, branches differ, refs unrelated)."
+    (interactive)
+    (let ((lock-recipes (my/elpaca-lock-file-recipes))
+          (buf (get-buffer-create "*my-elpaca-updates*")))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer)
+          (insert "#+TITLE: Elpaca package updates\n")
+          (insert "#+TODO: TODO | DONE\n")
+          (insert "#+STARTUP: overview\n\n")
+          (cl-loop for (id . e) in (elpaca--queued)
+                   for repo = (elpaca<-repo-dir e)
+                   when (and repo (file-directory-p repo)) do
+                   (let* ((default-directory repo)
+                          (lock-recipe (alist-get id lock-recipes))
+                          (lock-ref    (plist-get lock-recipe :ref))
+                          (lock-branch (plist-get lock-recipe :branch))
+                          (lock-repo-spec (plist-get lock-recipe :repo))
+                          (live-recipe (elpaca<-recipe e))
+                          (live-branch (or (plist-get live-recipe :branch)
+                                           (let ((s (my/elpaca--git "symbolic-ref"
+                                                                    "refs/remotes/origin/HEAD" "--short")))
+                                             (and s (string-prefix-p "origin/" s)
+                                                  (substring s (length "origin/"))))))
+                          (live-repo-spec (plist-get live-recipe :repo))
+                          (new-ref (and live-branch
+                                        (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
+                          (log (and lock-ref new-ref live-branch
+                                    (not (string= lock-ref new-ref))
+                                    (my/elpaca--git "merge-base" "--is-ancestor"
+                                                    lock-ref (concat "origin/" live-branch))
+                                    (my/elpaca--git "--no-pager" "log" "--reverse"
+                                                    "--pretty=    %h %s (%ch)"
+                                                    (format "%s..origin/%s" lock-ref live-branch))))
+                          (status (if (and lock-ref new-ref (string= lock-ref new-ref)) 'done 'todo)))
+                     (insert (format "* %s %s\n"
+                                     (if (eq status 'done) "DONE" "TODO") id))
+                     (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
+                     (insert (format "  - locked: %s on %s in %s\n"
+                                     (or lock-ref "?") (or lock-branch "?") (or lock-repo-spec "?")))
+                     (insert (format "  - new:    %s on %s in %s\n"
+                                     (or new-ref "?") (or live-branch "?") (or live-repo-spec "?")))
+                     (when log
+                       (insert "\n" log "\n"))
+                     (insert "\n")))
+          (org-mode)
+          (goto-char (point-min)))
+        (display-buffer buf))))
+#+end_src
+
 ** Cheatsheet :cheatsheet:
 - ~elpaca-manager~ to run the main elpaca UI.
 - To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
-*** Updating the packages
-- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
-  - Run ~my/elpaca-write-lock-file~, and then commit the lock file if any changes. This should be enough to restore the old state, unless some of the upstream git references in lock file don't exist any more (renamed repo/branch, force push, ...).
-  - As an extra measure against the missing refs, do ~cp -a elpaca/ elpaca.backup/~ and keep it around till update is successful, in case we need to revert and some refs from lock file dont' exist any more.
-- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new recipes for existing packages, not the locked ones.
-- ~elpaca-fetch-all~ to have elpaca fetch the package updates, but not yet merge them. It downloads the new commits from every package's remote, in =elpaca/= dir, but doesn't use them in any way yet.
-- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched. I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config. I usually create a file on disk where I log any changes I will need to do. If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
-- Once ready, ~elpaca-merge-all~ to merge/apply the package updates.
-- Fix/update my config as/if needed.
-- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config. Delete ~elpaca.backup/~.
-- That is it!
-NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
 * Utils
 ** Packages
 :PROPERTIES:

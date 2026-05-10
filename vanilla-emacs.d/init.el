@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-16 10:38:24 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-10 18:35:21 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -44,7 +44,7 @@
 (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
 ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
 ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-;;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
+;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
 (defun my/elpaca-write-lock-file ()
   (interactive)
@@ -53,6 +53,80 @@
 
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+
+(defun my/elpaca-lock-file-recipes ()
+  "Return alist (PACKAGE-ID . RECIPE-PLIST) read from elpaca-lock.eld."
+  (let ((path eplaca-lock-file))
+    (with-temp-buffer
+      (insert-file-contents path)
+      (cl-loop for entry in (read (current-buffer))
+               collect (cons (car entry) (plist-get (cdr entry) :recipe))))))
+
+(defun my/elpaca--git (&rest args)
+  "Run git ARGS in `default-directory'.  Return trimmed stdout or nil on error."
+  (with-temp-buffer
+    (and (eq 0 (apply #'call-process "git" nil t nil args))
+         (string-trim (buffer-string)))))
+
+(defun my/elpaca-show-updates ()
+  "For each elpaca package, show locked ref+branch (lock file) vs. the
+upstream tip on the LIVE recipe's branch (post `elpaca-update-menus'),
+plus the commit log between them when computable.
+
+PREREQUISITES:
+- Disable lock file in config + restart (so live recipes don't carry :ref).
+- Run `elpaca-update-menus' for fresh recipe data.
+- Run `elpaca-fetch-all' so origin/* refs are up to date.
+
+DONE = up to date.  TODO = anything else.  If a log isn't shown, infer why
+from the locked/new lines (missing branch, branches differ, refs unrelated)."
+  (interactive)
+  (let ((lock-recipes (my/elpaca-lock-file-recipes))
+        (buf (get-buffer-create "*my-elpaca-updates*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert "#+TITLE: Elpaca package updates\n")
+        (insert "#+TODO: TODO | DONE\n")
+        (insert "#+STARTUP: overview\n\n")
+        (cl-loop for (id . e) in (elpaca--queued)
+                 for repo = (elpaca<-repo-dir e)
+                 when (and repo (file-directory-p repo)) do
+                 (let* ((default-directory repo)
+                        (lock-recipe (alist-get id lock-recipes))
+                        (lock-ref    (plist-get lock-recipe :ref))
+                        (lock-branch (plist-get lock-recipe :branch))
+                        (lock-repo-spec (plist-get lock-recipe :repo))
+                        (live-recipe (elpaca<-recipe e))
+                        (live-branch (or (plist-get live-recipe :branch)
+                                         (let ((s (my/elpaca--git "symbolic-ref"
+                                                                  "refs/remotes/origin/HEAD" "--short")))
+                                           (and s (string-prefix-p "origin/" s)
+                                                (substring s (length "origin/"))))))
+                        (live-repo-spec (plist-get live-recipe :repo))
+                        (new-ref (and live-branch
+                                      (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
+                        (log (and lock-ref new-ref live-branch
+                                  (not (string= lock-ref new-ref))
+                                  (my/elpaca--git "merge-base" "--is-ancestor"
+                                                  lock-ref (concat "origin/" live-branch))
+                                  (my/elpaca--git "--no-pager" "log" "--reverse"
+                                                  "--pretty=    %h %s (%ch)"
+                                                  (format "%s..origin/%s" lock-ref live-branch))))
+                        (status (if (and lock-ref new-ref (string= lock-ref new-ref)) 'done 'todo)))
+                   (insert (format "* %s %s\n"
+                                   (if (eq status 'done) "DONE" "TODO") id))
+                   (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
+                   (insert (format "  - locked: %s on %s in %s\n"
+                                   (or lock-ref "?") (or lock-branch "?") (or lock-repo-spec "?")))
+                   (insert (format "  - new:    %s on %s in %s\n"
+                                   (or new-ref "?") (or live-branch "?") (or live-repo-spec "?")))
+                   (when log
+                     (insert "\n" log "\n"))
+                   (insert "\n")))
+        (org-mode)
+        (goto-char (point-min)))
+      (display-buffer buf))))
 
 (require 'cl-lib) ;; Common utilities and functions, e.g. cl-some, cl-loop, ... .
 
