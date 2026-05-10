@@ -70,60 +70,59 @@ In this config I use elpaca + use-package (package.el is not even loaded).
 *** Lifecycle of a package
 
 1. Installation typically happens when you start emacs for first time on new machine, or when you update packages or add new package.
-2. Loading typically happens each time you start emacs, and it can happen immediately on init, or it can happen later, on demand,
-   when package is needed (in lazy fashion), depending on how you set it up for that package.
+2. Loading typically happens each time you start emacs, and it can happen immediately on init, or it can happen later, on demand, when package is needed (in lazy fashion), depending on how you set it up for that package.
 3. Configuration typically happens right after loading.
 
 *** use-package
 
-The idea is that you organize all your code in `(use-package <package-name> ...)` declarations.
-There is even `(use-package emacs ...)` where `emacs` is a special "package" that won't trigger any installation or loading, allowing you to put general emacs config under it (e.g. `(column-number-mode)`).
+The idea is that you organize all your code in ~(use-package <package-name> ...)~ declarations.
+There is even ~(use-package emacs ...)~ where ~emacs~ is a special "package" that won't trigger any installation or loading, allowing you to put general emacs config under it (e.g. ~(column-number-mode)~).
 
-use-package has a bunch of keywords that you can use to configure your package or define how it is loaded / installed.
+=use-package= has a bunch of keywords that you can use to configure your package or define how it is loaded / installed.
 Mostly you will use keywords that come with use-package, but other packages can also extend use-package with their own keywords.
 I will quickly explain some of the more important/confusing ones:
-- :ensure -> This is really an interface toward package manager (who does package installation). Any value passed to :ensure is passed to the package manager as instructions for installation, e.g. `:ensure (:host "github" :repo "user/repo")`.
-    Therefore, its behaviour depends on the package manager used. But generally, `:ensure nil` will not allow package installation, while `:ensure t` or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
-    Normally you will want `:ensure t` for most of the packages, in which case you can (I do) configure use-package to have it be `t` by default.
+- =:ensure= -> This is really an interface toward package manager (who does package installation). Any value passed to :ensure is passed to the package manager as instructions for installation, e.g. `:ensure (:host "github" :repo "user/repo")`.
+    Therefore, its behaviour depends on the package manager used. But generally, ~:ensure nil~ will not allow package installation, while ~:ensure t~ or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
+    Normally you will want ~:ensure t~ for most of the packages, in which case you can (I do) configure use-package to have it be ~t~ by default.
     When using elpaca, you can pass elpaca recipe to :ensure.
-- :defer -> `:defer t` tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
+- =:defer= -> ~:defer t~ tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
     Alternatively, you can pass it a number of seconds emacs needs to be idle before package is loaded.
-- :demand -> Opposite of defer, `:demand t` tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
-- :init -> happens right before package is loaded.
-- :config -> happens right after package is loaded.
+- =:demand= -> Opposite of defer, ~:demand t~ tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
+- =:init= -> happens right before package is loaded.
+- =:config= -> happens right after package is loaded.
 - ...
 
-**** Deferred loading 
+**** Deferred loading
 
 It is generally recommended to postpone/defer loading of packages till they are needed (if applicable), for faster emacs startup.
 
-use-package will defer loading of packages if `:defer <non-nil>` is set, or if any of the keywords with the "autoloading side effect" are used (e.g. `bind`, `command`, `hook`, ... : these all will make use-package defer loading and then autoload package once corresponding binding / command / hook / ... has happeend).
+use-package will defer loading of packages if ~:defer <non-nil>~ is set, or if any of the keywords with the "autoloading side effect" are used (e.g. ~bind~, ~command~, ~hook~, ... : these all will make use-package defer loading and then autoload package once corresponding binding / command / hook / ... has happeend).
 
-If you use any of the "autoload" keywords but don't want use-package to be "smart" and assume you want autoloading, you can use `:demand t`.
+If you use any of the "autoload" keywords but don't want use-package to be "smart" and assume you want autoloading, you can use ~:demand t~.
 
-It can be good practice to add `:defer t` even when autoloading keywords are used, to be explicit about the intention.
+It can be good practice to add ~:defer t~ even when autoloading keywords are used, to be explicit about the intention.
 
 *** elpaca
-Elpaca can install package directly: `(elpaca some-package (message "this happens after package is installed"))`, but we use it via use-package.
-In the background, a call to `(use-package some-package :ensure t :some-keyword <smth>)` becomes `(elpaca some-package (use-package some-package :some-keyword <smth>))`.
+Elpaca can install package directly: ~(elpaca some-package (message "this happens after package is installed"))~, but we use it via use-package.
+In the background, a call to ~(use-package some-package :ensure t :some-keyword <smth>)~ becomes ~(elpaca some-package (use-package some-package :some-keyword <smth>))~.
 
 Compared to native package.el, that pulls in tarballs from package repos, Elpaca (and also Straight) work in a different way -> they pull package sources directly from their github repos, based on the "recipes", which say for each package where to pull from (and optionally how to build them).
 
 **** Recipes
 
-Elpaca allows you to define how the package should be installed via a `recipe`, which is provided as an argument to `:ensure` if using `use-package`.
-Example of a recipe: `(some-package :host github :repo "user/example")`.
+Elpaca allows you to define how the package should be installed via a ~recipe~, which is provided as an argument to ~:ensure~ if using ~use-package~.
+Example of a recipe: ~(some-package :host github :repo "user/example")~.
 
 **** Deferred installing
 
 Elpaca, unlike package.el, doesn't install packages immediately, instead it waits for emacs init to finish, and then installs them asynchronously, in parallel for fast, non-blocking installations.
 
-To prevent this behaviour and make elpaca install package right now, when the corresponding `use-package` declaration is evaluated, one can pass `:wait t` keyword do the elpaca recipe: `:ensure (:wait t ...)`.
+To prevent this behaviour and make elpaca install package right now, when the corresponding ~use-package~ declaration is evaluated, one can pass ~:wait t~ keyword to the elpaca recipe: ~:ensure (:wait t ...)~.
 This can be useful for packages that e.g. add keywords to use-package, since you need those installed and loaded first.
 
 Due to elpaca's deffered installing, instead of installing and loading happening during init phase (evaluation of init.el), we have following order of events: init -> installation of packages -> loading packages.
-Exception are packages with `:wait t` in their recipe, those will get installed / loaded at init.
-That also means that `after-init-hook` is often not the right choice any more, and we should instead use `elpaca-after-init-hook`, which will guarantee packages are installed / loaded.
+Exception are packages with ~:wait t~ in their recipe, those will get installed / loaded at init.
+That also means that ~after-init-hook~ is often not the right choice any more, and we should instead use ~elpaca-after-init-hook~, which will guarantee packages are installed / loaded.
 
 ** Config
 *** Disable package.el (in early-init.el)
@@ -223,7 +222,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 - ~elpaca-manager~ to run the main elpaca UI.
 - ~elpaca-update-all~ to fetch package updates and apply them.
 - To create/update a lock file, run ~my/elpaca-write-lock-file~.
-- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update some package, for example with ~elpaca-update~, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package. Make sure to restart emacs once you unset ~elpaca-lock-file~ in config, because elpaca won't pick it up if I just evaluate it. So I will want to modify the config code above to unset lock file, save it, restart emacs, update the packages I want to update, then put the config above to again use lock file, save it, restart emacs.
+- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update some package, for example with ~elpaca-update~, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package. Make sure to restart emacs once you unset ~elpaca-lock-file~ in config, because elpaca won't pick it up if I just evaluate it. So I will want to modify the config code above to unset lock file, save it, restart emacs, update the packages I want to update, ensure they work well, update the lock file, then put the config above to again use lock file, save it, restart emacs.
 * Utils
 ** Packages
 :PROPERTIES:
