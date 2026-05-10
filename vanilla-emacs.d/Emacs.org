@@ -108,10 +108,11 @@ In the background, a call to ~(use-package some-package :ensure t :some-keyword 
 
 Compared to native package.el, that pulls in tarballs from package repos, Elpaca (and also Straight) work in a different way -> they pull package sources directly from their github repos, based on the "recipes", which say for each package where to pull from (and optionally how to build them).
 
-**** Recipes
+All the package sources are checked out as git repos in by Elpaca in =elpaca/= dir, and then also built there, both fetching and building instructed by the recipes.
 
-Elpaca allows you to define how the package should be installed via a ~recipe~, which is provided as an argument to ~:ensure~ if using ~use-package~.
-Example of a recipe: ~(some-package :host github :repo "user/example")~.
+If elpaca recipe lock file exists and Elpaca is told to use it, those recipes the priority.
+
+Custom recipes can also be specified directly per package, if default one doesn't exist online or we want to override it, and in case of =use-package=, that is done via =:ensure=, e.g. ~:ensure (:host github :repo "user/example")~.
 
 **** Deferred installing
 
@@ -220,9 +221,19 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 
 ** Cheatsheet :cheatsheet:
 - ~elpaca-manager~ to run the main elpaca UI.
-- ~elpaca-update-all~ to fetch package updates and apply them.
-- To create/update a lock file, run ~my/elpaca-write-lock-file~.
-- *NOTE*: When lock file is set via ~elpaca-lock-file~ var, it is always used for obtaining the package recipes, and that prevents us from updating the packages. Commands like ~elpaca-update~ and similar will just use the version from the lock file. So if I indeed want to update some package, for example with ~elpaca-update~, I need to turn off the lock file (e.g. by temporarily commenting-out the setting of ~elpaca-lock-file~ var) and then doing the update of the package. Make sure to restart emacs once you unset ~elpaca-lock-file~ in config, because elpaca won't pick it up if I just evaluate it. So I will want to modify the config code above to unset lock file, save it, restart emacs, update the packages I want to update, ensure they work well, update the lock file, then put the config above to again use lock file, save it, restart emacs.
+- To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
+*** Updating the packages
+- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
+  - Run ~my/elpaca-write-lock-file~, and then commit the lock file if any changes. This should be enough to restore the old state, unless some of the upstream git references in lock file don't exist any more (renamed repo/branch, force push, ...).
+  - As an extra measure against the missing refs, do ~cp -a elpaca/ elpaca.backup/~ and keep it around till update is successful, in case we need to revert and some refs from lock file dont' exist any more.
+- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new recipes for existing packages, not the locked ones.
+- ~elpaca-fetch-all~ to have elpaca fetch the package updates, but not yet merge them. It downloads the new commits from every package's remote, in =elpaca/= dir, but doesn't use them in any way yet.
+- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched. I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config. I usually create a file on disk where I log any changes I will need to do. If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
+- Once ready, ~elpaca-merge-all~ to merge/apply the package updates.
+- Fix/update my config as/if needed.
+- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config. Delete ~elpaca.backup/~.
+- That is it!
+NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
 * Utils
 ** Packages
 :PROPERTIES:
