@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(emacsclient *)",
+      "Bash(find elpaca/repos/**:*)",
+      "Bash(ls elpaca/repos/**:*)",
+      "Bash(git *)",
+      "Bash(awk *)",
+      "Edit(/emacs-update.org)",
+      "Read(./**)"
+    ]
+  }
+}
