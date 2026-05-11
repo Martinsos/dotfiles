@@ -1,14 +1,14 @@
 ---
 name: analyze-emacs-package-updates
 description: Analyzes the log of incoming emacs package updates (usually in `emacs-update.org`), producing a report for each package, with special focus on any changes required in the current emacs config (`Emacs.org`).
-allowed-tools:
-  - Bash(git -C elpaca/repos/**:*)
-  - Bash(find elpaca/repos/**:*)
-  - Bash(ls elpaca/repos/**:*)
-  - Edit(/emacs-update.org)
 ---
 
 # Analyze Emacs package updates
+
+## Rules
+- ALWAYS try sticking with allowed permissions as much as possible, to avoid having to ask for user confirmation.
+  - NEVER use `cd ... && git ...` as that requires additional permissions: use `git -C ...` instead!
+  - If permissions use relative path, you SHOULD also!
 
 ## Inputs
 
@@ -48,23 +48,30 @@ Focus only on those with `TODO` prefix, skip those with `DONE`.
 
 Use `TaskCreate` in a single message (parallel) to create one task per package.
 
-### 2. Run one agent per package, sequentially
+### 2. Ensure emacs-update-ai-analysis/ dir exists
 
-Pass them what you know + following tips / instructions (`<pkg>` to be replaced with package name/id):
+```bash
+mkdir -p emacs-update-ai-analysis/
+```
+
+### 3. Run one agent per package
+
+Run one agent per package, in parallel.
+
+Pass them your context + instructions above in this skill + following tips / instructions (`<pkg>` to be replaced with package name/id):
+- If AI analysis file for this package already exists and is newer than `emacs-update.org`, skip the analysis: `test -f emacs-update-ai-analysis/<pkg>.org && [ emacs-update-ai-analysis/<pkg>.org -nt emacs-update.org ]`.
 - Read the whole package entry from `emacs-update.org`. Use `grep -En '^\*\s.*\b<pkg>\b'` to find heading line. Usually reading ~50 lines is more than enough, but expand as needed.
-  - If "AI analysis" subheading already exists, skip.
 - Read the package user config from `Emacs.org`. Use `grep -En '\buse-package\s+<pkg>\b'` and `grep -En "\bwith-eval-after-load\s+'<pkg>\b` to locate the relevant pieces of config. Read ~50 lines around each match, expand as needed.
-- If extra info/context needed, inspect the package repo at `elpaca/repos/<pkg>/`. You might want to check the changelog, commits, ... . If using `git`, use it with `-C` to avoid triggering permission asks. Don't overdo this or spend too much time on it, use it sparingly, only when more info is needed.
-- Write the analysis in `emacs-update.org`, as the last subheading in the package's entry, as "AI analysis" subheading, with correct priority cookie.
+- If extra info/context needed, inspect the package repo at `elpaca/repos/<pkg>/`. You might want to check the changelog, commits, ... . If using `git`, YOU MUST use it with `-C` to avoid triggering permission asks, don't use `cd ... && git ...`. Don't overdo this or spend too much time on it, use it sparingly, only when more info is needed.
+- Create the file `emacs-update-ai-analysis/<pkg>.org` and write the analysis into it, with the heading: `* [#A|B|C] AI analysis`.
   - If no entry in user config, mark AI analysis with `[#C]`.
-- Return `[#X] <pkg>: <one-sentence headline>` so the parent can build the final summary.
+- Return `[#A|B|C] <pkg>: <one-sentence headline>` so the parent can build the final summary.
 - Keep it concise in general.
 
-### 3. Final summary
+### 4. Collect and summarize
 
-When all packages are processed, print a final summary, keep it short.
+When all packages are processed by the agents, read all the files from `emacs-update-ai-analysis/` and copy each package analysis as the last subheading under the corresponding package heading in `emacs-update.org`: `** [#A|B|C] AI analysis`.
+
+Finally, print a final summary, keep it short.
 
 Also, if there are any suggestions you have to improve this skill, inform the user.
-
-## Misc
-- Try sticking with allowed permissions as much as possible, to avoid having to ask for user confirmation.
