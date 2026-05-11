@@ -236,7 +236,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
   - ~PROBLEM~: This currently doesn't really when using a lock file in general! Even though we disabled a lock file, as a consequence of using it, package repos in =elpaca/= are in a detached state due to how elpaca implemented its lock file system, and then =*elpaca-log*= fails to show the logs because its implementation for showing them requires packages repos to not be in a detached state but on a branch. This is so because lock file feature addition is still somewhat unbaked and elpaca's workflow for it is still maturing / being developed.
     Due to how it works, ~elpaca-merge-all~ also wouldn't work.
     ~SOLUTION~: The way I currently solve it is by then doing the following:
-    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file. So now I have the logs I needed. Review them, figure out what I will need to fix in the config.
+    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file. So now I have the logs I needed. Review them, figure out what I will need to fix in the config. Btw I have an AI skill for analyzing the logs against my config, use that as a help during reviewing.
     - Delete the =elpaca/= dir. I don't need it since elpaca logs don't work anyway, and why not then restart it fully then.
     - Restart emacs. This will install all the packages from the scratch.
 - Fix/update my config as/if needed.
