@@ -59,13 +59,14 @@ mkdir -p emacs-update-ai-analysis/
 Run one agent per package, in parallel.
 
 Pass them your context + instructions above in this skill + following tips / instructions (`<pkg>` to be replaced with package name/id):
-- If AI analysis file for this package already exists and is newer than `emacs-update.org`, skip the analysis: `test -f emacs-update-ai-analysis/<pkg>.org && [ emacs-update-ai-analysis/<pkg>.org -nt emacs-update.org ]`.
+- If AI analysis file for this package already exists and is newer than `emacs-update.org`, skip the analysis. Call the skill script: `./check-ai-analysis-existence.sh <pkg>` (exit 0 = skip).
 - Read the whole package entry from `emacs-update.org`. Use `grep -En '^\*\s.*\b<pkg>\b'` to find heading line. Usually reading ~50 lines is more than enough, but expand as needed.
 - Read the package user config from `Emacs.org`. Use `grep -En '\buse-package\s+<pkg>\b'` and `grep -En "\bwith-eval-after-load\s+'<pkg>\b` to locate the relevant pieces of config. Read ~50 lines around each match, expand as needed.
 - If extra info/context needed, inspect the package repo at `elpaca/repos/<pkg>/`. You might want to check the changelog, commits, ... . If using `git`, YOU MUST use it with `-C` to avoid triggering permission asks, don't use `cd ... && git ...`. Don't overdo this or spend too much time on it, use it sparingly, only when more info is needed.
 - Create the file `emacs-update-ai-analysis/<pkg>.org` and write the analysis into it, with the heading: `* [#A|B|C] AI analysis`.
   - If no entry in user config, mark AI analysis with `[#C]`.
 - Return `[#A|B|C] <pkg>: <one-sentence headline>` so the parent can build the final summary.
+- Parent is using `TaskCreate` so let it know your task is done.
 - Keep it concise in general.
 
 ### 4. Collect and summarize
