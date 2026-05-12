@@ -2,12 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(emacsclient *)",
-      "Bash(find elpaca/repos/**:*)",
-      "Bash(ls elpaca/repos/**:*)",
+      "Bash(find elpaca/repos/:*)",
       "Bash(git *)",
       "Bash(awk *)",
-      "Edit(/emacs-update.org)",
+      "Bash(./.claude/skills/**)",
       "Bash(mkdir -p emacs-update-ai-analysis)",
+      "Edit(/emacs-update.org)",
       "Write(/emacs-update-ai-analysis/**)",
       "Read(./**)"
     ]
