@@ -4862,50 +4862,6 @@ I created my own major mode for highlighting the ascii diagrams.
   )
 #+end_src
 * AI
-** Overview of popular packages
-Last updated: <2024-12-23 Mon>
-
-Quick summary:
-For now I will go with gpt.el (for general usage), copilot.el (for completion) and copilot-chat.el (for general usage). gpt.el and copilot-chat.el are overlapping in what they can do, so I have to figure out which I like better. gpt.el however can use any model, while copilot-chat has to use copilot, but is free for me.
-Out of higher-level models, I think Ellama and aider.el might be worth trying out for me. Elisa is also interesting, although it might be better if I just set up PrivateGPT and use it with gpt.el.
-I might also want to try out chatgpt-shell at some point, it is similar to gptel uses different approach.
-
-*** High level
-- [[https://github.com/s-kostyaev/ellama][Ellama]]
-  Has cmds to ask llm to summarize, translate, complete, code review, use CoT, ... . A lot of very specific commands for specific tasks.
-  Seems to me like I can do most of this with gpt.el directly with just a bit more work, so I will skip trying out Ellama for now, and maybe try it once I feel that I want more from gpt.el and Ellama offers it.
-- [[https://github.com/tninja/aider.el][aider.el]]
-  Makes it easy to use Aider from emacs, for the current project, and send it buffers and similar.
-  Has nice transient menu.
-  Certainly worth trying if using Aider.
-- [[https://github.com/daedsidog/evedel][Evedel]]
-  Uses gpt.el as a backend and needs it installed.
-  Introduces unique workflow for working with LLM where you add instructions(directives) and references in the text/code in your buffer and that is sent to the LLM in order to modify it.
-  Sounds powerful, but for now I don't need that level of control over how LLM refactors piece of my code.
-- [[https://github.com/s-kostyaev/elisa][Elisa]]
-  Implementation of RAG to be used in your emacs.
-  Combines local files/dirs, Emacs info manuals, and web search -> all these are added to "collection(s)".
-  And then you can ask questions about it.
-  Sounds awesome for working on specific projects with specific knowledge, but is a bit limited in the way that it can do only chatting. Probably it is better for me to sure PrivateGPT then, as a backend for gpt.el.
-- [[https://github.com/lanceberge/elysium][elysium]]
-  Uses gpt.el as backend and needs it installed.
-  Narrow-focused: given the query, it applies changes directly to the selected code. But I believe gpt.el can also do that?
-*** Mid-level
-- [[https://github.com/karthink/gptel][gptel]]
-  Allows for chatting with llm of choice anywhere in Emacs, with a lot of care about DX and being inobtrusive.
-  Quite flexible, allows a lot of customization on the fly with nice transient menu.
-  Also has commands for stuff like rewriting a piece of code, adding buffers to the context, ... .
-  Has support for multi-modal: specifically images.
-  Most popular emacs LLM package at the moment.
-- [[https://github.com/copilot-emacs/copilot.el][copilot.el]]
-  Brings copilot completion to Emacs.
-- [[https://github.com/chep/copilot-chat.el][copilot-chat.el]]
-  Brings copilot-chat capabilities to Emacs. Similar to gptel in what it can do, but only for copilot as a backend.
-- [[https://github.com/xenodium/chatgpt-shell][chatgpt-shell]]
-  Similar to gptel, but as a comint shell, which is a kind of specific emacs's mechanism for prompts / convos.
-*** Low-level
-- [[https://github.com/ahyatt/llm][llm]]
-
 ** GPTel
 =gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
@@ -5498,43 +5454,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
 *** TODO Look into "macher" package
-** Copilot
 
-*** copilot.el
-:PROPERTIES:
-:ID:       4699a041-7fc1-4c3c-a875-f16e7aa49694
-:END:
-
-I have it off by default because I find it intrusive. I however defined a keybinding for toggling copilot-mode easily.
-
-#+begin_src emacs-lisp
-
-  (use-package copilot
-    :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-    :config
-    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-    (my/leader-keys
-      "i TAB" '("toggle copilot" . copilot-mode)
-    )
-  )
-
-#+end_src
-
-**** Manual setup                                           :manual_setup:
-- install the copilot server: ~M-x copilot-install-server~
-- login to copilot with ~M-x copilot-login~
-
-
-** TODOs
-*** TODO Learn/configure gptel
-- Here is a bit more on effectively using gptel: https://www.reddit.com/r/emacs/s/O7Kh4Z9uNV .
-- About tool use + translation RAG in emacs using gptel and a super crappy LLM: https://www.reddit.com/r/emacs/s/IbQJijOHHZ .
-*** TODO Lean how to use Aider
-- There is Aidermacs, try it.
-- A bit about using Aider in Emacs, and other stuff, to get closer to Cursor experience: https://www.reddit.com/r/emacs/comments/1ikdb5c/how_is_cursor_ai_better_than_emacs/?share_id=-3XEqsEXmq65_vdCzFM6H&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10
-- There is aider.el, I might want to look into that one, or I can just use Aider directly form the terminal. https://github.com/tninja/aider.el
-- Aidermacs: another package for using aider in emacs, allegedly it is cool: https://www.reddit.com/r/emacs/s/ej9qMsblZq .
-*** TODO Try other stuff (Elysium? Evedel? Others?)
 * Formatting
 ** Whitespaces
 :PROPERTIES:
@@ -5747,7 +5667,6 @@ That is why I instead I use this dedicated mode that does just this: highlights 
   ;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
   (use-package colorful-mode
     :config
-    (add-to-list 'global-colorful-modes 'help-mode)
     (global-colorful-mode)
   )
 

@@ -25,8 +25,6 @@
 /safe-local-variable-directories.eld
 /projects
 /forge-database.sqlite
-/emacs-update.org
-/emacs-update-ai-analysis/
 /.claude/*.local.*
 *~
 /.claude/*.local.*
