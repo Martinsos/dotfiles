@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-11 23:48:28 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-14 19:19:32 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -3687,15 +3687,6 @@ Returns a structured list of information that can be sent to an LLM."
   (insert (concat (unless (bolp) "\n") text))
 )
 
-(use-package copilot
-  :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :config
-  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-  (my/leader-keys
-    "i TAB" '("toggle copilot" . copilot-mode)
-  )
-)
-
 (use-package whitespace
   :ensure nil ; Don't install as it is built-in with emacs.
   :config
@@ -3817,7 +3808,6 @@ Returns a structured list of information that can be sent to an LLM."
 ;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
 (use-package colorful-mode
   :config
-  (add-to-list 'global-colorful-modes 'help-mode)
   (global-colorful-mode)
 )
 
