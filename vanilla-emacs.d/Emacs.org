@@ -664,7 +664,7 @@ This measures how long each package took. Run ~use-package-report~ to see the re
 
   ;; doom-themes have nice, high quality themes.
   (use-package doom-themes
-    :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+    :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
     :config
     ;; If running in daemon mode, I want to load the theme only once real frame is available (daemon
     ;; starts with fake frame), otherwise theme can wrongly set itself up (because it thinks there is
@@ -691,7 +691,7 @@ This measures how long each package took. Run ~use-package-report~ to see the re
   ;; Nice themes by Prot.
   ;; `ef-dream' is nice, also `ef-night'.
   ;;(use-package ef-themes
-  ;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+  ;;  :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   ;;)
 
 #+end_src
@@ -911,7 +911,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
   ;;   Therefore, I don't completely understand if the config below is written in the best way, but
   ;;   it was recommended by others and it seems to work.
   (use-package general
-    :ensure (:wait t) ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
+    :demand t ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
     :config
     (general-evil-setup t)
 
@@ -3832,33 +3832,6 @@ Showing just one line by default helped, but I still didn't like it, and ended u
 
 #+end_src
 
-** Flymake                                                          :inactive:
-
-Im not using it for now since I managed to set up Flycheck quite well, but I might want to try it out in the future again.
-
-#+begin_src emacs-lisp :tangle no
-
-  (use-package flymake
-    :ensure nil ; built-in
-    :hook (prog-mode . flymake-mode)
-    :custom
-    (flymake-no-changes-timeout 0.2)
-    :config
-    (my/leader-keys
-      "en"  '("next" . flymake-goto-next-error)
-      "ep"  '("previous" . flymake-goto-prev-error)
-      "el"  '("list (buffer)" . flymake-show-buffer-diagnostics)
-      "eL"  '("list (project)" . flymake-show-project-diagnostics)
-    )
-  )
-
-  (use-package flymake-posframe
-    :ensure (:host github :repo "Ladicle/flymake-posframe")
-    :hook (flymake-mode . flymake-posframe-mode)
-  )
-
-#+end_src
-
 * Link checking
 :PROPERTIES:
 :ID:       de0fd882-a5af-4c6f-b52a-aa77fdd09ffe
@@ -5313,33 +5286,6 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
 *** TODO Look into "macher" package
-** Copilot
-
-*** copilot.el
-:PROPERTIES:
-:ID:       4699a041-7fc1-4c3c-a875-f16e7aa49694
-:END:
-
-I have it off by default because I find it intrusive. I however defined a keybinding for toggling copilot-mode easily.
-
-#+begin_src emacs-lisp
-
-  (use-package copilot
-    :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-    :config
-    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-    (my/leader-keys
-      "i TAB" '("toggle copilot" . copilot-mode)
-    )
-  )
-
-#+end_src
-
-**** Manual setup                                           :manual_setup:
-- install the copilot server: ~M-x copilot-install-server~
-- login to copilot with ~M-x copilot-login~
-
-
 ** TODOs
 *** TODO Learn/configure gptel
 - Here is a bit more on effectively using gptel: https://www.reddit.com/r/emacs/s/O7Kh4Z9uNV .

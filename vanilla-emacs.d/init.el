@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:32:32 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:51:30 CEST, don't edit it manually.
 
 ;; Since our packages are installed externally, by default we don't want
 ;; to try to install any of them via package.el.
@@ -344,7 +344,7 @@ USAGE:
 
 ;; doom-themes have nice, high quality themes.
 (use-package doom-themes
-  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+  :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   :config
   ;; If running in daemon mode, I want to load the theme only once real frame is available (daemon
   ;; starts with fake frame), otherwise theme can wrongly set itself up (because it thinks there is
@@ -371,7 +371,7 @@ USAGE:
 ;; Nice themes by Prot.
 ;; `ef-dream' is nice, also `ef-night'.
 ;;(use-package ef-themes
-;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+;;  :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
 ;;)
 
 (use-package emacs
@@ -472,7 +472,7 @@ USAGE:
 ;;   Therefore, I don't completely understand if the config below is written in the best way, but
 ;;   it was recommended by others and it seems to work.
 (use-package general
-  :ensure (:wait t) ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
+  :demand t ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
   :config
   (general-evil-setup t)
 
@@ -3569,15 +3569,6 @@ Returns a structured list of information that can be sent to an LLM."
 
 (defun my/insert-at-beg-of-line (text)
   (insert (concat (unless (bolp) "\n") text))
-)
-
-(use-package copilot
-  :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :config
-  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-  (my/leader-keys
-    "i TAB" '("toggle copilot" . copilot-mode)
-  )
 )
 
 (use-package whitespace
