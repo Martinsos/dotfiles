@@ -5,7 +5,8 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 
     # Relevant functionality emacs-overlay brings:
-    #  - latest (fresher) packages from Elpa and Melpa
+    #  - Updates emacs packages with latest (daily) packages from Elpa and Melpa.
+    #    This happens regardless of us using ...FromUsePackage or not.
     #  - `emacsWithPackagesFromUsePackage` -> parses init.el and builds packages.
     #  - `treesit-grammars.with-grammars` for bundling tree-sitter grammars.
     emacs-overlay = {
@@ -24,69 +25,111 @@
           overlays = [ emacs-overlay.overlays.default ];
         };
 
-        emacsPkg = pkgs.emacs-pgtk;
+        emacs = pkgs.emacs-pgtk;
 
-        # TODO(later): treesit-grammars.with-grammars to have nix handle them instead of elisp.
-        #  Once we do that, we can delete the list of them from Emacs.org allegedly and there should
-        #  be no duplication.  The only problem is that there is no for prisma in nixpkgs so we
+        # TODO(later): treesit-grammars.with-grammars to have nix handle them
+        #  instead of elisp.  Once we do that, we can delete the list of them
+        #  from Emacs.org allegedly and there should be no duplication.
+        #  The only problem is that there is no for prisma in nixpkgs so we
         #  would have to define that one on our own, but we can do that.
 
-        # TODO/NOTE(Martin) Understanding :ensure and who does what, this is what I understood so far is the best:
-        # - use emacs overlay with parsing use-package.
-        # - :ensure t by default in emacs, match the setting here so overlay knows.
-        # - Put :ensure nil if built-in, nothing (there ensure t) if Nix should pick itup.
-        # - If I want to experiment, I can do it in flake/overlay potentially via override, or via extraEmacsPackages, I think. Or I can do :ensure nil to stop nix from picking it up, and use :vc to have package.el do it (but will :ensure nil also stop package.el? Not sure should test.). One option is also to not use use-package for that package but go lower level wit hpackage-vs-install and require.
-        # - package-enable-at-startup -> this needs to be `t` or package.el wont' pick up package sinstalled by nix and use-package will make package.el install them! This makes sense to me.
+        emacsPkgs = (pkgs.emacsPackagesFor emacs).overrideScope (final: prev: {
+          # Here I can pin/patch/add emacs packages.
+          #
+          # Example:
+          # magit = prev.magit.overrideAttrs (old: {
+          #   src = pkgs.fetchFromGitHub {
+          #     owner = "magit"; repo = "magit";
+          #     rev = "abc123..."; sha256 = "...";
+          #   };
+          # });
+        });
 
-        # Replacement for elpaca: parse `(use-package ...)` declarations from
-        # init.el and produce an emacs with all those packages (plus our
-        # grammars) installed.
-        #
-        # NOTE: init.el today still bootstraps elpaca and sets
-        # `use-package-always-ensure t`. With this flake, packages come from
-        # nix instead, so the migration also requires editing init.el /
-        # Emacs.org to:
-        #   - remove the elpaca bootstrap and lock-file plumbing,
-        #   - set `use-package-always-ensure nil` (packages are already on
-        #     load-path; :ensure is a no-op signal for nix's parser),
-        #   - replace any `:ensure (:host github :repo "...")` recipes with
-        #     entries in the `override` arg below (for packages not on MELPA).
-        # Until those edits land, running this emacs will likely still try to
-        # bootstrap elpaca at startup. We'll iterate.
-        # TODO: Understand this better. Especially what I do with :ensure
-        #   If I want to have package.el enabled. Because I hvae three types of packages now:
-        #   built in, installed by nix, and installed by package.el. Or do I want to drop
-        #   the package.el? How do I test new packages easily then, or refer to packages
-        #   directly that are in some repo or whatever or local? I think I do want to have
-        #   package.el on.
-        myEmacs = pkgs.emacsWithPackagesFromUsePackage {
-          package = emacsPkg;
-          config = ./init.el; # TODO: What if we put Emacs.org? But this sound safer.
-          # init.el sets `use-package-always-ensure t`, so the parser should
-          # pull packages even when `:ensure` isn't explicit.
-          alwaysEnsure = true;
-          # Don't have the derivation write its own init file — keep using
-          # the existing Emacs.org → init.el flow.
-          # TODO: Why would it want to write its own derviation file?
-          defaultInitFile = false;
-          # TODO: What is this one about?
-          extraEmacsPackages = epkgs: [];
-          # TODO: oh cool can you explain this more? So maybe I don't need package.el? What i I am working on a local package?
-          # `override` is where to add custom recipes for packages not on
-          # MELPA, or to pin specific revisions. Fill in as parse failures
-          # surface during `nix build`.
-          # override = epkgs: epkgs // { };
-        };
+        # TODO: Consider adding use-package keyword :from 'nix or smth similar
+        # in Emacs.config, both for documentation but also maybe it can be used
+        # to then automaticaly generate this list below?
+        myEmacs = emacsPkgs.emacsWithPackages (emacsPkgs: with emacsPkgs; [
+          ace-window
+          all-the-icons
+          all-the-icons-dired
+          amx
+          avy
+          colorful-mode
+          column-enforce-mode
+          company
+          counsel
+          counsel-projectile
+          diff-hl
+          dired-hide-dotfiles
+          doom-modeline
+          doom-themes
+          elfeed
+          ethan-wspace
+          evil
+          evil-collection
+          evil-escape
+          evil-org
+          flycheck
+          flycheck-posframe
+          general
+          gptel
+          haskell-mode
+          helpful
+          hl-todo
+          htmlize
+          hydra
+          imenu-list
+          ivy
+          ivy-rich
+          jinx
+          lsp-eslint
+          lsp-haskell
+          lsp-ivy
+          lsp-mode
+          lsp-treemacs
+          lsp-ui
+          magit
+          markdown-mode
+          nix-mode
+          olivetti
+          org-appear
+          org-download
+          org-gcal
+          org-modern
+          org-present
+          org-rainbow-tags
+          org-super-agenda
+          org-superstar
+          org-tidy
+          powershell
+          projectile
+          quick-peek
+          rainbow-delimiters
+          sideline
+          sideline-flycheck
+          sideline-lsp
+          swiper
+          undo-fu
+          visual-fill-column
+          vterm
+          vterm-toggle
+          vundo
+          which-key
+          winum
+          xclip
+        ]);
+
+        # TODO/NOTE(Martin) Understanding :ensure and who does what, this is what I understood so far is the best:
+        # - :ensure nil by default in emacs, since they are either built in or coming from nix.
+        # - package-enable-at-startup -> try with nil, allegedly nix modifies load path itself, and package.el could just potentially load packages we are not aware of.
+        #   Another theory is it that it has to be t to load nix packages -> but I doubt that.
+        #   Finally, we might want to make it t to support any packages we handle via package.el.
+        # - Remove elpaca from config.
 
       in {
-        # TODO: I saw them doing `= self.packages.emacs` here, sounds nicer?
-        packages.default = myEmacs;
-        packages.emacs = myEmacs;
-
-        # TODO: Aha why do we need this?
-        apps.default = {
-          type = "app";
-          program = "${myEmacs}/bin/emacs";
+        packages = rec {
+          emacs = myEmacs;
+          default = emacs;
         };
 
         # TODO — external CLI tools the config touches. Decide per tool
