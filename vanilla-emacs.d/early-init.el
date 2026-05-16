@@ -1,4 +1,10 @@
-;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:13:24 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:32:32 CEST, don't edit it manually.
+
+;; Since we install packages externally (Nix) and they are added to load
+;; path separately, we don't want package.el to try to automatically
+;; load the packages from the usual place. If we will have any packages
+;; there, we want to be more explicit about it.
+(setq package-enable-at-startup nil)
 
 ;; When running emacs in non-daemon mode, I had emacs window appearing at the very start,
 ;; for a short time (~0.5-1s), as a small window with white background,

@@ -104,9 +104,23 @@ If you use any of the "autoload" keywords but don't want use-package to be "smar
 It can be good practice to add ~:defer t~ even when autoloading keywords are used, to be explicit about the intention.
 
 *** TODO Nix
+- mention lock file
 
 ** Config
 *** Disable default package.el package loading
+:PROPERTIES:
+:ID:       d7625383-a37f-45d1-b88c-bec99c044ac9
+:END:
+
+#+begin_src emacs-lisp :tangle ./early-init.el
+
+  ;; Since we install packages externally (Nix) and they are added to load
+  ;; path separately, we don't want package.el to try to automatically
+  ;; load the packages from the usual place. If we will have any packages
+  ;; there, we want to be more explicit about it.
+  (setq package-enable-at-startup nil)
+
+#+end_src
 
 *** use-package
 :PROPERTIES:
@@ -123,6 +137,7 @@ It can be good practice to add ~:defer t~ even when autoloading keywords are use
 
 ** Cheatsheet :cheatsheet:
 *** TODO Updating the packages
+- Take nix lock file into account
 * Utils
 ** Packages
 :PROPERTIES:
@@ -3824,7 +3839,7 @@ Im not using it for now since I managed to set up Flycheck quite well, but I mig
 #+begin_src emacs-lisp :tangle no
 
   (use-package flymake
-    :ensure nil ; built=in
+    :ensure nil ; built-in
     :hook (prog-mode . flymake-mode)
     :custom
     (flymake-no-changes-timeout 0.2)
