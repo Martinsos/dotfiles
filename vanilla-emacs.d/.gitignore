@@ -26,3 +26,6 @@
 /forge-database.sqlite
 *~
 /.claude/*.local.*
+# /result -> outputs of nix build.
+/result
+/result-*
