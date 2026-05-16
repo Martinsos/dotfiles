@@ -82,7 +82,6 @@
           ivy
           ivy-rich
           jinx
-          lsp-eslint
           lsp-haskell
           lsp-ivy
           lsp-mode
@@ -124,7 +123,7 @@
         # - package-enable-at-startup -> try with nil, allegedly nix modifies load path itself, and package.el could just potentially load packages we are not aware of.
         #   Another theory is it that it has to be t to load nix packages -> but I doubt that.
         #   Finally, we might want to make it t to support any packages we handle via package.el.
-        # - Remove elpaca from config.
+        # - There might be packages that are built-in but I install them by accident, recognize them and make them internal.
         # - Update docs in Emacs.config to document new stuff.
         # - Come up with new workflow for updating emacs, for getting the logs Come up with new workflow for updating emacs, for getting the logs to read through.
 
