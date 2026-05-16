@@ -125,6 +125,8 @@
         #   Another theory is it that it has to be t to load nix packages -> but I doubt that.
         #   Finally, we might want to make it t to support any packages we handle via package.el.
         # - Remove elpaca from config.
+        # - Update docs in Emacs.config to document new stuff.
+        # - Come up with new workflow for updating emacs, for getting the logs Come up with new workflow for updating emacs, for getting the logs to read through.
 
       in {
         packages = rec {

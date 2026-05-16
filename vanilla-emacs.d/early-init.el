@@ -1,6 +1,4 @@
-;; NOTE: This file was generated from Emacs.org on 2026-05-16 10:38:24 CEST, don't edit it manually.
-
-(setq package-enable-at-startup nil) ; Elpaca requires this.
+;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:13:24 CEST, don't edit it manually.
 
 ;; When running emacs in non-daemon mode, I had emacs window appearing at the very start,
 ;; for a short time (~0.5-1s), as a small window with white background,

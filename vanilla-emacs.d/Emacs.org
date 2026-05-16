@@ -47,16 +47,17 @@ I am actually not sure how useful is this but I found it fun.
 
 * Package management
 ** Tutorial
-*** package.el vs use-package vs elpaca
+*** package.el vs use-package vs elpaca/straight vs Nix
 
 There are three important "packages" to understand here: package.el, use-package, and elpaca.
 
-- **package.el** is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
-- **use-package** is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
+- *package.el* is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
+- *use-package* is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
   It uses package.el in the background to install packages, but it is not a package manager, instead it is a layer above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
-- **elpaca** is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant. Instead of downloading tarballs from .e.g melpa, it pulls package sources directly from their git repos.
+- *elpaca* is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant. Instead of downloading tarballs from .e.g melpa, it pulls package sources directly from their git repos. Fork of straight.el that is very similar.
+- *Nix* - ~TODO~
 
-In this config I use elpaca + use-package (package.el is not even loaded).
+I use use-package to configure packages, and Nix to install the packages from the outside. And there is still package.el if I want to install any packages the native way.
 
 *** Installing vs loading vs configuring packages
 
@@ -102,138 +103,26 @@ If you use any of the "autoload" keywords but don't want use-package to be "smar
 
 It can be good practice to add ~:defer t~ even when autoloading keywords are used, to be explicit about the intention.
 
-*** elpaca
-Elpaca can install package directly: ~(elpaca some-package (message "this happens after package is installed"))~, but we use it via use-package.
-In the background, a call to ~(use-package some-package :ensure t :some-keyword <smth>)~ becomes ~(elpaca some-package (use-package some-package :some-keyword <smth>))~.
-
-Compared to native package.el, that pulls in tarballs from package repos, Elpaca (and also Straight) work in a different way -> they pull package sources directly from their github repos, based on the "recipes", which say for each package where to pull from (and optionally how to build them).
-
-All the package sources are checked out as git repos in by Elpaca in =elpaca/= dir, and then also built there, both fetching and building instructed by the recipes.
-
-If elpaca recipe lock file exists and Elpaca is told to use it, those recipes the priority.
-
-Custom recipes can also be specified directly per package, if default one doesn't exist online or we want to override it, and in case of =use-package=, that is done via =:ensure=, e.g. ~:ensure (:host github :repo "user/example")~.
-
-**** Deferred installing
-
-Elpaca, unlike package.el, doesn't install packages immediately, instead it waits for emacs init to finish, and then installs them asynchronously, in parallel for fast, non-blocking installations.
-
-To prevent this behaviour and make elpaca install package right now, when the corresponding ~use-package~ declaration is evaluated, one can pass ~:wait t~ keyword to the elpaca recipe: ~:ensure (:wait t ...)~.
-This can be useful for packages that e.g. add keywords to use-package, since you need those installed and loaded first.
-
-Due to elpaca's deffered installing, instead of installing and loading happening during init phase (evaluation of init.el), we have following order of events: init -> installation of packages -> loading packages.
-Exception are packages with ~:wait t~ in their recipe, those will get installed / loaded at init.
-That also means that ~after-init-hook~ is often not the right choice any more, and we should instead use ~elpaca-after-init-hook~, which will guarantee packages are installed / loaded.
+*** TODO Nix
 
 ** Config
-*** Disable package.el (in early-init.el)
-:PROPERTIES:
-:ID:       61a61dc9-0c50-4788-b008-2b6b829fe205
-:END:
+*** Disable default package.el package loading
 
-#+begin_src emacs-lisp :tangle ./early-init.el
-
-  (setq package-enable-at-startup nil) ; Elpaca requires this.
-
-#+end_src
-
-*** Install and set up Elpaca (in init.el)
-:PROPERTIES:
-:ID:       ceee0d9e-6919-4255-8c98-12ca0fa13ff9
-:END:
-
-#+begin_src emacs-lisp
-
-  (defvar elpaca-installer-version 0.11)
-  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                                :ref nil :depth 1 :inherit ignore
-                                :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                                :build (:not elpaca--activate-package)))
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-         (build (expand-file-name "elpaca/" elpaca-builds-directory))
-         (order (cdr elpaca-order))
-         (default-directory repo))
-    (add-to-list 'load-path (if (file-exists-p build) build repo))
-    (unless (file-exists-p repo)
-      (make-directory repo t)
-      (when (<= emacs-major-version 28) (require 'subr-x))
-      (condition-case-unless-debug err
-          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                    ,@(when-let* ((depth (plist-get order :depth)))
-                                                        (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                    ,(plist-get order :repo) ,repo))))
-                    ((zerop (call-process "git" nil buffer t "checkout"
-                                          (or (plist-get order :ref) "--"))))
-                    (emacs (concat invocation-directory invocation-name))
-                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                    ((require 'elpaca))
-                    ((elpaca-generate-autoloads "elpaca" repo)))
-              (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-            (error "%s" (with-current-buffer buffer (buffer-string))))
-        ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-    (unless (require 'elpaca-autoloads nil t)
-      (require 'elpaca)
-      (elpaca-generate-autoloads "elpaca" repo)
-      (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
-  (add-hook 'after-init-hook #'elpaca-process-queues)
-  (elpaca `(,@elpaca-order))
-
-#+end_src
-
-*** Set up elpaca lock file
-:PROPERTIES:
-:ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
-:END:
-
-Here we set the elpaca lock file, so that, when installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references. Meaning that exact versions of packages as in the lock file are installed each time, ensuring consistency.
-
-#+begin_src emacs-lisp
-
-  (setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
-  ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
-  ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-  ;;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
-
-  (defun my/elpaca-write-lock-file ()
-    (interactive)
-    (elpaca-write-lock-file elpaca-lock-file)
-  )
-
-#+end_src
-
-**** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
-*** Install and set up use-package (with Elpaca as backend)
+*** use-package
 :PROPERTIES:
 :ID:       e1c4b11f-6277-4890-ac2a-3ed0be776300
 :END:
 
 #+begin_src emacs-lisp
 
-  (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
-  (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+  ;; Since our packages are installed externally, by default we don't want
+  ;; to try to install any of them via package.el.
+  (setq use-package-always-ensure nil)
 
 #+end_src
 
 ** Cheatsheet :cheatsheet:
-- ~elpaca-manager~ to run the main elpaca UI.
-- To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
-*** Updating the packages
-- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
-  - Run ~my/elpaca-write-lock-file~, and then commit the lock file if any changes. This should be enough to restore the old state, unless some of the upstream git references in lock file don't exist any more (renamed repo/branch, force push, ...).
-  - As an extra measure against the missing refs, do ~cp -a elpaca/ elpaca.backup/~ and keep it around till update is successful, in case we need to revert and some refs from lock file dont' exist any more.
-- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new recipes for existing packages, not the locked ones.
-- ~elpaca-fetch-all~ to have elpaca fetch the package updates, but not yet merge them. It downloads the new commits from every package's remote, in =elpaca/= dir, but doesn't use them in any way yet.
-- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched. I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config. I usually create a file on disk where I log any changes I will need to do. If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
-- Once ready, ~elpaca-merge-all~ to merge/apply the package updates.
-- Fix/update my config as/if needed.
-- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config. Delete ~elpaca.backup/~.
-- That is it!
-NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
+*** TODO Updating the packages
 * Utils
 ** Packages
 :PROPERTIES:
@@ -710,13 +599,11 @@ but I wanted to avoid this as I don't use "custom" file.
    'emacs-startup-hook
    (lambda ()
      (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-            (pkgs-load-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-            (final-setup-duration (float-time (time-subtract (current-time) elpaca-after-init-time)))
+            (final-setup-duration (float-time (time-subtract (current-time) after-init-time)))
            )
-       (message "Emacs ready in %.2f (%.2f (init) + %.2f (packages) + %.2f (final setup)) seconds with %d garbage collections."
-         (+ init-duration pkgs-load-duration final-setup-duration)
+       (message "Emacs ready in %.2f (%.2f (init) + %.2f (final setup)) seconds with %d garbage collections."
+         (+ init-duration final-setup-duration)
          init-duration
-         pkgs-load-duration
          final-setup-duration
          gcs-done
        )
@@ -3734,7 +3621,7 @@ Instead, I use an intermediary variable ~my/vterm-git-status-string~ that is eva
 Some of the most useful vterm features require us to do a bit of configuration of the shell on our system. We can do without it, but we will be missing some of the functionality.
 =vterm= brings that config, for our convenience, as one .sh file that we need to load in our .bashrc.
 This can be done with the snippet below, by putting it into =.bashrc= (as per vterm docs).
-It assumes vterm's =etc/= dir is next to where vterm is installed. This was true for me when installing it via Elpaca.
+It assumes vterm's =etc/= dir is next to where vterm is installed.
 
 #+begin_src bash :tangle no
 
@@ -3937,7 +3824,7 @@ Im not using it for now since I managed to set up Flycheck quite well, but I mig
 #+begin_src emacs-lisp :tangle no
 
   (use-package flymake
-    :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
+    :ensure nil ; built=in
     :hook (prog-mode . flymake-mode)
     :custom
     (flymake-no-changes-timeout 0.2)
@@ -4380,7 +4267,7 @@ For more details, this article is a great tutorial on treesitter support in Emac
 #+begin_src emacs-lisp
 
   (use-package treesit
-    :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+    :ensure nil ; built-in
     :defer t
     :preface
     (defun my/setup-install-grammars ()
@@ -5720,13 +5607,6 @@ Troubleshooting:
 :PROPERTIES:
 :ID:       9d1c5dcd-2903-4493-bf97-32292a3f4ae4
 :END:
-** A must
-*** TODO Pin down package versions (lockfile / freezing) [1/2]
-Elpaca now has some support for it, look into that:
- - [ ] I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
- - [X] Use the rudimentary support for lock files that was freshly added: https://github.com/progfolio/elpaca/issues/151#issuecomment-2629560507 .
-I might even want to use both hm! Gotta figure it out.
-
 ** Should do
 *** TODO Look into workgroups
 Also look into https://github.com/alphapapa/activities.el , it seems connected / complementary.

@@ -1,58 +1,10 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-16 10:38:24 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-16 23:13:24 CEST, don't edit it manually.
 
-(defvar elpaca-installer-version 0.11)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1 :inherit ignore
-                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (<= emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                  ,@(when-let* ((depth (plist-get order :depth)))
-                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                  ,(plist-get order :repo) ,repo))))
-                  ((zerop (call-process "git" nil buffer t "checkout"
-                                        (or (plist-get order :ref) "--"))))
-                  (emacs (concat invocation-directory invocation-name))
-                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                  ((require 'elpaca))
-                  ((elpaca-generate-autoloads "elpaca" repo)))
-            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-          (error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
-
-(setq elpaca-lock-file (expand-file-name "elpaca-lock.eld" user-emacs-directory))
-;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
-;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-;;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
-
-(defun my/elpaca-write-lock-file ()
-  (interactive)
-  (elpaca-write-lock-file elpaca-lock-file)
-)
-
-(elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
-(setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+;; Since our packages are installed externally, by default we don't want
+;; to try to install any of them via package.el.
+(setq use-package-always-ensure nil)
 
 (require 'cl-lib) ;; Common utilities and functions, e.g. cl-some, cl-loop, ... .
 
@@ -362,13 +314,11 @@ USAGE:
  'emacs-startup-hook
  (lambda ()
    (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-          (pkgs-load-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-          (final-setup-duration (float-time (time-subtract (current-time) elpaca-after-init-time)))
+          (final-setup-duration (float-time (time-subtract (current-time) after-init-time)))
          )
-     (message "Emacs ready in %.2f (%.2f (init) + %.2f (packages) + %.2f (final setup)) seconds with %d garbage collections."
-       (+ init-duration pkgs-load-duration final-setup-duration)
+     (message "Emacs ready in %.2f (%.2f (init) + %.2f (final setup)) seconds with %d garbage collections."
+       (+ init-duration final-setup-duration)
        init-duration
-       pkgs-load-duration
        final-setup-duration
        gcs-done
      )
@@ -2911,7 +2861,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 (use-package treesit
-  :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+  :ensure nil ; built-in
   :defer t
   :preface
   (defun my/setup-install-grammars ()
