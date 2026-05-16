@@ -1,8 +1,9 @@
+*~
+
 /elpa/
+
 /url/cookies
 /amx-items
-/elpaca/
-/elpaca.backup/
 /projectile-bookmarks.eld
 /projectile.cache
 /recentf
@@ -22,9 +23,13 @@
 /request/
 /bookmarks
 /multisession/files/emoji/
-/safe-local-variable-directories.eld
 /projects
 /forge-database.sqlite
+
+/safe-local-variable-directories.eld
+
 /.claude/*.local.*
-*~
-/.claude/*.local.*
+
+# /result -> outputs of nix build.
+/result
+/result-*

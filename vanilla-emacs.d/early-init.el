@@ -1,10 +1,6 @@
 ;; NOTE: This file was generated from Emacs.org, don't edit it manually.
 
-
-
-(setq package-enable-at-startup nil) ; Elpaca requires this.
-
-
+(setq package-enable-at-startup t) ; t is default, but better to be explicit.
 
 ;; When running emacs in non-daemon mode, I had emacs window appearing at the very start,
 ;; for a short time (~0.5-1s), as a small window with white background,
@@ -42,6 +38,6 @@
 
 (setq use-package-compute-statistics 1)
 
-
-(setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization. Also neccessary for lsp-booster below to work.
-
+;; Recommended performance optimization. Also neccessary for lsp-booster below to work.
+;; NOTE: Since I use Nix to build packages, I also had to set this env var in my Nix flake.
+(setenv "LSP_USE_PLISTS" "true")

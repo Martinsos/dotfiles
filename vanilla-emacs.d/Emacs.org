@@ -41,31 +41,36 @@ This has to be first line in the file (in this case init.el) for lexical binding
 
 * Package management
 ** Tutorial
-*** package.el vs use-package vs elpaca
+*** package.el vs use-package vs elpaca/straight vs Nix
 
 There are three important "packages" to understand here: package.el, use-package, and elpaca.
 
 - *package.el* is a default package manager (like e.g. cabal for Haskell) that comes with emacs.
 - *use-package* is a third-party package that allows for nicer, declarative and performant way to define your package configurations.
-  It uses package.el in the background to install packages, but it is not a package manager, instead it is a layer above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
-- *elpaca* is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant. Instead of downloading tarballs from .e.g melpa, it pulls package sources directly from their git repos.
+  It uses package.e (or elpaca or straight or smth else if configured so) l in the background to install packages, but it is not a package manager, instead it is a layer above it that is focused on loading and configuring packages (and not installing, that it delegates to package manager).
+- *elpaca* is a third-party package that is a package manager, a direct alternative to package.el, but more powerful / performant. Instead of downloading tarballs from .e.g melpa, it pulls package sources directly from their git repos. Fork of straight.el that is very similar.
+  Elpaca is a fork of *straight*, so straight is in most ways very similar. Both have support for lock file, although Elpaca's is still rudimentary.
+- *Nix* is a general (so not emacs-specific), external package manager, that can be used as alternative to package.el (and elpaca and straight) to install emacs packages. It does so from "outside", and Emacs just loads them, instead of Emacs initiating the installation, but from there on it is all the same to Emacs. Nix can also be used to install Emacs itself (and its system deps).
+  The fact it can manage/install every aspect of Emacs + that lock file is one of its core features means it can ensure complete stability and reproducibility of Emacs.
 
-In this config I use elpaca + use-package (package.el is not even loaded).
+In this config I use *Nix* to install the packages and *use-package* to configure them. And there is still *package.el* available if I want to install any packages the native way (e.g. for experimenting).
 
 *** Installing vs loading vs configuring packages
 
 - Installing package means downloading (and building) the package to your machine, so it can be loaded when you want.
   This is what package manager does for you.
 - Loading package means importing/requiring it in our emacs config (init.el), so it can be used. It needs to be installed first in order to be loaded (unless it comes with emacs already).
-  This is what use-package takes care of.
+  This is what use-package takes care of (or what you would do with =require= if not using =use-package=).
 - Configuring means exactly that: adapting the package to your needs by defining variables, key bindings, hooks, ... .
   use-package also helps with this, giving us structure and reducing boilerplate.
 
 *** Lifecycle of a package
 
-1. Installation typically happens when you start emacs for first time on new machine, or when you update packages or add new package.
+1. Installation typically happens when you start emacs for first time on new machine, when you update packages or add new package, or when you perform it via external dep manager if using one (e.g. Nix).
 2. Loading typically happens each time you start emacs, and it can happen immediately on init, or it can happen later, on demand, when package is needed (in lazy fashion), depending on how you set it up for that package.
 3. Configuration typically happens right after loading.
+
+*NOTE*: In Emacs, there can't be multiple versions of the same package installed (unlike Haskell, JS, ...). Usually that is not a problem though in pratice, in Emacs ecosystem.
 
 *** use-package
 
@@ -78,7 +83,6 @@ I will quickly explain some of the more important/confusing ones:
 - =:ensure= -> This is really an interface toward package manager (who does package installation). Any value passed to :ensure is passed to the package manager as instructions for installation, e.g. `:ensure (:host "github" :repo "user/repo")`.
     Therefore, its behaviour depends on the package manager used. But generally, ~:ensure nil~ will not allow package installation, while ~:ensure t~ or any other value will try to do install package if not installed yet. Should be really named :ensure-installed hah.
     Normally you will want ~:ensure t~ for most of the packages, in which case you can (I do) configure use-package to have it be ~t~ by default.
-    When using elpaca, you can pass elpaca recipe to :ensure.
 - =:defer= -> ~:defer t~ tells use-package to postpone loading of the package till it is needed (lazy). See "deferred loading" below.
     Alternatively, you can pass it a number of seconds emacs needs to be idle before package is loaded.
 - =:demand= -> Opposite of defer, ~:demand t~ tells use-package to load package now. Useful when using autoload keywords (see "deferred loading" below).
@@ -96,152 +100,151 @@ If you use any of the "autoload" keywords but don't want use-package to be "smar
 
 It can be good practice to add ~:defer t~ even when autoloading keywords are used, to be explicit about the intention.
 
-*** elpaca
-Elpaca can install package directly: ~(elpaca some-package (message "this happens after package is installed"))~, but we use it via use-package.
-In the background, a call to ~(use-package some-package :ensure t :some-keyword <smth>)~ becomes ~(elpaca some-package (use-package some-package :some-keyword <smth>))~.
+*** Nix
+Nix is a general, external package manager that lets you, in a declarative way, declare what you need (and how it is to be created) and then it reproducibly installs/produces it, while using a lock file.
 
-Compared to native package.el, that pulls in tarballs from package repos, Elpaca (and also Straight) work in a different way -> they pull package sources directly from their github repos, based on the "recipes", which say for each package where to pull from (and optionally how to build them).
+Big part of Nix is its huge package set/repo, called =nixpkgs=, which is really a lot of "recipes" ("derivations") how to install all popular packages, including Emacs and all Emacs packages from Elpa/Melpa (via =emacsPackages=).
 
-All the package sources are checked out as git repos in by Elpaca in =elpaca/= dir, and then also built there, both fetching and building instructed by the recipes.
+Nix's lock file basically records a "moment in time", a snapshot of =nixpkgs=, where all the packages work(build) together well, which is ensured by Nix's huge automatic CI and its maintainers.
 
-If elpaca recipe lock file exists and Elpaca is told to use it, those recipes the priority.
+That means that all the elisp packages successfully compile with the accompanying version of Emacs, plus there are maintainers who additionally curate package versions as needed.
+Elpa/Melpa are already kept well maintained so the packages work together, so that + the fact that =nixpkgs= (=unstable=) is a bit behind latest Elpa/Melpa (but not too much) + the Nix's CI and Nix Emacs maintainers curation means that we can mostly expect it all to just work well together!
 
-Custom recipes can also be specified directly per package, if default one doesn't exist online or we want to override it, and in case of =use-package=, that is done via =:ensure=, e.g. ~:ensure (:host github :repo "user/example")~.
+Btw, if needed, one can always additionally have Nix install specific/custom (elisp) packages with custom details by defining their derivation as Nix overrides (of that dep in =nixpkgs=).
 
-**** Deferred installing
+Nix has two main ways/standards to be used, modern one being "flakes", which is what we use here: there is a =flake.nix= file that defines how to install emacs and all its system deps and elisp packages.
+By running ~nix build~, the flake is built and as the output we get emacs binary that comes together with all its system deps and elisp packages.
+All of these are in "nix store", and there are some wrapper scripts for emacs that make sure nix-installed elisp packages are added to its load path and so on. In theory we don't need to know the details of that, and emacs also doesn't know anything about it, it just checks load path, sees the packages installed, and uses them, business as usual.
 
-Elpaca, unlike package.el, doesn't install packages immediately, instead it waits for emacs init to finish, and then installs them asynchronously, in parallel for fast, non-blocking installations.
+Btw all package installed by Nix always go into its "nix store" on the machine, and them are symlinked to there. This allows reusing the same packages as deps when needed.
 
-To prevent this behaviour and make elpaca install package right now, when the corresponding ~use-package~ declaration is evaluated, one can pass ~:wait t~ keyword to the elpaca recipe: ~:ensure (:wait t ...)~.
-This can be useful for packages that e.g. add keywords to use-package, since you need those installed and loaded first.
+There is also =emacs-overlay= for Nix. It brings some nice stuff like fresher elisp packages (daily cadence), parsing use-package declarations for names of elisp packages to be installed by Nix so we don't have to list them manually, ... . I however don't need so fresh packages, and also I had some trouble with its use-package parsing (failing on some glyphs, can't customize it to work with ~:ensure nix~), so I ended up not using it and doing my own automatic extraction of package names.
 
-Due to elpaca's deffered installing, instead of installing and loading happening during init phase (evaluation of init.el), we have following order of events: init -> installation of packages -> loading packages.
-Exception are packages with ~:wait t~ in their recipe, those will get installed / loaded at init.
-That also means that ~after-init-hook~ is often not the right choice any more, and we should instead use ~elpaca-after-init-hook~, which will guarantee packages are installed / loaded.
-
+While ~nix build~ makes it easy to observe the outputs, what we really want is to install emacs in the PATH so we can use it normally. For that to happen, simplest option is to use ~nix profile add/upgrade~ command which links to the nix-built Emacs from the default Nix profile, which then also makes it available in the PATH. We need to run it every time we update the flake though.
+Another option is to use Nix's Home Manager, but that is harder to set up and an overkill if using Nix only for Emacs and not the rest of the dotfiles.
 ** Config
-*** Disable package.el (in early-init.el)
 :PROPERTIES:
-:ID:       61a61dc9-0c50-4788-b008-2b6b829fe205
+:ID:       15d2974f-995e-4a08-a2ff-51e24d101061
 :END:
 
+Even though we are installing packages via Nix, so one might thing this is not needed anymore as it is package.el thing, we do want =package-enable-at-startup= to be =t= because that one is not about installing packages, it is about "activating" them (which primarily comes down to loading their autoloads) which we certainly need/want. Without this, packages would not be properly prepared for later loading.
 #+begin_src emacs-lisp :tangle ./early-init.el
-
-  (setq package-enable-at-startup nil) ; Elpaca requires this.
-
+  (setq package-enable-at-startup t) ; t is default, but better to be explicit.
 #+end_src
 
-*** Install and set up Elpaca (in init.el)
-:PROPERTIES:
-:ID:       ceee0d9e-6919-4255-8c98-12ca0fa13ff9
-:END:
-
+Since our packages are installed externally (Nix), by default we don't want to try to install any of them via package.el if they are missing. So we set =:ensure= to be =nil= by deafult. If we do want to use package.el for something, we will be explicit about it.
 #+begin_src emacs-lisp
-  (defvar elpaca-installer-version 0.12)
-  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-  (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
-  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                                :ref nil :depth 1 :inherit ignore
-                                :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                                :build (:not elpaca-activate)))
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
-         (build (expand-file-name "elpaca/" elpaca-builds-directory))
-         (order (cdr elpaca-order))
-         (default-directory repo))
-    (add-to-list 'load-path (if (file-exists-p build) build repo))
-    (unless (file-exists-p repo)
-      (make-directory repo t)
-      (when (<= emacs-major-version 28) (require 'subr-x))
-      (condition-case-unless-debug err
-          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                    ,@(when-let* ((depth (plist-get order :depth)))
-                                                        (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                    ,(plist-get order :repo) ,repo))))
-                    ((zerop (call-process "git" nil buffer t "checkout"
-                                          (or (plist-get order :ref) "--"))))
-                    (emacs (concat invocation-directory invocation-name))
-                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                    ((require 'elpaca))
-                    ((elpaca-generate-autoloads "elpaca" repo)))
-              (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-            (error "%s" (with-current-buffer buffer (buffer-string))))
-        ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-    (unless (require 'elpaca-autoloads nil t)
-      (require 'elpaca)
-      (elpaca-generate-autoloads "elpaca" repo)
-      (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
-  (add-hook 'after-init-hook #'elpaca-process-queues)
-  (elpaca `(,@elpaca-order))
+  (setq use-package-always-ensure nil)
 #+end_src
 
-*** Set up elpaca lock file
+*** Add support for :ensure nix in use-package declarations
 :PROPERTIES:
-:ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
+:ID:       ba1d26f0-55f6-4b20-89dc-0c6f873c67d5
 :END:
-
-Here we set the elpaca lock file, so that, when installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references. Meaning that exact versions of packages as in the lock file are installed each time, ensuring consistency.
-
 #+begin_src emacs-lisp
-
-  (defconst my/elpaca-lock-file-path (expand-file-name "elpaca-lock.eld" user-emacs-directory))
-  (setq elpaca-lock-file my/elpaca-lock-file-path)
-  ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
-  ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-  ;(setq elpaca-lock-file nil)
-
-  (defun my/elpaca-write-lock-file ()
-    (interactive)
-    (elpaca-write-lock-file elpaca-lock-file)
+  (defun my/use-package-ensure-function (package-name ensure-args state &optional no-refresh)
+    ;; We override standard `:ensure' use-package keyword's behaviour to also support `:ensure nix'.
+    ;; We could just use `:ensure nil', but this way we are explicit about which packages we expect
+    ;; to be handled via Nix and can e.g. parse init.el to generate list of them for Nix.
+    ;; We interpret it as "do nothing", but check that package is on load path as expected.
+    (if (memq 'nix ensure-args)
+        (if (locate-library (symbol-name package-name))
+            t
+          (progn
+            (display-warning 'use-package
+                             (format "Package `%s' is marked with `:ensure nix' but was not found on load-path" package-name)
+                             :warning)
+            nil
+          )
+        )
+      ;; `use-package-ensure-elpa' is the default value of `use-package-ensure-function'.
+      (use-package-ensure-elpa package-name ensure-args state no-refresh)
+    )
   )
 
+  (setq use-package-ensure-function #'my/use-package-ensure-function)
 #+end_src
 
-**** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
-*** Install and set up use-package (with Elpaca as backend)
+*** Automatically generate emacs-packages.nix from init.el when it is tangled
 :PROPERTIES:
-:ID:       e1c4b11f-6277-4890-ac2a-3ed0be776300
+:ID:       03514ca3-d485-4a78-9b9e-048b52bdf169
 :END:
-
 #+begin_src emacs-lisp
+  (add-hook
+   'org-babel-post-tangle-hook
+   (lambda ()
+     (when (and buffer-file-name (file-equal-p buffer-file-name (expand-file-name "init.el" user-emacs-directory)))
+       (my/generate-emacs-packages-nix-file)
+     )
+   )
+  )
 
-  (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
-  (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+  (defun my/generate-emacs-packages-nix-file ()
+    "Generate a file with list of emacs packages to be installed by Nix, automatically from init.el by parsing for `:ensure nix' use-package keyword."
+    (let ((init-file (expand-file-name "init.el" user-emacs-directory)))
+      (when (file-exists-p init-file)
+        (let* ((forms (my/read-all-forms-from-file init-file))
+               (nix-packages (sort (delete-dups (delq nil (mapcar #'my/parse-nix-use-package forms)))
+                                   #'string<)))
+          (my/write-emacs-packages-nix-file nix-packages)
+        )
+      )
+    )
+  )
 
+  (defun my/write-emacs-packages-nix-file (packages)
+    "Write PACKAGES (list of strings) to emacs-packages.nix file."
+    (with-temp-file (expand-file-name "emacs-packages.nix" user-emacs-directory)
+      (insert "# Auto-generated from init.el, do not edit by hand.\n")
+      (insert "emacsPkgs: with emacsPkgs; [\n")
+      (dolist (pkg packages)
+        (insert "  " pkg "\n"))
+      (insert "]\n")
+    )
+  )
+
+  (defun my/read-all-forms-from-file (file)
+    "Return a list of all top-level Lisp forms read from FILE."
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (let ((forms '()))
+        (condition-case nil
+            (while t (push (read (current-buffer)) forms))
+          (end-of-file nil)
+        )
+        (nreverse forms)
+      )
+    )
+  )
+
+  (defun my/parse-nix-use-package (form)
+    "Return package name (string) from a top-level elisp FORM that is use-package declaration that requires installation via nix, or nil if it is not."
+    (when (and (listp form) (eq (car-safe form) 'use-package) (symbolp (cadr form)))
+      (let* ((package-name (cadr form))
+             (keywords (cddr form))
+             (disabled (plist-member keywords :disabled))
+             (ensure (plist-member keywords :ensure))
+            )
+        (cond
+         ((and disabled (cadr disabled)) nil)
+         ((and ensure (eq (cadr ensure) 'nix)) (symbol-name package-name))
+         (t nil)
+        )
+      )
+    )
+  )
 #+end_src
 
-** Updating packages
-*** Instructions :cheatsheet:
-- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
-  - Run ~my/elpaca-write-lock-file~, commit the lock file if any changes.
-  - As an extra measure in case any of the git refs in the lock file became invalid, do ~cp -a elpaca/ elpaca.backup/~.
-- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new versions of the packages.
-- Run ~elpaca-update-menus~ to update the recipes, they don't change often but you never know.
-- ~elpaca-fetch-all~ to have elpaca fetch the package updates to local package repos in =elpaca/=, but not yet apply them.
-- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched.
-  I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config.
-  I usually create a file on disk where I log any changes I will need to do as I go through it.
-  If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
-  Once done, I call ~elpaca-merge-all~ to merge/apply the package updates.
-  - ~PROBLEM~: This currently doesn't really when using a lock file in general! Even though we disabled a lock file, as a consequence of using it, package repos in =elpaca/= are in a detached state due to how elpaca implemented its lock file system, and then =*elpaca-log*= fails to show the logs because its implementation for showing them requires packages repos to not be in a detached state but on a branch. This is so because lock file feature addition is still somewhat unbaked and elpaca's workflow for it is still maturing / being developed.
-    Due to how it works, ~elpaca-merge-all~ also wouldn't work.
-    ~SOLUTION~: The way I currently solve it is by then doing the following:
-    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file (=emacs-update.org=). So now I have the logs I needed. Review them, figure out what I will need to fix in the config. Btw I have an AI skill for analyzing the logs against my config, use that as a help during reviewing.
-      - Create new git branch =emacs-update=. Create a new git worktree with it, we will be working on the update there, since we need the current working config to be available under .emacs.d as usual, to power emacs till then.
-      - In the worktree, run the comparison of lock files, and then have AI go through that file + our config and write under each package in that file an analysis of what changed and how we need/want to update our config.
-      - Manually review each package analysis, and mark it as DONE when reviewed. If there is anything to be done, add ~TODO Update~ in the Emacs.org itself, under the relevant package, with instructions what to try / fix / check / add.
-        Once I reviewed all packages in =emacs-update.org=, I should have =Emacs.org= full of relevant TODOs.
-      - Do the actual update, which should affect only the worktree, and then run a test emacs instance with that dir specified as its .emacs.d, while still having the pre-update emacs running as the editor. In pre-update emacs, go thorugh config and resolve one by one ~TODO Update~, while checking in test emacs the results. Once done, that is it, worktree is now fully working updated emacs and I can merge it and use it from that point on!
-       - Merge worktree into main, delete worktree, also delete =emacs-update.org= file from git.
-    - Delete the =elpaca/= dir. I don't need it since elpaca logs don't work anyway, and why not then restart it fully then.
-- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config (and restart emacs). Delete ~elpaca.backup/~.
-- That is it!
-NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
-** Cheatsheet :cheatsheet:
-- ~elpaca-manager~ to run the main elpaca UI.
-- To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
+** Instructions :cheatsheet:
+*** Installing emacs and the packages
+Run ~make install~ to build our current Emacs (and all the elisp packages) and make it available in the PATH.
+This will be done based on the current =flake.nix= and =flake.lock=, so will be reproducible and idempotent.
+*** Adding/removing/overriding the package
+If package is automatically supplied to Nix from use-package declaration (~:ensure nix~), then just remove/add it from this emacs config, otherwise edit the =flake.nix= file.
+Run ~make install~ to build and install the new "emacs" with these changes.
+*** TODO Updating the emacs and the packages
+- Figure out the workflow, and also write helper logic for it! And AI skill probably. Emacs news, compare versions of packages, get their git logs / changelogs, ... .
 * Utils
 ** Packages
 :PROPERTIES:
@@ -254,7 +257,9 @@ NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go
 
   ;; Package for displaying content in a nice inline overlay.
   ;; I use it in the rest of the config in some place(s).
-  (use-package quick-peek)
+  (use-package quick-peek
+    :ensure nix
+  )
 
 #+end_src
 
@@ -537,15 +542,6 @@ NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go
   )
 
 #+end_src
-* Latest versions of built-ins
-:PROPERTIES:
-:ID:       495ebc5f-3b8c-4e69-a957-0703050e74c6
-:END:
-I install latest versions of certain built-in packages because some of the other packages are very new and need a newer one than the built-in.
-#+begin_src emacs-lisp
-  (use-package compat :ensure (:wait t))
-  (use-package transient :ensure (:wait t))
-#+end_src
 * Basic Emacs config
 ** General
 :PROPERTIES:
@@ -725,13 +721,11 @@ but I wanted to avoid this as I don't use "custom" file.
    'emacs-startup-hook
    (lambda ()
      (let* ((init-duration (float-time (time-subtract after-init-time before-init-time)))
-            (pkgs-load-duration (float-time (time-subtract elpaca-after-init-time after-init-time)))
-            (final-setup-duration (float-time (time-subtract (current-time) elpaca-after-init-time)))
+            (final-setup-duration (float-time (time-subtract (current-time) after-init-time)))
            )
-       (message "Emacs ready in %.2f (%.2f (init) + %.2f (packages) + %.2f (final setup)) seconds with %d garbage collections."
-         (+ init-duration pkgs-load-duration final-setup-duration)
+       (message "Emacs ready in %.2f (%.2f (init) + %.2f (final setup)) seconds with %d garbage collections."
+         (+ init-duration final-setup-duration)
          init-duration
-         pkgs-load-duration
          final-setup-duration
          gcs-done
        )
@@ -777,7 +771,8 @@ This measures how long each package took. Run ~use-package-report~ to see the re
 
   ;; doom-themes have nice, high quality themes.
   (use-package doom-themes
-    :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+    :ensure nix
+    :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
     :config
     ;; If running in daemon mode, I want to load the theme only once real frame is available (daemon
     ;; starts with fake frame), otherwise theme can wrongly set itself up (because it thinks there is
@@ -804,7 +799,8 @@ This measures how long each package took. Run ~use-package-report~ to see the re
   ;; Nice themes by Prot.
   ;; `ef-dream' is nice, also `ef-night'.
   ;;(use-package ef-themes
-  ;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
+  ;;  :ensure nix
+  ;;  :demand t ; Too ensure theme gets loaded as early as possible, so there is no white screen.
   ;;)
 
 #+end_src
@@ -910,6 +906,7 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 
 #+begin_src emacs-lisp
   (use-package doom-modeline
+    :ensure nix
     :custom
     (doom-modeline-height 40)
     (doom-modeline-buffer-encoding nil)
@@ -954,6 +951,7 @@ I don't set any keybindings here because it is enough to set undo-fu as evil's u
 #+begin_src emacs-lisp
 
   (use-package undo-fu
+    :ensure nix
     :config
     (setq undo-fu-ignore-keyboard-quit t) ; I don't want C-g to trigger normal emacs undo behavior.
   )
@@ -969,6 +967,7 @@ I don't set any keybindings here because it is enough to set undo-fu as evil's u
 
   ;; Displays undo history as a tree and lets you move through it.
   (use-package vundo
+    :ensure nix
     :defer t
     :config
     (setq vundo-glyph-alist vundo-unicode-symbols)
@@ -1021,7 +1020,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
   ;;   Therefore, I don't completely understand if the config below is written in the best way, but
   ;;   it was recommended by others and it seems to work.
   (use-package general
-    :ensure (:wait t) ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
+    :ensure nix
+    :demand t ; Load it immediately, so that I can use :general keyword in use-package declarations below if I want.
     :config
     (general-evil-setup t)
 
@@ -1172,6 +1172,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
 #+begin_src emacs-lisp
 
   (use-package which-key
+    :ensure nil ; built-in
     :config
     (setq which-key-idle-delay 0.5)
     (setq which-key-add-column-padding 2)
@@ -1194,6 +1195,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+begin_src emacs-lisp
 
   (use-package hydra
+    :ensure nix
     :config
     (defhydra hydra-text-scale ()
       "Scale text"
@@ -1290,6 +1292,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+begin_src emacs-lisp
   ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
   (use-package evil
+    :ensure nix
     :init
     (setq evil-want-integration t)  ; Required by evil-collection.
     (setq evil-want-keybinding nil) ; Required by evil-collection.
@@ -1309,6 +1312,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
 #+begin_src emacs-lisp
   (use-package evil-escape
+    :ensure nix
     :after evil
     :custom
     (evil-escape-key-sequence "fd")
@@ -1321,6 +1325,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   ;; Sets evil keybindings in many more parts of emacs than evil-mode does by default,
   ;; and in a better way than evil does.
   (use-package evil-collection
+    :ensure nix
     :after evil
     :custom (evil-collection-setup-minibuffer t)
     :config (evil-collection-init)
@@ -1341,6 +1346,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   )
 
   (use-package org
+    :ensure nil ; built-in
     :defer t
     :hook
     (org-mode . (lambda ()
@@ -1368,6 +1374,10 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
       ;; Unfolds parent headings when jumping to a folded location in the file.
       (reveal-mode 1)
+
+      ;; I often wouldn't notice bolded words are bolded, especially with the dark themes,
+      ;; so I here also add some color to them.
+      (face-remap-add-relative 'bold '(:inherit font-lock-keyword-face))
     ))
     :init
     (setq org-export-backends '(ascii html icalendar latex odt md))
@@ -1595,6 +1605,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   ;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
   (use-package org-modern
+    :ensure nix
     :after (org)
     :defer t
     :hook ((org-mode . org-modern-mode)
@@ -1634,12 +1645,13 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 
   ;; Org Tempo expands snippets to structures defined in org-structure-template-alist and org-tempo-keywords-alist.
   (use-package org-tempo
+    :ensure nil ; built-in (comes with org)
     :after (org)
-    :ensure nil ; Comes with org already.
   )
 
   ; Colors tags in org mode with "random" colors based on their string hash.
   (use-package org-rainbow-tags
+    :ensure nix
     :after (org)
     :hook ((org-mode org-agenda-finalize) . org-rainbow-tags-mode)
     :custom
@@ -1650,6 +1662,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   ;; Display "prettified" pieces of text in their raw shape when point is on them.
   ;; E.g. links or superscript.
   (use-package org-appear
+    :ensure nix
     :hook (org-mode . org-appear-mode)
     :custom
     (org-appear-autoemphasis t)
@@ -1676,6 +1689,7 @@ By default it downloads the image into current directory, but this can be custom
 
 #+begin_src emacs-lisp
   (use-package org-download
+    :ensure nix
     :after (org)
     :defer t
     :commands (org-download-clipboard org-download-yank org-download-delete)
@@ -1734,6 +1748,7 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 #+begin_src emacs-lisp
 
   (use-package evil-org
+    :ensure nix
     :after org
     :hook (org-mode . (lambda () evil-org-mode))
   )
@@ -1798,6 +1813,7 @@ Since information displayed in echo area upon mouse is ~help-echo~ information, 
 
 #+begin_src emacs-lisp
   (use-package org-tidy
+    :ensure nix
     :commands org-tidy-mode
   )
 #+end_src
@@ -1812,6 +1828,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
 #+begin_src emacs-lisp
 
   (use-package org-present
+    :ensure nix
     :after (org visual-fill-column)
     :bind (
       :map org-present-mode-keymap
@@ -1918,6 +1935,7 @@ Two most popular emacs packages for pulling in calendar events into org file are
   (defconst my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
 
   (use-package org-gcal
+    :ensure nix
     :after (org)
     :defer t
     :init
@@ -2107,6 +2125,7 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 #+begin_src emacs-lisp
 
   (use-package org-super-agenda
+    :ensure nix
     :after org-agenda
     :init
     ;; org-super-agenda-header-map is keymap for super agenda headers and normally it just copies keybindings
@@ -2982,6 +3001,7 @@ It automatically balances margins in order to put the content in the middle, wit
   )
 
   (use-package olivetti
+    :ensure nix
     :config
     (setq-default olivetti-body-width 120)
   )
@@ -3019,6 +3039,7 @@ It automatically balances margins in order to put the content in the middle, wit
 
 #+begin_src emacs-lisp
   (use-package elfeed
+    :ensure nix
     :defer t
     :config
     (setq elfeed-feeds '(
@@ -3104,6 +3125,7 @@ It automatically balances margins in order to put the content in the middle, wit
     ;; color for all the rest.
     ;;   TODO: Show this cheatsheet somehow as part of Ivy buffers? Kind of like Helm does in Spacemacs?
     (use-package ivy
+      :ensure nix
       :after (evil)
       :custom
       (ivy-height 20)
@@ -3170,6 +3192,7 @@ It automatically balances margins in order to put the content in the middle, wit
   ;; It brings enhanced versions of common emacs commands, powered by Ivy.
   ;; Ivy already offers some enhanced commands, but Counsel offers more and better.
   (use-package counsel
+    :ensure nix
     :config
     (setq counsel-describe-function-function 'helpful-callable)
     (setq counsel-describe-variable-function 'helpful-variable)
@@ -3188,6 +3211,7 @@ It automatically balances margins in order to put the content in the middle, wit
   ;; Swiper is a package that is part of Ivy ecosystem.
   ;; Better isearch (incremental search), powered by Ivy.
   (use-package swiper
+    :ensure nix
     :bind (("C-s" . swiper)
            :map evil-normal-state-map
            ("/" . swiper)
@@ -3209,6 +3233,7 @@ It automatically balances margins in order to put the content in the middle, wit
 
   ;; Show more info for some usages of Ivy. Also allows easier customization of Ivy output.
   (use-package ivy-rich
+    :ensure nix
     :after (ivy counsel)
     :config
     ;; This is my custom function for how Ivy shows candidates when finding a file.
@@ -3286,6 +3311,7 @@ They can be used to store a point, text, a window or frame configuration, ... , 
 
   ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
   (use-package projectile
+    :ensure nix
     :defer t
     :init
     ;; First thing that happens on switching to a new project.
@@ -3301,6 +3327,7 @@ They can be used to store a point, text, a window or frame configuration, ... , 
 
   ;; Provides better integration of Projectile and Counsel.
   (use-package counsel-projectile
+    :ensure nix
     :after (counsel projectile)
     :config
     (defun counsel-projectile-rg-region-or-symbol ()
@@ -3361,6 +3388,7 @@ It is basically a wrapper that calls =gitstatusd= program in the background.
 #+begin_src emacs-lisp
 
   (use-package gitstatus
+    :ensure nix
     :custom
     (gitstatusd-exe "~/.local/bin/gitstatusd")
     (gitstatus-prefix nil)
@@ -3382,6 +3410,7 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
 #+begin_src emacs-lisp
 
   (use-package magit
+    :ensure nix
     :defer t
     :config
     (general-define-key
@@ -3418,6 +3447,7 @@ Forge is for working with Github, Gitlab and similar git providers (forges).
 #+begin_src emacs-lisp
   ;; TODO: Commented out till I update magit to latest, too complicated to get it working otherwise.
   ;; (use-package forge
+  ;;   :ensure nix
   ;;   :after magit
   ;; )
 #+end_src
@@ -3439,6 +3469,7 @@ It adds indicator to the left margin/side of the window.
 #+begin_src emacs-lisp
 
   (use-package diff-hl
+    :ensure nix
     ;; Load once emacs is idle for 1 sec. This way it doesn't slow down initial startup,
     ;; but then again it is available early enough, in case we open a versioned file.
     :defer 1
@@ -3516,12 +3547,14 @@ It adds indicator to the left margin/side of the window.
   )
 
   (use-package all-the-icons-dired
+    :ensure nix
     :after (all-the-icons dired)
     :defer t
     :hook (dired-mode . all-the-icons-dired-mode)
   )
 
   (use-package dired-hide-dotfiles
+    :ensure nix
     :after (dired)
     :defer t
     :init
@@ -3555,6 +3588,7 @@ It adds indicator to the left margin/side of the window.
   ;; TODO: Fix highlight and search faces in tooltip/popup, or have theme that makes them nice. Company has faces that we can customize.
   ;; TODO: Either make scroll more visible, or use lines instead.
   (use-package company
+    :ensure nix
     :custom
     (company-tooltip-offset-display 'lines) ; Because scrollbar is not shown for me for some reason.
     (company-idle-delay 0.2)
@@ -3633,6 +3667,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
   ;; emacses have all those ready, so usually you don't have to think about it.
   (use-package vterm
+    :ensure nix
     :defer t
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
@@ -3649,6 +3684,7 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
   ;; Allows easy toggling of terminal(vterm) window.
   (use-package vterm-toggle
+    :ensure nix
     :defer t
     :init
     (my/leader-keys
@@ -3782,7 +3818,7 @@ Instead, I use an intermediary variable ~my/vterm-git-status-string~ that is eva
 Some of the most useful vterm features require us to do a bit of configuration of the shell on our system. We can do without it, but we will be missing some of the functionality.
 =vterm= brings that config, for our convenience, as one .sh file that we need to load in our .bashrc.
 This can be done with the snippet below, by putting it into =.bashrc= (as per vterm docs).
-It assumes vterm's =etc/= dir is next to where vterm is installed. This was true for me when installing it via Elpaca.
+It assumes vterm's =etc/= dir is next to where vterm is installed.
 
 #+begin_src bash :tangle no
 
@@ -3828,6 +3864,7 @@ Jinx uses Enchant program on your machine, which uses spelling backends like hun
 #+begin_src emacs-lisp
 
   (use-package jinx
+    :ensure nix
     :config
     (setq jinx-languages "en_us")
     (my/leader-keys
@@ -3867,6 +3904,7 @@ I currently configured it in the following way:
 #+begin_src emacs-lisp
 
   (use-package flycheck
+    :ensure nix
     :init (global-flycheck-mode)
     ;; org-lint makes editing visibly slower in huge org files (like my config),
     ;; so I make sure it runs only on save / mode enabled, not on every edit.
@@ -3888,6 +3926,7 @@ I currently configured it in the following way:
   ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
   ;; I configured it so it doesn't show them on cursor, as is default, but on request.
   (use-package flycheck-posframe
+    :ensure nix
     :after flycheck
     :custom
     (flycheck-posframe-border-width 10)
@@ -3929,6 +3968,7 @@ Showing just one line by default helped, but I still didn't like it, and ended u
 
   ;; Shows flycheck errors/warnings inline (in code, below the cursor), instead of a minibuffer which is default.
   (use-package flycheck-inline
+    :ensure nix
     :after (quick-peek)
     :hook (flycheck-mode . flycheck-inline-mode)
     :config
@@ -3980,36 +4020,6 @@ Showing just one line by default helped, but I still didn't like it, and ended u
   					 )
   	flycheck-inline-clear-function 'quick-peek-hide
     )
-  )
-
-#+end_src
-
-** Flymake                                                          :inactive:
-:PROPERTIES:
-:ID:       2810249f-da21-403c-a2a6-fa722477a4ba
-:END:
-
-Im not using it for now since I managed to set up Flycheck quite well, but I might want to try it out in the future again.
-
-#+begin_src emacs-lisp :tangle no
-
-  (use-package flymake
-    :ensure nil ; It already comes with emacs, so we tell elpaca not to install it.
-    :hook (prog-mode . flymake-mode)
-    :custom
-    (flymake-no-changes-timeout 0.2)
-    :config
-    (my/leader-keys
-      "en"  '("next" . flymake-goto-next-error)
-      "ep"  '("previous" . flymake-goto-prev-error)
-      "el"  '("list (buffer)" . flymake-show-buffer-diagnostics)
-      "eL"  '("list (project)" . flymake-show-project-diagnostics)
-    )
-  )
-
-  (use-package flymake-posframe
-    :ensure (:host github :repo "Ladicle/flymake-posframe")
-    :hook (flymake-mode . flymake-posframe-mode)
   )
 
 #+end_src
@@ -4071,6 +4081,7 @@ You can plug in multiple backends into it, and it will display the information u
 #+begin_src emacs-lisp
 
   (use-package sideline
+    :ensure nix
     :hook ((flycheck-mode lsp-mode) . sideline-mode)
     :init
     ;; `up` means it is shown above the line where cursor is, `down` means beneath it.
@@ -4079,6 +4090,7 @@ You can plug in multiple backends into it, and it will display the information u
   )
 
   (use-package sideline-flycheck
+    :ensure nix
     :hook (flycheck-mode . sideline-flycheck-setup)
     :custom
     ;; I want to show only short version of errors, otherwise it becomes a mess.
@@ -4104,6 +4116,7 @@ You can plug in multiple backends into it, and it will display the information u
   ;; The rest of the information I show in other way (via flycheck, via minibuffer, popups, ...).
   ;; Note that flycheck again sends some of that information to sideline though.
   (use-package sideline-lsp
+    :ensure nix
     :after lsp-mode
     :defer t
     :custom
@@ -4166,6 +4179,7 @@ Imenu-list displays imenu in the sidebar with some nice features for easily mana
   )
 
   (use-package imenu-list
+    :ensure nix
     :after imenu
     :config
     (setq imenu-list-focus-after-activation t
@@ -4256,6 +4270,7 @@ Therefore, for optimal experience, we should customize the faces used for semant
 #+begin_src emacs-lisp
 
   (use-package lsp-mode
+    :ensure nix
     :init
     (setq lsp-use-plists t) ; Recommended performance optimization. Requires setting env var (check early-init.el block below).
     :hook ((lsp-mode . lsp-enable-which-key-integration)
@@ -4303,7 +4318,9 @@ Therefore, for optimal experience, we should customize the faces used for semant
 
 #+begin_src emacs-lisp :tangle ./early-init.el
 
-  (setenv "LSP_USE_PLISTS" "true") ; Recommended performance optimization. Also neccessary for lsp-booster below to work.
+  ;; Recommended performance optimization. Also neccessary for lsp-booster below to work.
+  ;; NOTE: Since I use Nix to build packages, I also had to set this env var in my Nix flake.
+  (setenv "LSP_USE_PLISTS" "true")
 
 #+end_src
 
@@ -4319,6 +4336,7 @@ It can show information in two main ways: via ~lsp-ui-doc~ popup, or inline via 
 #+begin_src emacs-lisp
 
   (use-package lsp-ui
+    :ensure nix
     :after (lsp-mode evil)
     :commands lsp-ui-mode
     :custom
@@ -4408,10 +4426,16 @@ I followed instructions from the =lsp-booster= Github's README:
 
   ;; Brings lsp-ivy-workspace-symbol that searches for a symbol in project as you type its name.
   ;; TODO: Add a keybinding, under lsp-keymap-prefix, for this command, I guess under goto? So ", g s"?
-  (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+  (use-package lsp-ivy
+    :ensure nix
+    :commands lsp-ivy-workspace-symbol
+  )
 
   ;; Shows list of all errors in a nice treemacs fashion.
-  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+  (use-package lsp-treemacs
+    :ensure nix
+    :commands lsp-treemacs-errors-list
+  )
 
 #+end_src
 
@@ -4439,7 +4463,7 @@ For more details, this article is a great tutorial on treesitter support in Emac
 #+begin_src emacs-lisp
 
   (use-package treesit
-    :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
+    :ensure nil ; built-in
     :defer t
     :preface
     (defun my/setup-install-grammars ()
@@ -4555,6 +4579,7 @@ Usual ways to specify the compile command:
   )
 
   (use-package haskell-mode
+    :ensure nix
     :hook
     (haskell-mode . my/haskell-mode-setup)
     (haskell-literate-mode . my/haskell-mode-setup)
@@ -4579,6 +4604,7 @@ Usual ways to specify the compile command:
 
   ;; Teaches lsp-mode how to find and launch HLS (Haskell Language Server).
   (use-package lsp-haskell
+    :ensure nix
     :after lsp-mode
     :defer t
     :custom
@@ -4655,7 +4681,7 @@ haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a
   ;; This is a built-in package that brings major mode(s) that use treesitter for highlighting.
   ;; It defines typescript-ts-mode and tsx-ts-mode.
   (use-package typescript-ts-mode
-    :ensure nil ; Built-in, so don't install it via package manager.
+    :ensure nil ; built-in
     :mode (("\\.[mc]?[jt]s\\'" . typescript-ts-mode)
            ("\\.[jt]sx\\'" . tsx-ts-mode)
           )
@@ -4680,7 +4706,7 @@ This will also run eslint language server next to the other language servers if 
 #+begin_src emacs-lisp
 
   (use-package lsp-eslint
-    :ensure nil ;; Don't install since it comes built-in with lsp-mode.
+    :ensure nil ; comes with lsp-mode
     :after lsp-mode
   )
   
@@ -4699,7 +4725,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 :END:
 #+begin_src emacs-lisp
   (use-package css-mode
-    :ensure nil ; Built-in, so don't install it via package manager.
+    :ensure nil ; built-in
     :defer t
     :custom
     (css-indent-offset 2)
@@ -4715,7 +4741,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 
   ;; Built-in YAML major mode with treesitter highlighting.
   (use-package yaml-ts-mode
-    :ensure nil ; Built-in, so don't install it via package manager.
+    :ensure nil ; built-in
     :mode ("\\.ya?ml\\'" . yaml-ts-mode)
     :hook (yaml-ts-mode . lsp-deferred)
   )
@@ -4729,6 +4755,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 
 #+begin_src emacs-lisp
   (use-package markdown-mode
+    :ensure nix
     :config
     (my/on-theme-enabled
       ;; Set headers to have different sizes.
@@ -4744,6 +4771,8 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
   )
 #+end_src
 
+*** TODO Consider replacing with markdown-ts-mode (built-in in Emacs 31)
+
 ** Powershell
 :PROPERTIES:
 :ID:       10173d65-d5f9-45ce-bcbc-774f6af5ec95
@@ -4751,6 +4780,7 @@ Also popular is =web-mode=, so I might want to look into that one day, but I hav
 
 #+begin_src emacs-lisp
   (use-package powershell
+    :ensure nix
   )
 #+end_src
 
@@ -4831,6 +4861,7 @@ I created my own major mode for highlighting the ascii diagrams.
 :END:
 #+begin_src emacs-lisp
   (use-package nix-mode
+    :ensure nix
     :mode "\\.nix\\'"
   )
 #+end_src
@@ -4844,6 +4875,7 @@ I created my own major mode for highlighting the ascii diagrams.
 :END:
 #+begin_src emacs-lisp
   (use-package gptel
+    :ensure nix
     :after (org)
     :defer t
     :hook (gptel-mode . gptel-highlight-mode)
@@ -5451,7 +5483,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 #+begin_src emacs-lisp
 
   (use-package whitespace
-    :ensure nil ; Don't install as it is built-in with emacs.
+    :ensure nil ; built-in
     :config
     ; Don't highlight too-long lines, because it is too noisy and we use another package for that anyway.
     (setq whitespace-style (delq 'lines whitespace-style))
@@ -5497,6 +5529,7 @@ can turn off =ethan-mode= for a bit to add them. That will make the file dirty a
 #+begin_src emacs-lisp
 
   (use-package ethan-wspace
+    :ensure nix
     :init
     (setq mode-require-final-newline nil)
     :config
@@ -5525,6 +5558,7 @@ That is why I instead I use this dedicated mode that does just this: highlights 
 #+begin_src emacs-lisp
 
   (use-package column-enforce-mode
+    :ensure nix
     :hook (prog-mode . column-enforce-mode)
     :config
     (setq column-enforce-column fill-column)
@@ -5547,7 +5581,7 @@ That is why I instead I use this dedicated mode that does just this: highlights 
 #+begin_src emacs-lisp
 
   (use-package recentf
-    :ensure nil  ;; built-in
+    :ensure nil ; built-in
     :custom
     (recentf-max-saved-items 50)
     :config
@@ -5563,127 +5597,110 @@ That is why I instead I use this dedicated mode that does just this: highlights 
   ;; instead of at the window end.
   ;; It can also center the text.
   ;; Useful for making the buffer look "document" like.
-  (use-package visual-fill-column)
+  (use-package visual-fill-column
+    :ensure nix
+  )
 
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; This makes copy/paste properly work when emacs is running via the terminal.
   (use-package xclip
+    :ensure nix
     :config
     (xclip-mode 1)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Allows fast jumping inside the buffer (to word, to line, ...).
-  (use-package avy)
-
+  (use-package avy
+    :ensure nix
+  )
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Allows jumping to any window by typing just a single letter.
-  (use-package ace-window)
-
+  (use-package ace-window
+    :ensure nix
+  )
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; This package gives me commands to jump to a window with specific number (ace-window doesn't do that).
   (use-package winum
+    :ensure nix
     :config
     (winum-mode)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Remembers last used commands and puts them on top of M-x's list of commands.
   ;; Integrates seamlessly with Ivy/Counsel, Ido and some other.
-  (use-package amx)
-
+  (use-package amx
+    :ensure nix
+  )
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Highlight TODO and similar keywords in comments and strings.
   (use-package hl-todo
+    :ensure nix
     :config
     (global-hl-todo-mode)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Utility package that provides nice icons to be used in emacs, by other packages.
   ;; NOTE: The first time you load your config on a new machine, you'll have to
   ;; run the following command interactively:
   ;; M-x all-the-icons-install-fonts
-  (use-package all-the-icons)
-
+  (use-package all-the-icons
+    :ensure nix
+  )
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
   (use-package helpful
+    :ensure nix
     :defer t
+    :bind (([remap describe-command] . helpful-command)
+           ([remap describe-key] . helpful-key)
+           ("C-h h" . helpful-at-point)
+          )
     :custom
     (counsel-describe-function-function #'helpful-callable)
     (counsel-describe-variable-function #'helpful-variable)
-    :bind
-    (([remap describe-command] . helpful-command)
-    ([remap describe-key] . helpful-key)
-    ("C-h h" . helpful-at-point)
-    )
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Colorizes color names in buffers.
   ;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
   (use-package colorful-mode
+    :ensure nix
     :config
     (global-colorful-mode)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; It colors each pair of parenthesses into their own color.
   (use-package rainbow-delimiters
+    :ensure nix
     :hook
     (prog-mode . rainbow-delimiters-mode)
   )
-
 #+end_src
 
 #+begin_src emacs-lisp
-
   ;; Brings functions for converting buffer text and decorations to html.
-  (use-package htmlize)
-
-#+end_src
-
-#+begin_src emacs-lisp
-
-  ;; This introduces redundancy, because we exactly replicate the content of dir local vars that we want to allow automatically,
-  ;; but on the other hand it is the recommended/official way to be sure that we are ok with execution of that code, and not have
-  ;; emacs keep asking us if we want to execute them.
-  (setq safe-local-variable-values
-    '((eval with-eval-after-load 'lsp-mode
-  	  (add-to-list 'lsp-file-watch-ignored-directories "/e2e-test/test-outputs\\'")))
+  (use-package htmlize
+    :ensure nix
   )
-
 #+end_src
 
 ** Manual setup :manual_setup:
@@ -5711,13 +5728,6 @@ Troubleshooting:
 :PROPERTIES:
 :ID:       9d1c5dcd-2903-4493-bf97-32292a3f4ae4
 :END:
-** A must
-*** TODO Pin down package versions (lockfile / freezing) [1/2]
-Elpaca now has some support for it, look into that:
- - [ ] I could version control the =elpaca/= directory: https://github.com/progfolio/elpaca/issues/151#issuecomment-2601038260 . Probably use Git-lfs for that. I only wonder if having this public could be security issue in any way.
- - [X] Use the rudimentary support for lock files that was freshly added: https://github.com/progfolio/elpaca/issues/151#issuecomment-2629560507 .
-I might even want to use both hm! Gotta figure it out.
-
 ** Should do
 *** TODO Look into workgroups
 Also look into https://github.com/alphapapa/activities.el , it seems connected / complementary.

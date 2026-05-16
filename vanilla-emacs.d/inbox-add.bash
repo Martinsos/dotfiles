@@ -1,4 +1,3 @@
-
 WORK_DIARY_ORG_PATH="$(eval echo "~/Dropbox/work-diary.org")"
 # I redundantly escape < and > here to not trigger the noweb interpolation.
 WORK_DIARY_ORG_INBOX_TARGET="\<\<Insert INBOX tasks here\>\>"
@@ -30,4 +29,3 @@ if [ -n "$description" ]; then
 fi
 
 sed -i "/${WORK_DIARY_ORG_INBOX_TARGET}/r /dev/stdin" "${WORK_DIARY_ORG_PATH}" <<< "${org_heading}"
-
