@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-10 15:57:21 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-16 10:38:24 CEST, don't edit it manually.
 
 (defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -3154,6 +3154,10 @@ It uses external `gitstatusd' program to calculate the actual git status."
      (1 font-lock-keyword-face)
     )
    )
+)
+
+(use-package nix-mode
+  :mode "\\.nix\\'"
 )
 
 (use-package gptel

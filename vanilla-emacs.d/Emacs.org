@@ -4765,6 +4765,15 @@ I created my own major mode for highlighting the ascii diagrams.
   )
 #+end_src
 
+** Nix
+:PROPERTIES:
+:ID:       7d136c7c-279f-4071-9db1-76f19fb2d616
+:END:
+#+begin_src emacs-lisp
+  (use-package nix-mode
+    :mode "\\.nix\\'"
+  )
+#+end_src
 * AI
 ** Overview of popular packages
 Last updated: <2024-12-23 Mon>

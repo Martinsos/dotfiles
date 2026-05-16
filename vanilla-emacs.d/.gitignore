@@ -25,3 +25,4 @@
 /projects
 /forge-database.sqlite
 *~
+/.claude/*.local.*
