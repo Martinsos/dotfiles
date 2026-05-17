@@ -2,7 +2,7 @@
 #+TODO: TOREVIEW | DONE
 #+STARTUP: overview
 
-* TOREVIEW visual-fill-column
+* DONE visual-fill-column
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/visual-fill-column/][/home/martin/.emacs.d/elpaca/repos/visual-fill-column/]]
   - locked: 11575df4e042f3263db62de0e8ee4f2331fbb1b4 (2.6.3-2-g11575df) on ? in joostkremers/visual-fill-column
   - new:    e1be9a1545157d24454d950c0ac79553c540edb7 (2.7.1-1-ge1be9a1) on main in joostkremers/visual-fill-column
@@ -432,7 +432,7 @@
 - New models worth considering for your =gptel-model= default (currently =claude-sonnet-4-20250514=, dated; coding preset uses =claude-3-7-sonnet-20250219=, also dated): Claude Sonnet 4.5 (=29b7317=) / 4.6 (=d0e86a1=), Claude Opus 4.1/4.5/4.6/4.7 (=3c4e65b=, =e8dbe7b=, =8879956=, =74634b5=), Claude Haiku 4.5 (=6f1620b=); GPT-5..GPT-5.5 incl. mini/nano/pro (=229f7c6=, =05f3f4d=, =e652318=); Gemini 2.5 Flash-Lite, Gemini 3 Pro/Flash, Gemini 3.1 (=54687ed=, =9d6313c=, =0f65be0=, =86a2931=, =f30ebdf=); Grok 4 / grok-code-fast-1; refreshed Deepseek list; Bedrock Nova-2-lite + Opus 4.5/4.7.
 - Requirements bumped: compat 30.1 (=7af9ed8=) and Transient 0.7.4+ (=eb555e5=) — both should be satisfied via elpaca; =8b9114d= updates =gptel-transient= for Transient 1.12 behavior.
 - Optional follow-ups: refresh hard-coded models; try =gptel-highlight-mode= and token-usage header-line; wrap =my/gptel-chat-summarize-and-replace= in =(gptel-with-preset 'gptel-default ...)= to isolate from buffer-local context/tools.
-* TOREVIEW magit
+* DONE magit
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/magit/][/home/martin/.emacs.d/elpaca/repos/magit/]]
   - locked: e9614a336ffef61e8660188a95ae5d78674ed36d (v4.2.0-54-ge9614a33) on ? in magit/magit
   - new:    3d0a424665b36a6ff48ec3119a8aa9de92d6e293 (v4.5.0-243-g3d0a4246) on main in magit/magit
@@ -1364,7 +1364,7 @@
   - =magit-toggle-profiling= / =magit-toggle-subprocess-record= (already in your locked snapshot) for diagnosing slowness.
 - Forge note: your commented-out forge block (Emacs.org:3468) can now be considered again — the magit/transient rework is the historical blocker you mentioned; revisit if desired (not required by this update).
 - Risk level [#A] mainly because of the two new transitive deps (=cond-let=, =llama=), the Emacs minimum bump, the =--verbose= default flip on =magit-commit=, and the transient-pin question your own TODO calls out.
-* TOREVIEW transient
+* DONE transient
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/transient/][/home/martin/.emacs.d/elpaca/repos/transient/]]
   - locked: 13f3f5e0da85805e9ead0db70ba76a6bbc62d3a7 (v0.8.3-5-g13f3f5e) on ? in magit/transient
   - new:    93ae155c2188959b3d38e7eb2511bd3b6c291ca0 (v0.13.3-1-g93ae155) on main in magit/transient
