@@ -143,16 +143,15 @@ That also means that ~after-init-hook~ is often not the right choice any more, a
 :END:
 
 #+begin_src emacs-lisp
-
-  (defvar elpaca-installer-version 0.11)
+  (defvar elpaca-installer-version 0.12)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+  (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
   (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
                                 :ref nil :depth 1 :inherit ignore
                                 :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                                :build (:not elpaca--activate-package)))
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+                                :build (:not elpaca-activate)))
+  (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
          (build (expand-file-name "elpaca/" elpaca-builds-directory))
          (order (cdr elpaca-order))
          (default-directory repo))
@@ -182,12 +181,12 @@ That also means that ~after-init-hook~ is often not the right choice any more, a
       (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
   (add-hook 'after-init-hook #'elpaca-process-queues)
   (elpaca `(,@elpaca-order))
-
 #+end_src
 
-**** TODO Update
-- Update the bootstrap block to new one (12.0).
-- Delete the helpers block since I won't need it anyway anymore after Nix, so I don't have to update it.
+**** TODO Update [2/3]
+- [X] Update the bootstrap block to new one (12.0).
+- [X] Delete the helpers block since I won't need it anyway anymore after Nix, so I don't have to update it.
+- [ ] Generate and enable lock file once I am done with the update.
 *** Set up elpaca lock file
 :PROPERTIES:
 :ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
@@ -201,7 +200,7 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
   (setq elpaca-lock-file my/elpaca-lock-file-path)
   ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
   ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-  ;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
+  (setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
   (defun my/elpaca-write-lock-file ()
     (interactive)
@@ -250,81 +249,6 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
 - Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config (and restart emacs). Delete ~elpaca.backup/~.
 - That is it!
 NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
-*** Helpers
-:PROPERTIES:
-:ID:       062e8839-654b-4b77-8877-cf4af31ac518
-:END:
-#+begin_src emacs-lisp
-  (defun my/elpaca-lock-file-recipes ()
-    "Read recipes from my elpaca lock file as alist (PACKAGE-ID . RECIPE-PLIST)."
-    (let ((path my/elpaca-lock-file-path))
-      (with-temp-buffer
-        (insert-file-contents path)
-        (cl-loop for entry in (read (current-buffer))
-                 collect (cons (car entry) (plist-get (cdr entry) :recipe))))))
-
-  (defun my/elpaca--git (&rest args)
-    "Run git ARGS in `default-directory'.  Return stdout (trailing newline stripped) or nil on error."
-    (with-temp-buffer
-      (when (eq 0 (apply #'call-process "git" nil t nil args))
-        (string-trim-right (buffer-string)))))
-
-  (defun my/elpaca-show-updates ()
-    "For each elpaca package, show info about its version from the lock file,
-  info about its newest version, and the git log difference between the two if possible.
-  PREREQUISITES:
-  - Disable lock file in config + restart (so live recipes don't carry :ref).
-  - Run `elpaca-update-menus' for fresh recipe data.
-  - Run `elpaca-fetch-all' to fetch updates (in elpaca/ dir, does fetch for each repo."
-    (interactive)
-    (let ((lock-recipes (my/elpaca-lock-file-recipes)))
-      (with-current-buffer (get-buffer-create "*my-elpaca-updates*")
-        (erase-buffer)
-        (insert "#+TITLE: Elpaca package updates\n")
-        (insert "#+TODO: TODO | DONE\n")
-        (insert "#+STARTUP: overview\n\n")
-        (cl-loop for (pkg-id . pkg) in (elpaca--queued)
-                 for repo = (elpaca<-repo-dir pkg)
-                 when (and repo (file-directory-p repo)) do
-                 (let* ((default-directory repo)
-                        (lock-recipe (alist-get pkg-id lock-recipes))
-                        (lock-ref    (plist-get lock-recipe :ref))
-                        (lock-branch (plist-get lock-recipe :branch))
-                        (lock-repo-spec (plist-get lock-recipe :repo))
-                        (lock-ver (and lock-ref (my/elpaca--git "describe" "--tags" "--always" lock-ref)))
-                        (live-recipe (elpaca<-recipe pkg))
-                        (live-branch (or (plist-get live-recipe :branch)
-                                         (let ((s (my/elpaca--git "symbolic-ref"
-                                                                  "refs/remotes/origin/HEAD" "--short")))
-                                           (and s (string-prefix-p "origin/" s)
-                                                (substring s (length "origin/"))))))
-                        (live-repo-spec (plist-get live-recipe :repo))
-                        (live-branch-ref (and live-branch
-                                              (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
-                        (live-ver (and live-branch-ref (my/elpaca--git "describe" "--tags" "--always" live-branch-ref)))
-                        (log (and lock-ref live-branch-ref live-branch
-                                  (not (string= lock-ref live-branch-ref))
-                                  (my/elpaca--git "merge-base" "--is-ancestor"
-                                                  lock-ref (concat "origin/" live-branch))
-                                  (my/elpaca--git "--no-pager" "log" "--reverse" "--decorate=short"
-                                                  "--pretty=    %h%d %s (%ch)"
-                                                  (format "%s..origin/%s" lock-ref live-branch))))
-                        (status (if (and lock-ref live-branch-ref (string= lock-ref live-branch-ref)) 'done 'todo)))
-                   (insert (format "* %s %s\n"
-                                   (if (eq status 'done) "DONE" "TODO") pkg-id))
-                   (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
-                   (insert (format "  - locked: %s (%s) on %s in %s\n"
-                                   (or lock-ref "?") (or lock-ver "?") (or lock-branch "?") (or lock-repo-spec "?")))
-                   (insert (format "  - new:    %s (%s) on %s in %s\n"
-                                   (or live-branch-ref "?") (or live-ver "?") (or live-branch "?") (or live-repo-spec "?")))
-                   (when log
-                     (insert "\n" log "\n"))
-                   (insert "\n")))
-        (org-mode)
-        (goto-char (point-min))
-        (display-buffer (current-buffer)))))
-#+end_src
-
 ** Cheatsheet :cheatsheet:
 - ~elpaca-manager~ to run the main elpaca UI.
 - To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
@@ -622,6 +546,15 @@ NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go
     )
   )
 
+#+end_src
+* Latest versions of built-ins
+:PROPERTIES:
+:ID:       495ebc5f-3b8c-4e69-a957-0703050e74c6
+:END:
+I install latest versions of certain built-in packages because some of the other packages are very new and need a newer one than the built-in.
+#+begin_src emacs-lisp
+  (use-package compat :ensure (:wait t))
+  (use-package transient :ensure (:wait t))
 #+end_src
 * Basic Emacs config
 ** General
@@ -1735,7 +1668,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+end_src
 
 ** TODO Update
-- Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
+- [X] Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
 
 - inline-images got deprecated in favor of link-previews (more general). To be modern, I should do:
   1. Line 1485: ~org-startup-with-inline-images t~ → ~org-startup-with-link-previews t~.
@@ -3449,18 +3382,7 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
 
 #+begin_src emacs-lisp
 
-  ;; NOTE: I installed transient not because I use it directly, but because magit
-  ;;   needs a newer version of it than what comes with emacs by default, and this
-  ;;   takes care of it. If magit at some point stops needing it, I can remove this.
-  (use-package transient)
-
-  ;; Magit is all you need to work with git.
-  ;; TODO: I had to explicitly install new transient above to get magit to work because
-  ;;   it expects a newer version than what emacs ships with. Once I update emacs
-  ;;   or magit, drop the :after transient and remove (use-package transient) unless
-  ;;   I also use it for something else.
   (use-package magit
-    :after transient
     :defer t
     :config
     (general-define-key
@@ -3477,9 +3399,6 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
   )
 
 #+end_src
-
-*** TODO Update
-Remove :after transient, and also remove use-package transient above, and corresponding NOTEs and TODOs.
 
 *** Cheatsheet                                                 :cheatsheet:
 Some key combos I often use in magit:

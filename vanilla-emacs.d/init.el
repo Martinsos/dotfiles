@@ -1,16 +1,17 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-14 19:19:32 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 01:22:49 CEST, don't edit it manually.
 
-(defvar elpaca-installer-version 0.11)
+
+(defvar elpaca-installer-version 0.12)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
                               :ref nil :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+                              :build (:not elpaca-activate)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
        (build (expand-file-name "elpaca/" elpaca-builds-directory))
        (order (cdr elpaca-order))
        (default-directory repo))
@@ -41,94 +42,32 @@
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
 
+
 (defconst my/elpaca-lock-file-path (expand-file-name "elpaca-lock.eld" user-emacs-directory))
 (setq elpaca-lock-file my/elpaca-lock-file-path)
 ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
 ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
-;(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
+(setq elpaca-lock-file nil)  ;; TODO: Once I update packages, also uncomment (use-package forge) lower in the Emacs.org!
 
 (defun my/elpaca-write-lock-file ()
   (interactive)
   (elpaca-write-lock-file elpaca-lock-file)
 )
 
+
+
 (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
 (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
 
-(defun my/elpaca-lock-file-recipes ()
-  "Read recipes from my elpaca lock file as alist (PACKAGE-ID . RECIPE-PLIST)."
-  (let ((path my/elpaca-lock-file-path))
-    (with-temp-buffer
-      (insert-file-contents path)
-      (cl-loop for entry in (read (current-buffer))
-               collect (cons (car entry) (plist-get (cdr entry) :recipe))))))
 
-(defun my/elpaca--git (&rest args)
-  "Run git ARGS in `default-directory'.  Return stdout (trailing newline stripped) or nil on error."
-  (with-temp-buffer
-    (when (eq 0 (apply #'call-process "git" nil t nil args))
-      (string-trim-right (buffer-string)))))
-
-(defun my/elpaca-show-updates ()
-  "For each elpaca package, show info about its version from the lock file,
-info about its newest version, and the git log difference between the two if possible.
-PREREQUISITES:
-- Disable lock file in config + restart (so live recipes don't carry :ref).
-- Run `elpaca-update-menus' for fresh recipe data.
-- Run `elpaca-fetch-all' to fetch updates (in elpaca/ dir, does fetch for each repo."
-  (interactive)
-  (let ((lock-recipes (my/elpaca-lock-file-recipes)))
-    (with-current-buffer (get-buffer-create "*my-elpaca-updates*")
-      (erase-buffer)
-      (insert "#+TITLE: Elpaca package updates\n")
-      (insert "#+TODO: TODO | DONE\n")
-      (insert "#+STARTUP: overview\n\n")
-      (cl-loop for (pkg-id . pkg) in (elpaca--queued)
-               for repo = (elpaca<-repo-dir pkg)
-               when (and repo (file-directory-p repo)) do
-               (let* ((default-directory repo)
-                      (lock-recipe (alist-get pkg-id lock-recipes))
-                      (lock-ref    (plist-get lock-recipe :ref))
-                      (lock-branch (plist-get lock-recipe :branch))
-                      (lock-repo-spec (plist-get lock-recipe :repo))
-                      (lock-ver (and lock-ref (my/elpaca--git "describe" "--tags" "--always" lock-ref)))
-                      (live-recipe (elpaca<-recipe pkg))
-                      (live-branch (or (plist-get live-recipe :branch)
-                                       (let ((s (my/elpaca--git "symbolic-ref"
-                                                                "refs/remotes/origin/HEAD" "--short")))
-                                         (and s (string-prefix-p "origin/" s)
-                                              (substring s (length "origin/"))))))
-                      (live-repo-spec (plist-get live-recipe :repo))
-                      (live-branch-ref (and live-branch
-                                            (my/elpaca--git "rev-parse" (concat "origin/" live-branch))))
-                      (live-ver (and live-branch-ref (my/elpaca--git "describe" "--tags" "--always" live-branch-ref)))
-                      (log (and lock-ref live-branch-ref live-branch
-                                (not (string= lock-ref live-branch-ref))
-                                (my/elpaca--git "merge-base" "--is-ancestor"
-                                                lock-ref (concat "origin/" live-branch))
-                                (my/elpaca--git "--no-pager" "log" "--reverse" "--decorate=short"
-                                                "--pretty=    %h%d %s (%ch)"
-                                                (format "%s..origin/%s" lock-ref live-branch))))
-                      (status (if (and lock-ref live-branch-ref (string= lock-ref live-branch-ref)) 'done 'todo)))
-                 (insert (format "* %s %s\n"
-                                 (if (eq status 'done) "DONE" "TODO") pkg-id))
-                 (insert (format "  - repo dir: [[file:%s][%s]]\n" repo repo))
-                 (insert (format "  - locked: %s (%s) on %s in %s\n"
-                                 (or lock-ref "?") (or lock-ver "?") (or lock-branch "?") (or lock-repo-spec "?")))
-                 (insert (format "  - new:    %s (%s) on %s in %s\n"
-                                 (or live-branch-ref "?") (or live-ver "?") (or live-branch "?") (or live-repo-spec "?")))
-                 (when log
-                   (insert "\n" log "\n"))
-                 (insert "\n")))
-      (org-mode)
-      (goto-char (point-min))
-      (display-buffer (current-buffer)))))
 
 (require 'cl-lib) ;; Common utilities and functions, e.g. cl-some, cl-loop, ... .
 
 ;; Package for displaying content in a nice inline overlay.
 ;; I use it in the rest of the config in some place(s).
 (use-package quick-peek)
+
+
 
 (defun my/var-state (var)
   "Returns the value of a variable with specified name, or 'my/var-unbound if it is not bound."
@@ -144,6 +83,8 @@ PREREQUISITES:
   "Like setq-local but takes a var symbol (analogous to setq and set)."
   (set (make-local-variable var) value)
 )
+
+
 
 (defun my/save-local-var-state (var)
   "Save the current state of buffer-local VAR (symbol) and return a lambda that restores VAR to its original state.
@@ -195,6 +136,8 @@ USAGE:
   )
 )
 
+
+
 (defun my/save-mode-state (mode)
   "Save the current state (enabled or disabled) of MODE (symbol) and return a lambda that restores MODE to its original state.
 USAGE:
@@ -244,6 +187,8 @@ USAGE:
   )
 )
 
+
+
 (defun my/random-atom (xs)
   "Returns a random atom from the given list."
   (nth (random (length xs)) xs)
@@ -253,6 +198,8 @@ USAGE:
   (let ((n (mod num-steps (length list))))
     (append (cl-subseq list n) (cl-subseq list 0 n)))
 )
+
+
 
 (defvar my/motivational-quotes
   '((:author "Marcus Aurelius"
@@ -275,6 +222,7 @@ USAGE:
      :quote "Begin at once to live, and count each separate day as a separate life.")
     (:author "Pliny the Elder"
      :quote "Nulla dies sine linea.")))
+
 
 (defun my/is-face-at-point (face)
   "Returns non-nil if given FACE is applied at text at the current point."
@@ -333,6 +281,8 @@ USAGE:
   )
 )
 
+
+
 ;; Implemented based on 'lsp-describe-thing-at-point'.
 (defun my/lsp-describe-thing-at-point-f ()
   "Return string with the type signature and documentation of the thing at point."
@@ -347,6 +297,11 @@ USAGE:
     )
   )
 )
+
+
+(use-package compat :ensure (:wait t))
+(use-package transient :ensure (:wait t))
+
 
 (use-package emacs
   :ensure nil
@@ -405,6 +360,8 @@ USAGE:
   (setq split-width-threshold 160)
 )
 
+
+
 (use-package epg-config
   :ensure nil ; emacs built-in
   :config
@@ -412,7 +369,9 @@ USAGE:
   (setq epg-pinentry-mode 'loopback)
 )
 
+
 (setq auth-sources '("~/.authinfo"))
+
 
 (use-package plstore
   :ensure nil ; emacs built-in
@@ -422,6 +381,7 @@ USAGE:
   ;       Check plstore code for instructions on this if it will ever be needed.
   (setq-default plstore-cache-passphrase-for-symmetric-encryption t)
 )
+
 
 (let ((f (expand-file-name "safe-local-variable-directories.eld" user-emacs-directory)))
   (when (file-exists-p f)
@@ -452,6 +412,7 @@ USAGE:
               (progn
                 (server-start)
                 (message "Started emacs server.")))))
+
 
 (defmacro my/on-theme-enabled (&rest body)
   "Execute BODY now if there is any enabled theme, and on every future theme enable."
@@ -494,6 +455,7 @@ USAGE:
 ;;  :ensure (:wait t) ; Too ensure theme gets loaded as early as possible, so there is no white screen.
 ;;)
 
+
 (use-package emacs
   :ensure nil
   :config
@@ -507,6 +469,7 @@ USAGE:
   (set-face-attribute 'fixed-pitch nil :family my/main-fixed-pitch-font :height 1.0) ; height relative to 'default
   (set-face-attribute 'variable-pitch nil :family my/main-variable-pitch-font :height 1.2) ; height relative to 'default
 )
+
 
 (defun my/remap-fixed-pitch-height-relative-to-variable-pitch ()
   "Remaps the fixed-pitch face's (for the buffer) with adjusted height so it is relative to variable-pitch face."
@@ -529,6 +492,7 @@ USAGE:
   )
 )
 
+
 ;; TODO: Configure better or use some other modeline.
 (use-package doom-modeline
   :custom
@@ -539,6 +503,8 @@ USAGE:
   (doom-modeline-mode 1)
 )
 
+
+
 (use-package emacs
   :ensure nil
   :config
@@ -548,10 +514,14 @@ USAGE:
   (setq undo-outer-limit  300000000) ; ~300mb.
 )
 
+
+
 (use-package undo-fu
   :config
   (setq undo-fu-ignore-keyboard-quit t) ; I don't want C-g to trigger normal emacs undo behavior.
 )
+
+
 
 ;; Displays undo history as a tree and lets you move through it.
 (use-package vundo
@@ -584,6 +554,8 @@ USAGE:
   (add-hook 'vundo-mode-hook (lambda () (vundo-live-diff-mode 1)))
   ;;;;;/ Vundo Live Diff ;;;;;;
 )
+
+
 
 ;; general.el provides convenient, unified interface for key definitions.
 ;; It can do many cool things, one of them is specifying leader key and prefixes.
@@ -732,6 +704,8 @@ USAGE:
   )
 )
 
+
+
 (use-package which-key
   :config
   (setq which-key-idle-delay 0.5)
@@ -739,6 +713,8 @@ USAGE:
   (setq which-key-min-display-lines 5)
   (which-key-mode)
 )
+
+
 
 (use-package hydra
   :config
@@ -827,6 +803,7 @@ USAGE:
   )
 )
 
+
 ;; CHEATSHEET: C-z puts us into `emacs` mode, which is normal situation without evil.
 (use-package evil
   :init
@@ -860,6 +837,7 @@ USAGE:
   :custom (evil-collection-setup-minibuffer t)
   :config (evil-collection-init)
 )
+
 
 ;; This goes first so that all the rest of org-related config can add keys without any waiting.
 (my/leader-keys
@@ -1193,6 +1171,7 @@ USAGE:
   )
 )
 
+
 (with-eval-after-load 'org
   (defun my/org-display-link-info-at-point ()
     "Display the link info in the echo area when the cursor is on an Org mode link."
@@ -1207,10 +1186,14 @@ USAGE:
   )
 )
 
+
+
 (use-package evil-org
   :after org
   :hook (org-mode . (lambda () evil-org-mode))
 )
+
+
 
 (with-eval-after-load 'org
   ;; Here we define our custom structure templates (snippets) for quickly creating code blocks.
@@ -1233,6 +1216,8 @@ USAGE:
   (setq org-confirm-babel-evaluate nil) ; Don't ask for confirmation when evaluating a block.
 )
 
+
+
 (with-eval-after-load 'org
   (defun my/org-babel-tangle-no-confirm ()
     (let ((org-confirm-babel-evaluate nil)) (org-babel-tangle))
@@ -1245,9 +1230,11 @@ USAGE:
   (add-hook 'org-mode-hook 'my/when-emacs-org-file-tangle-on-save)
 )
 
+
 (use-package org-tidy
   :commands org-tidy-mode
 )
+
 
 (use-package org-present
   :after (org visual-fill-column)
@@ -1328,6 +1315,8 @@ USAGE:
   )
 )
 
+
+
 (defconst my/calendar-events-wasp-org-file "~/Dropbox/calendar-events-wasp.org")
 (defconst my/calendar-events-private-org-file "~/Dropbox/calendar-events-private.org")
 
@@ -1355,6 +1344,8 @@ USAGE:
   )
 )
 
+
+
 (with-eval-after-load 'org
   (setq org-agenda-scheduled-leaders '("-> " "-%dd -> "))
   (setq org-agenda-deadline-leaders '("! " "+%dd ! " "-%dd ! "))
@@ -1369,6 +1360,8 @@ USAGE:
   )
   (setq org-agenda-block-separator nil)
 )
+
+
 
 (with-eval-after-load 'evil
   ;; TODO: I am basing these keybindings on the evil-org-agenda-set-keys function from
@@ -1472,6 +1465,8 @@ USAGE:
   )
 )
 
+
+
 (use-package org-super-agenda
   :after org-agenda
   :init
@@ -1486,6 +1481,8 @@ USAGE:
   :config
   (org-super-agenda-mode)
 )
+
+
 
 (defvar my/after-org-agenda-mark-todo-deadlines-with-earlier-schedule-hook nil
   "Hook called after the marking of the todo deadlines with the earlier schedule")
@@ -1529,6 +1526,8 @@ It will both mark them with a text property and also style them to be less empha
 )
 
 (add-hook 'org-agenda-finalize-hook 'my/org-agenda-mark-todo-deadlines-with-earlier-schedule)
+
+
 
 (require 'cl-lib)
 
@@ -1596,6 +1595,8 @@ Return minutes (number)."
 )
 
 (add-hook 'org-agenda-finalize-hook 'my/org-agenda-insert-total-daily-leftover-efforts)
+
+
 
 (defun my/org-agenda-show-parent-todo ()
   "Add overlay showing parent TODO only for actual TODO agenda entries."
@@ -1672,6 +1673,7 @@ Returns nil if no heading found."
   (add-face-text-property 0 (length str) face append str)
   str
 )
+
 
 (with-eval-after-load 'org
   (defun my/org-time-to-short-day-with-num (time)
@@ -1928,6 +1930,7 @@ Returns nil if no heading found."
   )
 )
 
+
 (with-eval-after-load 'org
   (defun my/make-work-diary-sprint-calendar-cmd (sprint-length-in-weeks sprint-start-weekday)
     `("w" "Work Diary: sprint calendar"
@@ -1949,6 +1952,7 @@ Returns nil if no heading found."
      )
   )
 )
+
 
 (with-eval-after-load 'org
   (defun my/private-diary-journal-agenda-block (arg1) ; TODO: I don't know what this arg1 is, find out.
@@ -2008,6 +2012,7 @@ Returns nil if no heading found."
   )
 )
 
+
 (with-eval-after-load 'org
   (let (;; TODO: Pull this info (current sprint tag, maybe also start day)
         ;;   from the work-diary.org file. I could have a heading there called Sprints
@@ -2054,6 +2059,7 @@ Returns nil if no heading found."
               (org-agenda-redo)))
   )
 )
+
 
 (let* ((wd-path "~/Dropbox/work-diary.org")
        (wd-tasks `(file+headline ,wd-path "Tasks"))
@@ -2146,6 +2152,7 @@ Returns nil if no heading found."
   )
 )
 
+
 (my/leader-keys
   "aw" '("writing mode (olivetti)" . my/writing-mode)
 )
@@ -2184,6 +2191,7 @@ Returns nil if no heading found."
                        ("https://hojberg.xyz/rss.xml" blog programming)
   ))
 )
+
 
 (use-package emacs
   :ensure nil
@@ -2224,6 +2232,8 @@ Returns nil if no heading found."
     (switch-to-buffer "*Messages*")
   )
 )
+
+
 
 ;; Ivy is the main thing (nice search through list of stuff, in minibuffer and elsewhere),
 ;; while Counsel and Swiper extend its usage through more of the Emacs.
@@ -2287,6 +2297,8 @@ Returns nil if no heading found."
   (ivy-mode 1)
 )
 
+
+
 ;; Counsel is a package that is part of Ivy ecosystem.
 ;; It brings enhanced versions of common emacs commands, powered by Ivy.
 ;; Ivy already offers some enhanced commands, but Counsel offers more and better.
@@ -2296,6 +2308,8 @@ Returns nil if no heading found."
   (setq counsel-describe-variable-function 'helpful-variable)
   (counsel-mode 1)  ; This will remap the built-in Emacs functions that have counsel replacements.
 )
+
+
 
 ;; Swiper is a package that is part of Ivy ecosystem.
 ;; Better isearch (incremental search), powered by Ivy.
@@ -2309,6 +2323,8 @@ Returns nil if no heading found."
          ("*" . swiper-thing-at-point)
         )
 )
+
+
 
 ;; Show more info for some usages of Ivy. Also allows easier customization of Ivy output.
 (use-package ivy-rich
@@ -2349,6 +2365,7 @@ Returns nil if no heading found."
   (ivy-rich-mode 1)
 )
 
+
 (use-package emacs
   :ensure nil
   :config
@@ -2366,6 +2383,7 @@ Returns nil if no heading found."
     "@ l" '("bookmarks list" . list-bookmarks)
   )
 )
+
 
 ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
 (use-package projectile
@@ -2397,11 +2415,15 @@ Returns nil if no heading found."
   (counsel-projectile-mode)
 )
 
+
+
 (my/leader-keys
   "g" '("git (version control)" . (keymap))
   "gc" '("resolve conflicts (simple)" . smerge-mode)
   "gC" '("resolve conflicts (advanced)" . smerge-ediff)
 )
+
+
 
 (use-package gitstatus
   :custom
@@ -2409,18 +2431,9 @@ Returns nil if no heading found."
   (gitstatus-prefix nil)
 )
 
-;; NOTE: I installed transient not because I use it directly, but because magit
-;;   needs a newer version of it than what comes with emacs by default, and this
-;;   takes care of it. If magit at some point stops needing it, I can remove this.
-(use-package transient)
 
-;; Magit is all you need to work with git.
-;; TODO: I had to explicitly install new transient above to get magit to work because
-;;   it expects a newer version than what emacs ships with. Once I update emacs
-;;   or magit, drop the :after transient and remove (use-package transient) unless
-;;   I also use it for something else.
+
 (use-package magit
-  :after transient
   :defer t
   :config
   (general-define-key
@@ -2436,10 +2449,12 @@ Returns nil if no heading found."
   "gF" '("magit find file" . magit-find-file)
 )
 
+
 ;; TODO: Commented out till I update magit to latest, too complicated to get it working otherwise.
 ;; (use-package forge
 ;;   :after magit
 ;; )
+
 
 (use-package diff-hl
   :hook (dired-mode . diff-hl-dired-mode)
@@ -2452,6 +2467,7 @@ Returns nil if no heading found."
     "gR" '("reset ref rev (global)" . diff-hl-reset-reference-rev)
   )
 )
+
 
 (use-package dired
   :ensure nil ; emacs built-in
@@ -2524,6 +2540,7 @@ Returns nil if no heading found."
   )
 )
 
+
 ;; TODO: Fix highlight and search faces in tooltip/popup, or have theme that makes them nice. Company has faces that we can customize.
 ;; TODO: Either make scroll more visible, or use lines instead.
 (use-package company
@@ -2573,6 +2590,7 @@ Returns nil if no heading found."
   )
   (global-company-mode 1)
 )
+
 
 (defun my/vterm-new ()
   (interactive)
@@ -2629,6 +2647,8 @@ Returns nil if no heading found."
       (cdr (my/rotate-left bs (cl-position (current-buffer) bs)))))
 )
 
+
+
 (with-eval-after-load 'vterm
   (defvar my/vterm-prompt-hook nil "A hook that runs each time the prompt is printed in vterm.")
 
@@ -2643,6 +2663,8 @@ Returns nil if no heading found."
     (add-to-list 'vterm-eval-cmds '("prompt" my/run-vterm-prompt-hooks))
   )
 )
+
+
 
 (with-eval-after-load 'vterm
   (defvar-local my/vterm-git-status-string nil
@@ -2693,6 +2715,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
+
 (use-package jinx
   :config
   (setq jinx-languages "en_us")
@@ -2700,6 +2724,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "tc"  '("spell checking" . jinx-mode)
   )
 )
+
+
 
 (use-package flycheck
   :init (global-flycheck-mode)
@@ -2712,6 +2738,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "el"  '("list" . flycheck-list-errors)
   )
 )
+
+
 
 ;; Shows flycheck errors/warnings in a popup, instead of a minibuffer which is default.
 ;; I configured it so it doesn't show them on cursor, as is default, but on request.
@@ -2743,6 +2771,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
 (defun my/lychee-check (target)
   "Run lychee link checker on TARGET (file or directory)."
   (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
@@ -2773,6 +2802,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   "a l l" '("in buffer" . my/lychee-check-current-file)
   "a l p" '("in project" . my/lychee-check-project)
 )
+
 
 (use-package sideline
   :hook ((flycheck-mode lsp-mode) . sideline-mode)
@@ -2830,10 +2860,13 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
+
 (use-package hideshow
   :ensure nil ; emacs built-in
   :hook (prog-mode . hs-minor-mode)
 )
+
 
 (use-package imenu
   :ensure nil ; Built-in into emacs.
@@ -2853,6 +2886,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
 (use-package ediff
   :ensure nil ; emacs built-in
   :custom
@@ -2871,6 +2905,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "f d" '("ediff" . ediff)
   )
 )
+
+
 
 (use-package lsp-mode
   :init
@@ -2913,6 +2949,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
+
 (use-package lsp-ui
   :after (lsp-mode evil)
   :commands lsp-ui-mode
@@ -2941,6 +2979,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ) 
   (setq evil-lookup-func 'lsp-ui-doc-glance)
 )
+
+
 
 (defun lsp-booster--advice-json-parse (old-fn &rest args)
   "Try to parse bytecode instead of json."
@@ -2973,12 +3013,16 @@ It uses external `gitstatusd' program to calculate the actual git status."
       orig-result)))
 (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)
 
+
+
 ;; Brings lsp-ivy-workspace-symbol that searches for a symbol in project as you type its name.
 ;; TODO: Add a keybinding, under lsp-keymap-prefix, for this command, I guess under goto? So ", g s"?
 (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 
 ;; Shows list of all errors in a nice treemacs fashion.
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+
 
 (use-package treesit
   :ensure nil ; Because it is built-in package, this tells elpaca to not try to install it.
@@ -3022,6 +3066,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (my/setup-install-grammars)
 )
 
+
 (use-package emacs
   :ensure nil
   :hook ((compilation-filter . ansi-color-compilation-filter) ; Interprets ansii color codes in the output.
@@ -3045,7 +3090,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; semhl stands for "semantic highlight" -> faces with "semhl" are faces for lsp semantic tokens.
   ;; By default, lsp-face-semhl-operator just inherits lsp-face-semhl-function, which I found to be a shame.
   ;; By setting them to keyword face, operators are nicely visible.
-  (face-remap-add-relative 'lsp-face-semhl-operator '(:foregrund unspecified :inherit lsp-face-semhl-keyword))
+  (face-remap-add-relative 'lsp-face-semhl-operator '(:foreground unspecified :inherit lsp-face-semhl-keyword))
   ;; I don't want to differentiate class methods from functions by color, that is just confusing.
   (face-remap-add-relative 'lsp-face-semhl-method '(:foreground unspecified :inherit lsp-face-semhl-function))
   ;; haskell-operator-face is used for stuff like `::`, `->` and similar. By default they were the same as
@@ -3075,8 +3120,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
 ;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
 ;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
 ;; ;;  - Is too smart while highlighting signature.
-;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
 ;; ;;  - What is with literate mode?
 ;; (use-package haskell-ts-mode
 ;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
@@ -3097,6 +3140,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; This takes syntax highlighting to the maximum of detail. It is a bit slow though!
   (lsp-haskell-plugin-semantic-tokens-global-on t)
 )
+
+
+
 
 (defun my/add-jsdoc-in-typescript-ts-mode ()
   "Add jsdoc treesitter rules to typescript as a host language."
@@ -3156,10 +3202,13 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :hook (((typescript-ts-mode tsx-ts-mode) . #'my/add-jsdoc-in-typescript-ts-mode))
 )
 
+
+
 (use-package lsp-eslint
   :ensure nil ;; Don't install since it comes built-in with lsp-mode.
   :after lsp-mode
 )
+
 
 (use-package css-mode
   :ensure nil ; Built-in, so don't install it via package manager.
@@ -3168,12 +3217,14 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (css-indent-offset 2)
 )
 
+
 ;; Built-in YAML major mode with treesitter highlighting.
 (use-package yaml-ts-mode
   :ensure nil ; Built-in, so don't install it via package manager.
   :mode ("\\.ya?ml\\'" . yaml-ts-mode)
   :hook (yaml-ts-mode . lsp-deferred)
 )
+
 
 (use-package markdown-mode
   :config
@@ -3412,6 +3463,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
 (defun my/gptel-image-download-setup ()
   (when (derived-mode-p 'org-mode)
     (with-eval-after-load 'org-download
@@ -3423,6 +3475,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 (add-hook 'gptel-mode-hook #'my/gptel-image-download-setup)
+
 
 (with-eval-after-load 'gptel
   (gptel-make-preset 'coding
@@ -3552,6 +3605,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
+
 (defun my/gptel-collect-region-editor-context ()
   "Collect useful contextual information (errs, warns, lsp, ...) for the current region(selection).
 Returns a structured list of information that can be sent to an LLM."
@@ -3602,6 +3656,8 @@ Returns a structured list of information that can be sent to an LLM."
     context-info
   )
 )
+
+
 
 (defun my/gptel-send-to-chat (buffer beg end)
   (interactive
@@ -3691,6 +3747,8 @@ Returns a structured list of information that can be sent to an LLM."
   (insert (concat (unless (bolp) "\n") text))
 )
 
+
+
 (use-package whitespace
   :ensure nil ; Don't install as it is built-in with emacs.
   :config
@@ -3725,6 +3783,8 @@ Returns a structured list of information that can be sent to an LLM."
   )
 )
 
+
+
 (use-package ethan-wspace
   :init
   (setq mode-require-final-newline nil)
@@ -3732,6 +3792,8 @@ Returns a structured list of information that can be sent to an LLM."
   (global-ethan-wspace-mode 1)
   ;; There is ethan-wspace-face if I want to configure what it looks like.
 )
+
+
 
 (use-package column-enforce-mode
   :hook (prog-mode . column-enforce-mode)
@@ -3746,6 +3808,8 @@ Returns a structured list of information that can be sent to an LLM."
   )
 )
 
+
+
 (use-package recentf
   :ensure nil  ;; built-in
   :custom
@@ -3754,6 +3818,8 @@ Returns a structured list of information that can be sent to an LLM."
   (recentf-mode 1)
 )
 
+
+
 ;; Primarily supposed to be used with visual-line-mode (which is emacs builtin that soft wraps the line at window end).
 ;; visual-fill-column, when used with visual-line-mode, modifies the wrapping to happen at the fixed (by default fill-column) width,
 ;; instead of at the window end.
@@ -3761,17 +3827,25 @@ Returns a structured list of information that can be sent to an LLM."
 ;; Useful for making the buffer look "document" like.
 (use-package visual-fill-column)
 
+
+
 ;; This makes copy/paste properly work when emacs is running via the terminal.
 (use-package xclip
   :config
   (xclip-mode 1)
 )
 
+
+
 ;; Allows fast jumping inside the buffer (to word, to line, ...).
 (use-package avy)
 
+
+
 ;; Allows jumping to any window by typing just a single letter.
 (use-package ace-window)
+
+
 
 ;; This package gives me commands to jump to a window with specific number (ace-window doesn't do that).
 (use-package winum
@@ -3779,9 +3853,13 @@ Returns a structured list of information that can be sent to an LLM."
   (winum-mode)
 )
 
+
+
 ;; Remembers last used commands and puts them on top of M-x's list of commands.
 ;; Integrates seamlessly with Ivy/Counsel, Ido and some other.
 (use-package amx)
+
+
 
 ;; Highlight TODO and similar keywords in comments and strings.
 (use-package hl-todo
@@ -3789,11 +3867,15 @@ Returns a structured list of information that can be sent to an LLM."
   (global-hl-todo-mode)
 )
 
+
+
 ;; Utility package that provides nice icons to be used in emacs, by other packages.
 ;; NOTE: The first time you load your config on a new machine, you'll have to
 ;; run the following command interactively:
 ;; M-x all-the-icons-install-fonts
 (use-package all-the-icons)
+
+
 
 ;; Enhances built-in Emacs help with more information: A "better" Emacs *Help* buffer.
 (use-package helpful
@@ -3808,6 +3890,8 @@ Returns a structured list of information that can be sent to an LLM."
   )
 )
 
+
+
 ;; Colorizes color names in buffers.
 ;; Works better than clasical rainbow-mode, which would mess up Help buffer for me.
 (use-package colorful-mode
@@ -3815,14 +3899,20 @@ Returns a structured list of information that can be sent to an LLM."
   (global-colorful-mode)
 )
 
+
+
 ;; It colors each pair of parenthesses into their own color.
 (use-package rainbow-delimiters
   :hook
   (prog-mode . rainbow-delimiters-mode)
 )
 
+
+
 ;; Brings functions for converting buffer text and decorations to html.
 (use-package htmlize)
+
+
 
 ;; This introduces redundancy, because we exactly replicate the content of dir local vars that we want to allow automatically,
 ;; but on the other hand it is the recommended/official way to be sure that we are ok with execution of that code, and not have
@@ -3831,3 +3921,4 @@ Returns a structured list of information that can be sent to an LLM."
   '((eval with-eval-after-load 'lsp-mode
 	  (add-to-list 'lsp-file-watch-ignored-directories "/e2e-test/test-outputs\\'")))
 )
+
