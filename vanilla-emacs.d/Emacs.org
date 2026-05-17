@@ -4905,6 +4905,14 @@ I created my own major mode for highlighting the ascii diagrams.
 ** GPTel
 =gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
+*** TODO Update
+- Update the model to new one.
+- Default OpenAI backend is removed, now it is nil. Remove the comment stating OpenAI is default.
+- gptel-make-tool flipped the default for :include. Check my tools with undefined :include and set it explicitly if I want to keep the old behaviour (it is read buffer and modify buffer tools, so I probably do want to make these eplicitly nil, I don't want to see the whole output in the buffer).
+- try =gptel-highlight-mode=
+- try token-usage header-line
+- wrap =my/gptel-chat-summarize-and-replace= in =(gptel-with-preset 'gptel-default ...)= to isolate from buffer-local context/tools.
+
 *** General config
 :PROPERTIES:
 :ID:       fdfea65e-48dd-409d-8131-dbe9d5e35b59

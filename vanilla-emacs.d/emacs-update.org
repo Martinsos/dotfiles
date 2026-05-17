@@ -2,7 +2,7 @@
 #+TODO: TOREVIEW | DONE
 #+STARTUP: overview
 
-* TOREVIEW gptel
+* DONE gptel
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/gptel/][/home/martin/.emacs.d/elpaca/repos/gptel/]]
   - locked: bed2402c5442fec21cc336a76821a5c89c1b254b (v0.9.8.5-38-gbed2402) on ? in karthink/gptel
   - new:    df08c1a4d4c6e253870b8aa1634922b8f56224e7 (v0.9.9.5-2-gdf08c1a) on master in karthink/gptel
