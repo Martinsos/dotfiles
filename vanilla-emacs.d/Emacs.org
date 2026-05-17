@@ -185,6 +185,9 @@ That also means that ~after-init-hook~ is often not the right choice any more, a
 
 #+end_src
 
+**** TODO Update
+- Update the bootstrap block to new one (12.0).
+- Delete the helpers block since I won't need it anyway anymore after Nix, so I don't have to update it.
 *** Set up elpaca lock file
 :PROPERTIES:
 :ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
@@ -1084,6 +1087,8 @@ I don't set any keybindings here because it is enough to set undo-fu as evil's u
 
 #+end_src
 
+** TODO Update
+- [ ] Study the new (global-)vundo-popup-mode, what is that? Does it replace my vundo live diff workflow?
 ** TODO Install undo-fu-session?
 Do I need persistent undo between the emacs sessions? I think not?
 ** TODO Install undo-hl (highlights changes by undo in buffer)?
@@ -1730,7 +1735,12 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 #+end_src
 
 ** TODO Update
-Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
+- Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
+
+- inline-images got deprecated in favor of link-previews (more general). To be modern, I should do:
+  1. Line 1485: ~org-startup-with-inline-images t~ → ~org-startup-with-link-previews t~.
+  2. Line 1902: ~(org-display-inline-images)~ → ~(org-link-preview-region nil nil (point-min) (point-max))~ (or keep as-is, still works).
+  3. Line 1925: ~(org-remove-inline-images)~ → ~(org-link-preview-clear)~ (or keep as-is).
 
 ** Support for downloading and inserting images
 :PROPERTIES:
