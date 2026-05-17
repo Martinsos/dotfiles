@@ -1958,6 +1958,11 @@ Turns any org document into a presentation! Each top-level header is one slide.
 
 #+end_src
 
+*** TODO Update
+- visual-line-fill-column-mode was a combo mode, it is deprecated, and I should invoke them separately.
+  - (visual-line-fill-column-mode 1) → (visual-line-mode 1) + (visual-fill-column-mode 1)
+  - under restore-modes, replace visual-line-fill-column-mode with these two.
+
 *** Cheatsheet :cheatsheet:
 - `org-present` to go into presentation mode.
 - left and right arrow take you to previous or next header (which is actually now a slide).
@@ -3462,6 +3467,9 @@ TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatus
   )
 
 #+end_src
+
+*** TODO Update
+Remove :after transient, and also remove use-package transient above, and corresponding NOTEs and TODOs.
 
 *** Cheatsheet                                                 :cheatsheet:
 Some key combos I often use in magit:
