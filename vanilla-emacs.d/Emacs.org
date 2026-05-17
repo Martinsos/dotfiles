@@ -236,10 +236,14 @@ Here we set the elpaca lock file, so that, when installing packages, Elpaca will
   - ~PROBLEM~: This currently doesn't really when using a lock file in general! Even though we disabled a lock file, as a consequence of using it, package repos in =elpaca/= are in a detached state due to how elpaca implemented its lock file system, and then =*elpaca-log*= fails to show the logs because its implementation for showing them requires packages repos to not be in a detached state but on a branch. This is so because lock file feature addition is still somewhat unbaked and elpaca's workflow for it is still maturing / being developed.
     Due to how it works, ~elpaca-merge-all~ also wouldn't work.
     ~SOLUTION~: The way I currently solve it is by then doing the following:
-    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file. So now I have the logs I needed. Review them, figure out what I will need to fix in the config. Btw I have an AI skill for analyzing the logs against my config, use that as a help during reviewing.
+    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file (=emacs-update.org=). So now I have the logs I needed. Review them, figure out what I will need to fix in the config. Btw I have an AI skill for analyzing the logs against my config, use that as a help during reviewing.
+      - Create new git branch =emacs-update=. Create a new git worktree with it, we will be working on the update there, since we need the current working config to be available under .emacs.d as usual, to power emacs till then.
+      - In the worktree, run the comparison of lock files, and then have AI go through that file + our config and write under each package in that file an analysis of what changed and how we need/want to update our config.
+      - Manually review each package analysis, and mark it as DONE when reviewed. If there is anything to be done, add ~TODO Update~ in the Emacs.org itself, under the relevant package, with instructions what to try / fix / check / add.
+        Once I reviewed all packages in =emacs-update.org=, I should have =Emacs.org= full of relevant TODOs.
+      - Do the actual update, which should affect only the worktree, and then run a test emacs instance with that dir specified as its .emacs.d, while still having the pre-update emacs running as the editor. In pre-update emacs, go thorugh config and resolve one by one ~TODO Update~, while checking in test emacs the results. Once done, that is it, worktree is now fully working updated emacs and I can merge it and use it from that point on!
+       - Merge worktree into main, delete worktree, also delete =emacs-update.org= file from git.
     - Delete the =elpaca/= dir. I don't need it since elpaca logs don't work anyway, and why not then restart it fully then.
-    - Restart emacs. This will install all the packages from the scratch.
-- Fix/update my config as/if needed.
 - Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config (and restart emacs). Delete ~elpaca.backup/~.
 - That is it!
 NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
@@ -4174,6 +4178,10 @@ You can plug in multiple backends into it, and it will display the information u
 
 #+end_src
 
+** TODO Update
+- Rename sideline-flycheck-success to ...-info.
+- Use sideline-flycheck-(error|warning|info)-prefix to set a nice icon (check my todo above, in the code).
+
 * Folding
 :PROPERTIES:
 :ID:       d9d54e73-344d-4575-8711-24d2253b55a9
@@ -4579,7 +4587,7 @@ Usual ways to specify the compile command:
     ;; semhl stands for "semantic highlight" -> faces with "semhl" are faces for lsp semantic tokens.
     ;; By default, lsp-face-semhl-operator just inherits lsp-face-semhl-function, which I found to be a shame.
     ;; By setting them to keyword face, operators are nicely visible.
-    (face-remap-add-relative 'lsp-face-semhl-operator '(:foregrund unspecified :inherit lsp-face-semhl-keyword))
+    (face-remap-add-relative 'lsp-face-semhl-operator '(:foreground unspecified :inherit lsp-face-semhl-keyword))
     ;; I don't want to differentiate class methods from functions by color, that is just confusing.
     (face-remap-add-relative 'lsp-face-semhl-method '(:foreground unspecified :inherit lsp-face-semhl-function))
     ;; haskell-operator-face is used for stuff like `::`, `->` and similar. By default they were the same as
@@ -4609,8 +4617,6 @@ Usual ways to specify the compile command:
   ;; ;;    - actually it does apply font-lock-operator-face but I guess it is just white -> make that one interesting, e.g. use keyword face.
   ;; ;;    - I used treesit-explore-mode and it is great, I can see exactly how it understand the code, and it knows so much! So it does know a ton about the code, but we are not using it! WHy is that so? Beacause haskell-ts-mode is just not applying font lock faces to all these tokens, it seems so. It really should! Can I customize that myself, or do I need to make a PR on the haskell-ts-mode package?
   ;; ;;  - Is too smart while highlighting signature.
-  ;; ;;  - Can't get it to be default mode becuase haskell-mode still gets pulled in with lsp-haskell.
-  ;; ;;    I need to either make sure it doesn't get pulled in, or remove it from loading for .hs files.
   ;; ;;  - What is with literate mode?
   ;; (use-package haskell-ts-mode
   ;;   :load-path "~/git/haskell-ts-mode" ; NOTE: This is for using my local fork of the package, for dev purposes. Remove this line to use public version of the package.
