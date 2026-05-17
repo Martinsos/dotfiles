@@ -2,31 +2,6 @@
 #+TODO: TOREVIEW | DONE
 #+STARTUP: overview
 
-* DONE visual-fill-column
-  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/visual-fill-column/][/home/martin/.emacs.d/elpaca/repos/visual-fill-column/]]
-  - locked: 11575df4e042f3263db62de0e8ee4f2331fbb1b4 (2.6.3-2-g11575df) on ? in joostkremers/visual-fill-column
-  - new:    e1be9a1545157d24454d950c0ac79553c540edb7 (2.7.1-1-ge1be9a1) on main in joostkremers/visual-fill-column
-
-    d446413 Update copyright year. (Feb 5 2025)
-    30fc3e4 (tag: 2.7) New command `visual-fill-column-toggle-center-text`. (Mar 23 2025)
-    340d878 Mention package `visual-wrap-prefix-mode` in the README. (May 6 2025)
-    e391b52 Improve README w.r.t. using `visual-fill-column-mode` in minor mode hooks. (May 6 2025)
-    a38e3a2 Remove `visual-line-fill-column-mode`. (Sep 25 2025)
-    aeca29f Cosmetic fix. (Sep 25 2025)
-    3212ddd `visual-line-fill-column-mode`: Disable `visual-line-mode` as well. (Nov 10 2025)
-    9c0ecc2 (tag: 2.7.1) Update version number. (Nov 10 2025)
-    e1be9a1 (origin/main, origin/HEAD, main) Small fixes for the README. (Nov 10 2025)
-
-** [#C] AI analysis
-*TL;DR:* Nothing strictly to do, but heads-up: =visual-line-fill-column-mode= is now *deprecated* (since 2.7.0) — it still works but emits an obsolescence warning. Our org-present block uses it.
-- User's main `(use-package visual-fill-column)` has no customization, no bindings, no hooks; the package itself loads fine.
-- Apparent "removal" in a38e3a2 is misleading: the mode is marked obsolete via =(make-obsolete 'visual-line-fill-column-mode ... "2.7.0")= with a README "Deprecating visual-line-fill-column-mode" section. A new autoloaded helper =visual-fill-column-for-vline= is added, intended to be put on =visual-line-mode-hook=.
-- 3212ddd: =visual-line-fill-column-mode= now also disables =visual-line-mode= on toggle-off (was previously only =visual-fill-column-mode=) — more symmetric deactivation.
-- Our org-present block at =Emacs.org=:1869–1915 calls =(visual-line-fill-column-mode 1)= directly and tracks it in =my/save-modes-state=. It continues to work; expect a byte-compile / obsolescence warning. Optional migrations:
-  - Add =(add-hook 'visual-line-mode-hook #'visual-fill-column-for-vline)= and toggle just =visual-line-mode= in the presentation hooks; or
-  - Replace =(visual-line-fill-column-mode 1)= with =(visual-line-mode 1)= + =(visual-fill-column-mode 1)= and update the saved mode list.
-- New command =visual-fill-column-toggle-center-text= (2.7, 30fc3e4) is available; not used in current config.
-- Otherwise: README updates and copyright bump; no API changes affecting the `(use-package visual-fill-column)` at =Emacs.org=:5652.
 * TOREVIEW gptel
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/gptel/][/home/martin/.emacs.d/elpaca/repos/gptel/]]
   - locked: bed2402c5442fec21cc336a76821a5c89c1b254b (v0.9.8.5-38-gbed2402) on ? in karthink/gptel
@@ -432,6 +407,136 @@
 - New models worth considering for your =gptel-model= default (currently =claude-sonnet-4-20250514=, dated; coding preset uses =claude-3-7-sonnet-20250219=, also dated): Claude Sonnet 4.5 (=29b7317=) / 4.6 (=d0e86a1=), Claude Opus 4.1/4.5/4.6/4.7 (=3c4e65b=, =e8dbe7b=, =8879956=, =74634b5=), Claude Haiku 4.5 (=6f1620b=); GPT-5..GPT-5.5 incl. mini/nano/pro (=229f7c6=, =05f3f4d=, =e652318=); Gemini 2.5 Flash-Lite, Gemini 3 Pro/Flash, Gemini 3.1 (=54687ed=, =9d6313c=, =0f65be0=, =86a2931=, =f30ebdf=); Grok 4 / grok-code-fast-1; refreshed Deepseek list; Bedrock Nova-2-lite + Opus 4.5/4.7.
 - Requirements bumped: compat 30.1 (=7af9ed8=) and Transient 0.7.4+ (=eb555e5=) — both should be satisfied via elpaca; =8b9114d= updates =gptel-transient= for Transient 1.12 behavior.
 - Optional follow-ups: refresh hard-coded models; try =gptel-highlight-mode= and token-usage header-line; wrap =my/gptel-chat-summarize-and-replace= in =(gptel-with-preset 'gptel-default ...)= to isolate from buffer-local context/tools.
+* DONE vundo
+  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/vundo/][/home/martin/.emacs.d/elpaca/repos/vundo/]]
+  - locked: 288892ee93214ddcaf65fdd9f3134c1bd10100ee (v2.2.0-13-g288892e) on ? in (https://github.com/casouri/vundo . vundo)
+  - new:    e0af8c5845abf884a644215a9cac37f39c13cd5a (v2.4.0-14-ge0af8c5) on master in (https://github.com/casouri/vundo . vundo)
+
+    b28f037 Add vundo-popup.el (Mar 14 2025)
+    b89f719 (tag: v2.4.0) New version and updated README (Mar 14 2025)
+    d09448a Incrementally refresh vundo buffer in popup-mode (Apr 17 2025)
+    30f85b4 vundo as popup for normal undo/redo (issue #114) (Jun 17 2025)
+    a12bf04 Cleanup: add missing binding, correct typo (Sep 27 2025)
+    8253639 Merge pull request #117 from ideasman42/pr-add-binding (Sep 27 2025)
+    6fb8b32 Specify custom group for vundo-diff-highlight (Oct 29 2025)
+    9c13397 (master) Merge pull request #120 from tarsiiformes/group (Nov 1 2025)
+    438edfd docs(README): update font suggestion (Dec 12 2025)
+    f271369 Merge pull request #121 from hperrey/p_readme_font_suggestion (Dec 12 2025)
+    1a99802 Cleanup: grammar & corrections for doc-strings & comments (Dec 16 2025)
+    769a9eb Merge pull request #124 from ideasman42/pr-cleanup-docs (Dec 17 2025)
+    533eabf Remove global hook on vundo-diff quit (Dec 17 2025)
+    e6c150b vundo-goto-last-saved: avoid erroneous message (Dec 17 2025)
+    e76b773 vundo-diff: add validity check (Dec 18 2025)
+    e0af8c5 (origin/master, origin/HEAD) Make vundo-popup-mode global (Dec 18 2025)
+
+** [#C] AI analysis
+*TL;DR:* Nothing required; optionally try the new `vundo-popup-mode` / `global-vundo-popup-mode` as a global popup-style undo/redo.
+- v2.2.0-13 -> v2.4.0-14 (16 commits, Mar 2025 .. Dec 2025). Main additions are additive and don't touch user's customizations.
+- New file `vundo-popup.el` (b28f037, 30f85b4) introducing `vundo-popup-mode` with incremental buffer refresh (d09448a); made global in e0af8c5. Not used by current config; can be ignored or experimented with as an alternative to the explicit "open vundo" flow.
+- New `w` keybinding added to `vundo-mode-map` (go to beginning of next stem/branch, a12bf04/8253639). Does not collide with our `F` -> `vundo-live-diff-mode` remap.
+- `vundo-diff-highlight` defcustom moved to its own custom group (6fb8b32/9c13397); pure UI/grouping change, no breakage.
+- Bug fixes: `vundo-goto-last-saved` no longer prints spurious "Node saved" message (e6c150b); `vundo-diff` now validates marked node via `vundo-diff--node-valid-p` (e76b773); `vundo-diff--quit` removes its global hook properly (533eabf).
+- All private/internal symbols used in the user config still exist with same signatures in vundo.el / vundo-diff.el: `vundo--current-node`, `vundo--prev-mod-list`, `vundo-m-parent`, `vundo-diff-mark`, `vundo-diff`, `vundo-quit`, `vundo-confirm`, `vundo-mode-map`, `vundo-mode-hook`. The custom `vundo-live-diff-mode` should keep working unchanged.
+- `vundo-glyph-alist` / `vundo-unicode-symbols` unchanged.
+- Doc/grammar/group commits (1a99802, 6fb8b32, 438edfd) have no behavioral impact.
+* DONE elpaca
+  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/elpaca/][/home/martin/.emacs.d/elpaca/repos/elpaca/]]
+  - locked: b5ef5f19ac1224853234c9acdac0ec9ea1c440a1 (b5ef5f1) on ? in https://github.com/progfolio/elpaca.git
+  - new:    abda553407b8769006c241a8b2f0381fe66ad613 (v0.1.0-29-gabda553) on master in https://github.com/progfolio/elpaca.git
+
+    1508298 bump copyright year (Thu Jan 1 12:48)
+    5aa857a elpaca--checkout-ref:  track remote branch on checkout (#507) (Fri Feb 20 20:59)
+    686b402 elpaca-menu-melpa--update: remove duplicate percent sign (Mon Feb 23 19:57)
+    98262e4 elpaca-use-package: accept :straight, :elpaca, :vc keywords (Mon Feb 23 20:04)
+    a7fee1f elpaca--process-sentinel: remove unnecessary format call (Mon Feb 23 20:28)
+    ec427c3 refactor build assumptions (Mon Feb 23 21:17)
+    49db2a6 simplify elpaca struct creation (Mon Feb 23 21:17)
+    c08aa86 elpaca-file: add support for installing packages from local files (Mon Feb 23 21:17)
+    608f9e1 elapca-tar: add support for installing tarballs (Mon Feb 23 21:17)
+    f37a91c optimize Info path handling (Mon Feb 23 21:17)
+    030e723 add :on-error recipe keyword (Mon Feb 23 21:17)
+    cf50acf elpaca-order/recipe-functions: make hook functions composable (Fri Mar 6 15:18)
+    192638f (tag: v0.1.0) add top-level error recovery hook (Fri Mar 6 20:32)
+    4ad8170 elpaca-order-functions: update docstring (Fri Mar 6 23:30)
+    c2a9968 elpaca-info--recipe: account for normalized order plist (Sat Mar 7 00:35)
+    3f00e29 doc: bump remaining copyright years (Sat Mar 7 00:38)
+    29b8490 elpaca--process-filter: remove ansi escape sequences from logs (Sat Mar 7 09:23)
+    1cb3509 elpaca-info--recipe: pass normalized order plist internally (Sat Mar 7 19:13)
+    1e22eb4 fix git mono-repo deadlock (Sat Mar 7 21:45)
+    83bec4e elpaca--main-file: signal elpaca-errors (Sat Mar 7 21:45)
+    3e1f2d8 elpaca--info: formatting (Sun Mar 8 08:46)
+    fae2682 elpaca-info-sections-hook: add blockers, blocking sections (Sun Mar 8 08:47)
+    dc6d73e elpaca-menu-item, elpaca-recipe: improve interactive usage (Mon Mar 9 06:11)
+    637bc6d elpaca-test: allow :init (:file string) (Mon Mar 9 06:13)
+    5543a4f elpaca-source (git): fix mono-repo deadlock (Mon Mar 9 12:49)
+    cb981de elpaca-source (git): use builtp struct slot in mono-repo detection (Mon Mar 9 21:36)
+    3ed4197 elpaca-use-package-mode: account for :ensure/:vc interaction (Wed Mar 11 01:21)
+    3270e3b elpaca--shared-source-dir: fix shared source dir search direction (Wed Mar 11 01:22)
+    8ed8347 elpaca-source (git): check for source-dir before mono-repo checks (Wed Mar 11 01:36)
+    5af839f elpaca-menu-org: update org mode recipe (#520) (Sun Mar 22 14:45)
+    570190b elpaca-build-link: fix typo 'recusrive -> 'recursive  (#523) (Sun Mar 22 19:57)
+    9d9f08d elpaca-build-docs-process-sentinel: fix typo (#522) (Sun Mar 22 19:59)
+    8dd9065 elpaca-source-dir: fix specializer typo (#521) (Sun Mar 22 20:00)
+    66e1303 fix defmacro debug declarations (#519) (Sun Mar 22 22:34)
+    d50549d elpaca-build-steps: build on merge (#525) (Fri Mar 27 21:24)
+    23af52f elpaca-test--copy-local-store: respect directory defcustoms (Sat Apr 4 09:59)
+    44bd6ab elpaca-test--announce, elpaca-test: use elpaca-sources-directory (Sat Apr 4 11:17)
+    e9cb7ee Further improve edebug declarations (#526) (Sat Apr 4 23:26)
+    49984ec doc: update headings to use static links (Sat Apr 18 09:28)
+    f492982 doc: mention elpaca-default-build-steps in :build section (Sat Apr 18 09:29)
+    9c9477d doc: update recipe example outputs (Sat Apr 18 09:30)
+    abda553 (origin/master, origin/HEAD) elpaca-info--recipe: guard against nil E when run interpreted (Mon May 4 21:09)
+
+** [#A] AI analysis
+*TL;DR:* Big breaking refactor (`ec427c3`) renames bootstrap symbols, struct slots and the installer version — bump `elpaca-installer-version` to `0.12`, rename `elpaca-repos-directory` -> `elpaca-sources-directory` (and its `repos/` path to `sources/`), replace `elpaca--activate-package` with `elpaca-activate` in `elpaca-order`, and replace `(elpaca<-repo-dir pkg)` with `(elpaca<-source-dir pkg)` in `my/elpaca-show-updates`.
+- Bootstrap (`Emacs.org` "Install and set up Elpaca" / mirrored in `init.el`, around lines 147-154):
+  - `ec427c3 refactor build assumptions` renames `elpaca--activate-package` -> `elpaca-activate`. Your `elpaca-order` currently passes `:build (:not elpaca--activate-package)` — must become `:build (:not elpaca-activate)` or Elpaca will fail to skip activation at bootstrap.
+  - Same commit renames struct slot `repo-dir` -> `source-dir`. The on-disk repo dir defcustom is renamed too: `elpaca-repos-directory` is replaced by `elpaca-sources-directory` (no obsolete alias). Your bootstrap defines `elpaca-repos-directory` and `init.el` references it; rename the defvar (and the `repo` binding inside the `let*`) and update the path string from `"repos/"` to `"sources/"` to match the new upstream installer (`doc/installer.el` at `abda553`).
+  - Upstream bumped `elpaca-installer-version` from `0.11` to `0.12` in this cycle; the new `elpaca.el` actively `lwarn`'s at startup if your value doesn't match (`elpaca.el:42`: `(or noninteractive (= elpaca-installer-version 0.12) (lwarn ...))`). Bump your `(defvar elpaca-installer-version 0.11)` to `0.12` once the above renames are in.
+  - Practical note: switching from `repos/` to `sources/` changes the on-disk layout. Easiest path: do the rename in config, then (per your own cheatsheet) delete `elpaca/` and let Elpaca re-clone everything into `sources/`. The existing builds under `elpaca/builds/` remain valid if you'd prefer to move instead.
+- Helpers (`Emacs.org` "Helpers" section, ID `062e8839-654b-4b77-8877-cf4af31ac518`):
+  - `my/elpaca-show-updates` calls `(elpaca<-repo-dir pkg)` (line ~280, mirrored in `init.el` line 87). The accessor is gone — change to `(elpaca<-source-dir pkg)`. Without this fix, `my/elpaca-show-updates` will error on the next update cycle. `elpaca<-recipe` and `elpaca--queued` are unchanged and remain usable. (Struct also lost `mono-repo`, gained `declaration`, but you don't reference those.)
+- Cheatsheet text on line ~234 mentions `~elpaca/repos/<that-package>~` — update to `elpaca/sources/`. Update instructions in the same section that reference the `repos/` layout are worth a quick scan.
+- Public API otherwise stable for what you use:
+  - `elpaca`, `elpaca-process-queues`, `elpaca-write-lock-file`, `elpaca-lock-file`, `elpaca-after-init-hook`/`elpaca-after-init-time`, `elpaca-update-menus`, `elpaca-fetch-all`, `elpaca-merge-all`, `elpaca-manager`, `elpaca-generate-autoloads`, `elpaca-use-package-mode`, `elpaca<-recipe` accessor — all still present and behave the same for your usage. `elpaca-write-lock-file` now uses the new generic `elpaca-ref` internally.
+  - Bootstrap structure (the surrounding `let*`, `if-let*`, `condition-case`) is identical to the new upstream installer apart from the three renames above.
+- New features / behavior changes worth knowing (no action required):
+  - `030e723` adds `:on-error` recipe keyword (per-package build-error handler, receives the E struct and error data, non-nil return recovers).
+  - `192638f` (tag `v0.1.0`) adds `elpaca-error-functions` top-level recovery hook (first non-nil return suppresses).
+  - `:type` recipe keyword is now generic (`ec427c3`); defaults to `git`. New built-in types include `file` (`c08aa86`, `elpaca-file.el`) and `tar` (`608f9e1`, `elpaca-tar.el`) for installing from a local path or tarball.
+  - `cf50acf` makes `elpaca-order-functions` / `elpaca-recipe-functions` composable (via `elpaca-run-hook-with-reduce`). You don't set these.
+  - `dc6d73e`: `elpaca-menu-item` / `elpaca-recipe` interactive commands now copy paste-ready declarations by default; prefix arg copies raw form.
+  - `5aa857a` makes `elpaca--checkout-ref` track the remote branch on checkout — relevant to the documented "detached HEAD" pain in the lock-file workflow (Emacs.org lines ~236-238); worth re-testing whether `elpaca-merge-all` now works after fetching with the lock file disabled.
+  - `1e22eb4`, `5543a4f`, `cb981de`, `8ed8347`, `3270e3b`: several mono-repo deadlock and edge-case fixes in the git source backend — pure improvements.
+- Removed: `:pre-build` / `:post-build` recipe keywords (per `ec427c3`). Grep shows you don't use them — no impact, but FYI if you copy a recipe from elsewhere.
+- Other renames in the refactor (mostly internal, but useful to grep): `elpaca--repo-dirs` -> `elpaca--source-dirs`, `elpaca--link-build-files` -> `elpaca-build-link`, `elpaca--generate-autoloads-async` -> `elpaca-build-autoloads`, `elpaca--byte-compile` -> `elpaca-build-compile`, `elpaca--compile-info` -> `elpaca-build-docs`. None appear in the user's Emacs.org.
+- Risks: the three rename fixes are mechanical and low-risk, but must all be applied together before restarting emacs against the new elpaca, or the bootstrap will fail. Recommended order: apply `Emacs.org` edits -> tangle to `init.el` -> only then delete `elpaca/` and restart. The `elpaca.backup/` snapshot you already make is the escape hatch.
+- Anchor: last commit `abda553 elpaca-info--recipe: guard against nil E when run interpreted`.
+* DONE visual-fill-column
+  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/visual-fill-column/][/home/martin/.emacs.d/elpaca/repos/visual-fill-column/]]
+  - locked: 11575df4e042f3263db62de0e8ee4f2331fbb1b4 (2.6.3-2-g11575df) on ? in joostkremers/visual-fill-column
+  - new:    e1be9a1545157d24454d950c0ac79553c540edb7 (2.7.1-1-ge1be9a1) on main in joostkremers/visual-fill-column
+
+    d446413 Update copyright year. (Feb 5 2025)
+    30fc3e4 (tag: 2.7) New command `visual-fill-column-toggle-center-text`. (Mar 23 2025)
+    340d878 Mention package `visual-wrap-prefix-mode` in the README. (May 6 2025)
+    e391b52 Improve README w.r.t. using `visual-fill-column-mode` in minor mode hooks. (May 6 2025)
+    a38e3a2 Remove `visual-line-fill-column-mode`. (Sep 25 2025)
+    aeca29f Cosmetic fix. (Sep 25 2025)
+    3212ddd `visual-line-fill-column-mode`: Disable `visual-line-mode` as well. (Nov 10 2025)
+    9c0ecc2 (tag: 2.7.1) Update version number. (Nov 10 2025)
+    e1be9a1 (origin/main, origin/HEAD, main) Small fixes for the README. (Nov 10 2025)
+
+** [#C] AI analysis
+*TL;DR:* Nothing strictly to do, but heads-up: =visual-line-fill-column-mode= is now *deprecated* (since 2.7.0) — it still works but emits an obsolescence warning. Our org-present block uses it.
+- User's main `(use-package visual-fill-column)` has no customization, no bindings, no hooks; the package itself loads fine.
+- Apparent "removal" in a38e3a2 is misleading: the mode is marked obsolete via =(make-obsolete 'visual-line-fill-column-mode ... "2.7.0")= with a README "Deprecating visual-line-fill-column-mode" section. A new autoloaded helper =visual-fill-column-for-vline= is added, intended to be put on =visual-line-mode-hook=.
+- 3212ddd: =visual-line-fill-column-mode= now also disables =visual-line-mode= on toggle-off (was previously only =visual-fill-column-mode=) — more symmetric deactivation.
+- Our org-present block at =Emacs.org=:1869–1915 calls =(visual-line-fill-column-mode 1)= directly and tracks it in =my/save-modes-state=. It continues to work; expect a byte-compile / obsolescence warning. Optional migrations:
+  - Add =(add-hook 'visual-line-mode-hook #'visual-fill-column-for-vline)= and toggle just =visual-line-mode= in the presentation hooks; or
+  - Replace =(visual-line-fill-column-mode 1)= with =(visual-line-mode 1)= + =(visual-fill-column-mode 1)= and update the saved mode list.
+- New command =visual-fill-column-toggle-center-text= (2.7, 30fc3e4) is available; not used in current config.
+- Otherwise: README updates and copyright bump; no API changes affecting the `(use-package visual-fill-column)` at =Emacs.org=:5652.
 * DONE magit
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/magit/][/home/martin/.emacs.d/elpaca/repos/magit/]]
   - locked: e9614a336ffef61e8660188a95ae5d78674ed36d (v4.2.0-54-ge9614a33) on ? in magit/magit
@@ -1700,7 +1805,7 @@
   - Many new opt-in options added (e.g. ~transient-prefer-reading-value~, ~transient-use-accessible-formats~ / ~-values~, ~transient-describe-menu~, ~transient-select-menu-window~, ~transient-common-command-prefix~, ~transient-error-on-insert-failure~, ~transient-post-exit-hook~, ~transient-navigate-to-group-descriptions~) — none default-on in a way that requires action.
   - *API additions*: =transient-scope= got a =CLASSES= argument; advising suffix commands now supported; new =transient-cons-option= class; =transient-buttonize=, =transient-get-summary=, =transient-object= base class, recursion shorthand, mouse menu navigation. All additive.
 - Action item from your own TODO at the top of the file: since magit is being updated alongside transient, this is the natural moment to test whether magit still requires the pinned ~transient~ override. If magit works without it, you can drop both ~(use-package transient)~ and the ~:after transient~ in the magit block (see Emacs.org around the "Magit" section). With this transient bump alone you don't have to change anything; the corresponding magit update is the right place to revisit the workaround.
-* TOREVIEW org
+* DONE org
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/org/][/home/martin/.emacs.d/elpaca/repos/org/]]
   - locked: 2afac54c573e373aa77912c5e5c8c9cbe477108e (release_9.7.20-240-g2afac54c5) on ? in (https://git.sr.ht/~bzg/org-mode . org)
   - new:    004e0828b7758b70ceb0ff47cdd872940c49dcdb (release_9.8.4-149-g004e0828b) on main in emacsmirror/org
@@ -2495,113 +2600,6 @@
 3. Line 1925: ~(org-remove-inline-images)~ → ~(org-link-preview-clear)~ (or keep as-is).
 
 If minimum churn is preferred, only edit (1) is strictly necessary right now — (2) and (3) just suppress future obsolete warnings.
-* TOREVIEW vundo
-  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/vundo/][/home/martin/.emacs.d/elpaca/repos/vundo/]]
-  - locked: 288892ee93214ddcaf65fdd9f3134c1bd10100ee (v2.2.0-13-g288892e) on ? in (https://github.com/casouri/vundo . vundo)
-  - new:    e0af8c5845abf884a644215a9cac37f39c13cd5a (v2.4.0-14-ge0af8c5) on master in (https://github.com/casouri/vundo . vundo)
-
-    b28f037 Add vundo-popup.el (Mar 14 2025)
-    b89f719 (tag: v2.4.0) New version and updated README (Mar 14 2025)
-    d09448a Incrementally refresh vundo buffer in popup-mode (Apr 17 2025)
-    30f85b4 vundo as popup for normal undo/redo (issue #114) (Jun 17 2025)
-    a12bf04 Cleanup: add missing binding, correct typo (Sep 27 2025)
-    8253639 Merge pull request #117 from ideasman42/pr-add-binding (Sep 27 2025)
-    6fb8b32 Specify custom group for vundo-diff-highlight (Oct 29 2025)
-    9c13397 (master) Merge pull request #120 from tarsiiformes/group (Nov 1 2025)
-    438edfd docs(README): update font suggestion (Dec 12 2025)
-    f271369 Merge pull request #121 from hperrey/p_readme_font_suggestion (Dec 12 2025)
-    1a99802 Cleanup: grammar & corrections for doc-strings & comments (Dec 16 2025)
-    769a9eb Merge pull request #124 from ideasman42/pr-cleanup-docs (Dec 17 2025)
-    533eabf Remove global hook on vundo-diff quit (Dec 17 2025)
-    e6c150b vundo-goto-last-saved: avoid erroneous message (Dec 17 2025)
-    e76b773 vundo-diff: add validity check (Dec 18 2025)
-    e0af8c5 (origin/master, origin/HEAD) Make vundo-popup-mode global (Dec 18 2025)
-
-** TODO config
-- [ ] Study the new vundo-popup-mode, what is that?
-** [#C] AI analysis
-*TL;DR:* Nothing required; optionally try the new `vundo-popup-mode` / `global-vundo-popup-mode` as a global popup-style undo/redo.
-- v2.2.0-13 -> v2.4.0-14 (16 commits, Mar 2025 .. Dec 2025). Main additions are additive and don't touch user's customizations.
-- New file `vundo-popup.el` (b28f037, 30f85b4) introducing `vundo-popup-mode` with incremental buffer refresh (d09448a); made global in e0af8c5. Not used by current config; can be ignored or experimented with as an alternative to the explicit "open vundo" flow.
-- New `w` keybinding added to `vundo-mode-map` (go to beginning of next stem/branch, a12bf04/8253639). Does not collide with our `F` -> `vundo-live-diff-mode` remap.
-- `vundo-diff-highlight` defcustom moved to its own custom group (6fb8b32/9c13397); pure UI/grouping change, no breakage.
-- Bug fixes: `vundo-goto-last-saved` no longer prints spurious "Node saved" message (e6c150b); `vundo-diff` now validates marked node via `vundo-diff--node-valid-p` (e76b773); `vundo-diff--quit` removes its global hook properly (533eabf).
-- All private/internal symbols used in the user config still exist with same signatures in vundo.el / vundo-diff.el: `vundo--current-node`, `vundo--prev-mod-list`, `vundo-m-parent`, `vundo-diff-mark`, `vundo-diff`, `vundo-quit`, `vundo-confirm`, `vundo-mode-map`, `vundo-mode-hook`. The custom `vundo-live-diff-mode` should keep working unchanged.
-- `vundo-glyph-alist` / `vundo-unicode-symbols` unchanged.
-- Doc/grammar/group commits (1a99802, 6fb8b32, 438edfd) have no behavioral impact.
-* TOREVIEW elpaca
-  - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/elpaca/][/home/martin/.emacs.d/elpaca/repos/elpaca/]]
-  - locked: b5ef5f19ac1224853234c9acdac0ec9ea1c440a1 (b5ef5f1) on ? in https://github.com/progfolio/elpaca.git
-  - new:    abda553407b8769006c241a8b2f0381fe66ad613 (v0.1.0-29-gabda553) on master in https://github.com/progfolio/elpaca.git
-
-    1508298 bump copyright year (Thu Jan 1 12:48)
-    5aa857a elpaca--checkout-ref:  track remote branch on checkout (#507) (Fri Feb 20 20:59)
-    686b402 elpaca-menu-melpa--update: remove duplicate percent sign (Mon Feb 23 19:57)
-    98262e4 elpaca-use-package: accept :straight, :elpaca, :vc keywords (Mon Feb 23 20:04)
-    a7fee1f elpaca--process-sentinel: remove unnecessary format call (Mon Feb 23 20:28)
-    ec427c3 refactor build assumptions (Mon Feb 23 21:17)
-    49db2a6 simplify elpaca struct creation (Mon Feb 23 21:17)
-    c08aa86 elpaca-file: add support for installing packages from local files (Mon Feb 23 21:17)
-    608f9e1 elapca-tar: add support for installing tarballs (Mon Feb 23 21:17)
-    f37a91c optimize Info path handling (Mon Feb 23 21:17)
-    030e723 add :on-error recipe keyword (Mon Feb 23 21:17)
-    cf50acf elpaca-order/recipe-functions: make hook functions composable (Fri Mar 6 15:18)
-    192638f (tag: v0.1.0) add top-level error recovery hook (Fri Mar 6 20:32)
-    4ad8170 elpaca-order-functions: update docstring (Fri Mar 6 23:30)
-    c2a9968 elpaca-info--recipe: account for normalized order plist (Sat Mar 7 00:35)
-    3f00e29 doc: bump remaining copyright years (Sat Mar 7 00:38)
-    29b8490 elpaca--process-filter: remove ansi escape sequences from logs (Sat Mar 7 09:23)
-    1cb3509 elpaca-info--recipe: pass normalized order plist internally (Sat Mar 7 19:13)
-    1e22eb4 fix git mono-repo deadlock (Sat Mar 7 21:45)
-    83bec4e elpaca--main-file: signal elpaca-errors (Sat Mar 7 21:45)
-    3e1f2d8 elpaca--info: formatting (Sun Mar 8 08:46)
-    fae2682 elpaca-info-sections-hook: add blockers, blocking sections (Sun Mar 8 08:47)
-    dc6d73e elpaca-menu-item, elpaca-recipe: improve interactive usage (Mon Mar 9 06:11)
-    637bc6d elpaca-test: allow :init (:file string) (Mon Mar 9 06:13)
-    5543a4f elpaca-source (git): fix mono-repo deadlock (Mon Mar 9 12:49)
-    cb981de elpaca-source (git): use builtp struct slot in mono-repo detection (Mon Mar 9 21:36)
-    3ed4197 elpaca-use-package-mode: account for :ensure/:vc interaction (Wed Mar 11 01:21)
-    3270e3b elpaca--shared-source-dir: fix shared source dir search direction (Wed Mar 11 01:22)
-    8ed8347 elpaca-source (git): check for source-dir before mono-repo checks (Wed Mar 11 01:36)
-    5af839f elpaca-menu-org: update org mode recipe (#520) (Sun Mar 22 14:45)
-    570190b elpaca-build-link: fix typo 'recusrive -> 'recursive  (#523) (Sun Mar 22 19:57)
-    9d9f08d elpaca-build-docs-process-sentinel: fix typo (#522) (Sun Mar 22 19:59)
-    8dd9065 elpaca-source-dir: fix specializer typo (#521) (Sun Mar 22 20:00)
-    66e1303 fix defmacro debug declarations (#519) (Sun Mar 22 22:34)
-    d50549d elpaca-build-steps: build on merge (#525) (Fri Mar 27 21:24)
-    23af52f elpaca-test--copy-local-store: respect directory defcustoms (Sat Apr 4 09:59)
-    44bd6ab elpaca-test--announce, elpaca-test: use elpaca-sources-directory (Sat Apr 4 11:17)
-    e9cb7ee Further improve edebug declarations (#526) (Sat Apr 4 23:26)
-    49984ec doc: update headings to use static links (Sat Apr 18 09:28)
-    f492982 doc: mention elpaca-default-build-steps in :build section (Sat Apr 18 09:29)
-    9c9477d doc: update recipe example outputs (Sat Apr 18 09:30)
-    abda553 (origin/master, origin/HEAD) elpaca-info--recipe: guard against nil E when run interpreted (Mon May 4 21:09)
-
-** [#A] AI analysis
-*TL;DR:* Big breaking refactor (`ec427c3`) renames bootstrap symbols, struct slots and the installer version — bump `elpaca-installer-version` to `0.12`, rename `elpaca-repos-directory` -> `elpaca-sources-directory` (and its `repos/` path to `sources/`), replace `elpaca--activate-package` with `elpaca-activate` in `elpaca-order`, and replace `(elpaca<-repo-dir pkg)` with `(elpaca<-source-dir pkg)` in `my/elpaca-show-updates`.
-- Bootstrap (`Emacs.org` "Install and set up Elpaca" / mirrored in `init.el`, around lines 147-154):
-  - `ec427c3 refactor build assumptions` renames `elpaca--activate-package` -> `elpaca-activate`. Your `elpaca-order` currently passes `:build (:not elpaca--activate-package)` — must become `:build (:not elpaca-activate)` or Elpaca will fail to skip activation at bootstrap.
-  - Same commit renames struct slot `repo-dir` -> `source-dir`. The on-disk repo dir defcustom is renamed too: `elpaca-repos-directory` is replaced by `elpaca-sources-directory` (no obsolete alias). Your bootstrap defines `elpaca-repos-directory` and `init.el` references it; rename the defvar (and the `repo` binding inside the `let*`) and update the path string from `"repos/"` to `"sources/"` to match the new upstream installer (`doc/installer.el` at `abda553`).
-  - Upstream bumped `elpaca-installer-version` from `0.11` to `0.12` in this cycle; the new `elpaca.el` actively `lwarn`'s at startup if your value doesn't match (`elpaca.el:42`: `(or noninteractive (= elpaca-installer-version 0.12) (lwarn ...))`). Bump your `(defvar elpaca-installer-version 0.11)` to `0.12` once the above renames are in.
-  - Practical note: switching from `repos/` to `sources/` changes the on-disk layout. Easiest path: do the rename in config, then (per your own cheatsheet) delete `elpaca/` and let Elpaca re-clone everything into `sources/`. The existing builds under `elpaca/builds/` remain valid if you'd prefer to move instead.
-- Helpers (`Emacs.org` "Helpers" section, ID `062e8839-654b-4b77-8877-cf4af31ac518`):
-  - `my/elpaca-show-updates` calls `(elpaca<-repo-dir pkg)` (line ~280, mirrored in `init.el` line 87). The accessor is gone — change to `(elpaca<-source-dir pkg)`. Without this fix, `my/elpaca-show-updates` will error on the next update cycle. `elpaca<-recipe` and `elpaca--queued` are unchanged and remain usable. (Struct also lost `mono-repo`, gained `declaration`, but you don't reference those.)
-- Cheatsheet text on line ~234 mentions `~elpaca/repos/<that-package>~` — update to `elpaca/sources/`. Update instructions in the same section that reference the `repos/` layout are worth a quick scan.
-- Public API otherwise stable for what you use:
-  - `elpaca`, `elpaca-process-queues`, `elpaca-write-lock-file`, `elpaca-lock-file`, `elpaca-after-init-hook`/`elpaca-after-init-time`, `elpaca-update-menus`, `elpaca-fetch-all`, `elpaca-merge-all`, `elpaca-manager`, `elpaca-generate-autoloads`, `elpaca-use-package-mode`, `elpaca<-recipe` accessor — all still present and behave the same for your usage. `elpaca-write-lock-file` now uses the new generic `elpaca-ref` internally.
-  - Bootstrap structure (the surrounding `let*`, `if-let*`, `condition-case`) is identical to the new upstream installer apart from the three renames above.
-- New features / behavior changes worth knowing (no action required):
-  - `030e723` adds `:on-error` recipe keyword (per-package build-error handler, receives the E struct and error data, non-nil return recovers).
-  - `192638f` (tag `v0.1.0`) adds `elpaca-error-functions` top-level recovery hook (first non-nil return suppresses).
-  - `:type` recipe keyword is now generic (`ec427c3`); defaults to `git`. New built-in types include `file` (`c08aa86`, `elpaca-file.el`) and `tar` (`608f9e1`, `elpaca-tar.el`) for installing from a local path or tarball.
-  - `cf50acf` makes `elpaca-order-functions` / `elpaca-recipe-functions` composable (via `elpaca-run-hook-with-reduce`). You don't set these.
-  - `dc6d73e`: `elpaca-menu-item` / `elpaca-recipe` interactive commands now copy paste-ready declarations by default; prefix arg copies raw form.
-  - `5aa857a` makes `elpaca--checkout-ref` track the remote branch on checkout — relevant to the documented "detached HEAD" pain in the lock-file workflow (Emacs.org lines ~236-238); worth re-testing whether `elpaca-merge-all` now works after fetching with the lock file disabled.
-  - `1e22eb4`, `5543a4f`, `cb981de`, `8ed8347`, `3270e3b`: several mono-repo deadlock and edge-case fixes in the git source backend — pure improvements.
-- Removed: `:pre-build` / `:post-build` recipe keywords (per `ec427c3`). Grep shows you don't use them — no impact, but FYI if you copy a recipe from elsewhere.
-- Other renames in the refactor (mostly internal, but useful to grep): `elpaca--repo-dirs` -> `elpaca--source-dirs`, `elpaca--link-build-files` -> `elpaca-build-link`, `elpaca--generate-autoloads-async` -> `elpaca-build-autoloads`, `elpaca--byte-compile` -> `elpaca-build-compile`, `elpaca--compile-info` -> `elpaca-build-docs`. None appear in the user's Emacs.org.
-- Risks: the three rename fixes are mechanical and low-risk, but must all be applied together before restarting emacs against the new elpaca, or the bootstrap will fail. Recommended order: apply `Emacs.org` edits -> tangle to `init.el` -> only then delete `elpaca/` and restart. The `elpaca.backup/` snapshot you already make is the escape hatch.
-- Anchor: last commit `abda553 elpaca-info--recipe: guard against nil E when run interpreted`.
 * DONE haskell-mode
   - repo dir: [[file:/home/martin/.emacs.d/elpaca/repos/haskell-mode/][/home/martin/.emacs.d/elpaca/repos/haskell-mode/]]
   - locked: 4cec530008ef4054826eb1b55d6b26ae8e2807c0 (v17.5-28-g4cec530) on ? in haskell/haskell-mode
