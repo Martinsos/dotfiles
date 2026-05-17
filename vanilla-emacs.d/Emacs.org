@@ -994,6 +994,10 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 
 #+end_src
 
+** TODO Update
+Look into new features, maybe enable some that are not by default if I like them (e.g. worktree thing?):
+- Remaining changes are new opt-in features (selection info segment `0a420cf`, worktree indicator `fcf602b`, dedicated-window flag `ec27cdb`, tree-sitter indentation `a150d53`, unicode window numbers `c884489`, VCS-state -> face alist `75dc662`, speedbar support `9a3631c`, mu4e/IRC/reader/pdf segments, modal-state display `14cade0`, `doom-modeline-add-segment` / `doom-modeline-remove-segment` `593c3d5`/`bcf8cc0`, configurable remote-host display `f2f049c`, tab-bar-format-global alternative `83abca3`, buffer-position control `ddc2d47`) — all default off or backwards-compatible.
+
 ** Install Nerd font                                           :manual_setup:
 In order for =doom-modeline= to be able to render symbols, we need a Nerd font installed.
 Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will download the =Symbols Nerd Font Mono= font which only brings the symbols and will set up modeline to use that specific font for symbols.
@@ -1720,6 +1724,9 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (org-hide-emphasis-markers t)
   )
 #+end_src
+
+** TODO Update
+Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
 
 ** Support for downloading and inserting images
 :PROPERTIES:
@@ -3501,6 +3508,9 @@ It adds indicator to the left margin/side of the window.
 
 #+end_src
 
+*** TODO Update
+Use diff-hl-(re)set-reference-rev-in-project above instead of diff-hl-(re)set-reference-rev.
+
 *** Cheatsheet :cheatsheet:
 - ~diff-hl-set-reference-rev~ allows you to define against what are differences shown. E.g. you can set it to =master= to see what changes feature branch branching from =master= introduced.
 * Dired
@@ -3651,6 +3661,9 @@ It adds indicator to the left margin/side of the window.
   )
 #+end_src
 
+** TODO Update
+New feature =company-childframe=, look at / try it.
+
 ** TODO Find a way to also show additional docs next to each item. E.g. company-box
 But company-box currently overrides my setting for company-text-icons-mapping with its icons and is for some reason slow.
 
@@ -3724,6 +3737,9 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   )
 
 #+end_src
+
+** TODO Update
+Look into =vterm-toggle-togglable-buffer-functions= and =vterm-toggle--buffer-list= new behaviour, maybe update config if needed.
 
 ** My custom hook that triggers on prompt in vterm
 :PROPERTIES:
