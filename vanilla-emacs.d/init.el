@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-18 23:10:51 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 23:47:22 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -2555,11 +2555,19 @@ Returns nil if no heading found."
 ;; TODO: Either make scroll more visible, or use lines instead.
 (use-package company
   :custom
+  (company-tooltip-offset-display 'lines) ; Because scrollbar is not shown for me for some reason.
   (company-idle-delay 0.2)
   (company-minimum-prefix-length 1)
   (company-selection-wrap-around t)
   (company-format-margin-function 'company-text-icons-margin)
   (company-text-face-extra-attributes '(:weight semi-light :slant italic))
+  (company-tooltip-width-grow-only t)
+  (company-tooltip-minimum-width 25) ; Because otherwise tooltip is sometimes too narrow.
+  ;; Frontends: like default, but first element is childframe instead of pseudo tooltip.
+  ;; Childframe is a better implementation, more robust, by design, but somewhat new so not yet default.
+  (company-frontends '(company-childframe-unless-just-one-frontend
+                       company-preview-if-just-one-frontend
+                       company-echo-metadata-frontend))
   ;; I found default icons (be it vscode or text) to be too hard to understand,
   ;; so I made my own mapping here that provides more info. For the context, icons are
   ;; short descriptions left of the completion candidates in the popup.
@@ -2595,9 +2603,6 @@ Returns nil if no heading found."
     (t              "    ." shadow))
   )
   :config
-  (my/on-theme-enabled
-    (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
-  )
   (global-company-mode 1)
 )
 

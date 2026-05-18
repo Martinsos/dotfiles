@@ -3564,11 +3564,19 @@ It adds indicator to the left margin/side of the window.
   ;; TODO: Either make scroll more visible, or use lines instead.
   (use-package company
     :custom
+    (company-tooltip-offset-display 'lines) ; Because scrollbar is not shown for me for some reason.
     (company-idle-delay 0.2)
     (company-minimum-prefix-length 1)
     (company-selection-wrap-around t)
     (company-format-margin-function 'company-text-icons-margin)
     (company-text-face-extra-attributes '(:weight semi-light :slant italic))
+    (company-tooltip-width-grow-only t)
+    (company-tooltip-minimum-width 25) ; Because otherwise tooltip is sometimes too narrow.
+    ;; Frontends: like default, but first element is childframe instead of pseudo tooltip.
+    ;; Childframe is a better implementation, more robust, by design, but somewhat new so not yet default.
+    (company-frontends '(company-childframe-unless-just-one-frontend
+                         company-preview-if-just-one-frontend
+                         company-echo-metadata-frontend))
     ;; I found default icons (be it vscode or text) to be too hard to understand,
     ;; so I made my own mapping here that provides more info. For the context, icons are
     ;; short descriptions left of the completion candidates in the popup.
@@ -3604,15 +3612,9 @@ It adds indicator to the left margin/side of the window.
       (t              "    ." shadow))
     )
     :config
-    (my/on-theme-enabled
-      (my/face-add-to-inherit 'company-tooltip 'fixed-pitch) ; Otherwise popup would get messed up in org-mode with variable-pitch-mode.
-    )
     (global-company-mode 1)
   )
 #+end_src
-
-** TODO Update
-New feature =company-childframe=, look at / try it.
 
 ** TODO Find a way to also show additional docs next to each item. E.g. company-box
 But company-box currently overrides my setting for company-text-icons-mapping with its icons and is for some reason slow.
@@ -3689,7 +3691,8 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 #+end_src
 
 ** TODO Update
-Look into =vterm-toggle-togglable-buffer-functions= and =vterm-toggle--buffer-list= new behaviour, maybe update config if needed.
+- [ ] Look into =vterm-toggle-togglable-buffer-functions= and =vterm-toggle--buffer-list= new behaviour, maybe update config if needed.
+- [ ] There also seems to be some kind of error coming in, check that.
 
 ** My custom hook that triggers on prompt in vterm
 :PROPERTIES:
