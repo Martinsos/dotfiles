@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-18 21:14:02 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 21:54:32 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -869,6 +869,9 @@ USAGE:
     (visual-line-mode 1)
 
     (my/variable-pitch-mode-on)
+
+    ;; Unfolds parent headings when jumping to a folded location in the file.
+    (reveal-mode 1)
   ))
   :init
   (setq org-export-backends '(ascii html icalendar latex odt md))
@@ -2736,6 +2739,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
 (use-package flycheck
   :init (global-flycheck-mode)
+  ;; org-lint makes editing visibly slower in huge org files (like my config),
+  ;; so I make sure it runs only on save / mode enabled, not on every edit.
+  :hook (org-mode . (lambda () (setq-local flycheck-check-syntax-automatically '(save mode-enabled))))
   :custom
   (flycheck-display-errors-delay 0) ; Default value is 0.9.
   :config
