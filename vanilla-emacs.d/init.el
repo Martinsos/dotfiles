@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-18 21:54:32 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 23:10:51 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -2840,12 +2840,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
                         :weight 'light
                         :slant 'italic
                         :background "black")
-    (set-face-attribute 'sideline-flycheck-success nil
+    (set-face-attribute 'sideline-flycheck-info nil
                         :weight 'light
                         :slant 'italic
                         :background "black")
   )
-  ;; TODO: Somehow define following prefixes ✖ ⓘ ⚠ for errors / warning / success?
 )
 
 ;; From LSP directly, I show only code actions in the sideline.
