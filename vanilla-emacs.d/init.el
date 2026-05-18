@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-18 17:50:20 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 21:14:02 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1053,15 +1053,11 @@ USAGE:
 
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
-  ;; TODO: Disabled for now because when diff-hl and org-superstar are on, I can't cycle org headings.
-  ;;   Figure this out! Check the latest version, maybe it is fixed there? If so, I should use the latest version,
-  ;;   that is still better than not being able to cycle / open headings. Or I should give up on it fully.
-  :disabled
   :after (org)
-  ;; Newest version of org-superstar has a bug where leading heading stars appear when buffer is not focused:
+  ;; TODO: Newest version of org-superstar has a bug where leading heading stars appear when buffer is not focused:
   ;; https://github.com/integral-dw/org-superstar-mode/issues/63 .
-  ;; As a solution, I pin down the version of the package to a bit older one.
-  :ensure (:host github :repo "integral-dw/org-superstar-mode" :ref "17e248c")
+  ;; I don't have a fix for it yet. I tried going to older version, but then I had an issue where I can't cycle
+  ;; headings in org mode if diff-hl is enabled at the same time as org-superstar.
   :defer t
   :hook (org-mode . org-superstar-mode)
   :custom
