@@ -1570,6 +1570,10 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
   (use-package org-superstar
     :after (org)
+    ;; Newest version of org-superstar has a bug where leading heading stars appear when buffer is not focused:
+    ;; https://github.com/integral-dw/org-superstar-mode/issues/63 .
+    ;; As a solution, I pin down the version of the package to a bit older one.
+    :ensure (:host github :repo "integral-dw/org-superstar-mode" :ref "17e248c")
     :defer t
     :hook (org-mode . org-superstar-mode)
     :custom
@@ -2131,6 +2135,9 @@ Each org-super-agenda group "consumes" entries it shows, leaving the next group 
 #+end_src
 
 *** Work Diary (general config)
+:PROPERTIES:
+:ID:       48202169-2972-4c5e-9328-976db9d106cd
+:END:
 
 #+name: my/work-diary-org-path
 #+begin_src emacs-lisp :tangle no :results value none
@@ -2187,6 +2194,9 @@ This bash script picks up whatever is in the clipboard, and if it is URI, it wil
 - For the bash script to work, make sure that ~yad~ and ~wl-clipboard~ are installed system wide.
 - Also set up a keybinding at the OS level that will allow to easily run the script. A good one is =Win + I=.
 *** Private Diary (general config)
+:PROPERTIES:
+:ID:       7ffe5781-28d6-4fef-bf3a-96c8bb49649e
+:END:
 
 #+name: my/private-diary-org-path
 #+begin_src emacs-lisp :tangle no :results value none
@@ -3774,6 +3784,9 @@ Instead, I use an intermediary variable ~my/vterm-git-status-string~ that is eva
 #+end_src
 
 ** Shell-side configuration for vterm :manual_setup:
+:PROPERTIES:
+:ID:       0cef151e-d4a2-49fb-9c8a-210366c98caa
+:END:
 
 Some of the most useful vterm features require us to do a bit of configuration of the shell on our system. We can do without it, but we will be missing some of the functionality.
 =vterm= brings that config, for our convenience, as one .sh file that we need to load in our .bashrc.
@@ -3911,6 +3924,9 @@ I currently configured it in the following way:
 #+end_src
 
 *** Show errors inline                                              :inactive:
+:PROPERTIES:
+:ID:       13dba4c9-7daf-46f3-a3fb-72f411661229
+:END:
 
 While I got this to work quite nicely, I found that code inline can be pretty confusing, as it keeps popping in and out and moving the code you are reading, even when you don't care about the error at that moment.
 Showing just one line by default helped, but I still didn't like it, and ended up going instead for the sideline for 1 line and then posframe for the full error.
@@ -3975,6 +3991,9 @@ Showing just one line by default helped, but I still didn't like it, and ended u
 #+end_src
 
 ** Flymake                                                          :inactive:
+:PROPERTIES:
+:ID:       2810249f-da21-403c-a2a6-fa722477a4ba
+:END:
 
 Im not using it for now since I managed to set up Flycheck quite well, but I might want to try it out in the future again.
 
@@ -4767,6 +4786,9 @@ I created my own major mode for highlighting the directory tree listing.
 #+end_src
 
 *** Examples
+:PROPERTIES:
+:ID:       ccbce9fa-e100-4e5e-ab7d-ad4562c945ae
+:END:
 Examples of dir tree listing formats for which this highlighting will work nicely:
 
 #+begin_src dirtree
