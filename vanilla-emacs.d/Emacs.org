@@ -4101,12 +4101,11 @@ You can plug in multiple backends into it, and it will display the information u
                           :weight 'light
                           :slant 'italic
                           :background "black")
-      (set-face-attribute 'sideline-flycheck-success nil
+      (set-face-attribute 'sideline-flycheck-info nil
                           :weight 'light
                           :slant 'italic
                           :background "black")
     )
-    ;; TODO: Somehow define following prefixes ✖ ⓘ ⚠ for errors / warning / success?
   )
 
   ;; From LSP directly, I show only code actions in the sideline.
@@ -4135,10 +4134,6 @@ You can plug in multiple backends into it, and it will display the information u
   )
 
 #+end_src
-
-** TODO Update
-- Rename sideline-flycheck-success to ...-info.
-- Use sideline-flycheck-(error|warning|info)-prefix to set a nice icon (check my todo above, in the code).
 
 * Folding
 :PROPERTIES:
