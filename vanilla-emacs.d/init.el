@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-18 01:22:49 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-18 13:44:55 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1054,6 +1054,10 @@ USAGE:
 ;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
 (use-package org-superstar
   :after (org)
+  ;; Newest version of org-superstar has a bug where leading heading stars appear when buffer is not focused:
+  ;; https://github.com/integral-dw/org-superstar-mode/issues/63 .
+  ;; As a solution, I pin down the version of the package to a bit older one.
+  :ensure (:host github :repo "integral-dw/org-superstar-mode" :ref "17e248c")
   :defer t
   :hook (org-mode . org-superstar-mode)
   :custom
