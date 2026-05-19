@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 01:30:16 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 02:14:57 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -3344,14 +3344,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; I also disable hl-line because it makes it hard to see what is marked for deletion.
   (add-hook 'gptel-context-buffer-mode-hook (lambda () (setq-local global-hl-line-mode nil)))
 
-  ;; OpenAI (with ChatGPT) is the default backend.
-
   ;; Register Claude as one of the backends.
   (setq my/gptel-claude-backend (gptel-make-anthropic "Claude" :stream t :key gptel-api-key))
 
   ;; Set default model.
-  (setq gptel-model 'claude-sonnet-4-20250514 gptel-backend my/gptel-claude-backend)
-  ;(setq gptel-model 'gpt-4.1)
+  (setq gptel-model 'claude-opus-4-7 gptel-backend my/gptel-claude-backend)
 )
 
 (with-eval-after-load 'gptel
@@ -3494,9 +3491,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (gptel-make-preset 'coding
     :description "A preset optimized for coding tasks"
     :backend "Claude"
-    :model 'claude-3-7-sonnet-20250219
+    :model 'claude-opus-4-7
     :system "You are an expert coding assistant. Your role is to provide high-quality code solutions, refactorings, and explanations."
     :tools '("read_buffer" "modify_buffer" "emacs_eval" "emacs_docs"))
+  (gptel-make-preset 'think-claude
+    :description "Enable Anthropic extended thinking"
+    :request-params '(:thinking (:type "adaptive") :output_config (:effort "xhigh")))
 )
 
 (with-eval-after-load 'gptel
