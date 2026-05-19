@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 22:44:10 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 23:01:42 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -3317,6 +3317,14 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
   )
   :config
+  ;; evil-collection-gptel binds `<return>' to `gptel-send', but that fall through of
+  ;; `<return>' to `RET' in gptel transient's menu, preventing us from using enter button.
+  ;; Therefore we undo the problematic keybinding. Both `<return>' and `RET' continue working
+  ;; well because `<return>' will fall through to `RET'.
+  (with-eval-after-load 'evil-collection-gptel
+    (evil-collection-define-key 'normal 'gptel-mode-map (kbd "<return>") nil)
+    (evil-collection-define-key 'visual 'gptel-mode-map (kbd "<return>") nil))
+
   (setq gptel-default-mode 'org-mode)
   (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
   ;; On response, move cursor to the next prompt.

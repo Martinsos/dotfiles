@@ -4836,9 +4836,6 @@ I created my own major mode for highlighting the ascii diagrams.
 ** GPTel
 =gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
-*** TODO Update
-- [ ] RET doesn't work in (gptel) transient menu, fix it.
-
 *** General config
 :PROPERTIES:
 :ID:       fdfea65e-48dd-409d-8131-dbe9d5e35b59
@@ -4858,6 +4855,14 @@ I created my own major mode for highlighting the ascii diagrams.
       "i!"  '("[gptel] summarize chat" . my/gptel-chat-summarize-and-replace)
     )
     :config
+    ;; evil-collection-gptel binds `<return>' to `gptel-send', but that fall through of
+    ;; `<return>' to `RET' in gptel transient's menu, preventing us from using enter button.
+    ;; Therefore we undo the problematic keybinding. Both `<return>' and `RET' continue working
+    ;; well because `<return>' will fall through to `RET'.
+    (with-eval-after-load 'evil-collection-gptel
+      (evil-collection-define-key 'normal 'gptel-mode-map (kbd "<return>") nil)
+      (evil-collection-define-key 'visual 'gptel-mode-map (kbd "<return>") nil))
+
     (setq gptel-default-mode 'org-mode)
     (setq gptel-api-key 'gptel-api-key-from-auth-source) ; Will pull the API keys from ~/.authinfo .
     ;; On response, move cursor to the next prompt.
