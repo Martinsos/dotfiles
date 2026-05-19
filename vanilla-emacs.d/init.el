@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 21:44:44 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 22:44:10 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1254,19 +1254,22 @@ USAGE:
   ;;   Then I could not probably even need to go read-only.
 
   (defun my/on-presentation-start ()
-    (let ((restore-local-vars
-	      (my/save-local-vars-state
-	        '(visual-fill-column-width
-		  visual-fill-column-center-text
-		  org-tidy-properties-style
-		  org-tidy-general-drawer-flag
-		  org-tidy-general-drawer-name-whitelist)))
-          (restore-modes
-              (my/save-modes-state
-                '(evil-local-mode
-		  visual-line-fill-column-mode
-                  org-tidy-mode)))
-	 )
+    (let* ((restore-local-vars
+	    (my/save-local-vars-state
+	     '(visual-fill-column-width
+               visual-fill-column-center-text
+               org-tidy-properties-style
+               org-tidy-general-drawer-flag
+               org-tidy-general-drawer-name-whitelist)))
+           (restore-modes
+            (my/save-modes-state
+             '(evil-local-mode
+               visual-line-fill-column-mode
+               visual-line-mode
+               visual-fill-column-mode
+               org-tidy-mode)))
+           (on-presentation-quit nil)
+	  )
 
       (when (featurep 'evil)
         (evil-local-mode -1) ; Otherwise evil messes up org-present.
@@ -1286,7 +1289,8 @@ USAGE:
       ;;   If this happens before inlining images, then ATTR_ORG :width behaves weird.
       (setq-local visual-fill-column-width 20
                   visual-fill-column-center-text t)
-      (visual-line-fill-column-mode 1)
+      (visual-line-mode 1)
+      (visual-fill-column-mode 1)
 
       ;; Hide org drawers (:PROPERTY: and :NOTES:).
       (setq-local org-tidy-properties-style 'invisible
@@ -1294,18 +1298,21 @@ USAGE:
 		  org-tidy-general-drawer-name-whitelist '("NOTES"))
       (org-tidy-mode 1)
 
-      (defun my/on-presentation-quit ()
-	(org-present-small)
-	(org-remove-inline-images)
-	;(org-present-show-cursor)  ;; Trying out without
-	;(org-present-read-write)   ;; Trying out without
+      (setq on-presentation-quit
+            (lambda ()
+              (org-present-small)
+              (org-remove-inline-images)
+              ;(org-present-show-cursor)  ;; Trying out without
+              ;(org-present-read-write)   ;; Trying out without
 
-	(funcall restore-local-vars)
-	(funcall restore-modes)
+              ;; TODO: Here I get error that restore-local-vars variable symbol is not defined!
+              ;;   I haven't yet figured out how to fix it, and as a result, quitting presentation
+              ;;   doesn't work correctly (it leaves a mess behind).
+              (funcall restore-local-vars)
+              (funcall restore-modes)
 
-	(remove-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
-      )
-      (add-hook 'org-present-mode-quit-hook 'my/on-presentation-quit)
+              (remove-hook 'org-present-mode-quit-hook on-presentation-quit)))
+      (add-hook 'org-present-mode-quit-hook on-presentation-quit)
     )
   )
   (add-hook 'org-present-mode-hook 'my/on-presentation-start)
