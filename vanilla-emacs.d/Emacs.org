@@ -3654,14 +3654,15 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
       "'" '("toggle terminal" . vterm-toggle)
     )
     :config
-    ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
-    ;; me to dir of previous buffer! Very useful.
-    (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
-    (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
-    (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
-    (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
+    (with-eval-after-load 'vterm
+      (evil-define-key 'normal vterm-mode-map (kbd ",d") #'vterm-toggle-insert-cd)
+      (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
+      (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
+      (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
 
-    (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
+      (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
+    )
+
     (defun my/vterm-toggle-setup-modeline ()
       (setq-local mode-line-misc-info (append mode-line-misc-info (list my/vterm-toggle-modeline-segment))))
     (defconst my/vterm-toggle-modeline-segment
@@ -3680,10 +3681,6 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   )
 
 #+end_src
-
-** TODO Update
-- [ ] Look into =vterm-toggle-togglable-buffer-functions= and =vterm-toggle--buffer-list= new behaviour, maybe update config if needed.
-- [ ] There also seems to be some kind of error coming in, check that.
 
 ** My custom hook that triggers on prompt in vterm
 :PROPERTIES:
