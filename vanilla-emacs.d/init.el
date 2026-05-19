@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 02:14:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 16:08:56 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -492,8 +492,6 @@ USAGE:
   )
 )
 
-
-;; TODO: Configure better or use some other modeline.
 (use-package doom-modeline
   :custom
   (doom-modeline-height 40)
@@ -502,7 +500,6 @@ USAGE:
   :config
   (doom-modeline-mode 1)
 )
-
 
 
 (use-package emacs
@@ -3301,6 +3298,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
 (use-package gptel
   :after (org)
   :defer t
+  :hook (gptel-mode . gptel-highlight-mode)
   :init
   (my/leader-keys
     "ii"  '("[gptel] menu" . gptel-menu)
@@ -3508,6 +3506,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
    :name "read_buffer"
    :description "Return the contents of an emacs buffer."
    :category "emacs"
+   :include nil
    :args (list '(:name "buffer"
                  :type string
                  :description "the name of the buffer whose contents are to be retrieved"))
@@ -3523,6 +3522,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
    :description "Replace the contents of an existing buffer with new content."
    :category "emacs"
    :confirm t
+   :include nil
    :args (list '(:name "buffer"
                  :type string
                  :description "the name of the buffer to modify")

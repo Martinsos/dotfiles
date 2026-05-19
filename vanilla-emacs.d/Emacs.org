@@ -919,8 +919,6 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
 :END:
 
 #+begin_src emacs-lisp
-
-  ;; TODO: Configure better or use some other modeline.
   (use-package doom-modeline
     :custom
     (doom-modeline-height 40)
@@ -929,12 +927,7 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
     :config
     (doom-modeline-mode 1)
   )
-
 #+end_src
-
-** TODO Update
-Look into new features, maybe enable some that are not by default if I like them (e.g. worktree thing?):
-- Remaining changes are new opt-in features (selection info segment `0a420cf`, worktree indicator `fcf602b`, dedicated-window flag `ec27cdb`, tree-sitter indentation `a150d53`, unicode window numbers `c884489`, VCS-state -> face alist `75dc662`, speedbar support `9a3631c`, mu4e/IRC/reader/pdf segments, modal-state display `14cade0`, `doom-modeline-add-segment` / `doom-modeline-remove-segment` `593c3d5`/`bcf8cc0`, configurable remote-host display `f2f049c`, tab-bar-format-global alternative `83abca3`, buffer-position control `ddc2d47`) — all default off or backwards-compatible.
 
 ** Install Nerd font                                           :manual_setup:
 In order for =doom-modeline= to be able to render symbols, we need a Nerd font installed.
@@ -4845,10 +4838,8 @@ I created my own major mode for highlighting the ascii diagrams.
 =gptel= is a "mid-level" LLM package for emacs. It doesn't prescribe specific opinionated workflows but instead offers an easy, integrated way to interact with LLM from any emacs buffer.
 
 *** TODO Update
-- gptel-make-tool flipped the default for :include. Check my tools with undefined :include and set it explicitly if I want to keep the old behaviour (it is read buffer and modify buffer tools, so I probably do want to make these eplicitly nil, I don't want to see the whole output in the buffer).
-- try =gptel-highlight-mode=
-- try token-usage header-line
-- wrap =my/gptel-chat-summarize-and-replace= in =(gptel-with-preset 'gptel-default ...)= to isolate from buffer-local context/tools.
+- [ ] RET doesn't work in (gptel) transient menu, fix it.
+- [ ] wrap =my/gptel-chat-summarize-and-replace= in =(gptel-with-preset 'gptel-default ...)= to isolate from buffer-local context/tools.
 
 *** General config
 :PROPERTIES:
@@ -4858,6 +4849,7 @@ I created my own major mode for highlighting the ascii diagrams.
   (use-package gptel
     :after (org)
     :defer t
+    :hook (gptel-mode . gptel-highlight-mode)
     :init
     (my/leader-keys
       "ii"  '("[gptel] menu" . gptel-menu)
@@ -5098,6 +5090,7 @@ I created my own major mode for highlighting the ascii diagrams.
      :name "read_buffer"
      :description "Return the contents of an emacs buffer."
      :category "emacs"
+     :include nil
      :args (list '(:name "buffer"
                    :type string
                    :description "the name of the buffer whose contents are to be retrieved"))
@@ -5113,6 +5106,7 @@ I created my own major mode for highlighting the ascii diagrams.
      :description "Replace the contents of an existing buffer with new content."
      :category "emacs"
      :confirm t
+     :include nil
      :args (list '(:name "buffer"
                    :type string
                    :description "the name of the buffer to modify")
