@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 23:07:27 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-20 00:49:13 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1015,6 +1015,29 @@ USAGE:
     )
   )
 
+  ;; I couldn't get packages like org-superstar do it properly, so here we do
+  ;; it manually: hide stars in front of headings.
+  (font-lock-add-keywords 'org-mode
+    '(("^\\(\\*+ \\)"
+       (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'display "") nil))))
+    'append)
+
+  ;; By default org-indent aligns body text under the heading's stars+title, which
+  ;; over-indents the body now that the stars are hidden. Override the prefixes for a
+  ;; tidy outline of `my/org-indent-step' columns per level: a level-L heading sits at
+  ;; column (L-1)*step and its body at column L*step, so each subheading lines up with
+  ;; its parent's body text.
+  (defvar my/org-indent-step 1 "Columns of indentation added per outline level.")
+  (defun my/org-indent-tight-prefixes (&rest _)
+    (when (vectorp org-indent--heading-line-prefixes)
+      (let ((s my/org-indent-step))
+        (dotimes (n org-indent--deepest-level)
+          (aset org-indent--heading-line-prefixes n
+                (org-add-props (make-string (* (max 0 (1- n)) s) ?\s) nil 'face 'org-indent))
+          (aset org-indent--text-line-prefixes n
+                (org-add-props (make-string (* n s) ?\s) nil 'face 'org-indent))))))
+  (advice-add 'org-indent--compute-prefixes :after #'my/org-indent-tight-prefixes)
+
   (defun my/dynamically-configure-org-column-faces (&rest args)
     "Configures org-column faces with regard to current state of the system (i.e. default face).
      Should be called each time before calling org-columns, to update the faces."
@@ -1051,27 +1074,24 @@ USAGE:
 ;;   - [ ] Play more with org-modern below (check TODOs).
 ;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
-;; Replace header and list bullets (*, **, -, +, ...) with nice bullets.
+;; Style plain-list bullets (*, +, -) with nice glyphs.
+;; We use org-superstar ONLY for list bullets ('only disables all of its headline
+;; handling). Heading stars are hidden by our own font-lock rule in the org config
+;; above, which avoids org-superstar's focus-dependent header-star bug (issue #63).
 (use-package org-superstar
   :after (org)
-  ;; TODO: Newest version of org-superstar has a bug where leading heading stars appear when buffer is not focused:
-  ;; https://github.com/integral-dw/org-superstar-mode/issues/63 .
-  ;; I don't have a fix for it yet. I tried going to older version, but then I had an issue where I can't cycle
-  ;; headings in org mode if diff-hl is enabled at the same time as org-superstar.
   :defer t
   :hook (org-mode . org-superstar-mode)
   :custom
-  ;; Hide leading stars in front of a heading.
-  ;; 'org-hide-leading-stars' and 'org-indent-mode-turns-on-hiding-stars' must be 'nil' for this to work correctly.
-  (org-superstar-leading-bullet ?\s)
-  (org-superstar-headline-bullets-list '(nil)) ; No last star/bullet in front of headings.
+  (org-superstar-prettify-item-bullets 'only) ; Only style list bullets, leave headings alone.
   (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•))) ; Chars to use as bullets for lists.
   :config
-  (setq org-hide-leading-stars nil) ; Needed for org-superstar-leading-bullet to work.
-  (setq org-indent-mode-turns-on-hiding-stars nil) ; Needed for org-superstar-leading-bullet to work.
+  ;; Keep org/org-indent from also touching leading stars; our font-lock rule hides
+  ;; all heading stars with zero width.
+  (setq org-hide-leading-stars nil)
+  (setq org-indent-mode-turns-on-hiding-stars nil)
   (my/on-theme-enabled
     (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
-    (set-face-attribute 'org-superstar-leading nil :inherit '(fixed-pitch default))
   )
 )
 
@@ -1081,9 +1101,9 @@ USAGE:
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda))
   :custom
-  ;; I couldn't find combo of settings that gives me nicely aligned, no-star headings,
-  ;; so I leave that to org-superstar. Also lists while at it.
-  ;; TODO: Ask on org-modern GH repo for advice? Ask if it is possible to hide all the stars, and if so, how? Maybe also hide that leading space?
+  ;; Heading stars are hidden by our own font-lock rule in the org config (above the
+  ;; org-superstar block); org-modern can't hide stars while org-indent-mode is on.
+  ;; List bullets are handled by org-superstar.
   (org-modern-hide-stars nil)
   (org-modern-star nil)
   (org-modern-list nil)
