@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 23:01:42 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 23:07:27 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -3321,6 +3321,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; `<return>' to `RET' in gptel transient's menu, preventing us from using enter button.
   ;; Therefore we undo the problematic keybinding. Both `<return>' and `RET' continue working
   ;; well because `<return>' will fall through to `RET'.
+  ;; I created issue here https://github.com/emacs-evil/evil-collection/issues/916 .
   (with-eval-after-load 'evil-collection-gptel
     (evil-collection-define-key 'normal 'gptel-mode-map (kbd "<return>") nil)
     (evil-collection-define-key 'visual 'gptel-mode-map (kbd "<return>") nil))
