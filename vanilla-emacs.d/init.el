@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-19 16:08:56 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-19 21:44:44 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -2634,14 +2634,15 @@ Returns nil if no heading found."
     "'" '("toggle terminal" . vterm-toggle)
   )
   :config
-  ;; If I press C-return after toggling to terminal window, it will insert `cd` command that takes
-  ;; me to dir of previous buffer! Very useful.
-  (define-key vterm-mode-map [(control return)] #'vterm-toggle-insert-cd)
-  (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
-  (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
-  (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
+  (with-eval-after-load 'vterm
+    (evil-define-key 'normal vterm-mode-map (kbd ",d") #'vterm-toggle-insert-cd)
+    (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
+    (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
+    (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
 
-  (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
+    (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
+  )
+
   (defun my/vterm-toggle-setup-modeline ()
     (setq-local mode-line-misc-info (append mode-line-misc-info (list my/vterm-toggle-modeline-segment))))
   (defconst my/vterm-toggle-modeline-segment
