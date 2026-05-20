@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-20 11:33:19 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-20 12:44:57 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1087,69 +1087,40 @@ USAGE:
 ;;   - [ ] Play more with org-modern below (check TODOs).
 ;;   - [ ] Organize this code block, it is too big and scattered. Break it apart, organize, ... .
 
-;; Style plain-list bullets (*, +, -) with nice glyphs.
-;; We use org-superstar ONLY for list bullets ('only disables all of its headline
-;; handling). Heading stars are hidden by our own font-lock rule in the org config
-;; above, which avoids org-superstar's focus-dependent header-star bug (issue #63).
-(use-package org-superstar
-  :after (org)
-  :defer t
-  :hook (org-mode . org-superstar-mode)
-  :custom
-  (org-superstar-prettify-item-bullets 'only) ; Only style list bullets, leave headings alone.
-  (org-superstar-item-bullet-alist '((?* . ?★) (?+ . ?✦) (?- . ?•))) ; Chars to use as bullets for lists.
-  :config
-  ;; Keep org/org-indent from also touching leading stars; our font-lock rule hides
-  ;; all heading stars with zero width.
-  (setq org-hide-leading-stars nil)
-  (setq org-indent-mode-turns-on-hiding-stars nil)
-  (my/on-theme-enabled
-    (set-face-attribute 'org-superstar-item nil :foreground (face-attribute 'font-lock-keyword-face :foreground))
-  )
-)
-
 (use-package org-modern
   :after (org)
   :defer t
   :hook ((org-mode . org-modern-mode)
          (org-agenda-finalize . org-modern-agenda))
   :custom
-  ;; Heading stars are hidden by our own font-lock rule in the org config (above the
-  ;; org-superstar block); org-modern can't hide stars while org-indent-mode is on.
-  ;; List bullets are handled by org-superstar.
-  (org-modern-hide-stars nil)
-  (org-modern-star nil)
-  (org-modern-list nil)
-
-  (org-modern-checkbox nil) ; Glyphs are too small and emojis are kitch, so I don't decorate checkboxes.
-
+  (org-modern-list `((?- . ,(propertize "•" 'face 'font-lock-keyword-face))
+                     (?+ . ,(propertize "✦" 'face 'font-lock-keyword-face))
+                     (?* . ,(propertize "★" 'face 'font-lock-keyword-face))))
   (org-modern-horizontal-rule t)
-
-  (org-modern-table nil) ; I found it to not be that nice visually, while being harder to edit tables.
-
-  (org-modern-todo nil) ; TODO t
-  ;(org-modern-todo-faces ...) ; TODO
-
-  (org-modern-priority nil) ; TODO: t
-  ;(org-modern-priority-faces ...) ; TODO
-
-  (org-modern-tag nil) ; TODO t
-  ;(org-modern-tag-faces ...) ; TODO
-
-  (org-modern-timestamp nil) ; TODO: t
-
-  (org-modern-progress nil) ; TODO: t
-
   (org-modern-block-name '(("src" . ("{}" "∎"))
                            ("quote" . ("❝" "❞"))
                            ("verse" . ("♭♩" "♪♫"))
                            ("example" . ("example" "end"))
                            (t . ("" "/"))))
-  (org-modern-block-fringe nil)
-
+  (org-modern-block-fringe nil) ; Don't need it.
   (org-modern-keyword '(("title" . "")
                         (t . t)))
 
+  ;; I couldn't get org-modern to hide stars as I wanted while also using org-indent,
+  ;; so I turn it off here and do it manually in another place.
+  (org-modern-hide-stars nil)
+  (org-modern-star nil)
+  (org-modern-checkbox nil) ; Glyphs are too small and emojis are kitch, so I don't decorate checkboxes.
+  (org-modern-table nil) ; I found it to not be that nice visually, while being harder to edit tables.
+
+  (org-modern-todo nil) ; TODO t
+  ;(org-modern-todo-faces ...) ; TODO
+  (org-modern-priority nil) ; TODO: t
+  ;(org-modern-priority-faces ...) ; TODO
+  (org-modern-tag nil) ; TODO t
+  ;(org-modern-tag-faces ...) ; TODO
+  (org-modern-timestamp nil) ; TODO: t
+  (org-modern-progress nil) ; TODO: t
   ;;:config
   ;; TODO: Customize org-modern faces as needed, with set-face-attribute.
 )
