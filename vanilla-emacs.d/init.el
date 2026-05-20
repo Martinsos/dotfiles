@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-20 00:49:13 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-20 11:33:19 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1015,28 +1015,41 @@ USAGE:
     )
   )
 
-  ;; I couldn't get packages like org-superstar do it properly, so here we do
-  ;; it manually: hide stars in front of headings.
+  ;; We remove stars in front of headings.
+  ;; NOTE: I tried using packages like org-superstar and org-modern for this,
+  ;;   but it was very hard to get it working properly while also using org-indent,
+  ;;   so I went with this manual solution and it works very well.
   (font-lock-add-keywords 'org-mode
     '(("^\\(\\*+ \\)"
        (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'display "") nil))))
     'append)
 
   ;; By default org-indent aligns body text under the heading's stars+title, which
-  ;; over-indents the body now that the stars are hidden. Override the prefixes for a
-  ;; tidy outline of `my/org-indent-step' columns per level: a level-L heading sits at
-  ;; column (L-1)*step and its body at column L*step, so each subheading lines up with
-  ;; its parent's body text.
-  (defvar my/org-indent-step 1 "Columns of indentation added per outline level.")
-  (defun my/org-indent-tight-prefixes (&rest _)
+  ;; over-indents the body now that the stars are hidden (we hid them above).
+  ;; org-indent does indentation by calculating a string "prefix" for each level of heading
+  ;; and its text, that gets attached in front of it.
+  ;; So what we do is intercept those and replace them with our prefixes, which are just
+  ;; a bunch of spaces, correct amount of them.
+  ;; We go for following alignment:
+  ;; H0
+  ;;  h0text
+  ;;  H1
+  ;;   h1text
+  ;;   H2
+  ;;    h2text
+  ;; Note that org-indent by default does it a bit different, it also indents headings
+  ;; additionally, but I prefer this alignemnt where heading is aligned with text above it,
+  ;; and increased indentation happens only once we "enter" the heading.
+  (defun my/org-indent-recompute-prefixes (&rest _)
     (when (vectorp org-indent--heading-line-prefixes)
-      (let ((s my/org-indent-step))
-        (dotimes (n org-indent--deepest-level)
-          (aset org-indent--heading-line-prefixes n
-                (org-add-props (make-string (* (max 0 (1- n)) s) ?\s) nil 'face 'org-indent))
-          (aset org-indent--text-line-prefixes n
-                (org-add-props (make-string (* n s) ?\s) nil 'face 'org-indent))))))
-  (advice-add 'org-indent--compute-prefixes :after #'my/org-indent-tight-prefixes)
+      (let* ((indent-width 1)
+             (build-prefix (lambda (levels)
+                             (org-add-props (make-string (max 0 (* levels indent-width)) ?\s)
+                                 nil 'face 'org-indent))))
+        (dotimes (i org-indent--deepest-level)
+          (aset org-indent--heading-line-prefixes i (funcall build-prefix (1- i)))
+          (aset org-indent--text-line-prefixes    i (funcall build-prefix     i))))))
+  (advice-add 'org-indent--compute-prefixes :after #'my/org-indent-recompute-prefixes)
 
   (defun my/dynamically-configure-org-column-faces (&rest args)
     "Configures org-column faces with regard to current state of the system (i.e. default face).
