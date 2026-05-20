@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-20 12:44:57 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-20 21:49:31 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1021,7 +1021,7 @@ USAGE:
   ;;   so I went with this manual solution and it works very well.
   (font-lock-add-keywords 'org-mode
     '(("^\\(\\*+ \\)"
-       (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'display "") nil))))
+       (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'invisible t) nil))))
     'append)
 
   ;; By default org-indent aligns body text under the heading's stars+title, which
