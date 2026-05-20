@@ -1529,7 +1529,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     ;;   so I went with this manual solution and it works very well.
     (font-lock-add-keywords 'org-mode
       '(("^\\(\\*+ \\)"
-         (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'display "") nil))))
+         (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'invisible t) nil))))
       'append)
 
     ;; By default org-indent aligns body text under the heading's stars+title, which
@@ -1670,7 +1670,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
 ** TODO Update
 - [X] Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
 - [X] Worked around org-superstar header-star focus bug (issue #63): org-superstar now only styles list bullets ('only), heading stars are hidden by our own font-lock 'display "" rule, and org-indent prefixes are overridden for a tidy 1-col-per-level outline.
-- [ ] Now when I try to go to start of the heading line with "I" or something, I go to line before! That is not great I need to fix that.
+- [X] Now when I try to go to start of the heading line with "I" or something, I go to line before! That is not great I need to fix that.
 - [ ] inline-images got deprecated in favor of link-previews (more general). To be modern, I should do:
   1. Line 1485: ~org-startup-with-inline-images t~ → ~org-startup-with-link-previews t~.
   2. Line 1902: ~(org-display-inline-images)~ → ~(org-link-preview-region nil nil (point-min) (point-max))~ (or keep as-is, still works).
