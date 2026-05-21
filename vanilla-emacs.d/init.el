@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-20 21:49:31 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-21 23:20:37 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -1015,13 +1015,21 @@ USAGE:
     )
   )
 
-  ;; We remove stars in front of headings.
-  ;; NOTE: I tried using packages like org-superstar and org-modern for this,
-  ;;   but it was very hard to get it working properly while also using org-indent,
-  ;;   so I went with this manual solution and it works very well.
+  ;; We remove stars in front of headings by replacing them with space and then
+  ;; makng that space very small.
+  ;;
+  ;; Approaches that didn't work, that I tried:
+  ;; - org-supertar and org-modern, have bugs or don't work with org-indent.
+  ;; - set to display "" -> jumping to line start takes us to end of previous line.
+  ;; - set to invisible -> TAB on heading (org-cycle) stops working because of
+  ;;   its call to org-back-to-heading which skips heading starting with invisible
+  ;;   chars. To put it simply, it makes internal org logic thinking whole heading
+  ;;   is invisible, causing issues.
   (font-lock-add-keywords 'org-mode
     '(("^\\(\\*+ \\)"
-       (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'invisible t) nil))))
+       (1 (progn (put-text-property (match-beginning 1) (match-end 1) 'display " ")
+                 (put-text-property (match-beginning 1) (match-end 1) 'face '(:height 0.1))
+                 nil))))
     'append)
 
   ;; By default org-indent aligns body text under the heading's stars+title, which
@@ -1042,7 +1050,7 @@ USAGE:
   ;; and increased indentation happens only once we "enter" the heading.
   (defun my/org-indent-recompute-prefixes (&rest _)
     (when (vectorp org-indent--heading-line-prefixes)
-      (let* ((indent-width 1)
+      (let* ((indent-width 2)
              (build-prefix (lambda (levels)
                              (org-add-props (make-string (max 0 (* levels indent-width)) ?\s)
                                  nil 'face 'org-indent))))
