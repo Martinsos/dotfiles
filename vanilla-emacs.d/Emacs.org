@@ -1420,7 +1420,7 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     (add-to-list 'org-modules 'org-habit)
     (add-to-list 'org-modules 'org-inlinetask)
 
-    (setq-default org-startup-with-inline-images t ; Preview/show the images.
+    (setq-default org-startup-with-link-previews t ; Preview/show the links (images by default).
                   org-image-actual-width '(300) ; Sets all images to 300px width by default (so they are not too big).
                   org-startup-indented t ; Turn org-indent-mode on at startup.
                   org-pretty-entities t ; Displays math nicely (superscript, subscript, latex constants, ...).
@@ -1675,15 +1675,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
   )
 #+end_src
 
-** TODO Update
-- [X] Check that org-superstar is still rendering *, + and - bullet points correctly, becuase there were some changes to rendering.
-- [X] Worked around org-superstar header-star focus bug (issue #63): org-superstar now only styles list bullets ('only), heading stars are hidden by our own font-lock 'display "" rule, and org-indent prefixes are overridden for a tidy 1-col-per-level outline.
-- [X] Now when I try to go to start of the heading line with "I" or something, I go to line before! That is not great I need to fix that.
-- [ ] inline-images got deprecated in favor of link-previews (more general). To be modern, I should do:
-  1. Line 1485: ~org-startup-with-inline-images t~ → ~org-startup-with-link-previews t~.
-  2. Line 1902: ~(org-display-inline-images)~ → ~(org-link-preview-region nil nil (point-min) (point-max))~ (or keep as-is, still works).
-  3. Line 1925: ~(org-remove-inline-images)~ → ~(org-link-preview-clear)~ (or keep as-is).
-
 ** Support for downloading and inserting images
 :PROPERTIES:
 :ID:       b4b2926b-b315-49c1-abc9-98e7b5c153d4
@@ -1865,9 +1856,9 @@ Turns any org document into a presentation! Each top-level header is one slide.
         )
 
         (org-present-big)
-        (org-display-inline-images)
-        ;(org-present-hide-cursor)  ;; Trying out without
-        ;(org-present-read-only)    ;; Trying out without
+        (org-link-preview-region) ; Primarily to preview the images.
+        ;(org-present-hide-cursor) ; Trying out without
+        ;(org-present-read-only)   ; Trying out without
 
         ;; Soft wraps the text at fixed width while also centering it.
         ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
@@ -1890,7 +1881,7 @@ Turns any org document into a presentation! Each top-level header is one slide.
         (setq on-presentation-quit
               (lambda ()
                 (org-present-small)
-                (org-remove-inline-images)
+                (org-link-preview-clear)
                 ;(org-present-show-cursor)  ;; Trying out without
                 ;(org-present-read-write)   ;; Trying out without
 

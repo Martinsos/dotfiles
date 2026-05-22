@@ -1,6 +1,6 @@
 ;;; -*- lexical-binding: t; -*-
 
-;; NOTE: This file was generated from Emacs.org on 2026-05-21 23:20:37 CEST, don't edit it manually.
+;; NOTE: This file was generated from Emacs.org on 2026-05-22 09:40:17 CEST, don't edit it manually.
 
 
 (defvar elpaca-installer-version 0.12)
@@ -912,7 +912,7 @@ USAGE:
   (add-to-list 'org-modules 'org-habit)
   (add-to-list 'org-modules 'org-inlinetask)
 
-  (setq-default org-startup-with-inline-images t ; Preview/show the images.
+  (setq-default org-startup-with-link-previews t ; Preview/show the links (images by default).
                 org-image-actual-width '(300) ; Sets all images to 300px width by default (so they are not too big).
                 org-startup-indented t ; Turn org-indent-mode on at startup.
                 org-pretty-entities t ; Displays math nicely (superscript, subscript, latex constants, ...).
@@ -1288,9 +1288,9 @@ USAGE:
       )
 
       (org-present-big)
-      (org-display-inline-images)
-      ;(org-present-hide-cursor)  ;; Trying out without
-      ;(org-present-read-only)    ;; Trying out without
+      (org-link-preview-region) ; Primarily to preview the images.
+      ;(org-present-hide-cursor) ; Trying out without
+      ;(org-present-read-only)   ; Trying out without
 
       ;; Soft wraps the text at fixed width while also centering it.
       ;; TODO: I could get decent fixed width only with value of 20 when `(org-present-big)`
@@ -1313,7 +1313,7 @@ USAGE:
       (setq on-presentation-quit
             (lambda ()
               (org-present-small)
-              (org-remove-inline-images)
+              (org-link-preview-clear)
               ;(org-present-show-cursor)  ;; Trying out without
               ;(org-present-read-write)   ;; Trying out without
 
