@@ -177,6 +177,71 @@ That also means that ~after-init-hook~ is often not the right choice any more, a
   (elpaca `(,@elpaca-order))
 #+end_src
 
+*** Set up elpaca lock file
+:PROPERTIES:
+:ID:       7c5d38d2-2567-4d9c-8e0f-848801ad7834
+:END:
+
+Here we set the elpaca lock file, so that, when installing packages, Elpaca will inherit recipes from =elpaca-lock-file=, where recipes contain exact version control references. Meaning that exact versions of packages as in the lock file are installed each time, ensuring consistency.
+
+#+begin_src emacs-lisp
+
+  (defconst my/elpaca-lock-file-path (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+  (setq elpaca-lock-file my/elpaca-lock-file-path)
+  ;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
+  ;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
+  ;(setq elpaca-lock-file nil)
+
+  (defun my/elpaca-write-lock-file ()
+    (interactive)
+    (elpaca-write-lock-file elpaca-lock-file)
+  )
+
+#+end_src
+
+**** TODO Make updating of lock file automatic (advice on relevant elpaca functions?)
+*** Install and set up use-package (with Elpaca as backend)
+:PROPERTIES:
+:ID:       e1c4b11f-6277-4890-ac2a-3ed0be776300
+:END:
+
+#+begin_src emacs-lisp
+
+  (elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
+  (setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+
+#+end_src
+
+** Updating packages
+*** Instructions :cheatsheet:
+- First, let's make sure we have the current working state "saved", so we can revert if update goes wrong.
+  - Run ~my/elpaca-write-lock-file~, commit the lock file if any changes.
+  - As an extra measure in case any of the git refs in the lock file became invalid, do ~cp -a elpaca/ elpaca.backup/~.
+- Turn off the lock file usage (normally by temporarily commenting-out the setting of =elpaca-lock-file= var and restarting emacs), so that =elpaca-fetch= will pull in the new versions of the packages.
+- Run ~elpaca-update-menus~ to update the recipes, they don't change often but you never know.
+- ~elpaca-fetch-all~ to have elpaca fetch the package updates to local package repos in =elpaca/=, but not yet apply them.
+- A buffer =*elpaca-log*= opens, listing, per package, new commits that were fetched.
+  I should review the package updates, to figure out if I am ok with them, and if there are any breaking changes that will require me to adapt my config.
+  I usually create a file on disk where I log any changes I will need to do as I go through it.
+  If I want to dig deeper into certain package, I can go into =elpaca/repos/<that-package>= and look into its git log.
+  Once done, I call ~elpaca-merge-all~ to merge/apply the package updates.
+  - ~PROBLEM~: This currently doesn't really when using a lock file in general! Even though we disabled a lock file, as a consequence of using it, package repos in =elpaca/= are in a detached state due to how elpaca implemented its lock file system, and then =*elpaca-log*= fails to show the logs because its implementation for showing them requires packages repos to not be in a detached state but on a branch. This is so because lock file feature addition is still somewhat unbaked and elpaca's workflow for it is still maturing / being developed.
+    Due to how it works, ~elpaca-merge-all~ also wouldn't work.
+    ~SOLUTION~: The way I currently solve it is by then doing the following:
+    - Run ~my/elpaca-show-updates~ that compares the recipes from lock file and newest recipes and produces an org buffer capturing the differences. Save it in a file (=emacs-update.org=). So now I have the logs I needed. Review them, figure out what I will need to fix in the config. Btw I have an AI skill for analyzing the logs against my config, use that as a help during reviewing.
+      - Create new git branch =emacs-update=. Create a new git worktree with it, we will be working on the update there, since we need the current working config to be available under .emacs.d as usual, to power emacs till then.
+      - In the worktree, run the comparison of lock files, and then have AI go through that file + our config and write under each package in that file an analysis of what changed and how we need/want to update our config.
+      - Manually review each package analysis, and mark it as DONE when reviewed. If there is anything to be done, add ~TODO Update~ in the Emacs.org itself, under the relevant package, with instructions what to try / fix / check / add.
+        Once I reviewed all packages in =emacs-update.org=, I should have =Emacs.org= full of relevant TODOs.
+      - Do the actual update, which should affect only the worktree, and then run a test emacs instance with that dir specified as its .emacs.d, while still having the pre-update emacs running as the editor. In pre-update emacs, go thorugh config and resolve one by one ~TODO Update~, while checking in test emacs the results. Once done, that is it, worktree is now fully working updated emacs and I can merge it and use it from that point on!
+       - Merge worktree into main, delete worktree, also delete =emacs-update.org= file from git.
+    - Delete the =elpaca/= dir. I don't need it since elpaca logs don't work anyway, and why not then restart it fully then.
+- Run ~my/elpaca-write-lock-file~ again to lock in the new package versions, commit it. Re-enable setting of =elpaca-lock-file= var in my emacs config (and restart emacs). Delete ~elpaca.backup/~.
+- That is it!
+NOTE: There is also ~elpaca-update-all~ that does fetching and merging in one go, but it is not recommended as you then don't get an opportunity to review the packages.
+** Cheatsheet :cheatsheet:
+- ~elpaca-manager~ to run the main elpaca UI.
+- To create/update a lock file, run ~my/elpaca-write-lock-file~. Makes sense to do it after adding a new package.
 * Utils
 ** Packages
 :PROPERTIES:

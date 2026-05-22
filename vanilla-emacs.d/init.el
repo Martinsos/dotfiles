@@ -43,6 +43,24 @@
 (elpaca `(,@elpaca-order))
 
 
+(defconst my/elpaca-lock-file-path (expand-file-name "elpaca-lock.eld" user-emacs-directory))
+(setq elpaca-lock-file my/elpaca-lock-file-path)
+;; Uncomment to have elpaca (i.e. elpaca-update) install newest version of package, not the one in the lock file.
+;; Restart is needed for elpaca to pick this up. Check cheatsheet below for more details.
+;(setq elpaca-lock-file nil)
+
+(defun my/elpaca-write-lock-file ()
+  (interactive)
+  (elpaca-write-lock-file elpaca-lock-file)
+)
+
+
+
+(elpaca elpaca-use-package (elpaca-use-package-mode)) ; Install/setup use-package.
+(setq use-package-always-ensure t) ; Tells use-package to have :ensure t by default for every package it manages.
+
+
+
 (require 'cl-lib) ;; Common utilities and functions, e.g. cl-some, cl-loop, ... .
 
 ;; Package for displaying content in a nice inline overlay.
