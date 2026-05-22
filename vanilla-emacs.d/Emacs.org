@@ -24,24 +24,18 @@ This has to be first line in the file (in this case init.el) for lexical binding
 ;;; -*- lexical-binding: t; -*-
 #+end_src
 
-** Timestamps
+** Header comments
 :PROPERTIES:
 :ID:       7f968f8c-192b-4849-8ca9-17c1e36b833f
 :END:
-I am actually not sure how useful is this but I found it fun.
 
-#+name: timestamp
-#+begin_src emacs-lisp :tangle no :results value none
-  (format-time-string "%Y-%m-%d %H:%M:%S %Z")
-#+end_src
-
-#+begin_src emacs-lisp :tangle ./early-init.el :noweb yes
-  ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
+#+begin_src emacs-lisp :tangle ./early-init.el
+  ;; NOTE: This file was generated from Emacs.org, don't edit it manually.
 
 #+end_src
 
-#+begin_src emacs-lisp :tangle ./init.el :noweb yes
-  ;; NOTE: This file was generated from Emacs.org on <<timestamp()>>, don't edit it manually.
+#+begin_src emacs-lisp :tangle ./init.el
+  ;; NOTE: This file was generated from Emacs.org, don't edit it manually.
 
 #+end_src
 
