@@ -1122,6 +1122,7 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "br"  '("reload buffer" . revert-buffer)
       "bR"  '("rename buffer" . rename-buffer)
       "bv"  '("select whole buffer" . mark-whole-buffer)
+      "bi"  '("clone indirect buffer" . clone-indirect-buffer-other-window)
 
       "e"   '("errors" . (keymap))
 

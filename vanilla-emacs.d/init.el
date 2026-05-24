@@ -662,6 +662,7 @@ USAGE:
     "br"  '("reload buffer" . revert-buffer)
     "bR"  '("rename buffer" . rename-buffer)
     "bv"  '("select whole buffer" . mark-whole-buffer)
+    "bi"  '("clone indirect buffer" . clone-indirect-buffer-other-window)
 
     "e"   '("errors" . (keymap))
 
