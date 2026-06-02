@@ -586,7 +586,7 @@ USAGE:
 
     "^"   '("top-level keybindings" . which-key-show-top-level)
 
-    "C-u" '("universal argument" . universal-argument)
+    "u" '("universal argument" . universal-argument)
 
     "0"   '("jump to window 0" . winum-select-window-0)
     "1"   '("jump to window 1" . winum-select-window-1)
@@ -2465,6 +2465,10 @@ Returns nil if no heading found."
    ;; Originally it opens file in the same window, but I prefer when it opens in another window.
    "C-<return>" #'magit-diff-visit-worktree-file-other-window
   )
+  (add-hook 'magit-status-sections-hook #'magit-insert-worktrees t)
+  (my/on-theme-enabled
+    (set-face-attribute 'magit-branch-current nil :box t)
+  )
 )
 ;; I define this outside of (use-package magit) because later is deferred.
 (my/leader-keys
@@ -2982,6 +2986,9 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (my/on-theme-enabled
     (set-face-attribute 'lsp-inlay-hint-face nil :inherit 'lsp-details-face)
   )
+  ;; TODO: Had some issues with tailwindcss LSP error on initialization, so shut it off for now.
+  ;;   It is one of LSPs that comes by default and turns on in modes like tsx-ts-mode.
+  (add-to-list 'lsp-disabled-clients 'tailwindcss)
 )
 
 
