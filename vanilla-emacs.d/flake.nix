@@ -7,8 +7,6 @@
   };
 
   # TODO
-  # - [ ] Add some of the external system tools that Emacs needs to the Nix flake. Check TODO below
-  #       in this file for more details.
   # - [ ] Come up with new workflow for updating emacs, for getting the diff logs and Emacs NEWS to
   #       read through when updating the packages. I had this for Elpaca, now need it for Nix also.
   # - [ ] Have Nix install treesit grammars. Check TODO below in this file for more details.
@@ -62,10 +60,18 @@
 
         emacsWithPkgs = emacsPkgs.emacsWithPackages (import ./emacs-packages.nix);
 
-        # TODO: Could I generate this list from my Emacs.org?
-        #   Just tangle to specific nix file? Use one block that tangles to nix file and uses noweb to collect the rest.
+        # External CLI tools that I want to wrap together with Emacs and make them available to it on the PATH.
+        # Normally these are external requirements of specific emacs packages I use.
+        # Note that I on purpose don't add here:
+        #  - External deps that are part of the system config: fonts, hunspell (config, dict).
+        #    These are not binaries/tools so I can't add them this way.
+        #    I might maybe want to manage them in the future via Home Manager if I use it.
+        #  - Language servers, linters, ... , since they really should be project-specific.
+        #  - Tools like grep, git, fzf, ... , since one expects those to be coming from the system.
+        # TODO: Could/should I generate this list from my Emacs.org?
+        #       Just tangle to specific nix file? Use one block that tangles to nix file and uses noweb to collect the rest.
         emacsCliTools = [
-          # pkgs.emacs-lsp-booster
+          pkgs.emacs-lsp-booster
           pkgs.gitstatus
           pkgs.lychee
         ];
@@ -84,30 +90,5 @@
           default = emacs;
           emacs = emacsWithPkgsAndCliTools;
         };
-
-        # TODO — external CLI tools the config touches. Decide per tool
-        # whether the flake should wrap them onto emacs's PATH, or whether
-        # we rely on the system / per-project nix shells.
-        #
-        # First-pass classification (revisit together):
-        #
-        #
-        #   Emacs-specific — probably belongs here:
-        #     - emacs-lsp-booster   (LSP perf wrapper invoked from emacs)
-        #     - gitstatus(d)        (used by ... TBD; also useful in shells)
-        #     - lychee (link checking)
-        #     I will want to mark these as :system_dep: in Emacs.org, because I want dependencies
-        #     to be documented there. And any other system deps. Or maybe :external_dep:.
-        #     But I will remove :manual_step: if they are managed via Nix.
-        #
-        #     I on purpose don't add:
-        #     - Dependencies that are part of the system config: fonts, hunspell (config, dict).
-        #       I could manage them in the future via Home Manager if I use it.
-        #     - Language servers, since they really should be project-specific.
-        #     - Tools like grep, git, fzf, ... -> one expects thsoe to be coming from the system.
-        #
-        # Once we agree, wrap `myEmacs` with `pkgs.symlinkJoin` +
-        # `makeWrapper --prefix PATH : ${lib.makeBinPath [...]}` so the
-        # selected tools are visible to emacs only.
       });
 }
