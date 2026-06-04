@@ -66,7 +66,7 @@
         #   Just tangle to specific nix file? Use one block that tangles to nix file and uses noweb to collect the rest.
         emacsCliTools = [
           # pkgs.emacs-lsp-booster
-          # pkgs.gitstatus
+          pkgs.gitstatus
           pkgs.lychee
         ];
 

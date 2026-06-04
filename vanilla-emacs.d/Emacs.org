@@ -3387,22 +3387,20 @@ They can be used to store a point, text, a window or frame configuration, ... , 
 It is basically a wrapper that calls =gitstatusd= program in the background.
 
 #+begin_src emacs-lisp
-
   (use-package gitstatus
     :ensure nix
     :custom
-    (gitstatusd-exe "~/.local/bin/gitstatusd")
+    ;; One would expected gitstatusd-exe to be resolved against the PATH, in which case its default
+    ;; value of "gitstatusd" would work, but that is not so, so I have to give it absolute path.
+    ;; I opened an issue for it here https://github.com/igorepst/gitstatus-el/issues/1 .
+    (gitstatusd-exe (executable-find "gitstatusd"))
     (gitstatus-prefix nil)
   )
-
 #+end_src
 
-*** Installing =gitstatusd= on your machine      :external_dep:manual_setup:
-Ensure =gitstatus= (which provides =gitstatusd= binary) is installed on your machine.
-If it isn't already, you can download the latest binary from the [[https://github.com/romkatv/gitstatus][Github releases]] and e.g. put it into =~/.local/bin/= dir.
-Then, make sure that ~gitstatusd-exe~ is set to the path to that binary.
-TODO: Figure out why default value of ~gitstatusd-exe~, which is just ~gitstatusd~, doesn't work even when the binary is in PATH, and instead I have to set the exact path. Because if I can make that work that is great, I don't have to adjust the path above manually then.
-
+*** Setup                                         :external_dep:nix_managed:
+Requires =gitstatus= (which provides =gitstatusd= binary) to be installed on your machine.
+I install it via Nix together with Emacs, so nothing to do.
 ** Magit
 :PROPERTIES:
 :ID:       9b123fd0-be4f-4b62-994e-267b1dbcb202

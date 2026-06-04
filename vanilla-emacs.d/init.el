@@ -2432,7 +2432,10 @@ Returns nil if no heading found."
 (use-package gitstatus
   :ensure nix
   :custom
-  (gitstatusd-exe "~/.local/bin/gitstatusd")
+  ;; One would expected gitstatusd-exe to be resolved against the PATH, in which case its default
+  ;; value of "gitstatusd" would work, but that is not so, so I have to give it absolute path.
+  ;; I opened an issue for it here https://github.com/igorepst/gitstatus-el/issues/1 .
+  (gitstatusd-exe (executable-find "gitstatusd"))
   (gitstatus-prefix nil)
 )
 
