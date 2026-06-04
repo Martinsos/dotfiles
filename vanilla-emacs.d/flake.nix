@@ -60,11 +60,29 @@
           }
         );
 
-        myEmacs = emacsPkgs.emacsWithPackages (import ./emacs-packages.nix);
+        emacsWithPkgs = emacsPkgs.emacsWithPackages (import ./emacs-packages.nix);
+
+        # TODO: Could I generate this list from my Emacs.org?
+        #   Just tangle to specific nix file? Use one block that tangles to nix file and uses noweb to collect the rest.
+        emacsCliTools = [
+          # pkgs.emacs-lsp-booster
+          # pkgs.gitstatus
+          pkgs.lychee
+        ];
+
+        emacsWithPkgsAndCliTools = pkgs.symlinkJoin {
+          name = "emacs";
+          paths = [ emacsWithPkgs ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/emacs \
+              --prefix PATH : ${pkgs.lib.makeBinPath emacsCliTools}
+          '';
+        };
       in {
         packages = rec {
           default = emacs;
-          emacs = myEmacs;
+          emacs = emacsWithPkgsAndCliTools;
         };
 
         # TODO — external CLI tools the config touches. Decide per tool
@@ -73,18 +91,20 @@
         #
         # First-pass classification (revisit together):
         #
+        #
         #   Emacs-specific — probably belongs here:
         #     - emacs-lsp-booster   (LSP perf wrapper invoked from emacs)
-        #     - gitstatusd          (used by ... TBD; also useful in shells)
-        #     - lychee              (org-mode link checking)
-        #     - editorconfig-core-c (used by editorconfig.el on some setups)
+        #     - gitstatus(d)        (used by ... TBD; also useful in shells)
+        #     - lychee (link checking)
+        #     I will want to mark these as :system_dep: in Emacs.org, because I want dependencies
+        #     to be documented there. And any other system deps. Or maybe :external_dep:.
+        #     But I will remove :manual_step: if they are managed via Nix.
         #
-        #   General CLI tools — probably leave to the system:
-        #     - git, ripgrep, fd, delta, fzf
-        #
-        #   Language-/project-specific — do NOT bundle, control per-project:
-        #     - haskell-language-server, rust-analyzer, gopls, pyright, ...
-        #     - ghc, cargo, node, python, ...
+        #     I on purpose don't add:
+        #     - Dependencies that are part of the system config: fonts, hunspell (config, dict).
+        #       I could manage them in the future via Home Manager if I use it.
+        #     - Language servers, since they really should be project-specific.
+        #     - Tools like grep, git, fzf, ... -> one expects thsoe to be coming from the system.
         #
         # Once we agree, wrap `myEmacs` with `pkgs.symlinkJoin` +
         # `makeWrapper --prefix PATH : ${lib.makeBinPath [...]}` so the

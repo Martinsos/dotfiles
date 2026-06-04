@@ -2786,35 +2786,35 @@ It uses external `gitstatusd' program to calculate the actual git status."
   )
 )
 
-(defun my/lychee-check (target)
+(defun my/lychee-check-links (target)
   "Run lychee link checker on TARGET (file or directory)."
   (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
     (message "Running: %s" cmd)
     (shell-command cmd))
 )
 
-(defun my/lychee-check-current-file ()
+(defun my/lychee-check-links-current-file ()
   "Run lychee link checker on the current file."
   (interactive)
   (let ((file-name (buffer-file-name)))
     (if file-name
-        (my/lychee-check file-name)
+        (my/lychee-check-links file-name)
       (error "Buffer is not associated with a file")))
 )
 
-(defun my/lychee-check-project ()
+(defun my/lychee-check-links-project ()
   "Run lychee link checker on the current project."
   (interactive)
   (let ((project-root (projectile-project-root)))
     (if project-root
-        (my/lychee-check project-root)
+        (my/lychee-check-links project-root)
       (error "Not in a project")))
 )
 
 (my/leader-keys
   "a l" '("check links" . (keymap))
-  "a l l" '("in buffer" . my/lychee-check-current-file)
-  "a l p" '("in project" . my/lychee-check-project)
+  "a l l" '("in file" . my/lychee-check-links-current-file)
+  "a l p" '("in project" . my/lychee-check-links-project)
 )
 
 (use-package sideline

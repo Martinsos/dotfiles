@@ -8,7 +8,7 @@ Whenever this file is saved from my emacs, =init.el= and =early-init.el= are aut
 
 Even though =init.el= and =early-init.el= are generated, I still keep them in version control (git), because it helps me avoid the situation where I don't have them on disk (maybe I deleted them, or I did fresh checkout) and can't easily start emacs and evaluate this very org file in order to generate them! By keeping them in version control, I have easy access to them, and I can even more easily see the diffs that were done.
 
-Sometimes manual setup is needed for certain parts of this config to work, for example installing external dependencies or setting up API keys -> settings local to the machine. In such case, you will find instructions how to do it spread through this file, and they will be labeled with =manual_setup= org label.
+Sometimes manual setup is needed for certain parts of this config to work, for example installing external dependencies or setting up API keys -> settings local to the machine. In such case, you will find instructions how to do it spread through this file, and they will be tagged with =manual_setup= org tag. External dependencies are tagged with =external_dep=.
 
 ** NOTE: Splitting (use-package) declarations into multiple org code blocks
 This can be useful in order to nicely group and document the code. In this case, best way to do this is to use =(with-eval-after-load 'packagename <code that would normally go under :config>)=, for code that would go under =:config=, which is usually what we need, this is better then having multiple =(use-package ...)= declarations for the same package, because those can allegedly mess up with each other then.
@@ -237,12 +237,13 @@ Since our packages are installed externally (Nix), by default we don't want to t
 #+end_src
 
 ** Instructions :cheatsheet:
-*** Installing emacs and the packages
 Run ~make install~ to build our current Emacs (and all the elisp packages) and make it available in the PATH.
 This will be done based on the current =flake.nix= and =flake.lock=, so will be reproducible and idempotent.
-*** Adding/removing/overriding the package
-If package is automatically supplied to Nix from use-package declaration (~:ensure nix~), then just remove/add it from this emacs config, otherwise edit the =flake.nix= file.
-Run ~make install~ to build and install the new "emacs" with these changes.
+
+When adding/removing a package: if package is automatically supplied to Nix from use-package declaration (~:ensure nix~), then just remove/add it from this emacs config, otherwise edit the =flake.nix= file. And then run ~make install~ again of course.
+
+For testing, I can also first run ~nix build~ and then run ~./result/bin/emacs~ to try it out without yet installing it globally on the system.
+
 *** TODO Updating the emacs and the packages
 - Figure out the workflow, and also write helper logic for it! And AI skill probably. Emacs news, compare versions of packages, get their git logs / changelogs, ... .
 * Utils
@@ -880,7 +881,7 @@ Solution I settled on then is to remap the =fixed-pitch= face in such buffer (th
   )
 #+end_src
 
-*** Install the fonts                                          :manual_setup:
+*** Install the fonts                                          :external_dep:manual_setup:
 For Emacs to be able to use a font, it needs to be installed on your machine.
 To install on Archlinux:
  - Iosevka: ~sudo pacman -S ttc-iosevka ttc-iosevka-aile~
@@ -916,7 +917,7 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
   )
 #+end_src
 
-** Install Nerd font                                           :manual_setup:
+** Install Nerd font                              :manual_setup:external_dep:
 In order for =doom-modeline= to be able to render symbols, we need a Nerd font installed.
 Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will download the =Symbols Nerd Font Mono= font which only brings the symbols and will set up modeline to use that specific font for symbols.
 
@@ -3396,7 +3397,7 @@ It is basically a wrapper that calls =gitstatusd= program in the background.
 
 #+end_src
 
-*** Installing =gitstatusd= on your machine :manual_setup:
+*** Installing =gitstatusd= on your machine      :external_dep:manual_setup:
 Ensure =gitstatus= (which provides =gitstatusd= binary) is installed on your machine.
 If it isn't already, you can download the latest binary from the [[https://github.com/romkatv/gitstatus][Github releases]] and e.g. put it into =~/.local/bin/= dir.
 Then, make sure that ~gitstatusd-exe~ is set to the path to that binary.
@@ -3874,8 +3875,7 @@ Jinx uses Enchant program on your machine, which uses spelling backends like hun
 
 #+end_src
 
-*** Manual setup                                             :manual_setup:
-
+*** Setup                                        :manual_setup:external_dep:
 On Arch, install ~enchant~ and ~pkgconf~.
 Enchant needs to use some spelling backend, so also install e.g. ~hunspell~ (and make sure it is using it when I expect, file =/usr/share/enchant-2/enchant.ordering= on Arch defines that - default was ok for me though).
 Finally, that backend needs dictionaries for the languages I want to spell-check, so e.g. if I want english, I should install ~hunspell-en_us~.
@@ -4033,41 +4033,41 @@ For link checking, we use external program called =lychee=.
 It is quite versatile, checks a lot of different formats, checks both local and outgoing links, ... .
 
 #+begin_src emacs-lisp
-  (defun my/lychee-check (target)
+  (defun my/lychee-check-links (target)
     "Run lychee link checker on TARGET (file or directory)."
     (let ((cmd (format "lychee --include-fragments %s" (shell-quote-argument target))))
       (message "Running: %s" cmd)
       (shell-command cmd))
   )
 
-  (defun my/lychee-check-current-file ()
+  (defun my/lychee-check-links-current-file ()
     "Run lychee link checker on the current file."
     (interactive)
     (let ((file-name (buffer-file-name)))
       (if file-name
-          (my/lychee-check file-name)
+          (my/lychee-check-links file-name)
         (error "Buffer is not associated with a file")))
   )
 
-  (defun my/lychee-check-project ()
+  (defun my/lychee-check-links-project ()
     "Run lychee link checker on the current project."
     (interactive)
     (let ((project-root (projectile-project-root)))
       (if project-root
-          (my/lychee-check project-root)
+          (my/lychee-check-links project-root)
         (error "Not in a project")))
   )
 
   (my/leader-keys
     "a l" '("check links" . (keymap))
-    "a l l" '("in buffer" . my/lychee-check-current-file)
-    "a l p" '("in project" . my/lychee-check-project)
+    "a l l" '("in file" . my/lychee-check-links-current-file)
+    "a l p" '("in project" . my/lychee-check-links-project)
   )
 #+end_src
 
-** Install lychee :manual_setup:
-~sudo pacman -S lychee~
-
+** Setup                                         :external_dep:nix_managed:
+Requires =lychee= on the PATH.
+I install it via Nix, so nothing to do.
 * Sideline
 :PROPERTIES:
 :ID:       7a5f03ec-0948-4556-964a-850b95ad2886
@@ -4413,7 +4413,7 @@ I copied the code below exactly as it is from the =lsp-booster= Github's README 
 
 #+end_src
 
-**** Manual setup :manual_setup:
+**** Manual setup                               :manual_setup:external_dep:
 I followed instructions from the =lsp-booster= Github's README:
 - Downloaded the latest binary from the Github releases and made it available on =PATH= (e.g. put it in =~/.local/bin= dir).
 
@@ -4691,7 +4691,7 @@ haskell-mode doesn't know how to use treesitter, and haskell-ts-mode, which is a
 
 #+end_src
 
-*** Install Typescript language server :manual_setup:
+*** Install Typescript language server           :manual_setup:external_dep:
 Run ~lsp-install-server~ and then choose ~ts-ls~ to install Typescript Language Server for lsp-mode to use.
 
 *** TODO Customize LSP semantic token faces to be aligned with treesitter highlighting.
@@ -4712,7 +4712,7 @@ This will also run eslint language server next to the other language servers if 
   
 #+end_src
 
-**** Manual setup :manual_setup:
+**** Manual setup                               :manual_setup:external_dep:
 - =M-x lsp-install-server RET eslint RET=
   
 ** Web (HTML, CSS, ...)
