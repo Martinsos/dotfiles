@@ -165,7 +165,7 @@ Since our packages are installed externally (Nix), by default we don't want to t
   (setq use-package-ensure-function #'my/use-package-ensure-function)
 #+end_src
 
-*** Automatically generate emacs-packages.nix from init.el when it is tangled
+*** Generate list of emacs packages for Nix to install: emacs-packages.nix
 :PROPERTIES:
 :ID:       03514ca3-d485-4a78-9b9e-048b52bdf169
 :END:
@@ -195,7 +195,7 @@ Since our packages are installed externally (Nix), by default we don't want to t
   (defun my/write-emacs-packages-nix-file (packages)
     "Write PACKAGES (list of strings) to emacs-packages.nix file."
     (with-temp-file (expand-file-name "emacs-packages.nix" user-emacs-directory)
-      (insert "# Auto-generated from init.el, do not edit by hand.\n")
+      (insert "# NOTE: This file was generated from Emacs.org, don't edit it manually.\n")
       (insert "emacsPkgs: with emacsPkgs; [\n")
       (dolist (pkg packages)
         (insert "  " pkg "\n"))
@@ -234,6 +234,28 @@ Since our packages are installed externally (Nix), by default we don't want to t
       )
     )
   )
+#+end_src
+
+*** Generate list of external CLI tools for Nix to install: emacs-cli-tools.nix
+:PROPERTIES:
+:ID:       1e391851-25f8-4729-af65-a70850f6c7bf
+:END:
+I use Nix to install certain external CLI tools that Emacs needs and wrap them with it (put them on PATH).
+Normally these are external requirements (binaries) of specific emacs packages I use.
+
+Note that normally the following don't fall under this:
+ - External deps that are part of the system config: fonts, hunspell (config, dict).
+   These are not binaries/tools so I can't add them this way.
+   Note: I might maybe want to manage them in the future via Home Manager if I use it.
+ - Language servers, linters, ... , since they really should be project-specific.
+ - Tools like grep, git, fzf, ... , since one expects those to be coming from the system.
+
+I do this by adding, in this config, an org babel block with header ~nix :tangle no :noweb-ref emacs-cli-tools~ whenever I want to define an external CLI tool. It will be included in the generated file, as defined here:
+#+begin_src nix :tangle ./emacs-cli-tools.nix :noweb yes
+  # NOTE: This file was generated from Emacs.org, don't edit it manually.
+  { pkgs }: [
+    <<emacs-cli-tools>>
+  ]
 #+end_src
 
 ** Instructions :cheatsheet:
@@ -3400,7 +3422,11 @@ It is basically a wrapper that calls =gitstatusd= program in the background.
 
 *** Requirements                                  :external_dep:nix_managed:
 Requires =gitstatus= (which provides =gitstatusd= binary) to be installed on your machine.
+
 I install it via Nix together with Emacs.
+#+begin_src nix :tangle no :noweb-ref emacs-cli-tools
+  pkgs.gitstatus
+#+end_src
 ** Magit
 :PROPERTIES:
 :ID:       9b123fd0-be4f-4b62-994e-267b1dbcb202
@@ -4065,7 +4091,11 @@ It is quite versatile, checks a lot of different formats, checks both local and 
 
 ** Requirements                                    :external_dep:nix_managed:
 Requires =lychee= on the PATH.
+
 I install it via Nix, together with Emacs.
+#+begin_src nix :tangle no :noweb-ref emacs-cli-tools
+  pkgs.lychee
+#+end_src
 * Sideline
 :PROPERTIES:
 :ID:       7a5f03ec-0948-4556-964a-850b95ad2886
@@ -4413,7 +4443,11 @@ I copied the code below exactly as it is from the =lsp-booster= Github's README 
 
 **** Requirements                                :external_dep:nix_managed:
 Requires =emacs-lsp-booster= binary to be installed.
+
 I install it via Nix together with Emacs.
+#+begin_src nix :tangle no :noweb-ref emacs-cli-tools
+  pkgs.emacs-lsp-booster
+#+end_src
 
 *** Misc
 :PROPERTIES:

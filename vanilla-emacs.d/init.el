@@ -51,7 +51,7 @@
 (defun my/write-emacs-packages-nix-file (packages)
   "Write PACKAGES (list of strings) to emacs-packages.nix file."
   (with-temp-file (expand-file-name "emacs-packages.nix" user-emacs-directory)
-    (insert "# Auto-generated from init.el, do not edit by hand.\n")
+    (insert "# NOTE: This file was generated from Emacs.org, don't edit it manually.\n")
     (insert "emacsPkgs: with emacsPkgs; [\n")
     (dolist (pkg packages)
       (insert "  " pkg "\n"))

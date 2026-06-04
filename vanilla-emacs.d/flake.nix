@@ -30,6 +30,8 @@
         #  I am actually not sure if this is just overlay specific or can be also used without overlay.
         #  Yeah quick googling seems to show this has nothing to do with overlay, but is part of nixpkgs.emacsPackages.
 
+        # TODO: Move defining of these to Emacs.org, same like I did for external CLI tools?
+        #       I could define withEnv helper and use that instead of overly specific withLspUsePlists.
         emacsPkgs = (pkgs.emacsPackagesFor baseEmacs).overrideScope (final: prev:
           let
             # In order for lsp-booster elisp package to be more performant, in my emacs config
@@ -60,21 +62,7 @@
 
         emacsWithPkgs = emacsPkgs.emacsWithPackages (import ./emacs-packages.nix);
 
-        # External CLI tools that I want to wrap together with Emacs and make them available to it on the PATH.
-        # Normally these are external requirements of specific emacs packages I use.
-        # Note that I on purpose don't add here:
-        #  - External deps that are part of the system config: fonts, hunspell (config, dict).
-        #    These are not binaries/tools so I can't add them this way.
-        #    I might maybe want to manage them in the future via Home Manager if I use it.
-        #  - Language servers, linters, ... , since they really should be project-specific.
-        #  - Tools like grep, git, fzf, ... , since one expects those to be coming from the system.
-        # TODO: Could/should I generate this list from my Emacs.org?
-        #       Just tangle to specific nix file? Use one block that tangles to nix file and uses noweb to collect the rest.
-        emacsCliTools = [
-          pkgs.emacs-lsp-booster
-          pkgs.gitstatus
-          pkgs.lychee
-        ];
+        emacsCliTools = import ./emacs-cli-tools.nix { inherit pkgs; };
 
         emacsWithPkgsAndCliTools = pkgs.symlinkJoin {
           name = "emacs";
