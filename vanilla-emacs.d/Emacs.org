@@ -4483,12 +4483,12 @@ I investigated lsp-mode vs eglot. Eglot natively comes with emacs and is alterna
 Treesitter is for syntax understanding of the code what LSP is for semantic understanding of the code.
 Same like LSP, Treesitter removes the burden from the specific editor to implement all the logic related to dealing with syntax, and instead any editor can just leverage the one central implementation of it: Treesitter + corresponding treesitter grammar for specific language. In return, you get very good syntax highlighting, cleverer editing and movement through code, better indentation, ... -> anything that can be built with konwledge of concrete syntax tree.
 
-Emacs 29 brings its own built-in treesitter package (~treesit~).
-The only thing we need to configure is to tell it which grammars to pull in for which language.
+Emacs brings its own built-in treesitter package (~treesit~).
+The only thing we need to do is ensure treesitter grammars (compatible versions!) are installed and available.
 Now we have working treesitter for those languages! It is not used anywhere yet though.
 
 Easiest way to start using treesitter is to use one of the built-in major language modes that come with Emacs 29, that are made around using treesitter (they mostly use it for syntax highlighting): typescript-ts-mode, markdown-ts-mode, ... . We can easily check which exist by doing ~apropos~ and then ~-ts-mode$~. There are also third party major modes made with treesitter in mind (e.g. ~haskell-ts-mode~) that we can use, and additionaly, some older packages have added support for treesitter so we can toggle it there.
-It't not all about syntax highligthing though, there is for example cool ~combobulate~ package that brings structural editing for multiple languages, based on treesitter.
+It's not all about syntax highligthing though, there is for example cool ~combobulate~ package that brings structural editing for multiple languages, based on treesitter.
 
 For more details, this article is a great tutorial on treesitter support in Emacs: https://www.masteringemacs.org/article/how-to-get-started-tree-sitter .
 
@@ -4497,45 +4497,46 @@ For more details, this article is a great tutorial on treesitter support in Emac
   (use-package treesit
     :ensure nil ; built-in
     :defer t
-    :preface
-    (defun my/setup-install-grammars ()
-      "Install Tree-sitter grammars if they are absent."
-      (interactive)
-      (dolist (grammar
-               ;; Note the version numbers. These are the versions that with Emacs 29.
-               ;; I picked those up from https://github.com/mickeynp/combobulate .
-               '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-                 (bash "https://github.com/tree-sitter/tree-sitter-bash")
-                 (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.20.0"))
-                 (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-                 (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
-                 (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-                 (markdown . ("https://github.com/ikatyang/tree-sitter-markdown" "v0.7.1"))
-                 (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-                 (rust . ("https://github.com/tree-sitter/tree-sitter-rust" "v0.21.2"))
-                 (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
-                 (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
-                 (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-                 (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-                 (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
-                 (prisma "https://github.com/victorhqc/tree-sitter-prisma")
-  	       (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-  	       (c "https://github.com/tree-sitter/tree-sitter-c")
-                 (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-                 (cmake . ("https://github.com/uyha/tree-sitter-cmake" "v0.5.0" "src"))
-  	     ))
-        (add-to-list 'treesit-language-source-alist grammar)
-        ;; Only install `grammar' if we don't already have it installed.
-        ;; However, if we update a grammar version above then this won't update it since it is already installed,
-        ;; I should instead run `treesit-install-language-grammar' manually for it.
-        (unless (treesit-language-available-p (car grammar))
-          (treesit-install-language-grammar (car grammar))))
-    )
     :config
     (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details (4/4) when doing syntax highlighting.
-    (my/setup-install-grammars)
   )
 
+#+end_src
+
+*** Installing the treesitter grammars            :external_dep:nix_managed:
+:PROPERTIES:
+:ID:       e53bc680-656f-4588-add6-8b76272b44b7
+:END:
+I install (and load) the treesitter grammars via Nix, instead of having Emacs download and compile them at runtime (which is what the built-in ~treesit-install-language-grammar~ does).
+
+Additional benefit of using Nix for this is that one can count on grammars to be similary old as our Emacs version and the Emacs packages, so they are highly likely to be compatible with the Emacs packages using them (which is great as this often becomes a problem otherwise). While with the built-in method of installation, one would have to specify correct versions explicitly.
+
+If I ever need a grammar that is not in nixpkgs, I can still install it manually with ~M-x treesit-install-language-grammar~.
+
+#+begin_src nix :tangle ./emacs-treesit-grammars.nix
+  # NOTE: This file was generated from Emacs.org, don't edit it manually.
+  grammars: with grammars; [
+    tree-sitter-bash
+    tree-sitter-c
+    tree-sitter-cmake
+    tree-sitter-cpp
+    tree-sitter-css
+    tree-sitter-elisp
+    tree-sitter-go
+    tree-sitter-haskell
+    tree-sitter-html
+    tree-sitter-javascript
+    tree-sitter-json
+    tree-sitter-markdown
+    tree-sitter-nix
+    tree-sitter-prisma
+    tree-sitter-python
+    tree-sitter-rust
+    tree-sitter-toml
+    tree-sitter-tsx
+    tree-sitter-typescript
+    tree-sitter-yaml
+  ]
 #+end_src
 
 *** Cheatsheet :cheatsheet:

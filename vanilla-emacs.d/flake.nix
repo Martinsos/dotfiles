@@ -9,7 +9,6 @@
   # TODO
   # - [ ] Come up with new workflow for updating emacs, for getting the diff logs and Emacs NEWS to
   #       read through when updating the packages. I had this for Elpaca, now need it for Nix also.
-  # - [ ] Have Nix install treesit grammars. Check TODO below in this file for more details.
   # - [ ] Consider using Home Manager instead of my Makefile that runs nix profile commands.
   #       - Seems like a great tutorial: https://github.com/Evertras/simple-homemanager/tree/main .
 
@@ -21,14 +20,6 @@
         };
 
         baseEmacs = pkgs.emacs-pgtk;
-
-        # TODO(later): treesit-grammars.with-grammars (if using overlay) to have nix handle them
-        #  instead of elisp.  Once we do that, we can delete the list of them from Emacs.org
-        #  allegedly and there should be no duplication.  The only problem is that there is no for
-        #  prisma in nixpkgs so we would have to define that one on our own, but we can do that.
-        #  Related: https://github.com/nix-community/emacs-overlay/issues/341 .
-        #  I am actually not sure if this is just overlay specific or can be also used without overlay.
-        #  Yeah quick googling seems to show this has nothing to do with overlay, but is part of nixpkgs.emacsPackages.
 
         # TODO: Move defining of these to Emacs.org, same like I did for external CLI tools?
         #       I could define withEnv helper and use that instead of overly specific withLspUsePlists.
@@ -60,7 +51,10 @@
           }
         );
 
-        emacsWithPkgs = emacsPkgs.emacsWithPackages (import ./emacs-packages.nix);
+        emacsWithPkgs = emacsPkgs.emacsWithPackages (epkgs:
+          (import ./emacs-packages.nix epkgs)
+          ++ [ (epkgs.treesit-grammars.with-grammars (import ./emacs-treesit-grammars.nix)) ]
+        );
 
         emacsCliTools = import ./emacs-cli-tools.nix { inherit pkgs; };
 

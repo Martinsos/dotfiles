@@ -1,4 +1,4 @@
-# This file was generated from Emacs.org, don't edit it manually.
+# NOTE: This file was generated from Emacs.org, don't edit it manually.
 emacsPkgs: with emacsPkgs; [
   ace-window
   all-the-icons

@@ -3043,43 +3043,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
 (use-package treesit
   :ensure nil ; built-in
   :defer t
-  :preface
-  (defun my/setup-install-grammars ()
-    "Install Tree-sitter grammars if they are absent."
-    (interactive)
-    (dolist (grammar
-             ;; Note the version numbers. These are the versions that with Emacs 29.
-             ;; I picked those up from https://github.com/mickeynp/combobulate .
-             '((css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.20.0"))
-               (bash "https://github.com/tree-sitter/tree-sitter-bash")
-               (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.20.0"))
-               (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.20.1"))
-               (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.1" "src"))
-               (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.20.2"))
-               (markdown . ("https://github.com/ikatyang/tree-sitter-markdown" "v0.7.1"))
-               (python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.20.4"))
-               (rust . ("https://github.com/tree-sitter/tree-sitter-rust" "v0.21.2"))
-               (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
-               (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
-               (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-               (haskell . ("https://github.com/tree-sitter/tree-sitter-haskell"))
-               (prisma "https://github.com/victorhqc/tree-sitter-prisma")
-	       (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-	       (c "https://github.com/tree-sitter/tree-sitter-c")
-               (cpp "https://github.com/tree-sitter/tree-sitter-cpp")
-               (cmake . ("https://github.com/uyha/tree-sitter-cmake" "v0.5.0" "src"))
-	     ))
-      (add-to-list 'treesit-language-source-alist grammar)
-      ;; Only install `grammar' if we don't already have it installed.
-      ;; However, if we update a grammar version above then this won't update it since it is already installed,
-      ;; I should instead run `treesit-install-language-grammar' manually for it.
-      (unless (treesit-language-available-p (car grammar))
-        (treesit-install-language-grammar (car grammar))))
-  )
   :config
   (customize-set-variable 'treesit-font-lock-level 4) ; Use maximum details (4/4) when doing syntax highlighting.
-  (my/setup-install-grammars)
 )
 
 (use-package emacs
