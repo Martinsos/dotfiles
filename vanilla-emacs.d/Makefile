@@ -1,4 +1,4 @@
-.PHONY: install remove build
+.PHONY: install remove build update
 
 # Because `nix profile` always uses current dir as a profile element name when installing it from a
 # local flake. So we can't choose the name, instead I just capture that knowledge here.
@@ -24,3 +24,10 @@ remove:
 
 build:
 	nix build
+
+# Move the nix lock to latest nixos-unstable, then generate the emacs-update/ review dir (old/new
+# versions, package repos, analysis.org).
+# Meant to be run from a throwaway `_emacs-update` git worktree.
+update:
+	nix flake update
+	./gen-emacs-update.bash

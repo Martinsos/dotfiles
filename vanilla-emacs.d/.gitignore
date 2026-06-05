@@ -33,3 +33,5 @@
 # /result -> outputs of nix build.
 /result
 /result-*
+
+/emacs-update/
