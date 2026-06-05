@@ -118,7 +118,7 @@ All of these are in "nix store", and there are some wrapper scripts for emacs th
 
 Btw all package installed by Nix always go into its "nix store" on the machine, and them are symlinked to there. This allows reusing the same packages as deps when needed.
 
-There is also =emacs-overlay= for Nix. It brings some nice stuff like fresher elisp packages (daily cadence), parsing use-package declarations for names of elisp packages to be installed by Nix so we don't have to list them manually, ... . I however don't need so fresh packages, and also I had some trouble with its use-package parsing (failing on some glyphs, can't customize it to work with ~:ensure nix~), so I ended up not using it and doing my own automatic extraction of package names.
+There is also =emacs-overlay= for Nix. It brings some nice stuff like fresher elisp packages (daily cadence), parsing use-package declarations for names of elisp packages to be installed by Nix so we don't have to list them manually, ... . I however don't need so fresh packages, and also I had some trouble with its use-package parsing (failing on some glyphs, also can't customize it to work with ~:ensure nix~), so I ended up not using it and doing my own automatic extraction of package names.
 
 While ~nix build~ makes it easy to observe the outputs, what we really want is to install emacs in the PATH so we can use it normally. For that to happen, simplest option is to use ~nix profile add/upgrade~ command which links to the nix-built Emacs from the default Nix profile, which then also makes it available in the PATH. We need to run it every time we update the flake though.
 Another option is to use Nix's Home Manager, but that is harder to set up and an overkill if using Nix only for Emacs and not the rest of the dotfiles.
@@ -3453,10 +3453,13 @@ I install it via Nix together with Emacs.
     "gg" 'magit
     "gf" '("magit menu (current file)" . magit-file-dispatch)
     "gF" '("magit find file" . magit-find-file)
+    "gb" '("magit blame" . magit-blame)
   )
 
 #+end_src
 
+*** TODO Consider adding package for better git blame coloring
+https://github.com/jdtsmith/magit-blame-color-by-age
 *** Cheatsheet                                                 :cheatsheet:
 Some key combos I often use in magit:
 - ~S~ -> stage all changes.
@@ -3625,9 +3628,10 @@ It adds indicator to the left margin/side of the window.
     (company-tooltip-minimum-width 25) ; Because otherwise tooltip is sometimes too narrow.
     ;; Frontends: like default, but first element is childframe instead of pseudo tooltip.
     ;; Childframe is a better implementation, more robust, by design, but somewhat new so not yet default.
-    (company-frontends '(company-childframe-unless-just-one-frontend
-                         company-preview-if-just-one-frontend
-                         company-echo-metadata-frontend))
+    ;; TODO: Disabled till we move company to a newer version, since current does not support childframe yet.
+    ;; (company-frontends '(company-childframe-unless-just-one-frontend
+    ;;                      company-preview-if-just-one-frontend
+    ;;                      company-echo-metadata-frontend))
     ;; I found default icons (be it vscode or text) to be too hard to understand,
     ;; so I made my own mapping here that provides more info. For the context, icons are
     ;; short descriptions left of the completion candidates in the popup.

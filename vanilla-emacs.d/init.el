@@ -2458,6 +2458,7 @@ Returns nil if no heading found."
   "gg" 'magit
   "gf" '("magit menu (current file)" . magit-file-dispatch)
   "gF" '("magit find file" . magit-find-file)
+  "gb" '("magit blame" . magit-blame)
 )
 
 ;; TODO: Commented out till I update magit to latest, too complicated to get it working otherwise.
@@ -2570,9 +2571,10 @@ Returns nil if no heading found."
   (company-tooltip-minimum-width 25) ; Because otherwise tooltip is sometimes too narrow.
   ;; Frontends: like default, but first element is childframe instead of pseudo tooltip.
   ;; Childframe is a better implementation, more robust, by design, but somewhat new so not yet default.
-  (company-frontends '(company-childframe-unless-just-one-frontend
-                       company-preview-if-just-one-frontend
-                       company-echo-metadata-frontend))
+  ;; TODO: Disabled till we move company to a newer version, since current does not support childframe yet.
+  ;; (company-frontends '(company-childframe-unless-just-one-frontend
+  ;;                      company-preview-if-just-one-frontend
+  ;;                      company-echo-metadata-frontend))
   ;; I found default icons (be it vscode or text) to be too hard to understand,
   ;; so I made my own mapping here that provides more info. For the context, icons are
   ;; short descriptions left of the completion candidates in the popup.
