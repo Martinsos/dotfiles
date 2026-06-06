@@ -42,14 +42,9 @@ if [[ "$old_nixpkgs" == "$new_nixpkgs" ]]; then
 fi
 
 # --- 2. Evaluate package info at a given nixpkgs rev ---------------------------
-# The eval logic lives in get-emacs-packages-info.nix (pure evaluation, no build). By default it
-# uses every package in emacs-packages.nix; PKGS overrides that with a subset, for testing.
-names_arg=""
-[[ -n "${PKGS:-}" ]] && names_arg="names = [ $(printf '"%s" ' ${PKGS}) ];"
-
 eval_pkg_info() { # $1 = nixpkgs rev  ->  json on stdout
   nix eval --json --impure --expr \
-    'import ./get-emacs-packages-info.nix { rev = "'"$1"'"; '"$names_arg"' }'
+    'import ./used-emacs-pkgs-info.nix { rev = "'"$1"'" }'
 }
 
 echo "Evaluating OLD versions ($old_nixpkgs)..."
@@ -58,7 +53,7 @@ echo "Evaluating NEW versions ($new_nixpkgs)..."
 eval_pkg_info "$new_nixpkgs" > "$OUT/new-versions.json"
 
 # Merge into one array of new-package records, each with `.old` = the matching old record.
-# Names (and thus report order) come from new-versions.json, preserving emacs-packages.nix order.
+# Names (and thus report order) come from new-versions.json, preserving emacs-pkgs.nix order.
 merged=$(jq -s '
   (.[0].packages | map({ (.name): . }) | add) as $old
   | .[1].packages | map(. + { old: ($old[.name] // {}) })
@@ -125,7 +120,7 @@ echo "* Emacs Packages" >> "$ORG"
 changed=0 unchanged=0 noversion=0
 for name in $names; do
   # Pull every field we need for this package (one line each, so empty fields stay aligned).
-  # rev/cloneUrl are already resolved (forge fallbacks handled) by get-emacs-packages-info.nix.
+  # rev/cloneUrl are already resolved (forge fallbacks handled) by used-emacs-pkgs-info.nix.
   {
     read -r new_ver; read -r old_ver
     read -r new_rev; read -r old_rev

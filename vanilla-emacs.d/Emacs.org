@@ -165,7 +165,7 @@ Since our packages are installed externally (Nix), by default we don't want to t
   (setq use-package-ensure-function #'my/use-package-ensure-function)
 #+end_src
 
-*** Generate list of emacs packages for Nix to install: emacs-packages.nix
+*** Generate list of emacs packages for Nix to install: used-emacs-pkgs.nix
 :PROPERTIES:
 :ID:       03514ca3-d485-4a78-9b9e-048b52bdf169
 :END:
@@ -193,8 +193,8 @@ Since our packages are installed externally (Nix), by default we don't want to t
   )
 
   (defun my/write-emacs-packages-nix-file (packages)
-    "Write PACKAGES (list of strings) to emacs-packages.nix file."
-    (with-temp-file (expand-file-name "emacs-packages.nix" user-emacs-directory)
+    "Write PACKAGES (list of strings) to used-emacs-pkgs.nix file."
+    (with-temp-file (expand-file-name "used-emacs-pkgs.nix" user-emacs-directory)
       (insert "# NOTE: This file was generated from Emacs.org, don't edit it manually.\n")
       (insert "emacsPkgs: with emacsPkgs; [\n")
       (dolist (pkg packages)
