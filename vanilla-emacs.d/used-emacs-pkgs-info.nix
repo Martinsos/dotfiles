@@ -1,6 +1,5 @@
-# Evaluates, for a given nixpkgs rev, the version + source info of each Emacs package from
-# used-emacs-pkgs.nix. Useful for figuring out which versions of emacs packages am I using,
-# which is useful when updating them.
+# A function that, for a given nixpkgs rev, returns the version + source (repo) info
+# of each Emacs package that I use (used-emacs-pkgs.nix).
 { rev }:
 let
   nixpkgs = builtins.getFlake "github:NixOS/nixpkgs/${rev}";
@@ -10,26 +9,38 @@ let
   inherit (import ./emacs-pkgs.nix { inherit pkgs; }) baseEmacs emacsPkgs;
   usedEmacsPkgs = import ./used-emacs-pkgs.nix emacsPkgs;
 
-  getEmacsPkgInfo = d:
+  getEmacsPkgInfo = p: {
+    name     = p.pname;
+    version  = p.version or null;
+    homepage = (p.meta or {}).homepage or null;
+    inherit (getEmacsPkgGitRevAndRepo p)
+      rev
+      gitRepoUrl;
+  };
+
+  getEmacsPkgGitRevAndRepo = p:
     let
-      src = d.src;
-      meta = d.meta or { };
-      urls = src.urls or [ ];
-      # Forge-agnostic fallback: packages like those on Codeberg expose no rev/gitRepoUrl, but
-      # both are embedded in the archive url ".../<owner>/<repo>/archive/<rev>.tar.gz".
-      archive = builtins.match "(https?://[^/]+/[^/]+/[^/]+)/archive/([0-9a-f]+)\\.tar\\.gz" (src.url or "");
+      # Most popular forges (github, gitlab, codeberg, ...) follow similar shape for
+      # their "archive" urls, which point to tarballs of specific ref, so we can use
+      # that to obtain ref(rev) and git url, assuming src url of packages is archive url,
+      # which it normally is.
+      # This is useful if package doesn't have rev and git url specified directly.
+      # Github/codeberg shape is ".../<owner>/<repo>/archive/<rev>.tar.gz", while gitlab
+      # inserts a "/-" before "archive" and appends "/<filename>" after the rev, hence the
+      # optional "(-/)?" and "(/[^/]+)?" groups below.
+      archiveUrlPieces =
+        builtins.match
+          "(https?://[^/]+/[^/]+/[^/]+)/(-/)?archive/([^/]+)(/[^/]+)?\\.tar\\.gz"
+          (p.src.url or "");
     in {
-      name     = d.pname;
-      version  = d.version or null;
-      # Effective upstream rev and cloneable git url (both null when there is no git source).
-      rev      = src.rev or (if archive == null then null else builtins.elemAt archive 1);
-      cloneUrl = src.gitRepoUrl or (if archive == null then null else builtins.elemAt archive 0 + ".git");
-      # GNU ELPA & friends have no git source: the tarball is under src.urls and meta.homepage
-      # points at the (navigable) package page. Useful for manual digging.
-      tarball  = if urls == [ ] then null else builtins.head urls;
-      homepage = meta.homepage or null;
+      rev      = p.src.rev or (if archiveUrlPieces == null
+                               then null
+                               else builtins.elemAt archiveUrlPieces 2);
+      gitRepoUrl = p.src.gitRepoUrl or (if archiveUrlPieces == null
+                                      then null
+                                      else builtins.elemAt archiveUrlPieces 0 + ".git");
     };
 in {
   emacsVersion = baseEmacs.version;
-  packages = map getEmacsPkgInfo usedEmacsPkgs;
+  pkgsInfo = map getEmacsPkgInfo usedEmacsPkgs;
 }
