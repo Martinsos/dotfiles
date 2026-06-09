@@ -24,7 +24,7 @@
   # NEXT:
   # - [X] Extract pkg overrides.
   # - [X] Review in detail how info is extracted in used-emacs-pkgs-info.nix.
-  # - [ ] Review in detail the gen-emacs-update.bash script.
+  # - [X] Review in detail the gen-emacs-update.bash script.
   # - [ ] Document the workflow in Emacs.org.
 
   # TODO

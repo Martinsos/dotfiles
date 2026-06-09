@@ -20,13 +20,14 @@ main() {
 
   new_nix_rev="${NEW_REV:-$(cat flake.lock             | jq -r '.nodes.nixpkgs.locked.rev')}"
   old_nix_rev="${OLD_REV:-$(git show HEAD:./flake.lock | jq -r '.nodes.nixpkgs.locked.rev')}"
-  echo "old rev: $old_nix_rev, new rev: $new_nix_rev"
+  echo "Nixpkgs rev: $old_nix_rev -> $new_nix_rev"
   if [[ "$old_nix_rev" == "$new_nix_rev" ]]; then
-    echo "WARNING: old and new nixpkgs revs are identical."
+    echo "Old and new nixpkgs revs are identical, nothing to analyze."
+    exit 0
   fi
 
-  # Merge into one array of new-package records, each with `.old` = the matching old record.
-  # Order (and thus report order) comes from the new info, preserving used-emacs-pkgs.nix order.
+  # Evaluate packages info for both new and old revision, then merge them so that info about the
+  # old ones is added into new ones under the `.old`.
   echo "Evaluating package info for old and new revs (this can take a while)..."
   pkgs_info=$(jq -n \
     --argjson old "$(used_emacs_pkgs_info "$old_nix_rev")" \
@@ -37,6 +38,11 @@ main() {
   pkgs_names=$(jq -r '.[].name' <<<"$pkgs_info")
 
   # TODO(later): Add Emacs NEWS.
+  #   There is info on the version of emacs availble in the used_emacs_pkgs_info I just need to pass
+  #   it through. Then when I have new and old version of emacs, I should, if those changed,
+  #   let the user know they changed, and also point them to go read the emacs NEWS.
+  #   Or maybe we could obtain it for them. But Emacs NEWS file is "restarted" for each new major
+  #   Emacs version which makes it a bit trickier.
 
   {
     echo "#+TITLE: Emacs update analysis"
@@ -63,18 +69,18 @@ main() {
         (.rev // ""), (.old.rev // ""),
         (.gitRepoUrl // ""), (.homepage // "")' <<<"$pkgs_info")
 
-    if [[ -n "$old_rev" && -n "$new_rev" ]]; then
-      [[ "$old_rev" == "$new_rev" ]] && { unchanged=$((unchanged + 1)); continue; }
-    else
-      [[ "$old_ver" == "$new_ver" ]] && { unchanged=$((unchanged + 1)); continue; }
+    if [[ (-n "$old_rev" && "$old_rev" == "$new_rev") \
+       || (-n "$old_ver" && "$old_ver" == "$old_ver") ]]; then
+      unchanged=$((unchanged + 1));
+      continue;
     fi
     changed=$((changed + 1))
 
     {
       echo
       echo "** $name"
-      echo "- Old: $old_ver ${old_rev:0:12}"
-      echo "- New: $new_ver ${new_rev:0:12}"
+      echo "- Old: $old_ver (${old_rev:0:12})"
+      echo "- New: $new_ver (${new_rev:0:12})"
     } >> "$AF"
     [[ -n "$homepage" ]] && echo "- Homepage: $homepage" >> "$AF"
 
@@ -89,7 +95,7 @@ main() {
     if ! { clone_package_repo "$name" "$git_repo_url" \
            && [[ -n "$new_rev" ]] && ensure_package_repo_has_rev "$name" "$new_rev" \
            && [[ -n "$old_rev" ]] && ensure_package_repo_has_rev "$name" "$old_rev"; }; then
-      echo "- (Could not clone/fetch both revs to compute log.)" >> "$AF"
+      echo "- (Could not clone/fetch both revs to compute git log.)" >> "$AF"
       continue
     fi
 
