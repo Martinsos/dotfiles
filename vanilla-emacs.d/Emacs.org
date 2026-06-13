@@ -3510,6 +3510,7 @@ It adds indicator to the left margin/side of the window.
     (my/leader-keys
       "gn" '("next change" . diff-hl-next-hunk)
       "gp" '("previous change" . diff-hl-previous-hunk)
+      "gh" '("show hunk" . diff-hl-show-hunk)
       "gr" '("set ref rev" . diff-hl-set-reference-rev-in-project)
       "gR" '("reset ref rev" . diff-hl-reset-reference-rev-in-project)
     )

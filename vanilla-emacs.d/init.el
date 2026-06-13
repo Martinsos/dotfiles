@@ -2481,6 +2481,7 @@ Returns nil if no heading found."
   (my/leader-keys
     "gn" '("next change" . diff-hl-next-hunk)
     "gp" '("previous change" . diff-hl-previous-hunk)
+    "gh" '("show hunk" . diff-hl-show-hunk)
     "gr" '("set ref rev" . diff-hl-set-reference-rev-in-project)
     "gR" '("reset ref rev" . diff-hl-reset-reference-rev-in-project)
   )
