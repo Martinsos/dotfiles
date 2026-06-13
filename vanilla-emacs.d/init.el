@@ -2442,6 +2442,9 @@ Returns nil if no heading found."
 (use-package magit
   :ensure nix
   :defer t
+  :hook (magit-mode . (lambda () (setq truncate-lines nil)))
+  :custom
+  (magit-diff-refine-hunk 'all) ; Show char/word diffs, not just lines.
   :config
   (general-define-key
    :keymaps 'magit-diff-section-map

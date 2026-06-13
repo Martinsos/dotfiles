@@ -1,4 +1,5 @@
 *.~undo-tree~
 .aider*
 .projectile
+.claude/**/*.local.*
 .claude/*.local.*
