@@ -1454,7 +1454,6 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
                   org-fontify-quote-and-verse-blocks t ; Make it so they have their own faces applied.
                   org-ellipsis " ▾" ; At the end of the collapes heading / list / drawer / ... .
                   org-log-into-drawer t ; Will log state changes in org into LOGBOOK drawer.
-                  org-id-link-to-org-use-id t ; Link to org headings via ids. Create if missing.
     )
     (with-eval-after-load 'org-habit
       (setq-default org-habit-graph-column 60)
@@ -1978,7 +1977,6 @@ Two most popular emacs packages for pulling in calendar events into org file are
       "o C" '("calendar" . (keymap))
       "o C f" '("fetch newest calendar data" . org-gcal-fetch)
       "o C C" '("clear sync tokens" . org-gcal-sync-tokens-clear)
-      "o C F" '("refetch calendar data" . (lambda () (interactive) (org-gcal-sync-tokens-clear) (org-gcal-fetch)))
     )
   )
 
@@ -2001,7 +1999,7 @@ In the config above I then fetch those credentials from .authinfo and provide th
 *** Cheatsheet                                                 :cheatsheet:
 - ~org-gcal-fetch~ updates the events in all files in the alist, by pulling the info from the gcalendar.
   This is the command I will most often want to run.
-- ~org-gcal-sync-tokens-clear~ clears the sync tokens (which is gcalendar concept). If they are not cleared, ~org-gcal-fetch~ will be fetching only changes after the time of the last fetch! This is ok if we kept all the events stored, but if we maybe deleted files with events and want to fetch them again, there want to do full sync -> we should run this command first.
+- ~org-gcal-sync-tokens-clear~ clears the sync tokens (which is gcalendar concept). If they are not cleared, ~org-gcal-fetch~ will be fetching only changes after the time of the last fetch! This is ok if we kept all the events stored, but if we maybe deleted files with events and want to fetch them again, there want to do full sync -> we should run this command first. Note that this will not take into account any event deletions: so if events got deleted on the gcal side, it will not delete them here. Instead of doing "diff", it just fetches everything. So I shouldn't use this normally, only when I have a clean slate and need to refetch them all from the start.
 ** org-agenda
 *** General config
 :PROPERTIES:
@@ -3540,6 +3538,7 @@ It adds indicator to the left margin/side of the window.
       "d d" '("dired @ buffer" . dired-jump)
       "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
       "d p" '("dired @ project" . project-dired)
+      "d f" '("find file (rec)" . find-name-dired)
     )
     (defface my/dired-metadata-face
       '((t :inherit shadow))
@@ -3607,6 +3606,7 @@ It adds indicator to the left margin/side of the window.
 - ~*~ for premade marking commands
 - ~%~ to do something with files matching a regex
 - ~C~ to copy, ~R~ to move, ~D~ to delete
+- ~A~ to search (recursively) through marked dirs/files content
 - ~Z~ to (un)compress
 - ~i~ to get into Wdired mode where you can edit dired buffer and then save changes (e.g. to easily rename files)
 - ~I~ to insert contents of a dir as another section in the same dired buffer
@@ -3711,9 +3711,15 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
       "\"" '("new terminal" . my/vterm-new)
     )
     :config
+    (defun my/vterm-send-shift-return ()
+      "Send Shift+Enter to vterm as a distinct sequence (by kitty protocol)."
+      (interactive)
+      (vterm-send-string "\e[13;2u"))
+
     (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
     (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
     (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
+    (evil-define-key '(insert normal) vterm-mode-map (kbd "<S-return>") 'my/vterm-send-shift-return)
   )
 
   ;; Allows easy toggling of terminal(vterm) window.

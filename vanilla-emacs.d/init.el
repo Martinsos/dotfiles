@@ -930,7 +930,6 @@ USAGE:
                 org-fontify-quote-and-verse-blocks t ; Make it so they have their own faces applied.
                 org-ellipsis " ▾" ; At the end of the collapes heading / list / drawer / ... .
                 org-log-into-drawer t ; Will log state changes in org into LOGBOOK drawer.
-                org-id-link-to-org-use-id t ; Link to org headings via ids. Create if missing.
   )
   (with-eval-after-load 'org-habit
     (setq-default org-habit-graph-column 60)
@@ -1368,7 +1367,6 @@ USAGE:
     "o C" '("calendar" . (keymap))
     "o C f" '("fetch newest calendar data" . org-gcal-fetch)
     "o C C" '("clear sync tokens" . org-gcal-sync-tokens-clear)
-    "o C F" '("refetch calendar data" . (lambda () (interactive) (org-gcal-sync-tokens-clear) (org-gcal-fetch)))
   )
 )
 
@@ -2503,6 +2501,7 @@ Returns nil if no heading found."
     "d d" '("dired @ buffer" . dired-jump)
     "d D" '("dired @ buffer (other win)" . dired-jump-other-window)
     "d p" '("dired @ project" . project-dired)
+    "d f" '("find file (rec)" . find-name-dired)
   )
   (defface my/dired-metadata-face
     '((t :inherit shadow))
@@ -2636,9 +2635,15 @@ Returns nil if no heading found."
     "\"" '("new terminal" . my/vterm-new)
   )
   :config
+  (defun my/vterm-send-shift-return ()
+    "Send Shift+Enter to vterm as a distinct sequence (by kitty protocol)."
+    (interactive)
+    (vterm-send-string "\e[13;2u"))
+
   (evil-define-key 'normal vterm-mode-map (kbd "C-p") 'vterm-send-up)
   (evil-define-key 'normal vterm-mode-map (kbd "C-n") 'vterm-send-down)
   (evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
+  (evil-define-key '(insert normal) vterm-mode-map (kbd "<S-return>") 'my/vterm-send-shift-return)
 )
 
 ;; Allows easy toggling of terminal(vterm) window.
