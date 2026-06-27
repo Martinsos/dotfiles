@@ -912,8 +912,8 @@ USAGE:
    "m b"  '("babel block" . org-babel-mark-block)
    "m t"  '("subtree" . org-mark-subtree)
    "m e"  '("element" . org-mark-element)
-   "h" '("insert heading" . org-insert-heading)
-   "H" '("insert subheading" . org-insert-subheading)
+   "H" '("insert heading" . org-insert-heading)
+   "h" '("insert subheading" . org-insert-subheading)
    "e" '("export" . org-export-dispatch)
   )
 
@@ -3499,6 +3499,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
                (with-current-buffer buffer
                  (buffer-substring-no-properties (point-min) (point-max))))
   )
+  (add-to-list 'gptel-tools (gptel-get-tool "read_buffer")) ; Enabled by default.
 
   (gptel-make-tool
    :name "modify_buffer"
@@ -3537,6 +3538,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
                      (shr-insert-document dom)
                      (buffer-substring-no-properties (point-min) (point-max))))))
   )
+  (add-to-list 'gptel-tools (gptel-get-tool "read_url")) ; Enabled by default.
 
   (gptel-make-tool
    :name "emacs_eval"
@@ -3603,6 +3605,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
      )
    )
   )
+  (add-to-list 'gptel-tools (gptel-get-tool "emacs_docs")) ; Enabled by default.
 )
 
 (defun my/gptel-collect-region-editor-context ()
