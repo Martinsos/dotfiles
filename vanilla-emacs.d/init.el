@@ -359,7 +359,11 @@ USAGE:
   (setq auto-save-default nil) ; I save so often myself that I don't have a need for this.
   (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
 
-  (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
+  ;; Prevent emacs from persisting any configuration via `customize` system, since I don't want to
+  ;; use it, I want all customization to be done in my config via elisp.  I had it set to
+  ;; /dev/null before but had to set it to temporary file because some packages (i.e. package-vc)
+  ;; actually require it to store some state during the session (which sucks).
+  (setq custom-file (make-temp-file "emacs-custom-" nil ".el"))
 
   ;; Emacs looks at these two to decide if new window should be opened vertically (width threshold) or horizontally (height threshold).
   ;; Caveat: if both thresholds are met, it will prefer opening horizontally.
@@ -3746,6 +3750,18 @@ Returns a structured list of information that can be sent to an LLM."
 (defun my/insert-at-beg-of-line (text)
   (insert (concat (unless (bolp) "\n") text))
 )
+
+(use-package org-ql
+  :ensure nix
+  :defer t)
+
+(use-package org8
+  :load-path ("~/projects/org8" "~/projects/org8/agent-backends")
+  :hook (org-mode . org8-mode)
+  :config
+  (require 'org8-agent-backend-claude-code-vterm)
+  (require 'org8-agent-backend-mock)
+  (require 'org8-dashboard))
 
 (use-package whitespace
   :ensure nil ; built-in

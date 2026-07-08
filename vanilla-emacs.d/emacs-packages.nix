@@ -48,6 +48,7 @@ emacsPkgs: with emacsPkgs; [
   org-gcal
   org-modern
   org-present
+  org-ql
   org-rainbow-tags
   org-super-agenda
   org-tidy

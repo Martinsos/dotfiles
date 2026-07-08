@@ -615,7 +615,11 @@ For testing, I can also first run ~nix build~ and then run ~./result/bin/emacs~ 
     (setq auto-save-default nil) ; I save so often myself that I don't have a need for this.
     (setq create-lockfiles nil) ; I don't have a situation where multiple emacses want to edit the same file.
 
-    (setq custom-file "/dev/null") ; Prevent emacs from adding `customize` system choices to my init.el.
+    ;; Prevent emacs from persisting any configuration via `customize` system, since I don't want to
+    ;; use it, I want all customization to be done in my config via elisp.  I had it set to
+    ;; /dev/null before but had to set it to temporary file because some packages (i.e. package-vc)
+    ;; actually require it to store some state during the session (which sucks).
+    (setq custom-file (make-temp-file "emacs-custom-" nil ".el"))
 
     ;; Emacs looks at these two to decide if new window should be opened vertically (width threshold) or horizontally (height threshold).
     ;; Caveat: if both thresholds are met, it will prefer opening horizontally.
@@ -5522,6 +5526,23 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 - https://www.reddit.com/r/emacs/s/eRJhgE0NxT
 - It is cool because it already has the context I was building up.
 *** TODO Look into "macher" package
+
+** org8
+=org8= (Orgestrator) is my own package, developed at =~/projects/org8=: it turns org headings into AI-agent-driven tasks (git worktree + agent session per task, agent backends, dashboard). While it is in development we load it straight from the disk; its =org-ql= dependency comes via Nix like everything else.
+
+#+begin_src emacs-lisp
+  (use-package org-ql
+    :ensure nix
+    :defer t)
+
+  (use-package org8
+    :load-path ("~/projects/org8" "~/projects/org8/agent-backends")
+    :hook (org-mode . org8-mode)
+    :config
+    (require 'org8-agent-backend-claude-code-vterm)
+    (require 'org8-agent-backend-mock)
+    (require 'org8-dashboard))
+#+end_src
 
 * Formatting
 ** Whitespaces
