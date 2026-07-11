@@ -588,7 +588,6 @@ USAGE:
   ;;   should they all be here, or in their respective packages, or what.
   (my/leader-keys
     "SPC" '("M-x (exec cmd)" . counsel-M-x)
-    "TAB" '("previous buffer" . my/alternate-buffer)
     "RET" '("work diary" . (lambda () (interactive) (org-agenda nil "d")))
 
     "^"   '("top-level keybindings" . which-key-show-top-level)
@@ -2207,20 +2206,6 @@ Returns nil if no heading found."
 (use-package emacs
   :ensure nil
   :config
-  (defun my/alternate-buffer (&optional window)
-    "Switch back and forth between current and last buffer in the current window."
-    (interactive)
-    (cl-destructuring-bind (buf start pos)
-      (or (cl-find (window-buffer window) (window-prev-buffers) :key #'car :test-not #'eq)
-          (list (other-buffer) nil nil)
-      )
-      (if (not buf)
-        (message "Last buffer not found.")
-        (set-window-buffer-start-and-point window buf start pos)
-      )
-    )
-  )
-
   (defun my/open-init-file ()
     "Open the init file."
     (interactive)
@@ -2950,7 +2935,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (persp-mode)
   :config
   (my/leader-keys
-    "v" '("persp (views)" . perspective-map)
+    ";" '("workspaces (persp)" . perspective-map)
     ;; Prefix argument will make it list all buffers.
     "b b" '("switch buffer (persp)" . persp-counsel-switch-buffer)
     "b B" '("switch buffer (all)" .
@@ -2964,7 +2949,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "b d" '("kill buffer (persp)" . persp-kill-buffer*)
     "b s" '("go to scratch (persp)" . persp-switch-to-scratch-buffer)
     "b l" '("list buffers (persp)" . persp-list-buffers)
+    "TAB" '("prev win buffer" . my/persp-alternate-buffer)
   )
+  ;; Remap persp switch from "s" to ";", so I can do "; ;" for switching.
+  (define-key perspective-map (kbd "s") 'nil)
+  (define-key perspective-map (kbd ";") 'persp-switch)
 
   ;; Configures emacs to skip buffers from non-current perspective
   ;; when switching to previous or next buffer using standard commands
@@ -2975,6 +2964,31 @@ It uses external `gitstatusd' program to calculate the actual git status."
 
   ;; TODO: I stopped at https://github.com/nex3/perspective-el#saving-sessions-to-disk.
   ;; Implement save/load. Also check windows layout advice.
+)
+
+(defun my/persp-alternate-buffer (&optional window)
+  "Switch to previous persp buffer in the current window.
+Fall back to first other non-visible persp buffer if none."
+  (interactive)
+  (let ((curr-buf (window-buffer window)))
+    (cl-destructuring-bind (buf start pos)
+      (or (cl-find-if (lambda (entry)
+                        (and (not (eq (car entry) curr-buf))
+                             (persp-is-current-buffer (car entry))))
+                      (window-prev-buffers window))
+          (list (cl-find-if (lambda (b)
+                              (and (not (eq b curr-buf))
+                                   ;; Skip special emacs buffers (prefixed with space).
+                                   (not (string-prefix-p " " (buffer-name b)))
+                                   (not (get-buffer-window b 'visible))))
+                            (persp-current-buffers))
+                nil nil))
+      (if (not buf)
+        (message "No alternate buffer found.")
+        (set-window-buffer-start-and-point window buf start pos)
+      )
+    )
+  )
 )
 
 (use-package lsp-mode
