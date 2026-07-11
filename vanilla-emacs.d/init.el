@@ -2930,8 +2930,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :ensure nix
   :demand t ; Load it immediately, we need perspectives from the very start.
   :custom
-  (persp-suppress-no-prefix-key-warning t) ; Because I set keymap prefix using my/leader-keys.
-  (persp-switch-to-buffer-behavior 'switch) ; Open buffer in its persp instead of adding to current one.
+  ;; Because I set keymap prefix using my/leader-keys.
+  (persp-suppress-no-prefix-key-warning t)
+  ;; Open buffer in its persp instead of adding to current one.
+  (persp-switch-to-buffer-behavior 'switch)
+  (persp-state-default-file (expand-file-name "persp-state" user-emacs-directory))
   :init
   (persp-mode)
   :config
@@ -2962,9 +2965,22 @@ It uses external `gitstatusd' program to calculate the actual git status."
         (lambda (win buff bury-or-kill)
           (not (persp-is-current-buffer buff))))
 
-  ;; TODO: I stopped at https://github.com/nex3/perspective-el#saving-sessions-to-disk.
-  ;; Implement save/load. Also check windows layout advice.
+  ;; Save the persps on exit or when idle for 30 seconds (only once per idle period).
+  (run-with-idle-timer 30 t #'my/persp-state-save-quietly)
+  (add-hook 'kill-emacs-hook #'my/persp-state-save-quietly)
+  ;; Load the saved persps, but only once the rest of the startup is done.
+  (add-hook 'emacs-startup-hook #'my/persp-state-load-if-any)
 )
+
+(defun my/persp-state-save-quietly ()
+  (let ((inhibit-message t))
+    (with-demoted-errors "Failed to save perspective state: %S"
+      (persp-state-save))))
+
+(defun my/persp-state-load-if-any ()
+  (when (and persp-state-default-file (file-exists-p persp-state-default-file))
+    (with-demoted-errors "Failed to load perspective state: %S"
+      (persp-state-load persp-state-default-file))))
 
 (defun my/persp-alternate-buffer (&optional window)
   "Switch to previous persp buffer in the current window.
