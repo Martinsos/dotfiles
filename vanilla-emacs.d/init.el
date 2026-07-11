@@ -666,6 +666,7 @@ USAGE:
     "bR"  '("rename buffer" . rename-buffer)
     "bv"  '("select whole buffer" . mark-whole-buffer)
     "bi"  '("clone indirect buffer" . clone-indirect-buffer-other-window)
+    "bd"  '("kill buffer" . kill-current-buffer)
 
     "e"   '("errors" . (keymap))
 
@@ -2946,7 +2947,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
                 ;; Also, persp-switch-to-buffer-behavior determines if buffer is added to the
                 ;; current persp or if we switch to its persp.
                 (call-interactively #'persp-switch-to-buffer*))))
-    "b d" '("kill buffer (persp)" . persp-kill-buffer*)
     "b s" '("go to scratch (persp)" . persp-switch-to-scratch-buffer)
     "b l" '("list buffers (persp)" . persp-list-buffers)
     "TAB" '("prev win buffer" . my/persp-alternate-buffer)
