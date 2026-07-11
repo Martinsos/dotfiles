@@ -2260,7 +2260,6 @@ Returns nil if no heading found."
   :after (evil)
   :custom
   (ivy-height 20)
-  (ivy-use-virtual-buffers t)  ; Adds recent files and bookmarks and similar to results.
   (ivy-display-style 'fancy)
   (ivy-count-format "(%d/%d) ")  ; (num listed / total num)
   (ivy-extra-directories nil)  ; Don't show ./ and ../
@@ -2302,6 +2301,13 @@ Returns nil if no heading found."
   ;; ivy-initial-inputs-alist defines what to start specific searches with. Default is ^ for all searches,
   ;; which makes queries start from the start of each completion candidate, but I set it to nil to avoid that.
   (setq ivy-initial-inputs-alist nil)
+
+  (my/on-theme-enabled
+    ;; ivy-org face by default inherits from org-level-4, assuming its height
+    ;; is default. However, if it is not, layout of Ivy outputs get messed up,
+    ;; so I ensure here height is indeed set to default.
+    (set-face-attribute 'ivy-org nil :height (face-attribute 'default :height))
+  )
 
   ;; This will enhance specific emacs commands with ivy automatically.
   (ivy-mode 1)
