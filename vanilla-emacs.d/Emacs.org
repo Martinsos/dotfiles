@@ -1140,9 +1140,6 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "w="  '("balance window sizes" . balance-windows)
 
       "b"   '("buffers" . (keymap))
-      "bb"  '("switch buffer" . ivy-switch-buffer)
-      "bd"  '("kill buffer" . kill-current-buffer)
-      "bs"  '("go to scratch" . scratch-buffer)
       "bm"  '("go to messages" . my/switch-to-messages-buffer)
       "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
       "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
@@ -4290,6 +4287,55 @@ And there is ~ediff-revision~ which compares a file to its (git) revision.
 - Allegedly it makes more sense, you can more normally edit the buffers and DX is more intuitive.
   If you also add a hydra, you get the best DX.
 
+* Workspaces
+Concept of workspaces (aka workgroups, views, etc) is about grouping windows and buffers per task or project and easily switching between them, making it easier to multitask.
+
+perspective.el is the most mature and famous package for workspaces management, and one I use below.
+There are many other packages doing the same, but perspective.el sits in a good place of being popular, full-featured, and easy to use.
+Perspective supports not just window layouts but also filters buffers to only those relevant for current perspective (not all packages do that), which I cared about. It also allows saving/loading from disk.
+
+Perspectives are named and have their own list of buffers.
+One perspective can't span multiple frames.
+There is a "global" perspective per each frame where buffers shared between all the perspectives are available.
+
+#+begin_src emacs-lisp
+  (use-package perspective
+    :ensure nix
+    :demand t ; Load it immediately, we need perspectives from the very start.
+    :custom
+    (persp-suppress-no-prefix-key-warning t) ; Because I set keymap prefix using my/leader-keys.
+    (persp-switch-to-buffer-behavior 'switch) ; Open buffer in its persp instead of adding to current one.
+    :init
+    (persp-mode)
+    :config
+    (my/leader-keys
+      "v" '("persp (views)" . perspective-map)
+      ;; Prefix argument will make it list all buffers.
+      "b b" '("switch buffer (persp)" . persp-counsel-switch-buffer)
+      "b B" '("switch buffer (all)" .
+              (lambda () (interactive)
+                (let ((current-prefix-arg '(4)))
+                  ;; We set prefix argument to universal arg (4) above, so buffers from all persps
+                  ;; are shown.
+                  ;; Also, persp-switch-to-buffer-behavior determines if buffer is added to the
+                  ;; current persp or if we switch to its persp.
+                  (call-interactively #'persp-switch-to-buffer*))))
+      "b d" '("kill buffer (persp)" . persp-kill-buffer*)
+      "b s" '("go to scratch (persp)" . persp-switch-to-scratch-buffer)
+      "b l" '("list buffers (persp)" . persp-list-buffers)
+    )
+
+    ;; Configures emacs to skip buffers from non-current perspective
+    ;; when switching to previous or next buffer using standard commands
+    ;; like `previous-buffer' and `next-buffer'.
+    (setq switch-to-prev-buffer-skip
+          (lambda (win buff bury-or-kill)
+            (not (persp-is-current-buffer buff))))
+
+    ;; TODO: I stopped at https://github.com/nex3/perspective-el#saving-sessions-to-disk.
+    ;; Implement save/load. Also check windows layout advice.
+  )
+#+end_src
 * Development
 ** LSP
 :PROPERTIES:

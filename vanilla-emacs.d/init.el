@@ -660,9 +660,6 @@ USAGE:
     "w="  '("balance window sizes" . balance-windows)
 
     "b"   '("buffers" . (keymap))
-    "bb"  '("switch buffer" . ivy-switch-buffer)
-    "bd"  '("kill buffer" . kill-current-buffer)
-    "bs"  '("go to scratch" . scratch-buffer)
     "bm"  '("go to messages" . my/switch-to-messages-buffer)
     "bp"  '("previous buffer" . hydra-buffer-next-prev/previous-buffer)
     "bn"  '("next buffer" . hydra-buffer-next-prev/next-buffer)
@@ -2935,6 +2932,43 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (my/leader-keys
     "f d" '("ediff" . ediff)
   )
+)
+
+(use-package perspective
+  :ensure nix
+  :demand t ; Load it immediately, we need perspectives from the very start.
+  :custom
+  (persp-suppress-no-prefix-key-warning t) ; Because I set keymap prefix using my/leader-keys.
+  (persp-switch-to-buffer-behavior 'switch) ; Open buffer in its persp instead of adding to current one.
+  :init
+  (persp-mode)
+  :config
+  (my/leader-keys
+    "v" '("persp (views)" . perspective-map)
+    ;; Prefix argument will make it list all buffers.
+    "b b" '("switch buffer (persp)" . persp-counsel-switch-buffer)
+    "b B" '("switch buffer (all)" .
+            (lambda () (interactive)
+              (let ((current-prefix-arg '(4)))
+                ;; We set prefix argument to universal arg (4) above, so buffers from all persps
+                ;; are shown.
+                ;; Also, persp-switch-to-buffer-behavior determines if buffer is added to the
+                ;; current persp or if we switch to its persp.
+                (call-interactively #'persp-switch-to-buffer*))))
+    "b d" '("kill buffer (persp)" . persp-kill-buffer*)
+    "b s" '("go to scratch (persp)" . persp-switch-to-scratch-buffer)
+    "b l" '("list buffers (persp)" . persp-list-buffers)
+  )
+
+  ;; Configures emacs to skip buffers from non-current perspective
+  ;; when switching to previous or next buffer using standard commands
+  ;; like `previous-buffer' and `next-buffer'.
+  (setq switch-to-prev-buffer-skip
+        (lambda (win buff bury-or-kill)
+          (not (persp-is-current-buffer buff))))
+
+  ;; TODO: I stopped at https://github.com/nex3/perspective-el#saving-sessions-to-disk.
+  ;; Implement save/load. Also check windows layout advice.
 )
 
 (use-package lsp-mode

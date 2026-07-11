@@ -52,6 +52,7 @@ emacsPkgs: with emacsPkgs; [
   org-rainbow-tags
   org-super-agenda
   org-tidy
+  perspective
   powershell
   projectile
   quick-peek
