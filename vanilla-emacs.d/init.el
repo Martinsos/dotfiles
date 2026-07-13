@@ -2935,6 +2935,7 @@ It uses external `gitstatusd' program to calculate the actual git status."
   ;; Open buffer in its persp instead of adding to current one.
   (persp-switch-to-buffer-behavior 'switch)
   (persp-state-default-file (expand-file-name "persp-state" user-emacs-directory))
+  (persp-show-modestring nil)
   :init
   (persp-mode)
   :config
@@ -3826,11 +3827,16 @@ Returns a structured list of information that can be sent to an LLM."
   :defer t)
 
 (use-package org8
-  :load-path ("~/projects/org8" "~/projects/org8/agent-backends")
+  :load-path ("~/projects/org8"
+              "~/projects/org8/agent-backends"
+              "~/projects/org8/workspace-backends")
   :hook (org-mode . org8-mode)
+  :custom
+  (org8-workspace-backend 'perspective)
   :config
   (require 'org8-agent-backend-claude-code-vterm)
   (require 'org8-agent-backend-mock)
+  (require 'org8-workspace-backend-perspective)
   (require 'org8-dashboard))
 
 (use-package whitespace

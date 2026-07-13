@@ -4300,6 +4300,7 @@ There is a "global" perspective per each frame where buffers shared between all 
     ;; Open buffer in its persp instead of adding to current one.
     (persp-switch-to-buffer-behavior 'switch)
     (persp-state-default-file (expand-file-name "persp-state" user-emacs-directory))
+    (persp-show-modestring nil)
     :init
     (persp-mode)
     :config
@@ -5615,7 +5616,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 *** TODO Look into "macher" package
 
 ** org8
-=org8= (Orgestrator) is my own package, developed at =~/projects/org8=: it turns org headings into AI-agent-driven tasks (git worktree + agent session per task, agent backends, dashboard). While it is in development we load it straight from the disk; its =org-ql= dependency comes via Nix like everything else.
+=org8= (Orgestrator) is my own package, developed at =~/projects/org8=: it turns org headings into AI-agent-driven tasks (git worktree + agent session per task, agent backends, dashboard). While it is in development we load it straight from the disk; its =org-ql= dependency comes via Nix like everything else. Each task gets its own perspective (org8's workspace backend hooks into perspective.el, which I use anyway): opening a task from the dashboard drops me into its perspective with the agent session and dired.
 
 #+begin_src emacs-lisp
   (use-package org-ql
@@ -5623,11 +5624,16 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
     :defer t)
 
   (use-package org8
-    :load-path ("~/projects/org8" "~/projects/org8/agent-backends")
+    :load-path ("~/projects/org8"
+                "~/projects/org8/agent-backends"
+                "~/projects/org8/workspace-backends")
     :hook (org-mode . org8-mode)
+    :custom
+    (org8-workspace-backend 'perspective)
     :config
     (require 'org8-agent-backend-claude-code-vterm)
     (require 'org8-agent-backend-mock)
+    (require 'org8-workspace-backend-perspective)
     (require 'org8-dashboard))
 #+end_src
 
