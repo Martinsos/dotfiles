@@ -328,7 +328,7 @@ USAGE:
   (menu-bar-mode -1)
   (setq ring-bell-function 'ignore)
   (set-fringe-mode 10)
-  (setq-default fill-column 100)
+  (setq-default fill-column 80)
   (column-number-mode) ; Show row:column in mode line.
   (visual-line-mode 1) ; Treat wrapped lines as multiple lines when moving around.
   (global-hl-line-mode 1) ; Highlights the line in which cursor is.
@@ -2930,12 +2930,12 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :ensure nix
   :demand t ; Load it immediately, we need perspectives from the very start.
   :custom
+  (persp-modestring-short t) ; Show only current persp, not all of them.
   ;; Because I set keymap prefix using my/leader-keys.
   (persp-suppress-no-prefix-key-warning t)
   ;; Open buffer in its persp instead of adding to current one.
   (persp-switch-to-buffer-behavior 'switch)
   (persp-state-default-file (expand-file-name "persp-state" user-emacs-directory))
-  (persp-show-modestring nil)
   :init
   (persp-mode)
   :config
