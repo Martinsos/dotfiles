@@ -515,6 +515,7 @@ USAGE:
 (use-package tab-bar
   :ensure nil ; built-in
   :custom
+  ;; We don't show any tabs, only global information.
   ;; NOTE: By adding tab-bar-format-global here, a side effect happens: the
   ;; modeline(s) will stop showing global info in themselves.
   ;; This is a resonable default as it avoids showing same info in multiple

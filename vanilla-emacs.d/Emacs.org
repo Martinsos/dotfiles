@@ -943,10 +943,15 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
   )
 #+end_src
 
+"tab bar" in emacs is a frame-global line at the top of the frame.
+It is intended to show tabs, but it can be used for anything, and that is what I do here, I use it as a way to display frame-global information so it is not repeated in modeline of every window where it usually doesn't even fit.
+Btw I wish I could send it to the bottom of emacs, but there is no way to do that.
+
 #+begin_src emacs-lisp
   (use-package tab-bar
     :ensure nil ; built-in
     :custom
+    ;; We don't show any tabs, only global information.
     ;; NOTE: By adding tab-bar-format-global here, a side effect happens: the
     ;; modeline(s) will stop showing global info in themselves.
     ;; This is a resonable default as it avoids showing same info in multiple
