@@ -943,6 +943,26 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
   )
 #+end_src
 
+#+begin_src emacs-lisp
+  (use-package tab-bar
+    :ensure nil ; built-in
+    :custom
+    ;; NOTE: By adding tab-bar-format-global here, a side effect happens: the
+    ;; modeline(s) will stop showing global info in themselves.
+    ;; This is a resonable default as it avoids showing same info in multiple
+    ;; places, but it can be quite unexpected if you don't know about it.
+    (tab-bar-format '(tab-bar-format-align-right tab-bar-format-global))
+    (tab-bar-show t)
+    :config
+    (tab-bar-mode 1)
+    ;; Some themes (e.g. doom ones) make the base tab-bar face invisible (fg =
+    ;; bg) to hide stray filler glyphs, but unfortunately that also makes our
+    ;; "global" info invisible, so we revert that.
+    (my/on-theme-enabled
+      (set-face-attribute 'tab-bar nil :foreground (face-attribute 'default :foreground)))
+  )
+#+end_src
+
 ** Install Nerd font                              :manual_setup:external_dep:
 In order for =doom-modeline= to be able to render symbols, we need a Nerd font installed.
 Easiest method is to run ~nerd-icons-install-fonts~ here in emacs, which will download the =Symbols Nerd Font Mono= font which only brings the symbols and will set up modeline to use that specific font for symbols.

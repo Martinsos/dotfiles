@@ -512,6 +512,24 @@ USAGE:
   (doom-modeline-mode 1)
 )
 
+(use-package tab-bar
+  :ensure nil ; built-in
+  :custom
+  ;; NOTE: By adding tab-bar-format-global here, a side effect happens: the
+  ;; modeline(s) will stop showing global info in themselves.
+  ;; This is a resonable default as it avoids showing same info in multiple
+  ;; places, but it can be quite unexpected if you don't know about it.
+  (tab-bar-format '(tab-bar-format-align-right tab-bar-format-global))
+  (tab-bar-show t)
+  :config
+  (tab-bar-mode 1)
+  ;; Some themes (e.g. doom ones) make the base tab-bar face invisible (fg =
+  ;; bg) to hide stray filler glyphs, but unfortunately that also makes our
+  ;; "global" info invisible, so we revert that.
+  (my/on-theme-enabled
+    (set-face-attribute 'tab-bar nil :foreground (face-attribute 'default :foreground)))
+)
+
 (use-package emacs
   :ensure nil
   :config
