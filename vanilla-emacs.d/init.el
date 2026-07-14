@@ -520,16 +520,29 @@ USAGE:
   ;; modeline(s) will stop showing global info in themselves.
   ;; This is a resonable default as it avoids showing same info in multiple
   ;; places, but it can be quite unexpected if you don't know about it.
-  (tab-bar-format '(tab-bar-format-align-right tab-bar-format-global))
+  ;; NOTE: I am not using `tab-bar-format-align-right' because it was problematic,
+  ;; first render till next change of content would sometimes go into two rows
+  ;; because of wrong calculation of its width before the theme settled.
+  ;; NOTE: Space at the end prevents styling from last segment stretch
+  ;; the whole remaining length of the tab bar.
+  (tab-bar-format '(tab-bar-format-global
+                    my/tab-bar-format-padding
+                   ))
   (tab-bar-show t)
   :config
   (tab-bar-mode 1)
   ;; Some themes (e.g. doom ones) make the base tab-bar face invisible (fg =
   ;; bg) to hide stray filler glyphs, but unfortunately that also makes our
   ;; "global" info invisible, so we revert that.
+  ;; We also add an invisible box (same color as bg) around the content:
+  ;; it acts as padding, making the bar airier.
   (my/on-theme-enabled
-    (set-face-attribute 'tab-bar nil :foreground (face-attribute 'default :foreground)))
+    (set-face-attribute 'tab-bar nil
+      :foreground (face-attribute 'default :foreground)
+      :box `(:line-width (6 . 6) :color ,(face-background 'tab-bar nil 'default))))
 )
+
+(defun my/tab-bar-format-padding () " ")
 
 (use-package emacs
   :ensure nil
