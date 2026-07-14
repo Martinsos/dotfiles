@@ -2978,6 +2978,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
   (define-key perspective-map (kbd "s") 'nil)
   (define-key perspective-map (kbd ";") 'persp-switch)
 
+  (define-key perspective-map (kbd "TAB") 'persp-switch-last)
+
   ;; Configures emacs to skip buffers from non-current perspective
   ;; when switching to previous or next buffer using standard commands
   ;; like `previous-buffer' and `next-buffer'.
@@ -3856,7 +3858,8 @@ Returns a structured list of information that can be sent to an LLM."
   (require 'org8-agent-backend-claude-code-vterm)
   (require 'org8-agent-backend-mock)
   (require 'org8-workspace-backend-perspective)
-  (require 'org8-dashboard))
+  (require 'org8-dashboard)
+)
 
 (use-package whitespace
   :ensure nil ; built-in

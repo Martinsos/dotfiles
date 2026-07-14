@@ -4349,6 +4349,8 @@ There is a "global" perspective per each frame where buffers shared between all 
     (define-key perspective-map (kbd "s") 'nil)
     (define-key perspective-map (kbd ";") 'persp-switch)
 
+    (define-key perspective-map (kbd "TAB") 'persp-switch-last)
+
     ;; Configures emacs to skip buffers from non-current perspective
     ;; when switching to previous or next buffer using standard commands
     ;; like `previous-buffer' and `next-buffer'.
@@ -5659,7 +5661,8 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
     (require 'org8-agent-backend-claude-code-vterm)
     (require 'org8-agent-backend-mock)
     (require 'org8-workspace-backend-perspective)
-    (require 'org8-dashboard))
+    (require 'org8-dashboard)
+  )
 #+end_src
 
 * Formatting
