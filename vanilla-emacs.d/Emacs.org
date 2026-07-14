@@ -5662,6 +5662,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
     (require 'org8-agent-backend-mock)
     (require 'org8-workspace-backend-perspective)
     (require 'org8-dashboard)
+    (org8-micro-dashboard-mode)
   )
 #+end_src
 

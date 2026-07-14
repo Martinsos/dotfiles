@@ -3859,6 +3859,7 @@ Returns a structured list of information that can be sent to an LLM."
   (require 'org8-agent-backend-mock)
   (require 'org8-workspace-backend-perspective)
   (require 'org8-dashboard)
+  (org8-micro-dashboard-mode)
 )
 
 (use-package whitespace
