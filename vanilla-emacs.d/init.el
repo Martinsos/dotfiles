@@ -2990,7 +2990,8 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "; b a" '("add buffer" . persp-add-buffer)
     "; b A" '("add buffer (exclusive)" . persp-set-buffer)
     "; b g" '("add buffer (global)" . persp-add-buffer-to-frame-global)
-    "; b d" '("remove buffer" . persp-remove-buffer)
+    "; b d" '("remove buffer (current)" . (lambda () (interactive) (persp-remove-buffer (current-buffer))))
+    "; b D" '("remove buffer (list)" . persp-remove-buffer)
   )
   (my/leader-keys ; Global keybindings now using persp.
     ;; Prefix argument will make it list all buffers.
