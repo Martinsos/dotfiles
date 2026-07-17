@@ -2971,8 +2971,28 @@ It uses external `gitstatusd' program to calculate the actual git status."
   :init
   (persp-mode)
   :config
-  (my/leader-keys
-    ";" '("workspaces (persp)" . perspective-map)
+  (my/leader-keys ; My persp keymap.
+    ";" '("workspaces (persp)" . (keymap))
+    "; ;" '("switch persp (list)" . persp-switch)
+    "; `" '("switch persp (by num)" . persp-switch-by-number)
+    "; TAB" '("last persp" . persp-switch-last)
+    "; n" '("next persp" . persp-next)
+    "; p" '("prev persp" . persp-prev)
+    "; d" '("kill persp" . persp-kill)
+    "; i" '("import persp" . persp-import)
+    "; m" '("merge persp" . persp-merge)
+    "; u" '("unmerge persp" . persp-unmerge)
+    "; r" '("rename persp" . persp-rename)
+    "; C-l" '("load persp" . persp-state-load)
+    "; C-s" '("save persp" . persp-state-save)
+    ;;; Buffers operations.
+    "; b" '("buffers" . (keymap))
+    "; b a" '("add buffer" . persp-add-buffer)
+    "; b A" '("add buffer (exclusive)" . persp-set-buffer)
+    "; b g" '("add buffer (global)" . persp-add-buffer-to-frame-global)
+    "; b d" '("remove buffer" . persp-remove-buffer)
+  )
+  (my/leader-keys ; Global keybindings now using persp.
     ;; Prefix argument will make it list all buffers.
     "b b" '("switch buffer (persp)" . persp-counsel-switch-buffer)
     "b B" '("switch buffer (all)" .
@@ -2987,11 +3007,6 @@ It uses external `gitstatusd' program to calculate the actual git status."
     "b l" '("list buffers (persp)" . persp-list-buffers)
     "TAB" '("prev win buffer" . my/persp-alternate-buffer)
   )
-  ;; Remap persp switch from "s" to ";", so I can do "; ;" for switching.
-  (define-key perspective-map (kbd "s") 'nil)
-  (define-key perspective-map (kbd ";") 'persp-switch)
-
-  (define-key perspective-map (kbd "TAB") 'persp-switch-last)
 
   ;; Configures emacs to skip buffers from non-current perspective
   ;; when switching to previous or next buffer using standard commands
@@ -3872,7 +3887,12 @@ Returns a structured list of information that can be sent to an LLM."
   (require 'org8-agent-backend-mock)
   (require 'org8-workspace-backend-perspective)
   (require 'org8-dashboard)
+
   (org8-micro-dashboard-mode)
+
+  (my/leader-keys
+    "8" '("org8" . org8-command-map)
+  )
 )
 
 (use-package whitespace
