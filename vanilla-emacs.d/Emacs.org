@@ -4409,7 +4409,11 @@ There is a "global" perspective per each frame where buffers shared between all 
   (defun my/persp-state-load-if-any ()
     (when (and persp-state-default-file (file-exists-p persp-state-default-file))
       (with-demoted-errors "Failed to load perspective state: %S"
-        (persp-state-load persp-state-default-file))))
+        (persp-state-load persp-state-default-file)
+        ;; Additionally switch to initial frame ("main" by default) after loading,
+        ;; because load switches to last open persp when they where saved.
+        (persp-switch persp-initial-frame-name)
+      )))
 #+end_src
 
 #+begin_src emacs-lisp
@@ -5694,6 +5698,7 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
     :hook (org-mode . org8-mode)
     :custom
     (org8-workspace-backend 'perspective)
+    (org8-agent-backends '(claude-code-vterm opencode-vterm))
     :config
     (require 'org8-agent-backend-claude-code-vterm)
     (require 'org8-agent-backend-mock)

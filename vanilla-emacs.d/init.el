@@ -3036,7 +3036,11 @@ It uses external `gitstatusd' program to calculate the actual git status."
 (defun my/persp-state-load-if-any ()
   (when (and persp-state-default-file (file-exists-p persp-state-default-file))
     (with-demoted-errors "Failed to load perspective state: %S"
-      (persp-state-load persp-state-default-file))))
+      (persp-state-load persp-state-default-file)
+      ;; Additionally switch to initial frame ("main" by default) after loading,
+      ;; because load switches to last open persp when they where saved.
+      (persp-switch persp-initial-frame-name)
+    )))
 
 (defun my/persp-alternate-buffer (&optional window)
   "Switch to previous persp buffer in the current window.
@@ -3891,6 +3895,7 @@ Returns a structured list of information that can be sent to an LLM."
   :hook (org-mode . org8-mode)
   :custom
   (org8-workspace-backend 'perspective)
+  (org8-agent-backends '(claude-code-vterm opencode-vterm))
   :config
   (require 'org8-agent-backend-claude-code-vterm)
   (require 'org8-agent-backend-mock)
