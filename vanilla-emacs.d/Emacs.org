@@ -772,12 +772,17 @@ This measures how long each package took. Run ~use-package-report~ to see the re
 :ID:       a385c5f0-7889-4e87-a92c-8b2abe2df4d6
 :END:
 #+begin_src emacs-lisp
+  ;; I allow setting server name via env var in case we are running multiple
+  ;; emacs instances (e.g. for testing) and want to control server names for each.
+  (when-let* ((name (getenv "EMACS_SERVER_NAME")))
+    (setq server-name name))
+
   (add-hook 'after-init-hook
             (lambda ()
               (unless (daemonp)
                 (progn
                   (server-start)
-                  (message "Started emacs server.")))))
+                  (message "Started emacs server under name '%s'." server-name)))))
 #+end_src
 * Appearance
 ** Theme
@@ -5672,17 +5677,20 @@ How can one know he needs to press enter on it? It is quite non-intuitive. It sh
 *** TODO Look into "macher" package
 
 ** org8
-=org8= (Orgestrator) is my own package, developed at =~/projects/org8=: it turns org headings into AI-agent-driven tasks (git worktree + agent session per task, agent backends, dashboard). While it is in development we load it straight from the disk; its =org-ql= dependency comes via Nix like everything else. Each task gets its own perspective (org8's workspace backend hooks into perspective.el, which I use anyway): opening a task from the dashboard drops me into its perspective with the agent session and dired.
+=org8= (Orgestrator) is my own package, developed at =~/projects/org8=: it turns org headings into AI-agent-driven tasks (git worktree + agent session per task, agent backends, dashboard). While it is in development we load it straight from the disk (from =~/projects/org8= by default, or from the directory given by the =ORG8_DIR= env var — org8's =dev/my-emacs= script sets it to run a sandboxed Emacs against a specific worktree); its =org-ql= dependency comes via Nix like everything else. Each task gets its own perspective (org8's workspace backend hooks into perspective.el, which I use anyway): opening a task from the dashboard drops me into its perspective with the agent session and dired.
 
 #+begin_src emacs-lisp
   (use-package org-ql
     :ensure nix
     :defer t)
 
+  (defvar my/org8-pkg-dir (or (getenv "ORG8_PKG_DIR") "~/projects/org8")
+    "Directory to load the org8 package from.")
+
   (use-package org8
-    :load-path ("~/projects/org8"
-                "~/projects/org8/agent-backends"
-                "~/projects/org8/workspace-backends")
+    :load-path ((lambda () my/org8-pkg-dir)
+                (lambda () (expand-file-name "agent-backends" my/org8-pkg-dir))
+                (lambda () (expand-file-name "workspace-backends" my/org8-pkg-dir)))
     :hook (org-mode . org8-mode)
     :custom
     (org8-workspace-backend 'perspective)

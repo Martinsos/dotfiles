@@ -417,12 +417,17 @@ USAGE:
  )
 )
 
+;; I allow setting server name via env var in case we are running multiple
+;; emacs instances (e.g. for testing) and want to control server names for each.
+(when-let* ((name (getenv "EMACS_SERVER_NAME")))
+  (setq server-name name))
+
 (add-hook 'after-init-hook
           (lambda ()
             (unless (daemonp)
               (progn
                 (server-start)
-                (message "Started emacs server.")))))
+                (message "Started emacs server under name '%s'." server-name)))))
 
 (defmacro my/on-theme-enabled (&rest body)
   "Execute BODY now if there is any enabled theme, and on every future theme enable."
@@ -3876,10 +3881,13 @@ Returns a structured list of information that can be sent to an LLM."
   :ensure nix
   :defer t)
 
+(defvar my/org8-pkg-dir (or (getenv "ORG8_PKG_DIR") "~/projects/org8")
+  "Directory to load the org8 package from.")
+
 (use-package org8
-  :load-path ("~/projects/org8"
-              "~/projects/org8/agent-backends"
-              "~/projects/org8/workspace-backends")
+  :load-path ((lambda () my/org8-pkg-dir)
+              (lambda () (expand-file-name "agent-backends" my/org8-pkg-dir))
+              (lambda () (expand-file-name "workspace-backends" my/org8-pkg-dir)))
   :hook (org-mode . org8-mode)
   :custom
   (org8-workspace-backend 'perspective)
