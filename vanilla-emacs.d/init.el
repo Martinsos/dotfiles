@@ -401,6 +401,8 @@ USAGE:
     (dolist (dir (with-temp-buffer (insert-file-contents f) (read (current-buffer))))
       (add-to-list 'safe-local-variable-directories dir))))
 
+(add-to-list 'safe-local-variable-values '(flycheck-emacs-lisp-load-path . (".")))
+
 (add-hook
  'emacs-startup-hook
  (lambda ()
@@ -733,6 +735,8 @@ USAGE:
     "pp"  '("switch project" . counsel-projectile-switch-project)
     "pr"  '("find and replace" . projectile-replace)
     "px"  '("compile project" . projectile-compile-project)
+    "p!"  '("run cmd in root" . projectile-run-shell-command-in-root)
+    "pt"  '("run term in root" . projectile-run-vterm-other-window)
     "p."  '("all commands" . projectile-command-map)
   )
 
@@ -886,36 +890,35 @@ USAGE:
   :ensure nil ; built-in
   :defer t
   :hook
-  (org-mode . (lambda ()
-    ;; Let's get some breathing space:
-    (setq-local left-margin-width 2
-                right-margin-width 2)
-    ;; We have to reset buffer for margin changes to take effect.
-    ;; We use 'set-window-buffer' for that.
-    ;; We want to do it only for displayed buffers though,
-    ;; otherwise it would put display buffers that weren't visible moment ago
-    ;; (e.g. buffers of org files that org-agenda pulls data from),
-    ;; so we do it only for buffers that have window.
-    (when-let* ((b (current-buffer))
-                (w (get-buffer-window b)))
-      (set-window-buffer w b)
-    )
+  ((org-mode . (lambda ()
+     ;; Let's get some breathing space:
+     (setq-local left-margin-width 2
+                 right-margin-width 2)
+     ;; We have to reset buffer for margin changes to take effect.
+     ;; We use 'set-window-buffer' for that.
+     ;; We want to do it only for displayed buffers though,
+     ;; otherwise it would put display buffers that weren't visible moment ago
+     ;; (e.g. buffers of org files that org-agenda pulls data from),
+     ;; so we do it only for buffers that have window.
+     (when-let* ((b (current-buffer))
+                 (w (get-buffer-window b)))
+       (set-window-buffer w b)
+     )
 
-    ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
-    ;; to continue writing line indented with "enter", instead of always continue fully indented.
-    (setq-local evil-auto-indent nil)
+     ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
+     ;; to continue writing line indented with "enter", instead of always continue fully indented.
+     (setq-local evil-auto-indent nil)
 
-    (visual-line-mode 1)
+     (visual-line-mode 1)
 
-    (my/variable-pitch-mode-on)
+     (my/variable-pitch-mode-on)
 
-    ;; Unfolds parent headings when jumping to a folded location in the file.
-    (reveal-mode 1)
+     ;; Unfolds parent headings when jumping to a folded location in the file.
+     (reveal-mode 1)
 
-    ;; I often wouldn't notice bolded words are bolded, especially with the dark themes,
-    ;; so I here also add some color to them.
-    (face-remap-add-relative 'bold '(:inherit font-lock-keyword-face))
-  ))
+     ;; I often wouldn't notice bolded words are bolded, especially with the dark themes,
+     ;; so I here also add some color to them.
+     (face-remap-add-relative 'bold '(:inherit font-lock-keyword-face)))))
   :init
   (setq org-export-backends '(ascii html icalendar latex odt md))
   :config
@@ -1400,7 +1403,7 @@ USAGE:
   (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
 				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
 				    ))
-
+  (setq org-gcal-remove-api-cancelled-events t)
   (my/leader-keys
     "o C" '("calendar" . (keymap))
     "o C f" '("fetch newest calendar data" . org-gcal-fetch)
@@ -1965,8 +1968,11 @@ Returns nil if no heading found."
                     (:name "📥 Inbox"
                            :order 2
                            :and (:category "task" :todo "INBOX"))
-                    (:name "📚 To read"
+                    (:name "✍️ Content ideas"
                            :order 4
+                           :and (:category "task" :tag "content_idea"))
+                    (:name "📚 To read"
+                           :order 5
                            :and (:category "task" :tag "read"))
                     (:name "📋 Tasks"
                            :order 3
@@ -2294,7 +2300,9 @@ Returns nil if no heading found."
     (kbd "C-j") 'ivy-next-line
     (kbd "C-k") 'ivy-previous-line
     (kbd "C-l") 'ivy-alt-done
-    (kbd "TAB") 'ivy-alt-done)
+    (kbd "TAB") 'ivy-alt-done
+    (kbd "RET") 'ivy-done
+    (kbd "C-<return>") 'ivy-immediate-done)
   (evil-define-key '(insert normal) ivy-switch-buffer-map
     (kbd "C-j") 'ivy-next-line
     (kbd "C-k") 'ivy-previous-line
@@ -2468,29 +2476,40 @@ Returns nil if no heading found."
 )
 
 (use-package magit
-  :ensure nix
-  :defer t
-  :hook (magit-mode . (lambda () (setq truncate-lines nil)))
-  :custom
-  (magit-diff-refine-hunk 'all) ; Show char/word diffs, not just lines.
-  :config
-  (general-define-key
-   :keymaps 'magit-diff-section-map
-   ;; Originally it opens file in the same window, but I prefer when it opens in another window.
-   "C-<return>" #'magit-diff-visit-worktree-file-other-window
+    :ensure nix
+    :defer t
+    :hook (magit-mode . (lambda () (setq truncate-lines nil)))
+    :custom
+    (magit-diff-refine-hunk 'all) ; Show char/word diffs, not just lines.
+    :config
+    (general-define-key
+     :keymaps 'magit-diff-section-map
+     ;; Originally it opens file in the same window, but I prefer when it opens in another window.
+     "C-<return>" #'magit-diff-visit-worktree-file-other-window
+    )
+    (add-hook 'magit-status-sections-hook #'magit-insert-worktrees t)
+    (my/on-theme-enabled
+      (set-face-attribute 'magit-branch-current nil :box t)
+    )
   )
-  (add-hook 'magit-status-sections-hook #'magit-insert-worktrees t)
-  (my/on-theme-enabled
-    (set-face-attribute 'magit-branch-current nil :box t)
+  ;; I define this outside of (use-package magit) because later is deferred.
+  (my/leader-keys
+    "gg" 'magit
+    "gf" '("magit menu (current file)" . magit-file-dispatch)
+    "gF" '("magit find file" . magit-find-file)
+    "gb" '("magit blame" . magit-blame)
   )
-)
-;; I define this outside of (use-package magit) because later is deferred.
-(my/leader-keys
-  "gg" 'magit
-  "gf" '("magit menu (current file)" . magit-file-dispatch)
-  "gF" '("magit find file" . magit-find-file)
-  "gb" '("magit blame" . magit-blame)
-)
+
+  (defun my/magit-pull-other-branch (branch)
+    "Pull local BRANCH from its remote without checking it out.
+Fail if can't fast forward it."
+    (interactive
+     (list (magit-read-local-branch "Other branch to pull")))
+    (let* ((remote (or (magit-get "branch" branch "remote")
+                       (magit-read-remote (format "Remote for %s" branch)))))
+      (magit-run-git-async
+       "fetch" remote
+       (format "refs/heads/%s:refs/heads/%s" branch branch))))
 
 ;; TODO: Commented out till I update magit to latest, too complicated to get it working otherwise.
 ;; (use-package forge
@@ -3623,7 +3642,7 @@ Fall back to first other non-visible persp buffer if none."
    :name "read_buffer"
    :description "Return the contents of an emacs buffer."
    :category "emacs"
-   :include nil
+   :include t
    :args (list '(:name "buffer"
                  :type string
                  :description "the name of the buffer whose contents are to be retrieved"))
@@ -3640,7 +3659,7 @@ Fall back to first other non-visible persp buffer if none."
    :description "Replace the contents of an existing buffer with new content."
    :category "emacs"
    :confirm t
-   :include nil
+   :include t
    :args (list '(:name "buffer"
                  :type string
                  :description "the name of the buffer to modify")

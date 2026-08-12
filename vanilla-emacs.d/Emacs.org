@@ -695,6 +695,12 @@ but I wanted to avoid this as I don't use "custom" file.
       (dolist (dir (with-temp-buffer (insert-file-contents f) (read (current-buffer))))
         (add-to-list 'safe-local-variable-directories dir))))
 #+end_src
+
+I also add here some variable values directly when I don't want to list all the projects (or don't know them in advance):
+
+#+begin_src emacs-lisp
+  (add-to-list 'safe-local-variable-values '(flycheck-emacs-lisp-load-path . (".")))
+#+end_src
 * Startup
 ** Pretty startup
 :PROPERTIES:
@@ -1219,6 +1225,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
       "pp"  '("switch project" . counsel-projectile-switch-project)
       "pr"  '("find and replace" . projectile-replace)
       "px"  '("compile project" . projectile-compile-project)
+      "p!"  '("run cmd in root" . projectile-run-shell-command-in-root)
+      "pt"  '("run term in root" . projectile-run-vterm-other-window)
       "p."  '("all commands" . projectile-command-map)
     )
 
@@ -1416,36 +1424,35 @@ So then you go into "text scale resizing mode" to put it that way, and you can e
     :ensure nil ; built-in
     :defer t
     :hook
-    (org-mode . (lambda ()
-      ;; Let's get some breathing space:
-      (setq-local left-margin-width 2
-                  right-margin-width 2)
-      ;; We have to reset buffer for margin changes to take effect.
-      ;; We use 'set-window-buffer' for that.
-      ;; We want to do it only for displayed buffers though,
-      ;; otherwise it would put display buffers that weren't visible moment ago
-      ;; (e.g. buffers of org files that org-agenda pulls data from),
-      ;; so we do it only for buffers that have window.
-      (when-let* ((b (current-buffer))
-                  (w (get-buffer-window b)))
-        (set-window-buffer w b)
-      )
+    ((org-mode . (lambda ()
+       ;; Let's get some breathing space:
+       (setq-local left-margin-width 2
+                   right-margin-width 2)
+       ;; We have to reset buffer for margin changes to take effect.
+       ;; We use 'set-window-buffer' for that.
+       ;; We want to do it only for displayed buffers though,
+       ;; otherwise it would put display buffers that weren't visible moment ago
+       ;; (e.g. buffers of org files that org-agenda pulls data from),
+       ;; so we do it only for buffers that have window.
+       (when-let* ((b (current-buffer))
+                   (w (get-buffer-window b)))
+         (set-window-buffer w b)
+       )
 
-      ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
-      ;; to continue writing line indented with "enter", instead of always continue fully indented.
-      (setq-local evil-auto-indent nil)
+       ;; Having it off allows me to easily, in bullet points, go to start of line with "o" or
+       ;; to continue writing line indented with "enter", instead of always continue fully indented.
+       (setq-local evil-auto-indent nil)
 
-      (visual-line-mode 1)
+       (visual-line-mode 1)
 
-      (my/variable-pitch-mode-on)
+       (my/variable-pitch-mode-on)
 
-      ;; Unfolds parent headings when jumping to a folded location in the file.
-      (reveal-mode 1)
+       ;; Unfolds parent headings when jumping to a folded location in the file.
+       (reveal-mode 1)
 
-      ;; I often wouldn't notice bolded words are bolded, especially with the dark themes,
-      ;; so I here also add some color to them.
-      (face-remap-add-relative 'bold '(:inherit font-lock-keyword-face))
-    ))
+       ;; I often wouldn't notice bolded words are bolded, especially with the dark themes,
+       ;; so I here also add some color to them.
+       (face-remap-add-relative 'bold '(:inherit font-lock-keyword-face)))))
     :init
     (setq org-export-backends '(ascii html icalendar latex odt md))
     :config
@@ -2016,7 +2023,7 @@ Two most popular emacs packages for pulling in calendar events into org file are
     (setq org-gcal-fetch-file-alist `(("martin@wasp-lang.dev" . ,my/calendar-events-wasp-org-file)
   				    ("sosic.martin@gmail.com" . ,my/calendar-events-private-org-file)
   				    ))
-
+    (setq org-gcal-remove-api-cancelled-events t)
     (my/leader-keys
       "o C" '("calendar" . (keymap))
       "o C f" '("fetch newest calendar data" . org-gcal-fetch)
@@ -2776,8 +2783,11 @@ Order of headings below is important because they depend on each other.
                       (:name "📥 Inbox"
                              :order 2
                              :and (:category "task" :todo "INBOX"))
-                      (:name "📚 To read"
+                      (:name "✍️ Content ideas"
                              :order 4
+                             :and (:category "task" :tag "content_idea"))
+                      (:name "📚 To read"
+                             :order 5
                              :and (:category "task" :tag "read"))
                       (:name "📋 Tasks"
                              :order 3
@@ -3191,7 +3201,9 @@ It automatically balances margins in order to put the content in the middle, wit
         (kbd "C-j") 'ivy-next-line
         (kbd "C-k") 'ivy-previous-line
         (kbd "C-l") 'ivy-alt-done
-        (kbd "TAB") 'ivy-alt-done)
+        (kbd "TAB") 'ivy-alt-done
+        (kbd "RET") 'ivy-done
+        (kbd "C-<return>") 'ivy-immediate-done)
       (evil-define-key '(insert normal) ivy-switch-buffer-map
         (kbd "C-j") 'ivy-next-line
         (kbd "C-k") 'ivy-previous-line
@@ -3492,6 +3504,17 @@ I install it via Nix together with Emacs.
     "gF" '("magit find file" . magit-find-file)
     "gb" '("magit blame" . magit-blame)
   )
+
+  (defun my/magit-pull-other-branch (branch)
+    "Pull local BRANCH from its remote without checking it out.
+Fail if can't fast forward it."
+    (interactive
+     (list (magit-read-local-branch "Other branch to pull")))
+    (let* ((remote (or (magit-get "branch" branch "remote")
+                       (magit-read-remote (format "Remote for %s" branch)))))
+      (magit-run-git-async
+       "fetch" remote
+       (format "refs/heads/%s:refs/heads/%s" branch branch))))
 
 #+end_src
 
@@ -5333,7 +5356,7 @@ I created my own major mode for highlighting the ascii diagrams.
      :name "read_buffer"
      :description "Return the contents of an emacs buffer."
      :category "emacs"
-     :include nil
+     :include t
      :args (list '(:name "buffer"
                    :type string
                    :description "the name of the buffer whose contents are to be retrieved"))
@@ -5350,7 +5373,7 @@ I created my own major mode for highlighting the ascii diagrams.
      :description "Replace the contents of an existing buffer with new content."
      :category "emacs"
      :confirm t
-     :include nil
+     :include t
      :args (list '(:name "buffer"
                    :type string
                    :description "the name of the buffer to modify")
