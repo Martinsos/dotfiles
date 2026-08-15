@@ -2690,6 +2690,9 @@ Fail if can't fast forward it."
   (evil-define-key '(insert normal) vterm-mode-map (kbd "<S-return>") 'my/vterm-send-shift-return)
 )
 
+;; My custom logic below
+; =============================================================================
+
 ;;; Creating, listing and navigating the vterm buffers
 ;; ----------------------------------------------------------
 
@@ -2800,8 +2803,8 @@ It shows most recent vterm buffer not already visible, or creates new one if no 
 
 (add-to-list 'window-persistent-parameters '(my/vterm-toggled-marker . writable))
 
-;;; Insert cd command going into relevant dir
-;; ----------------------------------------------
+;;; Support inserting a cd command leading to relevant dir
+;; -----------------------------------------------------------
 
 (defun my/vterm-insert-cd ()
   "Insert into the terminal a cd command to the dir of the last used non-terminal window."

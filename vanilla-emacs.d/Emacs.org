@@ -3775,6 +3775,9 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     (evil-define-key '(insert normal) vterm-mode-map (kbd "<S-return>") 'my/vterm-send-shift-return)
   )
 
+  ;; My custom logic below
+  ; =============================================================================
+
   ;;; Creating, listing and navigating the vterm buffers
   ;; ----------------------------------------------------------
 
@@ -3885,8 +3888,8 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
 
   (add-to-list 'window-persistent-parameters '(my/vterm-toggled-marker . writable))
 
-  ;;; Insert cd command going into relevant dir
-  ;; ----------------------------------------------
+  ;;; Support inserting a cd command leading to relevant dir
+  ;; -----------------------------------------------------------
 
   (defun my/vterm-insert-cd ()
     "Insert into the terminal a cd command to the dir of the last used non-terminal window."
