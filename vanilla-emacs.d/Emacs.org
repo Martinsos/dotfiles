@@ -3795,13 +3795,14 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   ;;; Creating, listing and navigating the vterm buffers
   ;; ----------------------------------------------------------
 
-  (defun my/vterm-buffers ()
+  (defun my/vterm-buffers (&optional global)
     "Return vterm buffers of the current context, sorted by buffer name.
-  Context is the current perspective when `persp-mode' is enabled, otherwise whole Emacs."
+  Context is the current perspective when `persp-mode' is enabled, otherwise whole Emacs.
+  If GLOBAL is non-nil, context is ignored and all vterm buffers are returned."
     (sort (seq-filter
            (lambda (b)
              (and (buffer-match-p '(derived-mode . vterm-mode) b)
-                  (or (not (bound-and-true-p persp-mode)) (persp-is-current-buffer b))))
+                  (or global (not (bound-and-true-p persp-mode)) (persp-is-current-buffer b))))
            (buffer-list))
           ;; string-version-lessp does "smart" comparison where numbers
           ;; are correctly compared even when different number of digits.
@@ -3842,57 +3843,107 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   ;; ----------------------------------------------------------
 
   (defun my/vterm-switch-to-buffer ()
-    "Interactively pick a vterm buffer and switch to it.
-  Each terminal is listed with a marker (• current, ◦ visible), its name, its dir,
-  and the command executing in it (if any). Non-visible terminals are listed first,
-  then the visible ones, and the current one is the last."
+    "Interactively pick a vterm buffer (of the current context) and switch to it."
     (interactive)
-    (let* ((all-bufs (my/vterm-buffers))
-           (cur-buf (car (memq (current-buffer) all-bufs)))
-           (bufs (remq cur-buf all-bufs))
+    (my/vterm--switch-to-buffer-via-completion "Switch to terminal: "))
+
+  (defun my/vterm-switch-to-global-busy-buffer ()
+    "Interactively pick from all (globally) vterm buffers with a command running and switch to it.
+  Switching to it also switches to its perspective if not current one."
+    (interactive)
+    (my/vterm--switch-to-buffer-via-completion
+     "Switch to busy terminal: "
+     :global t
+     :map-candidate (lambda (c) (when (plist-get c :cmd) c))))
+
+  (with-eval-after-load 'vterm
+    (evil-define-key 'normal vterm-mode-map (kbd ",b") #'my/vterm-switch-to-buffer))
+
+  (my/leader-keys
+    "b!" '("switch busy term (all)" . my/vterm-switch-to-global-busy-buffer)
+  )
+
+  (with-eval-after-load 'ivy
+    ;; Ivy ignores the display-sort-function from below, so we explicitly tell it to not sort.
+    (add-to-list 'ivy-sort-functions-alist '(my/vterm-switch-to-buffer . nil))
+    (add-to-list 'ivy-sort-functions-alist '(my/vterm-switch-to-global-busy-buffer . nil)))
+
+  (cl-defun my/vterm--switch-to-buffer-via-completion (prompt &key global map-candidate)
+    "Let user pick a vterm buffer via completion and switch to it (and to its perspective if needed).
+  Considers vterm buffers of the current context, or all of them if GLOBAL is non-nil.
+  Each terminal is listed with a marker (• current, ◦ visible), its name, its dir,
+  and the command executing in it (if any). If any terminal is from another perspective,
+  they are also listed with the name of their perspective. Non-visible terminals are listed first,
+  then the visible ones, and the current one is the last.
+  MAP-CANDIDATE, if given, is called with each candidate (a plist, see `my/vterm--switch-candidate')
+  and should return it (possibly modified) or nil to drop it from the list."
+    (let* ((bufs (my/vterm-buffers global))
+           (cur-buf (car (memq (current-buffer) bufs)))
+           (bufs (remq cur-buf bufs))
            ;; Order: non-visible terminals first, then visible ones, then the current one.
            (bufs (append (seq-remove #'get-buffer-window bufs)
                          (seq-filter #'get-buffer-window bufs)
                          (and cur-buf (list cur-buf))))
-           (candidates (mapcar (lambda (b) (cons (my/vterm--switch-candidate-string b) b)) bufs)))
-      (if (not candidates)
+           (candidates (mapcar #'my/vterm--switch-candidate bufs))
+           (candidates (if map-candidate (delq nil (mapcar map-candidate candidates)) candidates))
+           ;; Show the perspective column only if there is at least one candidate from another perspective.
+           (show-persp (seq-some (lambda (c) (plist-get c :persp)) candidates))
+           (choices (mapcar (lambda (c) (cons (my/vterm--switch-candidate-string c show-persp)
+                                              (plist-get c :buf)))
+                            candidates)))
+      (if (not choices)
           (message "No terminals.")
         (let* ((table (lambda (string pred action)
                         (if (eq action 'metadata)
                             ;; Tell the completion UI to keep our order of candidates.
                             '(metadata (display-sort-function . identity)
                                        (cycle-sort-function . identity))
-                          (complete-with-action action candidates string pred))))
-               (choice (completing-read "Switch to terminal: " table nil t)))
-          (switch-to-buffer (cdr (assoc choice candidates)))))))
+                          (complete-with-action action choices string pred))))
+               (choice (completing-read prompt table nil t))
+               (buf (cdr (assoc choice choices))))
+          (if (bound-and-true-p persp-mode)
+              (persp-switch-to-buffer buf) ; Also switches to its perspective if needed.
+            (switch-to-buffer buf))))))
 
-  (with-eval-after-load 'vterm
-    (evil-define-key 'normal vterm-mode-map (kbd ",b") #'my/vterm-switch-to-buffer))
+  (defun my/vterm--switch-candidate (buf)
+    "Return a plist describing vterm buffer BUF, for use in the terminal switcher.
+  It has :buf (BUF), :name, :dir, :cmd (running command or nil), and :persp (name of BUF's
+  perspective if it is not the current one, otherwise nil)."
+    (list :buf buf
+          :name (buffer-name buf)
+          :dir (buffer-local-value 'default-directory buf)
+          :cmd (my/vterm--running-command buf)
+          :persp (my/vterm--buffer-other-persp-name buf)))
 
-  (with-eval-after-load 'ivy
-    ;; Ivy ignores the display-sort-function from above, so we explicitly tell it to not sort.
-    (add-to-list 'ivy-sort-functions-alist '(my/vterm-switch-to-buffer . nil)))
-
-  (defface my/vterm-switch-dir-face '((t :inherit (italic font-lock-comment-face)))
-    "Face of the terminal's dir in the terminal switcher.")
-
-  (defun my/vterm--switch-candidate-string (buf)
-    "Return a single line describing vterm buffer BUF: a marker (• current, ◦ visible),
-  its name, dir, and running command."
-    (let ((marker (cond ((eq buf (current-buffer)) "•")
-                        ((get-buffer-window buf) "◦")
-                        (t " ")))
-          (name (format "%-15s" (my/string-truncate (buffer-name buf) 15)))
-          (dir (format "%-35s" (my/shorten-path (buffer-local-value 'default-directory buf) 35)))
-          (cmd (if-let* ((cmd (my/vterm--running-command buf)))
-                   (concat "$ " (my/string-truncate cmd 25))
-                 "")))
+  (defun my/vterm--switch-candidate-string (candidate &optional show-persp)
+    "Return a single line describing CANDIDATE (see `my/vterm--switch-candidate'):
+  a marker (• current, ◦ visible), its name, its perspective (only if SHOW-PERSP is non-nil),
+  its dir, and running command."
+    (let* ((buf (plist-get candidate :buf))
+           (marker (cond ((eq buf (current-buffer)) "•")
+                         ((get-buffer-window buf) "◦")
+                         (t " ")))
+           (name (format "%-15s" (my/string-truncate (plist-get candidate :name) 15)))
+           ;; Bare "@" (like git's HEAD) means the terminal is in the current perspective.
+           (persp (when show-persp
+                    (format "%-12s" (concat "@" (my/string-truncate (or (plist-get candidate :persp) "") 11)))))
+           (dir (format "%-35s" (my/shorten-path (plist-get candidate :dir) 35)))
+           (cmd (if-let* ((cmd (plist-get candidate :cmd)))
+                    (concat "$ " (my/string-truncate cmd 25))
+                  "")))
       ;; NOTE: On selection, Ivy preserves only the first face of a face list (blah),
       ;;   which is why I make sure to use only a single face per each part of the line.
       (concat marker " "
               (propertize name 'face 'bold)
-              "  " (propertize dir 'face 'my/vterm-switch-dir-face)
+              (when persp (concat "  " (propertize persp 'face 'font-lock-type-face)))
+              "  " (propertize dir 'face 'italic)
               "  " (propertize cmd 'face 'font-lock-keyword-face))))
+
+  (defun my/vterm--buffer-other-persp-name (buf)
+    "Return the name of the perspective that BUF belongs to, if persp-mode is
+    used and persp is not the current one."
+    (when (bound-and-true-p persp-mode)
+      (cdr (persp-buffer-in-other-p buf))))
 
   (defun my/vterm--running-command (buf)
     "Return the command line of the foreground process in vterm buffer BUF, if there is one.
