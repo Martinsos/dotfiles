@@ -2666,11 +2666,6 @@ Fail if can't fast forward it."
   (global-company-mode 1)
 )
 
-(defun my/vterm-new ()
-  (interactive)
-  (vterm t)
-)
-
 ;; Requires some stuff like cmake, support for modules in emacs, libtool-bin, but most systems /
 ;; emacses have all those ready, so usually you don't have to think about it.
 (use-package vterm
@@ -2695,40 +2690,151 @@ Fail if can't fast forward it."
   (evil-define-key '(insert normal) vterm-mode-map (kbd "<S-return>") 'my/vterm-send-shift-return)
 )
 
-;; Allows easy toggling of terminal(vterm) window.
-(use-package vterm-toggle
-  :ensure nix
-  :defer t
-  :init
-  (my/leader-keys
-    "'" '("toggle terminal" . vterm-toggle)
-  )
-  :config
-  (with-eval-after-load 'vterm
-    (evil-define-key 'normal vterm-mode-map (kbd ",d") #'vterm-toggle-insert-cd)
-    (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
-    (evil-define-key 'normal vterm-mode-map (kbd ",n") #'vterm-toggle-forward)
-    (evil-define-key 'normal vterm-mode-map (kbd ",p") #'vterm-toggle-backward)
+;;; Creating, listing and navigating the vterm buffers
+;; ----------------------------------------------------------
 
-    (add-hook 'vterm-mode-hook #'my/vterm-toggle-setup-modeline)
-  )
+(defun my/vterm-buffers ()
+  "Return vterm buffers of the current context, sorted by buffer name.
+Context is the current perspective when `persp-mode' is enabled, otherwise whole Emacs."
+  (sort (seq-filter
+         (lambda (b)
+           (and (buffer-match-p '(derived-mode . vterm-mode) b)
+                (or (not (bound-and-true-p persp-mode)) (persp-is-current-buffer b))))
+         (buffer-list))
+        ;; string-version-lessp does "smart" comparison where numbers
+        ;; are correctly compared even when different number of digits.
+        (lambda (a b) (string-version-lessp (buffer-name a) (buffer-name b)))))
 
-  (defun my/vterm-toggle-setup-modeline ()
-    (setq-local mode-line-misc-info (append mode-line-misc-info (list my/vterm-toggle-modeline-segment))))
-  (defconst my/vterm-toggle-modeline-segment
-    '(:eval (my/vterm-toggle-modeline-buffers-list)))
+(defun my/vterm-list-other-buffers ()
+  "Return vterm buffers, excluding and starting from the current buffer."
+  (let ((bs (my/vterm-buffers)))
+    (if-let* ((idx (cl-position (current-buffer) bs)))
+        (cdr (my/rotate-left bs idx))
+      bs)))
 
-  (defun my/vterm-toggle-modeline-buffers-list ()
-    "Return mode-line text listing other vterm-toggle buffers."
-    (when-let* ((names (mapcar (lambda (bn) (my/string-truncate bn 15))
-                               (cons (propertize (buffer-name (current-buffer)) 'face 'bold)
-                                     (mapcar #'buffer-name (my/vterm-toggle-list-other-buffers))))))
-      (concat " [ " (string-join names " | ") " ] ")))
-  (defun my/vterm-toggle-list-other-buffers ()
-    "Return list of live vterm-toggle buffers, excluding and starting from the current buffer."
-    (let ((bs (seq-filter #'buffer-live-p vterm-toggle--buffer-list)))
-      (cdr (my/rotate-left bs (cl-position (current-buffer) bs)))))
+(defun my/vterm-new ()
+  (interactive)
+  (vterm t)
 )
+
+(defun my/vterm-next ()
+  "Switch to the next terminal."
+  (interactive)
+  (if-let* ((buf (car (my/vterm-list-other-buffers))))
+      (switch-to-buffer buf)
+    (message "No next terminal.")))
+
+(defun my/vterm-prev ()
+  "Switch to the previous terminal."
+  (interactive)
+  (if-let* ((buf (car (last (my/vterm-list-other-buffers)))))
+      (switch-to-buffer buf)
+    (message "No previous terminal.")))
+
+(with-eval-after-load 'vterm
+  (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
+  (evil-define-key 'normal vterm-mode-map (kbd ",n") #'my/vterm-next)
+  (evil-define-key 'normal vterm-mode-map (kbd ",p") #'my/vterm-prev))
+
+;;; Vterm modeline
+;; ------------------------------------
+
+;; Modeline segment for vterm buffer: marks the toggled window and lists the vterm buffers.
+(defconst my/vterm-modeline-segment
+  '(:eval (concat (my/vterm-modeline-toggled-indicator) (my/vterm-modeline-buffers-list))))
+(defun my/vterm-setup-modeline ()
+  (setq-local mode-line-misc-info (append mode-line-misc-info (list my/vterm-modeline-segment))))
+(add-hook 'vterm-mode-hook #'my/vterm-setup-modeline)
+
+(defun my/vterm-modeline-toggled-indicator ()
+  "Return mode-line marker if the window being rendered is the toggled window."
+  (when (window-parameter (selected-window) 'my/vterm-toggled-marker)
+    (propertize " ◨" 'face '(:inherit bold :height 1.25) 'display '(raise -0.05))))
+
+(defun my/vterm-modeline-buffers-list ()
+  "Return mode-line text listing the vterm buffers."
+  (when-let* ((names (mapcar (lambda (bn) (my/string-truncate bn 15))
+                             (cons (propertize (buffer-name (current-buffer)) 'face 'bold)
+                                   (mapcar #'buffer-name (my/vterm-list-other-buffers))))))
+    (concat " [ " (string-join names " | ") " ] ")))
+
+;;; Vterm toggling
+;; ------------------------------------
+
+(defun my/vterm-toggle ()
+  "Toggle dedicated terminal window.
+It shows most recent vterm buffer not already visible, or creates new one if no such buffer."
+  (interactive)
+  (let ((win (my/vterm--toggled-window)))
+    ;; If marked window is not vterm buffer any more, clear the window parameter.
+    (when (and win (not (buffer-match-p '(derived-mode . vterm-mode) (window-buffer win))))
+      (set-window-parameter win 'my/vterm-toggled-marker nil)
+      (setq win nil))
+    (cond
+     ;; Toggled window exists -> dismiss it.
+     (win
+      (if (one-window-p)
+          (progn (set-window-parameter win 'my/vterm-toggled-marker nil)
+                 (previous-buffer))
+        (delete-window win)))
+     ;; No toggled window -> open it.
+     (t
+      (let* ((visible-bufs (mapcar #'window-buffer (window-list)))
+             (vterm-bufs (my/vterm-buffers))
+             (last-used-nonvisible-vterm-buf
+              (seq-find (lambda (b) (and (memq b vterm-bufs) (not (memq b visible-bufs))))
+                        (buffer-list))) ; We rely on fact that buffer-list is recency ordered.
+             (buf-to-open last-used-nonvisible-vterm-buf))
+        (if buf-to-open
+            (pop-to-buffer buf-to-open)
+          (vterm-other-window t))
+        (set-window-parameter (selected-window) 'my/vterm-toggled-marker t))))))
+
+(my/leader-keys
+  "'" '("toggle terminal" . my/vterm-toggle)
+)
+
+(defun my/vterm--toggled-window ()
+  "Return this frame's window opened by `my/vterm-toggle', if any."
+  (seq-find (lambda (w) (window-parameter w 'my/vterm-toggled-marker)) (window-list)))
+
+(add-to-list 'window-persistent-parameters '(my/vterm-toggled-marker . writable))
+
+;;; Insert cd command going into relevant dir
+;; ----------------------------------------------
+
+(defun my/vterm-insert-cd ()
+  "Insert into the terminal a cd command to the dir of the last used non-terminal window."
+  (interactive)
+  (if-let* ((win (my/vterm--last-used-nonterm-window)))
+      (my/vterm--insert-cd-to (buffer-local-value 'default-directory (window-buffer win)))
+    (message "No other (non-terminal) window to take the directory from.")))
+
+(defun my/vterm-insert-cd-project-root ()
+  "Insert into the terminal a cd command to the project root of the last used non-terminal window."
+  (interactive)
+  (let* ((win (my/vterm--last-used-nonterm-window))
+         (root (when win
+                 (with-current-buffer (window-buffer win)
+                   (when-let* ((proj (project-current))) (project-root proj))))))
+    (cond (root (my/vterm--insert-cd-to root))
+          (win (message "Last used non-terminal window's buffer is not in a project."))
+          (t (message "No other (non-terminal) window to take the project from.")))))
+
+(with-eval-after-load 'vterm
+  (evil-define-key 'normal vterm-mode-map (kbd ",d") #'my/vterm-insert-cd)
+  (evil-define-key 'normal vterm-mode-map (kbd ",D") #'my/vterm-insert-cd-project-root))
+
+(defun my/vterm--insert-cd-to (dir)
+  "Insert (without executing) into the terminal a command to cd to DIR."
+  (vterm-send-string (concat "cd " (shell-quote-argument (expand-file-name dir)))))
+
+(defun my/vterm--last-used-nonterm-window ()
+  "Return the most recently used non-terminal window, if any.
+It usually shows the buffer I was working in before coming to the terminal."
+  (seq-find
+   (lambda (w) (not (buffer-match-p '(derived-mode . vterm-mode) (window-buffer w))))
+   (seq-sort-by #'window-use-time #'> (window-list))))
 
 (with-eval-after-load 'vterm
   (defvar my/vterm-prompt-hook nil "A hook that runs each time the prompt is printed in vterm.")

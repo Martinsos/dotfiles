@@ -64,7 +64,6 @@ emacsPkgs: with emacsPkgs; [
   undo-fu
   visual-fill-column
   vterm
-  vterm-toggle
   vundo
   winum
   xclip
