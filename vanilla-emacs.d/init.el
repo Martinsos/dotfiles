@@ -302,6 +302,20 @@ USAGE:
   )
 )
 
+(defun my/shorten-path (path max-length)
+  "Shorten PATH to at most MAX-LENGTH chars while keeping it recognizable.
+PATH may be a file or a directory; its last component is always kept in full (unless
+the final truncation step kicks in). Applies progressively more aggressive steps,
+stopping as soon as it fits: abbreviating home dir to ~, fish-style shortening of
+parent dirs (e.g. ~/p/d/emacs.d), and finally truncating it from the left.
+Also drops the trailing slash if there is one."
+  (let ((path (directory-file-name (abbreviate-file-name path))))
+    (when (and (> (length path) max-length) (require 'shrink-path nil t))
+      (setq path (directory-file-name (shrink-path-dirs path))))
+    (if (> (length path) max-length)
+        (concat "…" (substring path (- (length path) (1- max-length))))
+      path)))
+
 ;; Implemented based on 'lsp-describe-thing-at-point'.
 (defun my/lsp-describe-thing-at-point-f ()
   "Return string with the type signature and documentation of the thing at point."
@@ -2738,6 +2752,73 @@ Context is the current perspective when `persp-mode' is enabled, otherwise whole
   (evil-define-key 'normal vterm-mode-map (kbd ",c") #'my/vterm-new)
   (evil-define-key 'normal vterm-mode-map (kbd ",n") #'my/vterm-next)
   (evil-define-key 'normal vterm-mode-map (kbd ",p") #'my/vterm-prev))
+
+;;; Switching to a terminal via completion
+;; ----------------------------------------------------------
+
+(defun my/vterm-switch-to-buffer ()
+  "Interactively pick another vterm buffer and switch to it.
+Each terminal is listed with its name, its dir, and the command executing in it (if any).
+Terminals already visible in some window are listed last and deemphasized."
+  (interactive)
+  (let* (;; Drop current terminal buffer.
+         (bufs (remq (current-buffer) (my/vterm-buffers)))
+         ;; List non-visible terminals first.
+         (bufs (append (seq-remove #'get-buffer-window bufs)
+                       (seq-filter #'get-buffer-window bufs)))
+         (candidates (mapcar (lambda (b) (cons (my/vterm--switch-candidate-string b) b)) bufs)))
+    (if (not candidates)
+        (message "No other terminals.")
+      (let* ((table (lambda (string pred action)
+                      (if (eq action 'metadata)
+                          ;; Tell the completion UI to keep our order of candidates.
+                          '(metadata (display-sort-function . identity)
+                                     (cycle-sort-function . identity))
+                        (complete-with-action action candidates string pred))))
+             (choice (completing-read "Switch to terminal: " table nil t)))
+        (switch-to-buffer (cdr (assoc choice candidates)))))))
+
+(with-eval-after-load 'vterm
+  (evil-define-key 'normal vterm-mode-map (kbd ",b") #'my/vterm-switch-to-buffer))
+
+(with-eval-after-load 'ivy
+  ;; Ivy ignores the display-sort-function from above, so we explicitly tell it to not sort.
+  (add-to-list 'ivy-sort-functions-alist '(my/vterm-switch-to-buffer . nil)))
+
+(defun my/vterm--switch-candidate-string (buf)
+  "Return a single line describing vterm buffer BUF: its name, running command, and dir.
+If BUF is currently visible in some window, the whole line is deemphasized."
+  (let* ((name (format "%-15s" (my/string-truncate (buffer-name buf) 15)))
+         (cmd (format "$ %-25s" (my/string-truncate (or (my/vterm--running-command buf) "") 25)))
+         (dir (my/shorten-path (buffer-local-value 'default-directory buf) 35))
+         (line (concat (propertize name 'face 'bold)
+                       "  " (propertize cmd 'face 'font-lock-function-name-face)
+                       "  " (propertize dir 'face '(italic font-lock-comment-face)))))
+    (when (get-buffer-window buf)
+      ;; Prepend (not append) shadow, so its gray overrides the other faces' colors.
+      (add-face-text-property 0 (length line) 'shadow nil line))
+    line))
+
+(defun my/vterm--running-command (buf)
+  "Return the command line of the foreground process in vterm buffer BUF, if there is one.
+Returns nil when the shell in BUF is idle. It derives this live from /proc, by checking
+if the terminal's foreground process group differs from the shell's own, so Linux only."
+  (ignore-errors
+    (let* ((shell-pid (process-id (get-buffer-process buf)))
+           (stat (with-temp-buffer
+                   (insert-file-contents (format "/proc/%d/stat" shell-pid))
+                   (buffer-string)))
+           ;; Parse fields only after the "(comm)" part, since comm can contain spaces.
+           (stat-fields (split-string (substring stat (+ 2 (cl-position ?\) stat :from-end t))) " "))
+           ;; pgrp = process group of the terminal's shell. Stays the same through its lifetime.
+           (pgrp (string-to-number (nth 2 stat-fields)))
+           ;; tpgid = process group of the command that is currently running in the terminal.
+           ;; If no command is running, then it is the same as pgrp.
+           (tpgid (string-to-number (nth 5 stat-fields))))
+      (when (/= tpgid pgrp) ; which means a command is running.
+        (with-temp-buffer
+          (insert-file-contents (format "/proc/%d/cmdline" tpgid))
+          (string-join (split-string (buffer-string) "\0" t) " "))))))
 
 ;;; Vterm modeline
 ;; ------------------------------------
