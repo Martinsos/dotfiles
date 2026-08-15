@@ -3842,18 +3842,21 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
   ;; ----------------------------------------------------------
 
   (defun my/vterm-switch-to-buffer ()
-    "Interactively pick another vterm buffer and switch to it.
-  Each terminal is listed with its name, its dir, and the command executing in it (if any).
-  Terminals already visible in some window are listed last and deemphasized."
+    "Interactively pick a vterm buffer and switch to it.
+  Each terminal is listed with a marker (• current, ◦ visible), its name, its dir,
+  and the command executing in it (if any). Non-visible terminals are listed first,
+  then the visible ones, and the current one is the last."
     (interactive)
-    (let* (;; Drop current terminal buffer.
-           (bufs (remq (current-buffer) (my/vterm-buffers)))
-           ;; List non-visible terminals first.
+    (let* ((all-bufs (my/vterm-buffers))
+           (cur-buf (car (memq (current-buffer) all-bufs)))
+           (bufs (remq cur-buf all-bufs))
+           ;; Order: non-visible terminals first, then visible ones, then the current one.
            (bufs (append (seq-remove #'get-buffer-window bufs)
-                         (seq-filter #'get-buffer-window bufs)))
+                         (seq-filter #'get-buffer-window bufs)
+                         (and cur-buf (list cur-buf))))
            (candidates (mapcar (lambda (b) (cons (my/vterm--switch-candidate-string b) b)) bufs)))
       (if (not candidates)
-          (message "No other terminals.")
+          (message "No terminals.")
         (let* ((table (lambda (string pred action)
                         (if (eq action 'metadata)
                             ;; Tell the completion UI to keep our order of candidates.
@@ -3870,19 +3873,26 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     ;; Ivy ignores the display-sort-function from above, so we explicitly tell it to not sort.
     (add-to-list 'ivy-sort-functions-alist '(my/vterm-switch-to-buffer . nil)))
 
+  (defface my/vterm-switch-dir-face '((t :inherit (italic font-lock-comment-face)))
+    "Face of the terminal's dir in the terminal switcher.")
+
   (defun my/vterm--switch-candidate-string (buf)
-    "Return a single line describing vterm buffer BUF: its name, running command, and dir.
-  If BUF is currently visible in some window, the whole line is deemphasized."
-    (let* ((name (format "%-15s" (my/string-truncate (buffer-name buf) 15)))
-           (cmd (format "$ %-25s" (my/string-truncate (or (my/vterm--running-command buf) "") 25)))
-           (dir (my/shorten-path (buffer-local-value 'default-directory buf) 35))
-           (line (concat (propertize name 'face 'bold)
-                         "  " (propertize cmd 'face 'font-lock-function-name-face)
-                         "  " (propertize dir 'face '(italic font-lock-comment-face)))))
-      (when (get-buffer-window buf)
-        ;; Prepend (not append) shadow, so its gray overrides the other faces' colors.
-        (add-face-text-property 0 (length line) 'shadow nil line))
-      line))
+    "Return a single line describing vterm buffer BUF: a marker (• current, ◦ visible),
+  its name, dir, and running command."
+    (let ((marker (cond ((eq buf (current-buffer)) "•")
+                        ((get-buffer-window buf) "◦")
+                        (t " ")))
+          (name (format "%-15s" (my/string-truncate (buffer-name buf) 15)))
+          (dir (format "%-35s" (my/shorten-path (buffer-local-value 'default-directory buf) 35)))
+          (cmd (if-let* ((cmd (my/vterm--running-command buf)))
+                   (concat "$ " (my/string-truncate cmd 25))
+                 "")))
+      ;; NOTE: On selection, Ivy preserves only the first face of a face list (blah),
+      ;;   which is why I make sure to use only a single face per each part of the line.
+      (concat marker " "
+              (propertize name 'face 'bold)
+              "  " (propertize dir 'face 'my/vterm-switch-dir-face)
+              "  " (propertize cmd 'face 'font-lock-keyword-face))))
 
   (defun my/vterm--running-command (buf)
     "Return the command line of the foreground process in vterm buffer BUF, if there is one.
