@@ -3,3 +3,5 @@
 .projectile
 .claude/**/*.local.*
 .claude/*.local.*
+
+**/.claude/settings.local.json

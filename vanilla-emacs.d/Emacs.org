@@ -1153,6 +1153,8 @@ Seems to not be on any package manager though, so I need straight.el probably.
 
       "`"   '("mark ring" . counsel-mark-ring)
 
+      "L"   '("copy location" . my/copy-location)
+
       "t"   '("toggle" . (keymap))
 
       "c"   '("change / customize" . (keymap))
@@ -2926,7 +2928,7 @@ Order of headings below is important because they depend on each other.
           ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
           ;;   pull it in, either for the first heading, or for the one tagged with :current:,
           ;;   something like that.
-          (work-diary-sprint-current-tag "s59")
+          (work-diary-sprint-current-tag "s75")
           (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
           (work-diary-sprint-length-in-weeks 2)
          )
@@ -2944,7 +2946,7 @@ Order of headings below is important because they depend on each other.
       "od"  '("[view] Work Diary (daily)" .
               (lambda () (interactive)
                 (delete-other-windows)
-                (scratch-buffer)
+                (persp-switch-to-scratch-buffer)
                 (org-agenda nil "d")
                 (org-agenda-redo)))
       "op"  '("[view] Work Diary (planning)" .
@@ -2958,7 +2960,7 @@ Order of headings below is important because they depend on each other.
       "oP"  '("[view] Private Diary" .
               (lambda () (interactive)
                 (delete-other-windows)
-                (scratch-buffer)
+                (persp-switch-to-scratch-buffer)
                 (org-agenda nil "p")
                 (org-agenda-redo)))
     )
@@ -3391,7 +3393,6 @@ They can be used to store a point, text, a window or frame configuration, ... , 
 :END:
 
 #+begin_src emacs-lisp
-
   ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
   (use-package projectile
     :ensure nix
@@ -3413,17 +3414,16 @@ They can be used to store a point, text, a window or frame configuration, ... , 
     :ensure nix
     :after (counsel projectile)
     :config
-    (defun counsel-projectile-rg-region-or-symbol ()
-      "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
-      (interactive)
-      (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
-          (counsel-projectile-rg)
-      )
-    )
-
     (counsel-projectile-mode)
   )
 
+  (defun counsel-projectile-rg-region-or-symbol ()
+    "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
+    (interactive)
+    (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
+        (counsel-projectile-rg)
+    )
+  )
 #+end_src
 
 ** Cheatsheet :cheatsheet:
@@ -3499,7 +3499,7 @@ I install it via Nix together with Emacs.
     :defer t
     :hook (magit-mode . (lambda () (setq truncate-lines nil)))
     :custom
-    (magit-diff-refine-hunk 'all) ; Show char/word diffs, not just lines.
+    (magit-diff-refine-hunk nil) ; Show only line diffs, not char/word, because it is unreadable.
     :config
     (general-define-key
      :keymaps 'magit-diff-section-map
@@ -3568,6 +3568,8 @@ As per Forge's docs:
 =diff-hl= package highlights lines that were modified (compared to versioned state of the file).
 It adds indicator to the left margin/side of the window.
 
+Staged changes get a muted indicator, unstaged ones the usual colored indicator: handy when staging parts of a file mid-review, as the colored indicators mark what is left to review.
+
 #+begin_src emacs-lisp
 
   (use-package diff-hl
@@ -3578,11 +3580,25 @@ It adds indicator to the left margin/side of the window.
     :hook (dired-mode . diff-hl-dired-mode)
     :config
     (global-diff-hl-mode)
+
+    ;; Ensure changes done through magit are reflected in diff-hl.
+    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)
+
+    ;; Show staged changes as muted ("reference") indicators, distinct from the
+    ;; normal indicators that then mark only unstaged changes.
+    (setq diff-hl-show-staged-changes nil)
+
+    (my/on-theme-enabled
+     (dolist (face '(diff-hl-reference-insert diff-hl-reference-delete diff-hl-reference-change))
+       (set-face-attribute face nil :inherit nil :foreground 'unspecified
+                           :background (face-foreground 'shadow nil t))))
+
     (my/leader-keys
       "gn" '("next change" . diff-hl-next-hunk)
       "gp" '("previous change" . diff-hl-previous-hunk)
       ;; Opens info + manipulation commands for hunk under the cursor (in normal file buffer), cool.
       "gh" '("show hunk" . diff-hl-show-hunk)
+      "gs" '("stage hunk/region" . diff-hl-stage-dwim)
       "gr" '("set ref rev" . diff-hl-set-reference-rev-in-project)
       "gR" '("reset ref rev" . diff-hl-reset-reference-rev-in-project)
     )
@@ -3772,11 +3788,15 @@ I chose ~vterm~ because it uses external ~libvterm~ implementation of a terminal
     :defer t
     ;; hl-line highlight flickers in vterm, so we turn it off.
     ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-    :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+    ;; goto-address-mode highlights the links and emails in the output.
+    :hook ((vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+           (vterm-mode . goto-address-mode))
     :init
     (my/leader-keys
       "\"" '("new terminal" . my/vterm-new)
     )
+    :custom
+    (vterm-copy-mode-remove-fake-newlines t) ; So that e.g. long URLs stay in one consumable piece.
     :config
     (defun my/vterm-send-shift-return ()
       "Send Shift+Enter to vterm as a distinct sequence (by kitty protocol)."
@@ -6216,6 +6236,20 @@ That is why I instead I use this dedicated mode that does just this: highlights 
   )
 #+end_src
 
+#+begin_src emacs-lisp
+  (defun my/copy-location ()
+    "Copy current location as FILE(or BUFFER):LINE to the kill ring."
+    (interactive)
+    (let ((location (format "%s:%d"
+                            (if buffer-file-name
+                                (abbreviate-file-name buffer-file-name)
+                              (format "<buffer %s>" (buffer-name)))
+                            (line-number-at-pos nil t))))
+      (kill-new location)
+      (message "Copied: %s" location)))
+
+#+end_src
+
 ** Manual setup :manual_setup:
 - Run ~M-x all-the-icons-install-fonts~.
 
@@ -6342,3 +6376,10 @@ works best with the rest of the stuff above, so it kind of pulls one another hm,
 
 *** TODO Learn more about Avy: https://karthinks.com/software/avy-can-do-anything/ .
 *** TODO Read more about other [[https://www.reddit.com/r/emacs/comments/1gux2bi/org_search_vs_organization/?share_id=f51nt5J93w5gxGj6rjjqm&utm_content=1&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=10][people's org workflows]]:
+
+* Local variables (this file)
+This file is quite big and org-lint is noticably slow so I disable it.
+
+# Local Variables:
+# flycheck-disabled-checkers: (org-lint)
+# End:

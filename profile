@@ -11,3 +11,5 @@ export PATH="$FLYCTL_INSTALL/bin:$PATH"
 [ -f "$HOME/.ghcup/env" ] && source "$HOME/.ghcup/env"
 
 [ -f "$HOME/.cargo/env" ] && source "$HOME/.cargo/env"
+
+[ -f "$HOME/.local/bin/mise" ] && eval "$($HOME/.local/bin/mise activate bash --shims)"

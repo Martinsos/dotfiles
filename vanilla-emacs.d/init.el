@@ -663,6 +663,8 @@ Also drops the trailing slash if there is one."
 
     "`"   '("mark ring" . counsel-mark-ring)
 
+    "L"   '("copy location" . my/copy-location)
+
     "t"   '("toggle" . (keymap))
 
     "c"   '("change / customize" . (keymap))
@@ -2091,7 +2093,7 @@ Returns nil if no heading found."
         ;;   and SCHEDULED set? Anyway, they would have that metadata on them, and I could
         ;;   pull it in, either for the first heading, or for the one tagged with :current:,
         ;;   something like that.
-        (work-diary-sprint-current-tag "s59")
+        (work-diary-sprint-current-tag "s75")
         (work-diary-sprint-start-weekday 3) ; 3 is Wednesday in org agenda.
         (work-diary-sprint-length-in-weeks 2)
        )
@@ -2109,7 +2111,7 @@ Returns nil if no heading found."
     "od"  '("[view] Work Diary (daily)" .
             (lambda () (interactive)
               (delete-other-windows)
-              (scratch-buffer)
+              (persp-switch-to-scratch-buffer)
               (org-agenda nil "d")
               (org-agenda-redo)))
     "op"  '("[view] Work Diary (planning)" .
@@ -2123,7 +2125,7 @@ Returns nil if no heading found."
     "oP"  '("[view] Private Diary" .
             (lambda () (interactive)
               (delete-other-windows)
-              (scratch-buffer)
+              (persp-switch-to-scratch-buffer)
               (org-agenda nil "p")
               (org-agenda-redo)))
   )
@@ -2462,15 +2464,15 @@ Returns nil if no heading found."
   :ensure nix
   :after (counsel projectile)
   :config
-  (defun counsel-projectile-rg-region-or-symbol ()
-    "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
-    (interactive)
-    (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
-        (counsel-projectile-rg)
-    )
-  )
-
   (counsel-projectile-mode)
+)
+
+(defun counsel-projectile-rg-region-or-symbol ()
+  "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
+  (interactive)
+  (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
+      (counsel-projectile-rg)
+  )
 )
 
 (my/leader-keys
@@ -2494,7 +2496,7 @@ Returns nil if no heading found."
     :defer t
     :hook (magit-mode . (lambda () (setq truncate-lines nil)))
     :custom
-    (magit-diff-refine-hunk 'all) ; Show char/word diffs, not just lines.
+    (magit-diff-refine-hunk nil) ; Show only line diffs, not char/word, because it is unreadable.
     :config
     (general-define-key
      :keymaps 'magit-diff-section-map
@@ -2539,11 +2541,25 @@ Fail if can't fast forward it."
   :hook (dired-mode . diff-hl-dired-mode)
   :config
   (global-diff-hl-mode)
+
+  ;; Ensure changes done through magit are reflected in diff-hl.
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh)
+
+  ;; Show staged changes as muted ("reference") indicators, distinct from the
+  ;; normal indicators that then mark only unstaged changes.
+  (setq diff-hl-show-staged-changes nil)
+
+  (my/on-theme-enabled
+   (dolist (face '(diff-hl-reference-insert diff-hl-reference-delete diff-hl-reference-change))
+     (set-face-attribute face nil :inherit nil :foreground 'unspecified
+                         :background (face-foreground 'shadow nil t))))
+
   (my/leader-keys
     "gn" '("next change" . diff-hl-next-hunk)
     "gp" '("previous change" . diff-hl-previous-hunk)
     ;; Opens info + manipulation commands for hunk under the cursor (in normal file buffer), cool.
     "gh" '("show hunk" . diff-hl-show-hunk)
+    "gs" '("stage hunk/region" . diff-hl-stage-dwim)
     "gr" '("set ref rev" . diff-hl-set-reference-rev-in-project)
     "gR" '("reset ref rev" . diff-hl-reset-reference-rev-in-project)
   )
@@ -2687,11 +2703,15 @@ Fail if can't fast forward it."
   :defer t
   ;; hl-line highlight flickers in vterm, so we turn it off.
   ;; Relevant github issue: https://github.com/akermu/emacs-libvterm/issues/432 .
-  :hook (vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+  ;; goto-address-mode highlights the links and emails in the output.
+  :hook ((vterm-mode . (lambda () (setq-local global-hl-line-mode nil)))
+         (vterm-mode . goto-address-mode))
   :init
   (my/leader-keys
     "\"" '("new terminal" . my/vterm-new)
   )
+  :custom
+  (vterm-copy-mode-remove-fake-newlines t) ; So that e.g. long URLs stay in one consumable piece.
   :config
   (defun my/vterm-send-shift-return ()
     "Send Shift+Enter to vterm as a distinct sequence (by kitty protocol)."
@@ -4330,3 +4350,14 @@ Returns a structured list of information that can be sent to an LLM."
 (use-package htmlize
   :ensure nix
 )
+
+(defun my/copy-location ()
+  "Copy current location as FILE(or BUFFER):LINE to the kill ring."
+  (interactive)
+  (let ((location (format "%s:%d"
+                          (if buffer-file-name
+                              (abbreviate-file-name buffer-file-name)
+                            (format "<buffer %s>" (buffer-name)))
+                          (line-number-at-pos nil t))))
+    (kill-new location)
+    (message "Copied: %s" location)))
