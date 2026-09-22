@@ -963,6 +963,8 @@ NOTE: Sometimes I had trouble with otf fonts rendering weird in Chromium, so I p
     (doom-modeline-height 40)
     (doom-modeline-buffer-encoding nil)
     (doom-modeline-minor-modes nil)
+    (doom-modeline-total-line-number t) ; Show total number of lines next to the point location.
+    (doom-modeline-percent-position '(6 "%q")) ; Show window position as perc of buffer it spans (top%-bot%).
     :config
     (doom-modeline-mode 1)
   )
@@ -3517,6 +3519,7 @@ I install it via Nix together with Emacs.
     "gf" '("magit menu (current file)" . magit-file-dispatch)
     "gF" '("magit find file" . magit-find-file)
     "gb" '("magit blame" . magit-blame)
+    "gS" '("stage file" . magit-file-stage)
   )
 
   (defun my/magit-pull-other-branch (branch)

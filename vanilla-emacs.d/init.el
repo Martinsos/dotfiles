@@ -529,6 +529,8 @@ Also drops the trailing slash if there is one."
   (doom-modeline-height 40)
   (doom-modeline-buffer-encoding nil)
   (doom-modeline-minor-modes nil)
+  (doom-modeline-total-line-number t) ; Show total number of lines next to the point location.
+  (doom-modeline-percent-position '(6 "%q")) ; Show window position as perc of buffer it spans (top%-bot%).
   :config
   (doom-modeline-mode 1)
 )
@@ -2514,6 +2516,7 @@ Returns nil if no heading found."
     "gf" '("magit menu (current file)" . magit-file-dispatch)
     "gF" '("magit find file" . magit-find-file)
     "gb" '("magit blame" . magit-blame)
+    "gS" '("stage file" . magit-file-stage)
   )
 
   (defun my/magit-pull-other-branch (branch)
