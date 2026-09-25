@@ -2448,7 +2448,6 @@ Returns nil if no heading found."
 ;; Projectile brings the concept of "Project" to emacs, as a project on the disk.
 (use-package projectile
   :ensure nix
-  :defer t
   :init
   ;; First thing that happens on switching to a new project.
   ;; TODO: Try without this, see if I like that better or not, or if I would like something else.
@@ -2467,14 +2466,12 @@ Returns nil if no heading found."
   :after (counsel projectile)
   :config
   (counsel-projectile-mode)
-)
 
-(defun counsel-projectile-rg-region-or-symbol ()
-  "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
-  (interactive)
-  (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
-      (counsel-projectile-rg)
-  )
+  (defun counsel-projectile-rg-region-or-symbol ()
+    "Search for selected region if active, otherwise search for symbol at point using `counsel-projectile-rg`."
+    (interactive)
+    (let ((counsel-projectile-rg-initial-input (projectile-symbol-or-selection-at-point)))
+        (counsel-projectile-rg)))
 )
 
 (my/leader-keys
